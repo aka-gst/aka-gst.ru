@@ -21,13 +21,20 @@ bad=0
 say_ok()  { ok=$((ok + 1));  printf '  ok    %s\n' "$1"; }
 say_bad() { bad=$((bad + 1)); printf '  FAIL  %s\n' "$1"; }
 
+# Сеть даёт 2-7% случайных обрывов, и это НЕ свойство сайта. Повторы нужны
+# каждому запросу, а не только проверке кодов: раньше сверка хеша и разбор
+# страницы 404 ходили голым curl, и их случайный обрыв читался как
+# «выкладка не доведена». Отсюда и плавал счёт: 35/2, 36/1, 37/0.
+RETRY="--retry 3 --retry-all-errors --retry-delay 1 --max-time 25"
+
 # 000 — это «ответа не было», а не код ответа. Отличать обязательно: иначе
 # сетевой сбой читается как «файла нет», а это противоположные выводы.
 # Три попытки с паузой: запросы подряд иногда упираются в ограничение.
 code() {
   attempt=1
   while [ "$attempt" -le 3 ]; do
-    c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "$1" || echo 000)
+    # shellcheck disable=SC2086
+    c=$(curl -s $RETRY -o /dev/null -w '%{http_code}' "$1" || echo 000)
     [ "$c" != "000" ] && { echo "$c"; return; }
     attempt=$((attempt + 1))
     sleep 1
@@ -59,7 +66,8 @@ done
 
 echo
 echo "== опечатка в адресе даёт страницу, а не пустоту =="
-miss=$(curl -s --max-time 25 "$BASE/takoy-stranicy-tochno-net" -w '\n%{http_code}')
+# shellcheck disable=SC2086
+miss=$(curl -s $RETRY "$BASE/takoy-stranicy-tochno-net" -w '\n%{http_code}')
 mcode=$(printf '%s' "$miss" | tail -1)
 if [ "$mcode" = "404" ] && printf '%s' "$miss" | grep -q 'Страница не найдена'; then
   say_ok "404 отдаёт свою страницу с кодом 404"
@@ -70,7 +78,8 @@ fi
 echo
 echo "== ассеты, на которые ссылается сама страница =="
 # Строка запроса — часть адреса. Именно на ней ломается наивная проверка.
-page=$(curl -s --max-time 25 "$BASE/")
+# shellcheck disable=SC2086
+page=$(curl -s $RETRY "$BASE/")
 printf '%s' "$page" \
   | grep -oE '(href|src)="/[^"]+\.(css|js|svg|png)(\?[^"]*)?"' \
   | sed 's/.*="//; s/"$//' | sort -u \
@@ -90,7 +99,8 @@ if [ -f "$HERE/index.html" ]; then
   # Хешируем ФАЙЛ, а не $page: подстановка $( ) срезает завершающий перевод
   # строки, и сверка с файлом не совпала бы никогда — вечный ложный провал.
   raw=$(mktemp)
-  curl -s --max-time 25 "$BASE/" -o "$raw"
+  # shellcheck disable=SC2086
+  curl -s $RETRY "$BASE/" -o "$raw"
   live=$(shasum -a 256 "$raw" | cut -d' ' -f1)
   rm -f "$raw"
   local_hash=$(shasum -a 256 "$HERE/index.html" | cut -d' ' -f1)
