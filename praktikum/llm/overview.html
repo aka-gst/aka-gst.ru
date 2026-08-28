@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>О практикуме — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Учебно-практический проект aka-gst: разобраться, как устроены AI-агенты, научиться собирать их под реальные задачи и превратить этот навык в понятную услугу для клиентов.">
+<meta property="og:title" content="О практикуме — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Учебно-практический проект aka-gst: разобраться, как устроены AI-агенты, научиться собирать их под реальные задачи и превратить этот навык в понятную услугу для клиентов.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/overview.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/overview.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "О практикуме", "description": "Учебно-практический проект aka-gst: разобраться, как устроены AI-агенты, научиться собирать их под реальные задачи и превратить этот навык в понятную услугу для клиентов.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Раздел · 5 мин</p><h1>О практикуме</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#chto-uzhe-rabotaet">Что уже работает</a></li><li><a href="#veb-versiya-praktikuma">Веб-версия практикума</a></li><li><a href="#arhitektura">Архитектура</a></li><li><a href="#bystryi-zapusk">Быстрый запуск</a></li><li><a href="#konechnyi-rezultat">Конечный результат</a></li><li><a href="#chto-zdes-oznachaet-obuchit-agenta">Что здесь означает «обучить агента»</a></li><li><a href="#tehnologicheskii-marshrut">Технологический маршрут</a></li><li><a href="#pravila-proekta">Правила проекта</a></li><li><a href="#struktura">Структура</a></li><li><a href="#tekuschii-rezultat">Текущий результат</a></li><li><a href="#licenziya">Лицензия</a></li></ol></details><article><p>Учебно-практический проект aka-gst: разобраться, как устроены AI-агенты, научиться собирать их под реальные задачи и превратить этот навык в понятную услугу для клиентов.</p><h2 id="chto-uzhe-rabotaet">Что уже работает</h2><ul><li>локальная генерация через Ollama и <code>qwen3:8b</code>;</li><li>structured output с JSON Schema и Pydantic;</li><li>agent loop с allowlist безопасных инструментов;</li><li>память сессий и audit log в SQLite;</li><li>RAG по Markdown-документам с проверяемыми источниками;</li><li>evaluation-набор: 6/6 сценариев, retrieval hit rate 100%;</li><li>FastAPI, API-key guard, Docker Compose и health checks;</li><li>backup/restore с SHA-256 и защита от path traversal;</li><li>76 автоматических тестов;</li><li>первый модуль помощника аналитика маркетплейса на искусственном CSV.</li><li>контекстный навигатор по демонстрационной структуре кабинета продавца.</li><li>безопасная основа read-only интеграции с официальным WB API.</li></ul><h2 id="veb-versiya-praktikuma">Веб-версия практикума</h2><p>Лабораторные работы читаются не только из репозитория. Тот же материал собирается в статический сайт: с телефона он читается, а поисковики его индексируют.</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>sh tools/build.sh</code></pre></div><p>Команда пересобирает <code>course/llm-service-lab.json</code> и страницы в <code>web/</code>. CI выполняет её же и падает, если закоммиченный результат разошёлся с Markdown-исходниками.</p><p>JSON описан общей схемой <code>aka-gst.course/1</code> — по ней QA Quest подключает этот практикум как ступень 3, не переписывая уроки заново.</p><p>Опубликовано: <a href="https://aka-gst.ru/praktikum/llm/">https://aka-gst.ru/praktikum/llm/</a>.</p><h2 id="arhitektura">Архитектура</h2><div class="snippet" data-lang="mermaid"><div class="snippet-bar"><span class="snippet-lang">mermaid</span></div><pre><code>flowchart LR
+    Client[&quot;CLI / HTTP-клиент&quot;] --&gt; API[&quot;FastAPI + Pydantic&quot;]
+    API --&gt; Guard[&quot;API key + лимиты&quot;]
+    Guard --&gt; Agent[&quot;Agent loop&quot;]
+    Agent --&gt; Tools[&quot;Разрешённые инструменты&quot;]
+    Agent --&gt; Memory[&quot;SQLite: память и audit&quot;]
+    Agent --&gt; RAG[&quot;RAG-поиск&quot;]
+    RAG --&gt; Docs[&quot;Документы клиента&quot;]
+    RAG --&gt; Embed[&quot;qwen3-embedding:0.6b&quot;]
+    Agent --&gt; Model[&quot;Ollama / qwen3:8b&quot;]</code></pre></div><h2 id="bystryi-zapusk">Быстрый запуск</h2><p>Требования: Python 3.12+, <a href="https://docs.astral.sh/uv/">uv</a>, Ollama и модели <code>qwen3:8b</code>, <code>qwen3-embedding:0.6b</code>.</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv sync --python 3.12
+uv run python -m agent_lab.rag index
+uv run pytest -q
+uv run uvicorn agent_lab.service:app --host 127.0.0.1 --port 8000</code></pre></div><p>Проверка сервиса:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/ready
+curl http://127.0.0.1:8000/v1/integrations/wb/status</code></pre></div><p>Настоящий токен WB хранится только в локальном <code>.env</code> как <code>WB_API_TOKEN</code> и никогда не добавляется в Git. До получения разрешения продавца интеграция работает без токена и продолжает использовать демонстрационные CSV.</p><p>Веб-интерфейс помощника: <a href="http://127.0.0.1:8000/marketplace">http://127.0.0.1:8000/marketplace</a>.</p><p>Вопрос по демонстрационному отчёту маркетплейса:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>curl -X POST http://127.0.0.1:8000/v1/marketplace/ask \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;question&quot;:&quot;Почему процент выкупа маленький?&quot;,&quot;report&quot;:&quot;sales-report.csv&quot;}&#x27;</code></pre></div><p>Запуск через Docker Desktop:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>docker compose build
+docker compose up -d</code></pre></div><h2 id="konechnyi-rezultat">Конечный результат</h2><p>После прохождения проекта должны появиться три демонстрационных решения:</p><ol><li><strong>Локальный помощник с инструментами</strong> — принимает задачу, выбирает разрешённый инструмент, выполняет действие и сохраняет проверяемый отчёт.</li><li><strong>RAG-помощник по документам</strong> — отвечает только на основе загруженных материалов и указывает источники.</li><li><strong>Клиентский агент под ключ</strong> — установка, конфигурация, тесты, инструкция, резервное копирование и передача заказчику.</li></ol><h2 id="chto-zdes-oznachaet-obuchit-agenta">Что здесь означает «обучить агента»</h2><p>В большинстве клиентских проектов модель не обучают с нуля. Используются четыре уровня настройки:</p><ol><li><strong>Инструкция и примеры</strong> — задаём роль, ограничения и формат ответа.</li><li><strong>Инструменты</strong> — разрешаем агенту вызывать API, искать документы или работать с файлами.</li><li><strong>RAG</strong> — подключаем собственную базу знаний без изменения весов модели.</li><li><strong>Fine-tuning</strong> — дообучаем модель на подготовленном датасете, только если первые три уровня недостаточны.</li></ol><p>Обучение модели с нуля в этот проект не входит: оно требует больших датасетов, GPU-кластера и бюджета, а для большинства частных заказов не окупается.</p><h2 id="tehnologicheskii-marshrut">Технологический маршрут</h2><ul><li>Python 3.12+</li><li>HTTP и OpenAI-compatible API</li><li>Ollama для локальных моделей</li><li>Pydantic для схем данных</li><li>pytest для проверок</li><li>FastAPI для локального сервиса</li><li>SQLite и векторное хранилище для памяти/RAG</li><li>Docker — после того, как локальная версия работает</li><li>GitHub Actions для автоматических проверок</li></ul><h2 id="pravila-proekta">Правила проекта</h2><ul><li>Сначала формулируем задачу и критерии качества, затем выбираем модель.</li><li>Секреты хранятся только в локальном <code>.env</code>, который не попадает в Git.</li><li>Агент получает минимально необходимые разрешения.</li><li>Каждый важный результат проверяется тестом или сохраняемым evidence.</li><li>Для опасных и внешних действий требуется подтверждение человека.</li><li>Нельзя обещать клиенту «обученную нейросеть», если фактически сделан prompt или RAG.</li></ul><h2 id="struktura">Структура</h2><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>docs/       теория, архитектура и памятки
+labs/       последовательные учебные лабораторные работы
+projects/   итоговые проекты для портфолио
+templates/  анкета клиента, ТЗ, отчёт и инструкция передачи
+tests/      автоматические проверки</code></pre></div><p>Начинать следует с ROADMAP.md и лабораторной работы <code>labs/01-model-api</code>.</p><h2 id="tekuschii-rezultat">Текущий результат</h2><p>Пройдены лабораторные 1–10: Ollama API, structured output, безопасные инструменты, память SQLite, RAG, evaluation, FastAPI/Docker, передача клиенту, помощник аналитика маркетплейса и навигатор по интерфейсу. Проверяемый набор содержит 76 автоматических тестов.</p><p>Подробный портфельный разбор: docs/portfolio-case-study.md.</p><p>Следующий прикладной проект: помощник аналитика маркетплейса. Он считает показатели отчёта проверяемым кодом, а затем будет использовать RAG и локальную модель для объяснения результата.</p><h2 id="licenziya">Лицензия</h2><p>Исходный код проекта опубликован по лицензии <a href="LICENSE">MIT</a>. Модели, Ollama, Docker и сторонние библиотеки распространяются на собственных условиях и не включены в эту лицензию.</p></article><nav class="pager"><a class="next" href="roadmap.html"><span class="eyebrow">Дальше</span>Маршрут обучения</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

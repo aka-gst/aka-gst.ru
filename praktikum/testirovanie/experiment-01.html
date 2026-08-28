@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Эксперимент 1. Инвентаризация среды — Локальные AI-агенты, Git и DevOps</title>
+<meta name="description" content="Атомарная цель. Зафиксировать исходное состояние Windows, инструментов, локальных моделей и Git-репозитория без изменения файлов.">
+<meta property="og:title" content="Эксперимент 1. Инвентаризация среды — Локальные AI-агенты, Git и DevOps">
+<meta property="og:description" content="Атомарная цель. Зафиксировать исходное состояние Windows, инструментов, локальных моделей и Git-репозитория без изменения файлов.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/testirovanie/experiment-01.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/testirovanie/experiment-01.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Эксперимент 1. Инвентаризация среды", "description": "Атомарная цель. Зафиксировать исходное состояние Windows, инструментов, локальных моделей и Git-репозитория без изменения файлов.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Локальные AI-агенты, Git и DevOps"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Локальные AI-агенты, Git и DevOps</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 1 · 3 мин</p><h1>Эксперимент 1. Инвентаризация среды</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#chto-my-delaem-i-zachem">Что мы делаем и зачем</a></li><li><a href="#chto-dolzhno-byt-gotovo">Что должно быть готово</a></li><li><a href="#gde-vypolnyat">Где выполнять</a></li><li><a href="#scope">Scope</a></li><li><a href="#komandy-powershell">Команды PowerShell</a></li><li><a href="#kak-dei-stvovat-pri-zaprose-razresheniya">Как действовать при запросе разрешения</a></li><li><a href="#chto-dolzhno-poluchitsya">Что должно получиться</a></li><li><a href="#tipovye-oshibki-i-dei-stviya">Типовые ошибки и действия</a></li><li><a href="#artefakty-i-dokazatelstva">Артефакты и доказательства</a></li><li><a href="#kriterii-zaversheniya">Критерий завершения</a></li></ol></details><article><div class="callout"><p><strong>Атомарная цель. </strong>Зафиксировать исходное состояние Windows, инструментов, локальных моделей и Git-репозитория без изменения файлов.</p></div><h3 id="chto-my-delaem-i-zachem">Что мы делаем и зачем</h3><p>Инвентаризация нужна как точка отсчёта. Если дальнейший запуск упадёт, вы сможете отличить исходную проблему окружения от ошибки, появившейся после настройки. Здесь не исправляют найденные проблемы внутри того же шага: сначала сохраняют факты и классифицируют их.</p><h3 id="chto-dolzhno-byt-gotovo">Что должно быть готово</h3><ul><li>Codex CLI запускается из PowerShell.</li><li>Рабочая папка C:\dev\agent-lab существует.</li><li>Не требуется запускать Open-LLM-VTuber или менять conf.yaml.</li></ul><h3 id="gde-vypolnyat">Где выполнять</h3><p>Обычный PowerShell: C:\dev\agent-lab. Затем новая сессия Codex из этой же папки.</p><h3 id="scope">Scope</h3><div class="tablewrap"><table><thead><tr><th><strong>Разрешено</strong></th><th>Только действия, прямо указанные в prompt и командах этого эксперимента.</th></tr></thead><tbody><tr><td><strong>Запрещено</strong></td><td>Секреты, изменение main/upstream, расширение scope и скрытое исправление новых ошибок.</td></tr><tr><td><strong>Результат</strong></td><td>Артефакты и критерии на третьей странице эксперимента.</td></tr></tbody></table></div><p>Откройте Codex из папки, указанной на предыдущей странице. Для независимого аудита обязательно создайте новую сессию. Скопируйте следующий prompt целиком, не вырезая ограничения.</p><p class="note"><strong>PROMPT ДЛЯ CODEX - КОПИРОВАТЬ ЦЕЛИКОМ</strong></p><div class="callout"><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>Проведи read-only инвентаризацию среды C:\dev\agent-lab.
+
+Ничего не изменяй. Не читай и не выводи содержимое .env, токенов, SSH-ключей, cookies, keychain и других секретов. Не печатай персональные абсолютные пути; заменяй каталог пользователя на %USERPROFILE% или %LOCALAPPDATA%.
+
+Проверь реальные версии Git и uv, состояние GitHub CLI без значения token и scopes, список Ollama-моделей, найденные Git-репозитории и git status --short каждого из них. Если команда завершилась ошибкой, покажи exit code и классифицируй ошибку как environment, configuration, dependency или source.
+
+Ничего не исправляй в этом шаге. В конце создай компактную таблицу: проверка, фактический результат, PASS/FAIL, классификация. Подтверди, что файлы не изменялись.</code></pre></div></div><h3 id="komandy-powershell">Команды PowerShell</h3><p>Команды ниже нужны либо для ручного выполнения, либо для сверки предложения Codex. Строки после комментария «после подтверждения» не запускаются заранее.</p><p class="note"><strong>КОМАНДЫ - КОПИРОВАТЬ ПО ПОРЯДКУ</strong></p><div class="callout"><div class="snippet" data-lang="powershell"><div class="snippet-bar"><span class="snippet-lang">powershell</span></div><pre><code>Set-Location C:\dev\agent-lab
+git --version
+uv --version
+gh auth status
+ollama list
+Get-ChildItem -Directory -Force | Where-Object { Test-Path (Join-Path $_.FullName &#x27;.git&#x27;) }
+git -C .\Open-LLM-VTuber status --short</code></pre></div></div><h3 id="kak-dei-stvovat-pri-zaprose-razresheniya">Как действовать при запросе разрешения</h3><p>Прочитайте команду и рабочую папку; сразу сверьте их со scope этого эксперимента.</p><p>Для одной безопасной команды выберите разовое Yes, proceed.</p><p>Если команда читает секреты, пишет за пределами scope или меняет main - нажмите Esc и объясните ограничение.</p><h3 id="chto-dolzhno-poluchitsya">Что должно получиться</h3><ul><li>Git и uv печатают версии и exit code 0.</li><li>gh auth status сообщает успешный вход, но в отчёт не копируется строка Token.</li><li>ollama list показывает qwen3-vl:4b или честно фиксирует отсутствие модели.</li><li>git status --short не печатает строк для чистого рабочего дерева.</li></ul><h3 id="tipovye-oshibki-i-dei-stviya">Типовые ошибки и действия</h3><ul><li>orchestrator_helper_launch_failed: обновить Codex CLI и повторить минимальный Get-Location.</li><li>Invalid GitHub token: выполнить gh auth login в обычном PowerShell и повторить только проверку.</li><li>Ollama не может писать лог из sandbox: запустить ollama serve вне sandbox и разрешить агенту только ollama list.</li></ul><h3 id="artefakty-i-dokazatelstva">Артефакты и доказательства</h3><ul class="checklist"><li><label><input type="checkbox"><span>Таблица версий без персональных путей.</span></label></li><li><label><input type="checkbox"><span>Список локальных моделей.</span></label></li><li><label><input type="checkbox"><span>Состояние Git-репозитория.</span></label></li><li><label><input type="checkbox"><span>Классификация всех ошибок.</span></label></li></ul><h3 id="kriterii-zaversheniya">Критерий завершения</h3><ul class="checklist"><li><label><input type="checkbox"><span>Каждая команда имеет реальный вывод.</span></label></li><li><label><input type="checkbox"><span>Source tree не изменён.</span></label></li><li><label><input type="checkbox"><span>В отчёте нет token и персональных абсолютных путей.</span></label></li></ul><p class="note"><strong>ГОТОВАЯ ЗАПИСЬ В ОТЧЁТ</strong></p><div class="callout"><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>Эксперимент 1: Инвентаризация среды | Статус: PASS / FAIL / NOT PROVEN
+Доказательство: &lt;минимальный обезличенный вывод&gt; | Не доказано: &lt;ограничение&gt;
+Source tree: unchanged / &lt;известный diff&gt; | Следующий шаг: Если GitHub и Ollama исправны, перейти к безопасной подготовке fork и рабочей ветки.</code></pre></div></div></article><nav class="pager"><a class="prev" href="method.html"><span class="eyebrow">Назад</span>Метод и правила работы</a><a class="next" href="experiment-02.html"><span class="eyebrow">Дальше</span>Эксперимент 2. Fork, remotes и рабочая ветка</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>praktikum_codex_hermes_full_windows_macos_ru_v3.docx</code> · обновлён 2026-08-13 · <a href="https://github.com/aka-gst/agent-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

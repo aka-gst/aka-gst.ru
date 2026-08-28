@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' blob: data:; media-src blob: data:; connect-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta name="referrer" content="no-referrer">
+    <title>ФотоДата — изменение даты фото и видео</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+:root{--bg:#070709;--p:#111116;--c:#18181e;--l:#30303a;--t:#f5f5f7;--m:#92929e;--g:#55f58b;--v:#9a63ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 5% 0,#102019,transparent 28%),radial-gradient(circle at 95% 5%,#21132f,transparent 30%),var(--bg);color:var(--t);font-family:Segoe UI,Arial;min-height:100vh}button,input,select{font:inherit}.app{max-width:1450px;margin:auto;padding:0 28px}header{height:72px;display:flex;align-items:center;border-bottom:1px solid var(--l);font:700 19px Georgia;gap:10px}.logo{width:35px;height:35px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--v));color:#071009}.hero{padding:38px 0 28px;display:flex;justify-content:space-between;align-items:end;gap:20px}.hero h1{font:italic 400 clamp(34px,5vw,60px)/1.05 Georgia;margin:0;background:linear-gradient(90deg,var(--g),var(--v));background-clip:text;-webkit-background-clip:text;color:transparent}.add{border:1px solid #4a4a57;background:#17171c;color:white;padding:13px 18px;border-radius:10px;font-weight:700;cursor:pointer;white-space:nowrap}.layout{height:670px;display:grid;grid-template-columns:240px 1fr;background:#0e0e12;border:1px solid var(--l);border-radius:16px;overflow:hidden}.side{padding:18px 12px;border-right:1px solid var(--l);overflow:auto}.sideTitle{padding:0 9px 12px;color:#71717d;font-size:10px;font-weight:800;letter-spacing:.12em}.folder{width:100%;display:flex;gap:8px;align-items:center;border:0;background:none;color:#b6b6c0;padding:10px;border-radius:8px;text-align:left;cursor:pointer}.folder.active{background:linear-gradient(90deg,#1a2b20,#21172d);color:white;box-shadow:inset 2px 0 var(--g)}.folder b{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.folder i{font-style:normal;font-size:10px;color:#777785}.content{min-width:0;display:flex;flex-direction:column}.tools{height:70px;flex:none;padding:12px 20px;border-bottom:1px solid var(--l);display:flex;align-items:center;justify-content:space-between;gap:10px}.tools span{color:var(--m);font-size:11px}.controls{display:flex;gap:8px}.controls button,.controls select{border:1px solid #393945;background:#16161b;color:#ddd;padding:9px 11px;border-radius:8px;font-size:12px}.gallery{flex:1;min-height:0;overflow:auto;padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));grid-auto-rows:max-content;align-content:start;gap:12px}.empty{grid-column:1/-1;height:100%;min-height:480px;border:1px dashed #3b3b47;border-radius:12px;display:grid;place-items:center;text-align:center;color:var(--m);cursor:pointer}.empty h2{font:400 22px Georgia;color:white}.card{position:relative;border:1px solid #2d2d37;background:var(--c);border-radius:11px;overflow:hidden;cursor:pointer}.card.selected{border-color:var(--g);box-shadow:0 0 0 2px #55f58b45}.media{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#0b0b0e}.check{position:absolute;top:8px;left:8px;width:22px;height:22px;border:1px solid #ffffff70;background:#08080aaa;border-radius:6px;display:grid;place-items:center;color:transparent;z-index:2}.selected .check{background:linear-gradient(135deg,var(--g),var(--v));color:#071009;border:0}.full{position:absolute;right:8px;top:8px;width:28px;height:28px;border:1px solid #ffffff55;background:#08080acc;color:white;border-radius:7px;z-index:2}.meta{padding:10px}.meta b,.meta span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta b{font-size:11px}.meta span{margin-top:6px;color:var(--g);font-size:10px}.more{grid-column:1/-1;text-align:center;color:var(--m);padding:18px}.editor{position:sticky;bottom:10px;margin:18px 0 30px;background:#121217ef;border:1px solid #393945;border-radius:14px;padding:16px 19px;display:flex;justify-content:space-between;align-items:end;gap:15px;backdrop-filter:blur(15px)}.fields{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.field label{display:block;color:#80808c;font-size:9px;font-weight:800;letter-spacing:.1em;margin-bottom:6px}.field input{background:#09090c;border:1px solid #383844;color:white;color-scheme:dark;border-radius:8px;padding:10px}.field input[type=number]{width:75px}.primary{border:0;background:linear-gradient(100deg,var(--g),var(--v));color:#08090a;border-radius:8px;padding:11px 15px;font-weight:800}.primary:disabled{opacity:.35}.status{color:var(--m);font-size:11px;margin-bottom:7px;text-align:right}.viewer{display:none;position:fixed;inset:0;background:#050507ef;z-index:30;align-items:center;justify-content:center;padding:30px}.viewer.show{display:flex}.viewer img,.viewer video{max-width:94vw;max-height:88vh}.viewer button{position:absolute;right:20px;top:20px;border:1px solid #555;background:#17171d;color:white;width:40px;height:40px;border-radius:50%;font-size:22px}.notice{display:none;color:var(--g);font-size:12px;margin-top:8px}.notice.show{display:block}@media(max-width:750px){.app{padding:0 12px}.hero{align-items:start;flex-direction:column;padding-top:28px}.hero h1{font-size:39px}.layout{height:650px;grid-template-columns:1fr}.side{display:none}.tools{padding:10px}.gallery{padding:10px;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.meta{padding:8px}.editor{position:relative;bottom:auto;flex-direction:column;align-items:stretch}.status{text-align:left}.primary{width:100%}.add{width:100%}}
+</style>
+<style>
+.content{height:100%;min-height:0;overflow:hidden}.gallery{height:0;min-height:0;flex:1 1 auto;overflow-y:scroll!important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#654b8c #111116}.gallery::-webkit-scrollbar{width:10px}.gallery::-webkit-scrollbar-track{background:#111116}.gallery::-webkit-scrollbar-thumb{background:linear-gradient(#55f58b,#9a63ff);border-radius:10px;border:3px solid #111116}.side{height:100%;min-height:0;overflow-y:auto}
+</style>
+<style>
+.side{scrollbar-width:thin;scrollbar-color:#7250a0 #111116}.side::-webkit-scrollbar{width:10px}.side::-webkit-scrollbar-track{background:#111116}.side::-webkit-scrollbar-thumb{background:linear-gradient(#55f58b,#9a63ff);border-radius:10px;border:3px solid #111116}.side::-webkit-scrollbar-corner{background:#111116}
+</style>
+<style>
+/* Lightweight visual layer: hierarchy, workflow steps and responsive polish. */
+:root{--bg:#0b0d0c;--p:#111512;--c:#171b18;--l:#2b312d;--t:#f3f5f3;--m:#969d98;--g:#6ee7a0;--v:#a8b5ad}
+body{background:radial-gradient(circle at 12% -10%,#173024 0,transparent 32%),var(--bg);font-family:Inter,"Segoe UI",Arial,sans-serif}.app{max-width:1560px}.app-header{height:56px;font:700 16px Inter,"Segoe UI",Arial,sans-serif}.brand{display:flex;align-items:center;gap:10px;color:var(--t);text-decoration:none}.logo{width:32px;height:32px;background:var(--g);border-radius:10px;font-family:Georgia,serif}.home-link{display:flex;align-items:center;gap:7px;margin-left:18px;padding:7px 10px;border:1px solid var(--l);border-radius:9px;background:#151916;color:var(--t);font-size:11px;font-weight:700;text-decoration:none;transition:border-color .15s ease,background .15s ease}.home-link span{color:var(--g);font-size:15px}.home-link:hover{border-color:var(--g);background:#18231c}.privacy-note{margin-left:auto;color:var(--m);font-size:11px;font-weight:500;display:flex;align-items:center;gap:8px}.privacy-note i{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 0 4px #6ee7a018}
+.hero{padding:18px 0 14px;align-items:center}.eyebrow{margin:0 0 7px;color:var(--g);font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.hero h1{max-width:980px;font:500 clamp(30px,3.2vw,44px)/1.05 Inter,"Segoe UI",Arial,sans-serif;letter-spacing:-.045em;background:none;color:var(--t)}.hero-copy{margin:8px 0 0;color:var(--m);font-size:12px}.add{background:var(--g);border-color:var(--g);color:#07110b;box-shadow:0 8px 24px #6ee7a01c;transition:transform .15s ease,filter .15s ease}.add:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.steps{list-style:none;margin:0 0 12px;padding:0 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;color:#707872;font-size:11px}.steps li{display:flex;align-items:center;gap:8px;position:relative}.steps li:not(:last-child)::after{content:"";height:1px;background:var(--l);position:absolute;left:108px;right:10px}.steps b,.step-badge{width:24px;height:24px;border:1px solid var(--l);border-radius:50%;display:grid;place-items:center;font-size:10px}.steps .active{color:var(--t)}.steps .active b,.step-badge{background:#183324;border-color:#315b40;color:var(--g)}
+.capability-note{display:flex;align-items:center;gap:9px;margin:0 0 12px;padding:10px 13px;border:1px solid var(--l);border-radius:10px;background:#111512;color:var(--m);font-size:11px}.capability-note::before{content:"i";flex:none;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#1c3224;color:var(--g);font-weight:800}.capability-note strong{color:var(--t)}
+.notice.save-result{display:block;margin-top:12px;padding:12px 14px;border:1px solid #315b40;border-radius:10px;background:#132319;color:var(--m);line-height:1.5}.notice.save-result strong{display:block;color:var(--g);font-size:13px}.notice.save-result span{display:block;margin-top:2px}
+.drop-overlay{position:fixed;inset:14px;z-index:100;display:grid;place-items:center;border:2px dashed var(--g);border-radius:18px;background:#09110de8;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease}.drop-overlay.show{opacity:1;visibility:visible}.drop-overlay div{text-align:center}.drop-overlay b,.drop-overlay span{display:block}.drop-overlay b{font-size:22px}.drop-overlay span{margin-top:8px;color:var(--m);font-size:12px}
+.mobile-save-queue{margin:12px 0 30px;padding:18px;border:1px solid #315b40;border-radius:12px;background:#111a14;overflow:hidden}.mobile-save-queue[hidden]{display:none}.mobile-save-queue p{margin:5px 0 0;color:var(--m);font-size:12px}.mobile-save-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.mobile-save-heading button{flex:none;border:0;border-radius:9px;padding:10px 13px;background:var(--g);color:#07110b;font-weight:800}.mobile-save-list{display:grid;gap:8px;margin-top:14px}.mobile-save-item{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px;border-radius:9px;background:#0c110e}.mobile-save-item span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.mobile-save-item button{white-space:nowrap;border:1px solid #385342;border-radius:8px;padding:8px 12px;background:#19271e;color:var(--t);font-size:11px}.mobile-save-item.done{opacity:.6}
+.mobile-save-queue.attention{position:relative;border-color:var(--g);box-shadow:0 0 0 3px #6ee7a020;animation:saveQueuePulse .8s ease 2}.mobile-save-queue.attention::before{content:"↓ Сохраните подготовленные файлы";display:block;margin:-4px 0 12px;color:var(--g);font-size:12px;font-weight:800;text-align:center}@keyframes saveQueuePulse{50%{transform:translateY(3px);box-shadow:0 0 0 7px #6ee7a012}}
+.layout{height:max(620px,calc(100vh - 350px));max-height:820px;background:#0f1210;border-color:var(--l);border-radius:14px}.folder.active{background:#18231c;color:var(--t);box-shadow:inset 2px 0 var(--g)}.tools{height:64px}.controls button,.controls select{background:#151916;border-color:var(--l)}.empty{min-height:410px;background:#101311;border-color:#343b36}.empty h2{font-family:Inter,"Segoe UI",Arial,sans-serif;font-weight:600}.card{border-color:var(--l);transition:border-color .15s ease,transform .15s ease}.card:hover{transform:translateY(-2px);border-color:#465149}.selected .check,.primary{background:var(--g);color:#07110b}.card.selected{border-color:var(--g);box-shadow:0 0 0 2px #6ee7a02e}
+.controls .select-all{border-color:#315b40;background:#183324;color:var(--g);font-weight:700}
+.editor{position:relative;bottom:auto;z-index:1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:end;margin:12px 0 30px;background:#121613;border-color:#343b36;box-shadow:0 12px 30px #0003}.editor-heading{display:flex;align-items:center;gap:10px;padding-right:8px}.editor-heading strong,.editor-heading small{display:block}.editor-heading strong{font-size:13px}.editor-heading small{margin-top:3px;color:var(--m);font-size:10px}.field input{background:#0c0f0d;border-color:#343b36}.primary{border-radius:9px}.secondary-action,.copy-action{background:#263029;color:var(--t)}.save-group{min-width:590px;display:grid;grid-template-columns:auto auto auto;gap:8px}.save-group .status{grid-column:1/-1;text-align:right}.update-action-wrap{display:flex}.update-action-wrap[hidden]{display:none}.update-action-wrap #save{width:100%}.save-group #undo{border:1px solid #465149;background:#1a211c;color:var(--t);border-radius:9px;padding:11px 14px;font-weight:700}.save-group #undo:disabled{opacity:.4}
+@media(max-width:1100px){.editor{grid-template-columns:1fr auto}.editor-heading{grid-column:1/-1}.fields{min-width:0}.save-group{min-width:180px}.steps li:not(:last-child)::after{display:none}}
+@media(max-width:820px){.tools{height:auto;min-height:64px;align-items:flex-start}.controls{flex-wrap:wrap;justify-content:flex-end}.editor{grid-template-columns:1fr}.editor-heading{grid-column:auto}.save-group{width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}.save-group .status{text-align:left}.save-group #undo{display:none}.save-group #download{display:block;width:100%;min-width:0}}
+@media(min-width:1101px){body{height:100dvh;overflow:hidden}.app{height:100dvh;display:flex;flex-direction:column}.app-header{height:46px;flex:none}.hero{min-height:72px;flex:none;padding:9px 0 8px}.eyebrow{display:none}.hero h1{max-width:none;font-size:30px;line-height:1;letter-spacing:-.035em;white-space:nowrap}.hero-copy{margin-top:6px;font-size:11px}.add{padding:10px 15px}.notice{margin-top:5px}.steps{height:24px;flex:none;margin-bottom:6px;padding:0 8px}.steps b{width:20px;height:20px}.steps li:not(:last-child)::after{left:102px}.capability-note{min-height:32px;flex:none;margin-bottom:8px;padding:6px 10px}.layout{height:auto;min-height:0;max-height:none;flex:1 1 auto}.editor{flex:none;margin:8px 0 10px;padding:12px 16px}.gallery{min-height:0}.mobile-save-queue{flex:none;margin-bottom:10px}}
+@media(max-width:750px){body{height:auto;overflow:auto}.app{height:auto;display:block;max-width:1380px}.app-header{height:64px}.logo{width:35px;height:35px}.home-link{margin-left:auto;padding:7px 9px}.privacy-note{margin-left:12px;font-size:0}.hero{padding-top:22px}.hero h1{font-size:34px;white-space:normal}.hero-copy{font-size:12px}.steps{padding:0;grid-template-columns:repeat(4,1fr)}.steps li{justify-content:center}.steps span{display:none}.capability-note{line-height:1.45}.layout{height:610px;max-height:none}.layout.is-empty{height:230px}.layout.is-empty .tools{display:none}.layout.is-empty .empty{height:100%;min-height:0;padding:18px}.layout.is-empty .empty h2{margin:0;font-size:22px}.layout.is-empty .empty p{margin:8px 0 0;font-size:13px}.tools{display:grid;grid-template-columns:1fr}.controls{justify-content:flex-start}.controls select{width:100%}.controls .select-all{flex:1}.editor{display:flex;position:relative;bottom:auto}.editor-heading{width:100%}.fields{width:100%}.save-group{width:100%}.status{text-align:left}.mobile-save-heading{align-items:stretch;flex-direction:column}.mobile-save-heading button{width:100%}.mobile-save-item{display:block}.mobile-save-item span{display:block;width:100%}}
+.add-actions{display:flex;gap:8px}.add-video{display:none}@media(max-width:750px){.add-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.add-video{display:block}.add-actions .add{width:100%}.gallery{touch-action:pan-y;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch}.card{cursor:default}.card .media,.card .check{cursor:pointer}.check{padding:0}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.add,.card{transition:none}.mobile-save-queue.attention{animation:none}}
+</style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="app-header">
+        <a class="brand" href="#" aria-label="ФотоДата — на главную"><span class="logo" aria-hidden="true">Ф</span><span>ФотоДата</span></a>
+        <a class="home-link" href="https://aka-gst.ru/" aria-label="Вернуться на главную aka-gst.ru"><span aria-hidden="true">⌂</span> На главную</a>
+        <span class="privacy-note"><i></i> Обработка только на устройстве</span>
+      </header>
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Локальный редактор метаданных</p>
+          <h1 id="page-title">Меняйте дату съёмки сразу у группы файлов</h1>
+          <p class="hero-copy">Фото и видео обрабатываются в браузере и не покидают ваше устройство.</p>
+          <div class="notice" id="notice" role="status"></div>
+        </div>
+        <div class="add-actions"><button class="add" id="add">＋ Добавить папку</button><button class="add add-video" id="addVideo" hidden>＋ Выбрать видео</button></div>
+      </section>
+      <ol class="steps" aria-label="Порядок работы">
+        <li class="active"><b>1</b><span>Добавьте папку</span></li>
+        <li><b>2</b><span>Выберите файлы</span></li>
+        <li><b>3</b><span>Укажите дату</span></li>
+        <li><b>4</b><span>Сохраните</span></li>
+      </ol>
+      <div class="capability-note" id="capabilityNote" role="note"></div>
+      <section class="layout" aria-label="Файлы">
+        <aside class="side"><div class="sideTitle">ПАПКИ</div><div id="folders"></div></aside>
+        <div class="content">
+          <div class="tools">
+            <div><b id="title">Все файлы</b><br><span id="summary">Файлы не добавлены</span></div>
+            <div class="controls">
+              <select id="sort" aria-label="Сортировка файлов"><option value="old">Сначала старые</option><option value="new">Сначала новые</option><option value="name">По имени</option></select>
+              <button class="select-all" id="all">✓ Выбрать все фото</button><button id="none">Снять выбор</button>
+            </div>
+          </div>
+          <div class="gallery" id="gallery"></div>
+        </div>
+      </section>
+      <section class="editor" aria-label="Изменение даты">
+        <div class="editor-heading"><span class="step-badge">3</span><div><strong>Новая дата</strong><small>Применится к выбранным файлам</small></div></div>
+        <div class="fields">
+          <div class="field"><label for="date">ДАТА И ВРЕМЯ</label><input id="date" type="datetime-local" min="1900-01-01T00:00" max="9999-12-31T23:59"></div>
+          <div class="field"><label for="step">ИНТЕРВАЛ, МИН</label><input id="step" type="number" min="0" value="0"></div>
+          <button class="primary secondary-action" id="apply" disabled>Применить дату</button>
+        </div>
+        <div class="save-group"><div class="status" id="status">Ничего не выбрано</div><button class="primary copy-action" id="download" disabled>Скачать новые файлы</button><span class="update-action-wrap" id="updateActionWrap"><button class="primary" id="save" disabled>Обновить оригиналы</button></span></div>
+      </section>
+      <section class="mobile-save-queue" id="mobileSaveQueue" hidden aria-labelledby="mobileSaveTitle">
+        <div class="mobile-save-heading"><div><strong id="mobileSaveTitle">Сохраните подготовленные фотографии</strong><p>Открывайте системное меню для каждого файла и выбирайте место сохранения.</p></div><button id="mobileSaveNext">Открыть меню</button></div>
+        <div class="mobile-save-list" id="mobileSaveList"></div>
+      </section>
+    </main>
+    <input id="folderPick" type="file" webkitdirectory multiple hidden>
+    <input id="mediaPick" type="file" accept="image/*" multiple hidden>
+    <input id="videoPick" type="file" accept="video/*" multiple hidden>
+    <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Просмотр файла"><button aria-label="Закрыть">×</button><div></div></div>
+  <script>
+const P=[],mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent),$=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0'),fmt=d=>`${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`,exif=d=>`${d.getFullYear()}:${pad(d.getMonth()+1)}:${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;let folder='*',limit=30;const date=$('#date');date.value=new Date().toISOString().slice(0,16);function accepted(f){return f.type.startsWith('image/')||f.type.startsWith('video/')||/\.(jpe?g|heic|heif|png|webp|mp4|mov|m4v)$/i.test(f.name)}function addFiles(files){const list=[...files].filter(accepted);$('#notice').className='notice show';$('#notice').textContent=list.length?`Получено файлов: ${list.length}`:'Не удалось получить файлы';for(const f of list)P.push({id:crypto.randomUUID(),file:f,name:f.name,folder:f.webkitRelativePath?.split('/').slice(0,-1).join(' / ')||'Медиатека',date:new Date(f.lastModified||Date.now()),selected:false,url:null,handle:null});folder='*';limit=mobile?30:60;render();return list.length}async function walk(dir,path=''){for await(const [name,h] of dir.entries()){if(h.kind==='directory')await walk(h,path?path+' / '+name:name);else if(accepted({name,type:''})){const f=await h.getFile();P.push({id:crypto.randomUUID(),file:f,name,folder:path||dir.name,date:new Date(f.lastModified||Date.now()),selected:false,url:null,handle:h})}}}async function choose(){if(mobile){$('#notice').className='notice show';$('#notice').textContent='Для нескольких фото отметьте их в системном окне и нажмите «Готово»';$('#mediaPick').click();return}if(window.isSecureContext&&window.showDirectoryPicker){try{const d=await showDirectoryPicker({mode:'readwrite'});P.splice(0).forEach(x=>x.url&&URL.revokeObjectURL(x.url));await walk(d);folder='*';render()}catch(e){if(e.name!=='AbortError'){$('#notice').textContent='Не удалось открыть системный выбор папки. Используйте обычный выбор папки.';$('#folderPick').click()}}}else $('#folderPick').click()}$('#add').textContent=mobile?'＋ Выбрать фото':'＋ Добавить папку';$('#add').onclick=choose;$('#addVideo').hidden=!mobile;$('#addVideo').onclick=()=>$('#videoPick').click();function receivePickedFiles(input,emptyMessage){const n=addFiles(input.files);input.value='';$('#notice').textContent=n?`Добавлено в приложение: ${n}`:emptyMessage}$('#mediaPick').onchange=e=>receivePickedFiles(e.target,'Фотографии не были переданы браузеру');$('#videoPick').onchange=e=>receivePickedFiles(e.target,'Видео не были переданы браузеру');$('#folderPick').onchange=e=>{const n=addFiles(e.target.files);e.target.value='';$('#notice').textContent=n?`Добавлена папка: ${n} файлов`:'В выбранной папке нет поддерживаемых фото или видео'};
+function view(){let a=folder==='*'?P:P.filter(x=>x.folder===folder),s=$('#sort').value;return a.slice().sort((x,y)=>s==='name'?x.name.localeCompare(y.name,'ru',{numeric:true}):s==='new'?y.date-x.date:x.date-y.date)}function renderFolders(){const m=new Map;P.forEach(x=>m.set(x.folder,(m.get(x.folder)||0)+1));$('#folders').innerHTML='';for(const [name,n] of [['Все файлы',P.length],...m]){const b=document.createElement('button');b.className='folder '+((name==='Все файлы'&&folder==='*')||name===folder?'active':'');b.innerHTML=`<b></b><i>${n}</i>`;b.querySelector('b').textContent=name;b.onclick=()=>{folder=name==='Все файлы'?'*':name;limit=60;render()};$('#folders').append(b)}}function render(){renderFolders();const layout=$('.layout');layout.classList.toggle('is-empty',!P.length);const a=view(),shown=a.slice(0,limit),ids=new Set(shown.map(x=>x.id));P.forEach(x=>{if(x.url&&!ids.has(x.id)){URL.revokeObjectURL(x.url);x.url=null}});$('#title').textContent=folder==='*'?'Все файлы':folder;$('#summary').textContent=`${a.length} файлов · выбрано ${P.filter(x=>x.selected).length}`;const g=$('#gallery');g.innerHTML='';if(!P.length){g.innerHTML='<div class="empty"><div><h2>Выберите фото и видео</h2><p>Можно выбрать сразу несколько файлов</p></div></div>';g.querySelector('.empty').onclick=choose;return}for(const p of shown){if(!p.url)p.url=URL.createObjectURL(p.file);const video=p.file.type.startsWith('video/')||/\.(mp4|mov|m4v)$/i.test(p.name),c=document.createElement('article');c.className='card '+(p.selected?'selected':'');c.innerHTML=`<button class="check" aria-label="Выбрать файл">✓</button>${video?'<video class="media" muted preload="metadata">':'<img class="media" loading="lazy">'}<button class="full">⛶</button><div class="meta"><b></b><span></span></div>`;const toggle=e=>{e.stopPropagation();p.selected=!p.selected;c.classList.toggle('selected');updateSelection()};c.querySelector('.media').src=p.url;c.querySelector('.media').onclick=toggle;c.querySelector('.check').onclick=toggle;c.querySelector('b').textContent=p.name;c.querySelector('span').textContent=fmt(p.date);c.querySelector('.full').onclick=e=>{e.stopPropagation();openFull(p,video)};g.append(c)}if(shown.length<a.length){const d=document.createElement('div');d.className='more';d.textContent=`Листайте ниже — осталось ${a.length-shown.length}`;g.append(d)}}function updateSelection(){const n=P.filter(x=>x.selected).length;$('#status').textContent=n?`Выбрано: ${n}`:'Ничего не выбрано';$('#apply').disabled=$('#save').disabled=!n;$('#summary').textContent=`${view().length} файлов · выбрано ${n}`}$('#sort').onchange=render;$('#all').onclick=()=>{view().forEach(x=>x.selected=true);render();updateSelection()};$('#none').onclick=()=>{P.forEach(x=>x.selected=false);render();updateSelection()};$('#gallery').onscroll=()=>{const g=$('#gallery');if(g.scrollTop+g.clientHeight>g.scrollHeight-350&&limit<view().length){const y=g.scrollTop;limit+=30;render();g.scrollTop=y}};$('#apply').onclick=()=>{const y=date.value.slice(0,4);if(y.length!==4||+y>9999)return alert('Введите четырёхзначный год');const d=new Date(date.value),step=+$('#step').value||0;P.filter(x=>x.selected).forEach((x,i)=>x.date=new Date(d.getTime()+i*step*60000));render();updateSelection()};function openFull(p,v){$('#viewer div').innerHTML=v?`<video src="${p.url}" controls autoplay>`:`<img src="${p.url}">`;$('#viewer').classList.add('show')}$('#viewer button').onclick=()=>{$('#viewer').classList.remove('show');$('#viewer div').innerHTML=''};
+function exifSeg(d){const q=new TextEncoder().encode(exif(d)+'\0'),t=new Uint8Array(88),v=new DataView(t.buffer);t.set([73,73,42,0]);v.setUint32(4,8,true);v.setUint16(8,2,true);for(const [o,tag,type,count,val]of[[10,306,2,20,68],[22,34665,4,1,38],[40,36867,2,20,68],[52,36868,2,20,68]]){v.setUint16(o,tag,true);v.setUint16(o+2,type,true);v.setUint32(o+4,count,true);v.setUint32(o+8,val,true)}v.setUint16(38,2,true);t.set(q,68);const p=new Uint8Array(94);p.set([69,120,105,102,0,0]);p.set(t,6);const out=new Uint8Array(98);out.set([255,225]);new DataView(out.buffer).setUint16(2,96);out.set(p,4);return out}function jpegDate(buf,d){const a=new Uint8Array(buf),parts=[a.slice(0,2)];let i=2;while(i+4<a.length&&a[i]===255){const m=a[i+1];if(m===218||m===217)break;const n=(a[i+2]<<8)+a[i+3],e=i+2+n,x=m===225&&a[i+4]===69&&a[i+5]===120&&a[i+6]===105&&a[i+7]===102;if(!x)parts.push(a.slice(i,e));i=e}parts.push(exifSeg(d),a.slice(i));return new Blob(parts,{type:'image/jpeg'})}async function convert(f){const u=URL.createObjectURL(f),im=new Image;await new Promise((r,j)=>{im.onload=r;im.onerror=()=>j(Error('Формат не поддерживается'));im.src=u});const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext('2d').drawImage(im,0,0);URL.revokeObjectURL(u);return new Promise((r,j)=>c.toBlob(b=>b?r(b):j(Error('Ошибка конвертации')),'image/jpeg',.94))}async function changed(p){if(p.file.type==='image/jpeg'||/\.jpe?g$/i.test(p.name))return jpegDate(await p.file.arrayBuffer(),p.date);if(p.file.type.startsWith('image/')){const j=await convert(p.file);return jpegDate(await j.arrayBuffer(),p.date)}throw Error('Изменение видео временно недоступно в мобильном режиме')}$('#save').onclick=async()=>{const a=P.filter(x=>x.selected);$('#save').disabled=true;try{for(const p of a){const b=await changed(p);if(p.handle){const w=await p.handle.createWritable();await w.write(b);await w.close()}else{const link=document.createElement('a');link.href=URL.createObjectURL(b);link.download=p.name.replace(/\.[^.]+$/,'')+'_new-date.jpg';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),30000);await new Promise(r=>setTimeout(r,300))}}$('#notice').className='notice show';$('#notice').textContent=`Готово: ${a.length} файлов`}catch(e){$('#notice').className='notice show';$('#notice').textContent='Ошибка: '+e.message}updateSelection()};render();
+</script>
+<script>
+function patchVideo(src,d){const out=src.slice(),v=new DataView(out.buffer),sec=Math.floor(d.getTime()/1000)+2082844800;function scan(start,end){let pos=start;while(pos+8<=end){let size=v.getUint32(pos),head=8;if(size===1&&pos+16<=end){size=Number(v.getBigUint64(pos+8));head=16}if(size<8||pos+size>end)break;const type=String.fromCharCode(out[pos+4],out[pos+5],out[pos+6],out[pos+7]);if(type==='mvhd'||type==='mdhd'){const o=pos+head,ver=out[o];if(ver===0){v.setUint32(o+4,sec);v.setUint32(o+8,sec)}else if(ver===1){v.setBigUint64(o+4,BigInt(sec));v.setBigUint64(o+12,BigInt(sec))}}if(['moov','trak','mdia'].includes(type))scan(pos+head,pos+size);pos+=size}}scan(0,out.length);return new Blob([out],{type:'video/mp4'})}
+changed=async function(p){if(p.file.type.startsWith('video/')||/\.(mp4|mov|m4v)$/i.test(p.name))return patchVideo(new Uint8Array(await p.file.arrayBuffer()),p.date);if(p.file.type==='image/jpeg'||/\.jpe?g$/i.test(p.name))return jpegDate(await p.file.arrayBuffer(),p.date);if(p.file.type.startsWith('image/')){const j=await convert(p.file);return jpegDate(await j.arrayBuffer(),p.date)}throw Error('Формат не поддерживается')};
+</script>
+<script>
+/* Pure drag-and-drop helpers. Kept DOM-free so the exact browser logic is unit-testable. */
+globalThis.DropImportCore={
+  async requestAllHandles(transferItems){
+    const requests=Array.from(transferItems,transferItem=>
+      transferItem.getAsFileSystemHandle?transferItem.getAsFileSystemHandle():Promise.resolve(null)
+    );
+    const results=await Promise.allSettled(requests);
+    return results
+      .filter(result=>result.status==='fulfilled'&&result.value)
+      .map(result=>result.value);
+  },
+
+  mergeFiles(transferredFiles,handleFiles){
+    const unique=new Map();
+    for(const file of [...transferredFiles,...handleFiles]){
+      const key=`${file.name}\0${file.size}\0${file.lastModified}`;
+      if(!unique.has(key))unique.set(key,file);
+    }
+    return [...unique.values()];
+  },
+
+  placeInTemporaryFolder(items,firstNewItem,folderName='Временные файлы'){
+    const imported=items.slice(firstNewItem);
+    imported.forEach(item=>{item.folder=folderName});
+    return {folderName,count:imported.length,items:imported};
+  }
+};
+</script>
+<script>
+/* Import files and folders dragged from Finder without navigating away from the app. */
+const dropOverlay=document.createElement('div');
+dropOverlay.className='drop-overlay';
+dropOverlay.innerHTML='<div><b>Отпустите фото или папку</b><span>Файлы останутся на этом устройстве</span></div>';
+document.body.append(dropOverlay);
+
+let externalDragDepth=0;
+const isInternalPhotoDrag=event=>Array.from(event.dataTransfer?.types||[]).includes('application/x-photo-meta-ids');
+
+function readLegacyDirectory(reader){
+  return new Promise((resolve,reject)=>{
+    const entries=[];
+    const readBatch=()=>reader.readEntries(batch=>{
+      if(!batch.length){resolve(entries);return}
+      entries.push(...batch);readBatch();
+    },reject);
+    readBatch();
+  });
+}
+
+async function importLegacyEntry(entry,path=''){
+  if(entry.isDirectory){
+    const nextPath=path?`${path} / ${entry.name}`:entry.name;
+    const children=await readLegacyDirectory(entry.createReader());
+    for(const child of children)await importLegacyEntry(child,nextPath);
+    return;
+  }
+  if(!entry.isFile)return;
+  const file=await new Promise((resolve,reject)=>entry.file(resolve,reject));
+  if(!accepted(file))return;
+  P.push({id:crypto.randomUUID(),file,name:file.name,folder:path||'Медиатека',date:new Date(file.lastModified||Date.now()),selected:false,url:null,handle:null});
+}
+
+window.addEventListener('dragenter',event=>{
+  if(mobile||isInternalPhotoDrag(event))return;
+  event.preventDefault();
+  externalDragDepth++;
+  dropOverlay.classList.add('show');
+},{capture:true});
+
+window.addEventListener('dragover',event=>{
+  event.preventDefault();
+  if(event.dataTransfer&&!isInternalPhotoDrag(event))event.dataTransfer.dropEffect='copy';
+},{capture:true});
+
+window.addEventListener('dragleave',event=>{
+  if(mobile||isInternalPhotoDrag(event))return;
+  externalDragDepth=Math.max(0,externalDragDepth-1);
+  if(!externalDragDepth)dropOverlay.classList.remove('show');
+},{capture:true});
+
+window.addEventListener('drop',async event=>{
+  dropOverlay.classList.remove('show');externalDragDepth=0;
+  if(isInternalPhotoDrag(event))return;
+  event.preventDefault();event.stopPropagation();
+  if(mobile)return;
+
+  const transferItems=Array.from(event.dataTransfer?.items||[]);
+  /* Never invoke both directory APIs for the same DataTransferItem. Some Windows
+     Chromium builds can crash the renderer when both handles are requested. */
+  const useModernDrop=window.isSecureContext&&transferItems.some(item=>item.getAsFileSystemHandle);
+  // Legacy entries must be captured synchronously before DataTransfer expires.
+  const legacyEntries=useModernDrop?[]:transferItems.map(item=>item.webkitGetAsEntry?.()).filter(Boolean);
+  try{
+    const handles=useModernDrop?await DropImportCore.requestAllHandles(transferItems):[];
+
+    const directories=handles.filter(handle=>handle.kind==='directory');
+    if(directories.length){
+      P.splice(0).forEach(item=>item.url&&URL.revokeObjectURL(item.url));
+      for(const directory of directories){
+        if(directory.requestPermission)await directory.requestPermission({mode:'readwrite'});
+        await walk(directory,directory.name);
+      }
+      folder='*';limit=typeof SAFE_INITIAL_BATCH==='number'?SAFE_INITIAL_BATCH:4;
+      $('#notice').className='notice show';
+      $('#notice').textContent=`Добавлено из папки: ${P.length} файлов`;
+      render();return;
+    }
+
+    const legacyDirectories=legacyEntries.filter(entry=>entry.isDirectory);
+    if(legacyDirectories.length){
+      P.splice(0).forEach(item=>item.url&&URL.revokeObjectURL(item.url));
+      for(const directory of legacyDirectories)await importLegacyEntry(directory);
+      folder='*';limit=typeof SAFE_INITIAL_BATCH==='number'?SAFE_INITIAL_BATCH:4;
+      $('#notice').className='notice show';
+      $('#notice').textContent=`Добавлено из папки: ${P.length} файлов`;
+      render();return;
+    }
+
+    const transferredFiles=Array.from(event.dataTransfer?.files||[]);
+    const handleFiles=await Promise.all(handles.filter(handle=>handle.kind==='file').map(handle=>handle.getFile()));
+    const fileList=DropImportCore.mergeFiles(transferredFiles,handleFiles);
+    const firstNewItem=P.length;
+    const added=addFiles(fileList);
+    if(added){
+      const temporary=DropImportCore.placeInTemporaryFolder(P,firstNewItem);
+      folder=temporary.folderName;
+      render();
+      $('#notice').className='notice show';
+      $('#notice').textContent=`Во «Временные файлы» добавлено: ${added}`;
+    }
+    if(!added){
+      $('#notice').className='notice show';
+      $('#notice').textContent='Не найдено поддерживаемых фото или видео';
+    }
+  }catch(error){
+    $('#notice').className='notice show';
+    $('#notice').textContent='Не удалось добавить файлы: '+error.message;
+  }
+},{capture:true});
+</script>
+<script>
+/* Сохранение одним действием: применить дату → подтвердить → изменить оригиналы. */
+$('#save').onclick=async()=>{
+  const items=P.filter(item=>item.selected);
+  if(!items.length)return;
+  const year=date.value.slice(0,4),base=new Date(date.value),interval=Number($('#step').value)||0;
+  if(year.length!==4||Number(year)<1900||Number(year)>9999||Number.isNaN(base.getTime())){
+    alert('Укажите корректную дату с четырёхзначным годом от 1900 до 9999.');return;
+  }
+  const word=items.length===1?'файл':items.length<5?'файла':'файлов';
+  if(!confirm(`Вы уверены, что хотите изменить ${items.length} ${word}?`))return;
+  items.forEach((item,index)=>item.date=new Date(base.getTime()+index*interval*60000));
+  $('#save').disabled=true;$('#status').textContent='Сохраняю изменения…';
+  try{
+    for(const item of items){
+      const blob=await changed(item);
+      if(item.handle){
+        const writer=await item.handle.createWritable();await writer.write(blob);await writer.close();
+        if(item.url){URL.revokeObjectURL(item.url);item.url=null}item.file=await item.handle.getFile();
+      }else{
+        const link=document.createElement('a'),video=item.file.type.startsWith('video/')||/\.(mp4|mov|m4v)$/i.test(item.name),ext=video?(item.name.match(/\.[^.]+$/)?.[0]||'.mp4'):'.jpg';
+        link.href=URL.createObjectURL(blob);link.download=item.name.replace(/\.[^.]+$/,'')+'_new-date'+ext;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),30000);await new Promise(resolve=>setTimeout(resolve,300));
+      }
+    }
+    $('#notice').className='notice show';$('#notice').textContent=`Изменено: ${items.length} ${word}`;
+  }catch(error){$('#notice').className='notice show';$('#notice').textContent='Ошибка: '+error.message}
+  render();updateSelection();
+};
+</script>
+<script>
+/* Windows ожидает APP1/EXIF в начале JPEG, сразу после SOI. */
+jpegDate=function(buffer,newDate){
+  const source=new Uint8Array(buffer);
+  if(source[0]!==255||source[1]!==216)throw Error('Файл не является JPEG');
+  const parts=[source.slice(0,2),exifSeg(newDate)];
+  let position=2;
+  while(position+4<source.length&&source[position]===255){
+    const marker=source[position+1];
+    if(marker===218||marker===217)break;
+    const length=(source[position+2]<<8)+source[position+3],end=position+2+length;
+    if(end>source.length)break;
+    const oldExif=marker===225&&source[position+4]===69&&source[position+5]===120&&source[position+6]===105&&source[position+7]===102;
+    if(!oldExif)parts.push(source.slice(position,end));
+    position=end;
+  }
+  parts.push(source.slice(position));
+  return new Blob(parts,{type:'image/jpeg'});
+};
+</script>
+<script>
+/* Совместимость с Safari на локальном HTTP: randomUUID там недоступен. */
+if(!crypto.randomUUID){
+  crypto.randomUUID=function(){
+    const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
+    bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+    const hex=Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  };
+}
+</script>
+<script>
+/* iPhone: передаём готовые файлы в системное меню «Поделиться» → «Сохранить изображения». */
+const iosDevice=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/i.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+function crc32(bytes){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0)}return(crc^0xffffffff)>>>0}
+function dosDateTime(date=new Date()){const year=Math.max(1980,date.getFullYear()),time=(date.getHours()<<11)|(date.getMinutes()<<5)|(date.getSeconds()>>1),day=((year-1980)<<9)|((date.getMonth()+1)<<5)|date.getDate();return{time,day}}
+async function makeZip(files){
+  const encoder=new TextEncoder(),localParts=[],centralParts=[];let offset=0;
+  for(const file of files){
+    const name=encoder.encode(file.name),data=new Uint8Array(await file.arrayBuffer()),crc=crc32(data),{time,day}=dosDateTime();
+    const local=new Uint8Array(30+name.length),lv=new DataView(local.buffer);lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0x0800,true);lv.setUint16(10,time,true);lv.setUint16(12,day,true);lv.setUint32(14,crc,true);lv.setUint32(18,data.length,true);lv.setUint32(22,data.length,true);lv.setUint16(26,name.length,true);local.set(name,30);
+    const central=new Uint8Array(46+name.length),cv=new DataView(central.buffer);cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0x0800,true);cv.setUint16(12,time,true);cv.setUint16(14,day,true);cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,data.length,true);cv.setUint16(28,name.length,true);cv.setUint32(42,offset,true);central.set(name,46);
+    localParts.push(local,data);centralParts.push(central);offset+=local.length+data.length;
+  }
+  const centralSize=centralParts.reduce((sum,part)=>sum+part.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);ev.setUint32(12,centralSize,true);ev.setUint32(16,offset,true);
+  return new Blob([...localParts,...centralParts,end],{type:'application/zip'});
+}
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+const desktopSaveHandler=$('#save').onclick;
+$('#save').onclick=async()=>{
+  if(!mobile)return desktopSaveHandler();
+  const items=P.filter(item=>item.selected);if(!items.length)return;
+  const year=date.value.slice(0,4),base=new Date(date.value),interval=Number($('#step').value)||0;
+  if(year.length!==4||Number(year)<1900||Number(year)>9999||Number.isNaN(base.getTime()))return alert('Укажите корректную дату.');
+  if(!confirm(`Подготовить ${items.length} файлов для сохранения в медиатеку?`))return;
+  items.forEach((item,index)=>item.date=new Date(base.getTime()+index*interval*60000));
+  $('#save').disabled=true;$('#status').textContent='Подготавливаю файлы…';
+  try{
+    const shareFiles=[];
+    for(const item of items){
+      const blob=await changed(item),video=item.file.type.startsWith('video/')||/\.(mp4|mov|m4v)$/i.test(item.name),extension=video?(item.name.match(/\.[^.]+$/)?.[0]||'.mp4'):'.jpg';
+      shareFiles.push(new File([blob],item.name.replace(/\.[^.]+$/,'')+'_new-date'+extension,{type:blob.type||item.file.type}));
+    }
+    for(const item of items){if(item.url){URL.revokeObjectURL(item.url);item.url=null}}
+    render();
+    if(shareFiles.length>1&&iosDevice){
+      showMobileSaveQueue(shareFiles);
+      $('#notice').className='notice show';
+      $('#notice').textContent=`Подготовлено ${shareFiles.length} файлов — сохраните их по одному ниже`;
+    }else if(shareFiles.length>1){
+      const archive=await makeZip(shareFiles);downloadBlob(archive,`ФотоДата_${shareFiles.length}_файлов.zip`);
+      $('#notice').className='notice show';$('#notice').textContent=`Скачан ZIP-архив: ${shareFiles.length} файлов`;
+    }else if(iosDevice&&navigator.share&&(!navigator.canShare||navigator.canShare({files:shareFiles}))){
+      await navigator.share({files:shareFiles,title:'Multi Photo Change Date'});
+      $('#notice').className='notice show';$('#notice').textContent='В меню выберите «Сохранить изображения»';
+    }else{
+      for(const file of shareFiles)downloadBlob(file,file.name);
+      $('#notice').className='notice show';$('#notice').textContent='Файл сохранён в «Загрузки»';
+    }
+  }catch(error){if(error.name!=='AbortError'){ $('#notice').className='notice show';$('#notice').textContent='Ошибка: '+error.message }}
+  updateSelection();
+};
+
+function showMobileSaveQueue(files){
+  const queue=$('#mobileSaveQueue'),list=$('#mobileSaveList');
+  list.innerHTML='';queue.hidden=false;queue.classList.add('attention');
+  const downloadPreparedFile=file=>{
+    const url=URL.createObjectURL(file),link=document.createElement('a');
+    link.href=url;link.download=file.name;link.click();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+  };
+  const canShareFile=file=>iosDevice&&navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}));
+  const saveNext=$('#mobileSaveNext');let nextFileIndex=0;
+  const updateNextButton=()=>{
+    saveNext.disabled=nextFileIndex>=files.length;
+    saveNext.textContent=nextFileIndex>=files.length
+      ?(iosDevice?'Все меню открыты':'Все файлы скачаны')
+      :(iosDevice?`Открыть меню · ${nextFileIndex+1} из ${files.length}`:`Скачать файл · ${nextFileIndex+1} из ${files.length}`);
+  };
+  saveNext.onclick=()=>{
+    if(nextFileIndex>=files.length)return;
+    const currentIndex=nextFileIndex,file=files[currentIndex];
+    if(!canShareFile(file)){
+      downloadPreparedFile(file);list.children[currentIndex]?.classList.add('done');nextFileIndex++;updateNextButton();return;
+    }
+    /* Advance immediately: some iOS versions never resolve share() after Save Image. */
+    nextFileIndex++;updateNextButton();
+    navigator.share({files:[file],title:file.name}).then(()=>{
+      list.children[currentIndex]?.classList.add('done');
+    }).catch(error=>{
+      nextFileIndex=Math.min(nextFileIndex,currentIndex);updateNextButton();
+      if(error.name==='AbortError')return;
+      $('#notice').className='notice show';$('#notice').textContent='Не удалось передать файл: '+error.message;
+    });
+  };
+  updateNextButton();
+  files.forEach((file,index)=>{
+    const row=document.createElement('div');row.className='mobile-save-item';
+    const name=document.createElement('span');name.textContent=`${index+1}. ${file.name}`;
+    row.append(name);list.append(row);
+  });
+  queue.addEventListener('click',()=>queue.classList.remove('attention'),{once:true});
+  requestAnimationFrame(()=>{
+    queue.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+  });
+}
+</script>
+<script>
+/* Сохраняем исходную EXIF-ориентацию, чтобы фото не поворачивалось. */
+function readOrientation(source){
+  try{
+    const a=new Uint8Array(source),v=new DataView(source);let p=2;
+    while(p+12<a.length&&a[p]===255){const m=a[p+1],len=(a[p+2]<<8)+a[p+3];if(m===225&&a[p+4]===69&&a[p+5]===120&&a[p+6]===105&&a[p+7]===102){const t=p+10,little=a[t]===73,u16=o=>v.getUint16(o,little),u32=o=>v.getUint32(o,little),ifd=t+u32(t+4),count=u16(ifd);for(let i=0;i<count;i++){const e=ifd+2+i*12;if(u16(e)===274)return u16(e+8)}return 1}if(m===218||!len)break;p+=2+len}
+  }catch(_){return 1}return 1;
+}
+
+exifSeg=function(d,orientation=1){
+  const text=new TextEncoder().encode(exif(d)+'\0'),t=new Uint8Array(100),v=new DataView(t.buffer);
+  t.set([73,73,42,0]);v.setUint32(4,8,true);v.setUint16(8,3,true);
+  const entry=(o,tag,type,count,value)=>{v.setUint16(o,tag,true);v.setUint16(o+2,type,true);v.setUint32(o+4,count,true);if(type===3&&count===1)v.setUint16(o+8,value,true);else v.setUint32(o+8,value,true)};
+  entry(10,274,3,1,orientation);entry(22,306,2,20,80);entry(34,34665,4,1,50);v.setUint32(46,0,true);
+  v.setUint16(50,2,true);entry(52,36867,2,20,80);entry(64,36868,2,20,80);v.setUint32(76,0,true);t.set(text,80);
+  const payload=new Uint8Array(106);payload.set([69,120,105,102,0,0]);payload.set(t,6);const out=new Uint8Array(110);out.set([255,225]);new DataView(out.buffer).setUint16(2,108);out.set(payload,4);return out;
+};
+
+jpegDate=function(buffer,newDate){
+  const source=new Uint8Array(buffer),orientation=readOrientation(buffer);if(source[0]!==255||source[1]!==216)throw Error('Файл не является JPEG');
+  const parts=[source.slice(0,2),exifSeg(newDate,orientation)];let position=2;
+  while(position+4<source.length&&source[position]===255){const marker=source[position+1];if(marker===218||marker===217)break;const length=(source[position+2]<<8)+source[position+3],end=position+2+length;if(end>source.length)break;const oldExif=marker===225&&source[position+4]===69&&source[position+5]===120&&source[position+6]===105&&source[position+7]===102;if(!oldExif)parts.push(source.slice(position,end));position=end}
+  parts.push(source.slice(position));return new Blob(parts,{type:'image/jpeg'});
+};
+</script>
+<script>
+const intervalInput=$('#step');
+intervalInput.max='1000';
+intervalInput.addEventListener('input',()=>{
+  let value=Number(intervalInput.value);
+  if(value>1000)intervalInput.value='1000';
+  if(value<0)intervalInput.value='0';
+});
+intervalInput.addEventListener('focus',()=>{
+  if(intervalInput.value==='0')intervalInput.value='';
+});
+intervalInput.addEventListener('blur',()=>{
+  if(intervalInput.value==='')intervalInput.value='0';
+});
+const saveWithMobileCompletion=$('#save').onclick;
+$('#save').onclick=async()=>{
+  if(Number(intervalInput.value)>1000)intervalInput.value='1000';
+  /* superseded save-result wrapper
+  const noticeBefore=$('#notice').textContent;
+  const noticeBefore=$('#notice').textContent;
+  const noticeBefore=$('#notice').textContent;
+  await saveWithMobileCompletion();
+  const noticeAfter=$('#notice').textContent;
+  const saveSucceeded=noticeAfter!==noticeBefore&&noticeAfter&&!/Ошибка|РћС€РёР±РєР°/.test(noticeAfter);
+  if(saveSucceeded){P.forEach(item=>item.selected=false);render();updateSelection()}
+  const noticeAfter=$('#notice').textContent;
+  const saveSucceeded=noticeAfter!==noticeBefore&&noticeAfter&&!/Ошибка|РћС€РёР±РєР°/.test(noticeAfter);
+  if(saveSucceeded){P.forEach(item=>item.selected=false);render();updateSelection()}
+  const noticeAfter=$('#notice').textContent;
+  const saved=noticeAfter!==noticeBefore&&noticeAfter&&!noticeAfter.startsWith('Ошибка');
+  */
+  const finalNoticeBefore=$('#notice').textContent;
+  await saveWithMobileCompletion();
+  const finalNoticeAfter=$('#notice').textContent;
+  const saved=finalNoticeAfter!==finalNoticeBefore&&finalNoticeAfter&&!finalNoticeAfter.startsWith('\u041e\u0448\u0438\u0431\u043a\u0430');
+  if(saved){
+    P.forEach(item=>item.selected=false);
+    render();updateSelection();
+  }
+  if(mobile&&saved&&!finalNoticeAfter.startsWith('Подготовлено')){
+    $('#notice').className='notice show';
+    $('#notice').textContent='Готово';
+  }
+};
+async function readEmbeddedPhotoDate(file){
+  if(!/\.jpe?g$/i.test(file.name)&&file.type!=='image/jpeg')return null;
+  try{
+    const bytes=new Uint8Array(await file.slice(0,524288).arrayBuffer());
+    const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+    for(let marker=2;marker+12<bytes.length&&bytes[marker]===255;){
+      const type=bytes[marker+1];if(type===218||type===217)break;
+      const length=(bytes[marker+2]<<8)+bytes[marker+3],end=marker+2+length;
+      if(end>bytes.length||length<2)break;
+      const isExif=type===225&&bytes[marker+4]===69&&bytes[marker+5]===120&&bytes[marker+6]===105&&bytes[marker+7]===102;
+      if(isExif){
+        const tiff=marker+10,little=bytes[tiff]===73;
+        const u16=offset=>view.getUint16(offset,little),u32=offset=>view.getUint32(offset,little);
+        const readEntry=(ifd,tag)=>{const count=u16(ifd);for(let index=0;index<count;index++){const entry=ifd+2+index*12;if(entry+12>end)break;if(u16(entry)!==tag)continue;const size=u32(entry+4),offset=size<=4?entry+8:tiff+u32(entry+8);if(offset+Math.min(size,19)>end)return null;return String.fromCharCode(...bytes.subarray(offset,offset+Math.min(size-1,19)))}return null};
+        const ifd0=tiff+u32(tiff+4),entryCount=u16(ifd0);let exifIfd=null;
+        for(let index=0;index<entryCount;index++){const entry=ifd0+2+index*12;if(entry+12>end)break;if(u16(entry)===34665){exifIfd=tiff+u32(entry+8);break}}
+        const value=exifIfd&&readEntry(exifIfd,36867),match=value&&/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(value);
+        if(match){const [,year,month,day,hour,minute,second]=match.map(Number),dateValue=new Date(year,month-1,day,hour,minute,second);if(year>=1900&&month>=1&&month<=12&&day>=1&&day<=31&&!Number.isNaN(dateValue.getTime()))return dateValue}
+      }
+      marker=end;
+    }
+  }catch(error){}
+  return null;
+}
+async function refreshCurrentFolderDates(){
+  /* Read only the visible batch. Large Windows folders can otherwise crash the
+     renderer while previews and EXIF chunks are allocated at the same time. */
+  const items=view().slice(0,limit).filter(item=>!item.embeddedDateChecked);
+  let next=0;
+  async function worker(){
+    while(next<items.length){
+      const item=items[next++];
+      const embedded=await readEmbeddedPhotoDate(item.file);
+      if(embedded){item.date=embedded;item.dateSource='embedded'}
+      else item.dateSource='file-modified';
+      item.embeddedDateChecked=true;
+    }
+  }
+  /* Two readers keep peak memory low when a Windows folder contains large
+     phone/camera originals and Chrome already has many open tabs. */
+  await Promise.all(Array.from({length:Math.min(2,items.length)},worker));
+  if(items.length){const gallery=$('#gallery'),position=gallery.scrollTop;render();gallery.scrollTop=position}
+}
+const windowsDesktop=/Windows/i.test(navigator.userAgent);
+const SAFE_INITIAL_BATCH=windowsDesktop?4:60,SAFE_BATCH_INCREMENT=windowsDesktop?4:30;
+limit=SAFE_INITIAL_BATCH;
+$('#gallery').onscroll=()=>{
+  const gallery=$('#gallery');
+  if(gallery.scrollTop+gallery.clientHeight>gallery.scrollHeight-350&&limit<view().length){
+    const position=gallery.scrollTop;
+    limit+=SAFE_BATCH_INCREMENT;render();gallery.scrollTop=position;
+  }
+};
+/* Replace the original folder click (which requested 60 previews at once). */
+$('#folders').addEventListener('click',event=>{
+  const button=event.target.closest('.folder');if(!button)return;
+  event.preventDefault();event.stopPropagation();
+  const name=button.querySelector('b')?.textContent;
+  folder=name==='Все файлы'?'*':name;
+  limit=SAFE_INITIAL_BATCH;
+  render();$('#gallery').scrollTop=0;refreshCurrentFolderDates();
+},{capture:true});
+let metadataRefreshScheduled=false;
+new MutationObserver(()=>{
+  if(metadataRefreshScheduled||!P.some(item=>!item.embeddedDateChecked))return;
+  metadataRefreshScheduled=true;
+  queueMicrotask(async()=>{
+    try{await refreshCurrentFolderDates()}
+    finally{metadataRefreshScheduled=false}
+  });
+}).observe($('#gallery'),{childList:true});
+$('#folders').addEventListener('click',event=>{
+  if(!event.target.closest('.folder'))return;
+  const gallery=$('#gallery');
+  gallery.scrollTop=0;
+  requestAnimationFrame(()=>{gallery.scrollTop=0});
+  refreshCurrentFolderDates();
+});
+const moveDirectoryHandles=new Map();
+walk=async function(dir,path=''){
+  const currentPath=path||dir.name;
+  moveDirectoryHandles.set(currentPath,dir);
+  for await(const [name,handle] of dir.entries()){
+    if(handle.kind==='directory')await walk(handle,path?path+' / '+name:name);
+    else if(accepted({name,type:''})){
+      const file=await handle.getFile();
+      P.push({id:crypto.randomUUID(),file,name,folder:currentPath,date:new Date(file.lastModified||Date.now()),selected:false,url:null,handle,sourceDirectoryHandle:dir});
+    }
+  }
+};
+const renderBeforeMove=render;
+render=function(){
+  renderBeforeMove();
+  const visible=view().slice(0,limit),cards=$('#gallery').querySelectorAll('.card');
+  cards.forEach((card,index)=>{
+    const item=visible[index];
+    if(!item)return;
+    if(!mobile){
+      card.draggable=true;
+      card.dataset.photoId=item.id;
+      card.title='Перетащите фото на папку слева';
+    }
+    const dateLabel=card.querySelector('.meta span');
+    if(dateLabel&&item.embeddedDateChecked){
+      const prefix=item.dateSource==='embedded'?'Снято':'Изменено';
+      dateLabel.textContent=`${prefix} · ${fmt(item.date)}`;
+      dateLabel.title=item.dateSource==='embedded'?'Дата съёмки из метаданных фото':'EXIF-дата отсутствует; показана дата изменения файла';
+    }
+  });
+};
+let movingPhotoIds=[];
+$('#gallery').addEventListener('dragstart',event=>{
+  if(mobile)return;
+  const card=event.target.closest('.card');if(!card)return;
+  const dragged=P.find(item=>item.id===card.dataset.photoId);if(!dragged)return;
+  const group=dragged.selected?view().filter(item=>item.selected):[dragged];
+  movingPhotoIds=group.map(item=>item.id);
+  event.dataTransfer.effectAllowed='move';
+  event.dataTransfer.setData('application/x-photo-meta-ids',movingPhotoIds.join(','));
+  event.dataTransfer.setData('text/plain',`${group.length} photo files`);
+  card.classList.add('dragging');
+});
+$('#gallery').addEventListener('dragend',()=>{
+  movingPhotoIds=[];
+  document.querySelectorAll('.folder.move-target').forEach(button=>button.classList.remove('move-target'));
+  document.querySelectorAll('.card.dragging').forEach(card=>card.classList.remove('dragging'));
+});
+function moveTargetAt(event){
+  const button=document.elementFromPoint(event.clientX,event.clientY)?.closest('.folder');
+  if(!button)return null;
+  const path=button.querySelector('b')?.textContent;
+  return path&&moveDirectoryHandles.has(path)?{button,path,handle:moveDirectoryHandles.get(path)}:null;
+}
+window.addEventListener('dragover',event=>{
+  if(!movingPhotoIds.length)return;
+  document.querySelectorAll('.folder.move-target').forEach(button=>button.classList.remove('move-target'));
+  const target=moveTargetAt(event);
+  if(target){target.button.classList.add('move-target');event.dataTransfer.dropEffect='move'}
+},{capture:true});
+window.addEventListener('drop',async event=>{
+  if(!movingPhotoIds.length)return;
+  const ids=movingPhotoIds.slice();movingPhotoIds=[];
+  document.querySelectorAll('.folder.move-target').forEach(button=>button.classList.remove('move-target'));
+  const target=moveTargetAt(event);if(!target)return;
+  event.preventDefault();
+  const items=ids.map(id=>P.find(item=>item.id===id)).filter(item=>item&&item.folder!==target.path);
+  if(!items.length)return;
+  const word=items.length===1?'файл':'файлов';
+  if(!confirm(`Переместить ${items.length} ${word} в папку «${target.path}»?`))return;
+  try{
+    const movingNames=new Set();
+    for(const item of items){
+      if(movingNames.has(item.name))throw Error(`Среди выбранных есть несколько файлов с именем ${item.name}`);
+      movingNames.add(item.name);
+      if(!item.sourceDirectoryHandle)throw Error(`Нет доступа к исходной папке файла ${item.name}`);
+      try{await target.handle.getFileHandle(item.name);throw Error(`В папке «${target.path}» уже есть файл ${item.name}`)}catch(error){if(error.name!=='NotFoundError')throw error}
+    }
+    for(const item of items){
+      if(!item.sourceDirectoryHandle)throw Error(`Нет доступа к исходной папке файла ${item.name}`);
+      try{await target.handle.getFileHandle(item.name);throw Error(`В папке «${target.path}» уже есть файл ${item.name}`)}catch(error){if(error.name!=='NotFoundError')throw error}
+      const newHandle=await target.handle.getFileHandle(item.name,{create:true});
+      const writer=await newHandle.createWritable();await writer.write(item.file);await writer.close();
+      await item.sourceDirectoryHandle.removeEntry(item.name);
+      if(item.url){URL.revokeObjectURL(item.url);item.url=null}
+      item.handle=newHandle;item.sourceDirectoryHandle=target.handle;item.folder=target.path;item.file=await newHandle.getFile();item.selected=false;
+    }
+    $('#notice').className='notice show';$('#notice').textContent=`Перемещено: ${items.length} ${word}`;
+    render();updateSelection();
+  }catch(error){
+    $('#notice').className='notice show';$('#notice').textContent='Ошибка перемещения: '+error.message;
+    render();updateSelection();
+  }
+},{capture:true});
+const moveStyle=document.createElement('style');
+moveStyle.textContent='.card[draggable=true]{cursor:grab}.card.dragging{opacity:.45}.folder.move-target{outline:2px solid var(--g);background:linear-gradient(90deg,#183a25,#302047)!important}';
+document.head.append(moveStyle);
+render();
+const undoHistory=[];
+const undoButton=document.createElement('button');
+undoButton.id='undo';undoButton.textContent='↶ Отменить действие';undoButton.disabled=true;undoButton.hidden=mobile;
+$('#download').before(undoButton);
+function updateUndoButton(){
+  undoButton.disabled=!undoHistory.length;
+  undoButton.textContent=undoHistory.length?`↶ Отменить действие · ${undoHistory.length}`:'↶ Отменить действие';
+  undoButton.title=undoHistory.length?`Сохранено действий: ${undoHistory.length} из 3`:'Нет действий для отмены';
+}
+function rememberUndo(action){undoHistory.push(action);if(undoHistory.length>3)undoHistory.shift();updateUndoButton()}
+const applyBeforeUndo=$('#apply').onclick;
+$('#apply').onclick=event=>{
+  const selected=P.filter(item=>item.selected);
+  const enteredYear=date.value.slice(0,4),enteredDate=new Date(date.value);
+  if(enteredYear.length!==4||Number(enteredYear)>9999||Number.isNaN(enteredDate.getTime()))return applyBeforeUndo.call($('#apply'),event);
+  selected.forEach(item=>{if(!item.savedDate)item.savedDate=new Date(item.date)});
+  const result=applyBeforeUndo.call($('#apply'),event);
+  if(selected.length){
+    const originalsAvailable=selected.every(item=>item.handle);
+    $('#apply').disabled=true;
+    $('#notice').className='notice show save-result';
+    $('#notice').innerHTML=originalsAvailable
+      ? `<strong>Новая дата применена к выбранным: ${selected.length}</strong><span>Теперь можно скачать новые файлы или обновить выбранные оригиналы.</span>`
+      : `<strong>Новая дата применена к выбранным: ${selected.length}</strong><span>Оригиналы недоступны для записи — скачайте новые файлы с изменённой датой.</span>`;
+  }
+  return result;
+};
+const enableApplyAfterDateChange=()=>{$('#apply').disabled=!P.some(item=>item.selected)};
+date.addEventListener('input',enableApplyAfterDateChange);
+intervalInput.addEventListener('input',enableApplyAfterDateChange);
+const saveBeforeUndo=$('#save').onclick;
+$('#save').onclick=async event=>{
+  const selected=P.filter(item=>item.selected),canUndo=selected.length&&selected.every(item=>item.handle);
+  const records=canUndo?selected.map(item=>({item,date:new Date(item.savedDate||item.date)})):[];
+  let confirmed=false;const nativeConfirm=window.confirm;
+  window.confirm=(...args)=>{const result=nativeConfirm.apply(window,args);if(result)confirmed=true;return result};
+  try{await saveBeforeUndo.call($('#save'),event)}finally{window.confirm=nativeConfirm}
+  const failed=$('#notice').textContent.startsWith('\u041e\u0448\u0438\u0431\u043a\u0430');
+  if(confirmed&&records.length&&!failed){
+    records.forEach(({item})=>{item.savedDate=new Date(item.date);item.selected=false});
+    rememberUndo({type:'dates',records});render();updateSelection();
+  }
+};
+let pendingMoveUndo=null;
+$('#gallery').addEventListener('dragstart',()=>{
+  queueMicrotask(()=>{pendingMoveUndo=movingPhotoIds.map(id=>P.find(item=>item.id===id)).filter(Boolean).map(item=>({item,folder:item.folder,directory:item.sourceDirectoryHandle}))});
+});
+window.addEventListener('drop',()=>{
+  if(!pendingMoveUndo?.length)return;
+  const records=pendingMoveUndo;pendingMoveUndo=null;let attempts=0;
+  const detectMove=()=>{
+    const moved=records.filter(record=>record.item.folder!==record.folder);
+    const finished=moved.length===records.length||$('#notice').textContent.startsWith('\u041e\u0448\u0431\u043a\u0430');
+    if(finished){if(moved.length)rememberUndo({type:'move',records:moved});return}
+    if(++attempts<600)setTimeout(detectMove,100);
+  };
+  setTimeout(detectMove,100);
+},{capture:true});
+async function undoDates(action){
+  for(const record of action.records){
+    const {item}=record;if(!item.handle)throw Error(`Нет доступа к оригиналу ${item.name}`);
+    item.date=new Date(record.date);const blob=await changed(item),writer=await item.handle.createWritable();
+    await writer.write(blob);await writer.close();
+    if(item.url){URL.revokeObjectURL(item.url);item.url=null}item.file=await item.handle.getFile();item.savedDate=new Date(record.date);item.selected=false;
+  }
+}
+async function undoMove(action){
+  for(const {item,directory} of action.records){
+    if(!directory||!item.sourceDirectoryHandle)throw Error(`Нет доступа к папке файла ${item.name}`);
+    try{await directory.getFileHandle(item.name);throw Error(`В исходной папке уже есть файл ${item.name}`)}catch(error){if(error.name!=='NotFoundError')throw error}
+  }
+  for(const record of action.records){
+    const {item,directory,folder:oldFolder}=record,currentDirectory=item.sourceDirectoryHandle;
+    const oldHandle=await directory.getFileHandle(item.name,{create:true}),writer=await oldHandle.createWritable();
+    await writer.write(item.file);await writer.close();await currentDirectory.removeEntry(item.name);
+    if(item.url){URL.revokeObjectURL(item.url);item.url=null}
+    item.handle=oldHandle;item.sourceDirectoryHandle=directory;item.folder=oldFolder;item.file=await oldHandle.getFile();item.selected=false;
+  }
+}
+undoButton.onclick=async()=>{
+  const action=undoHistory.at(-1);if(!action)return;
+  const label=action.type==='dates'?'вернуть прежние даты':'вернуть файлы в прошлую папку';
+  if(!confirm(`Вы уверены, что хотите ${label} для ${action.records.length} файлов?`))return;
+  undoButton.disabled=true;
+  try{
+    if(action.type==='dates')await undoDates(action);else await undoMove(action);
+    undoHistory.pop();$('#notice').className='notice show';$('#notice').textContent=`Действие отменено: ${action.records.length} файлов`;render();updateSelection();
+  }catch(error){$('#notice').className='notice show';$('#notice').textContent='Ошибка возврата: '+error.message}
+  updateUndoButton();
+};
+$('#viewer').addEventListener('click',()=>{
+  $('#viewer').classList.remove('show');
+  $('#viewer div').innerHTML='';
+});
+</script>
+<script>
+/* Explain browser capabilities and make the save action predictable. */
+const capabilityNote=$('#capabilityNote');
+
+/* Safari restores the previous scroll position after reload unless disabled. */
+if('scrollRestoration' in history)history.scrollRestoration='manual';
+window.addEventListener('pageshow',()=>{
+  scrollTo({top:0,left:0,behavior:'auto'});
+  const gallery=$('#gallery');
+  if(gallery)gallery.scrollTop=0;
+  requestAnimationFrame(()=>scrollTo(0,0));
+});
+
+function currentSaveMode(){
+  const selected=P.filter(item=>item.selected);
+  if(mobile)return 'mobile-copy';
+  if(selected.length&&selected.every(item=>item.handle))return 'originals';
+  return window.isSecureContext&&window.showDirectoryPicker?'folder':'download-copy';
+}
+
+function updateModeGuidance(){
+  const mode=currentSaveMode(),selectedCount=P.filter(item=>item.selected).length;
+  if(mode==='mobile-copy'){
+    capabilityNote.innerHTML='<strong>Телефон:</strong> дата изменится в новых копиях. Затем откроется системное меню сохранения.';
+  }else if(mode==='originals'){
+    capabilityNote.innerHTML='<strong>Папка с доступом:</strong> выбранные оригиналы будут изменены после подтверждения.';
+  }else if(mode==='folder'){
+    capabilityNote.innerHTML='<strong>Компьютер:</strong> добавьте папку и разрешите запись, чтобы менять оригиналы.';
+  }else{
+    capabilityNote.innerHTML='<strong>Ограниченный режим:</strong> браузер сохранит изменённые копии в «Загрузки».';
+  }
+
+  const downloadButton=$('#download'),updateButton=$('#save'),updateWrap=$('#updateActionWrap');
+  const directWriteSupported=window.isSecureContext&&Boolean(window.showDirectoryPicker);
+  const selectedWritable=Boolean(selectedCount)&&P.filter(item=>item.selected).every(item=>item.handle);
+  const updateAvailable=directWriteSupported&&selectedWritable;
+  downloadButton.disabled=!selectedCount;
+  downloadButton.textContent=mobile?`Сохранить новые файлы${selectedCount?' · '+selectedCount:''}`:`Скачать новые файлы${selectedCount?' · '+selectedCount:''}`;
+  updateWrap.hidden=mobile;
+  updateButton.disabled=!selectedCount||!updateAvailable;
+  updateButton.textContent=selectedCount?`Обновить оригиналы · ${selectedCount}`:'Обновить оригиналы';
+  const unavailableReason=!selectedCount?'Сначала выберите фотографии'
+    :!window.isSecureContext?'Недоступно по обычному HTTP. Откройте через localhost на этом компьютере или через HTTPS.'
+    :!window.showDirectoryPicker?'Этот браузер не поддерживает обновление оригиналов. Используйте Chrome или Edge.'
+    :!selectedWritable?'Заново добавьте папку и разрешите браузеру запись в оригиналы.'
+    :'Изменить оригиналы в выбранной папке';
+  updateWrap.title=unavailableReason;updateButton.title=unavailableReason;
+}
+
+const updateSelectionBeforeGuidance=updateSelection;
+updateSelection=function(){
+  updateSelectionBeforeGuidance();
+  updateModeGuidance();
+};
+
+new MutationObserver(updateModeGuidance).observe($('#gallery'),{childList:true});
+updateModeGuidance();
+
+/* Verify the JPEG produced by the metadata writer before it is saved or shared. */
+const changedBeforeResultVerification=changed;
+changed=async function(item){
+  const blob=await changedBeforeResultVerification(item);
+  const isJpeg=blob.type==='image/jpeg'||/\.jpe?g$/i.test(item.name);
+  if(isJpeg){
+    const verificationFile=new File([blob],item.name,{type:'image/jpeg'});
+    const writtenDate=await readEmbeddedPhotoDate(verificationFile);
+    item.lastWriteVerified=Boolean(writtenDate&&Math.abs(writtenDate-item.date)<1000);
+  }else item.lastWriteVerified=null;
+  return blob;
+};
+
+const saveBeforeResultMessage=$('#save').onclick;
+$('#save').onclick=async event=>{
+  const items=P.filter(item=>item.selected),mode=currentSaveMode();
+  if(!items.length)return saveBeforeResultMessage.call($('#save'),event);
+  items.forEach(item=>{item.lastWriteVerified=undefined});
+  const noticeBefore=$('#notice').textContent;
+  await saveBeforeResultMessage.call($('#save'),event);
+  const notice=$('#notice'),failed=notice.textContent.startsWith('Ошибка');
+  const completed=notice.textContent!==noticeBefore&&!failed;
+  if(!completed)return;
+
+  const verified=items.filter(item=>item.lastWriteVerified===true).length;
+  const unsupported=items.filter(item=>item.lastWriteVerified===null).length;
+  const firstDate=items[0]?.date;
+  const dateRange=items.length>1&&items.at(-1)?.date-firstDate
+    ? `${fmt(firstDate)} — ${fmt(items.at(-1).date)}`
+    : fmt(firstDate);
+  const preparedForMobile=mode==='mobile-copy'&&notice.textContent.startsWith('Подготовлено');
+  const modeText=mode==='originals'
+    ? 'Оригиналы обновлены. Дата изменения Finder может стать сегодняшней.'
+    : preparedForMobile?'Файлы подготовлены. Для каждого откройте системное меню ниже и выберите место сохранения.'
+    : 'Созданы новые копии. Даты «Создан» и «Изменён» в Finder будут сегодняшними.';
+  const verificationText=verified
+    ? `EXIF проверен в ${verified} из ${items.length} файлов.`
+    : unsupported===items.length?'Для видео дата записана без перекодирования.':'Проверьте EXIF готового файла.';
+
+  notice.className='notice show save-result';
+  notice.innerHTML=`<strong>Дата съёмки установлена: ${dateRange}</strong><span>${verificationText} ${modeText}</span>`;
+};
+
+/* Copies and originals are separate, explicit actions. */
+const updateOriginalsHandler=$('#save').onclick;
+$('#save').onclick=async event=>{
+  const selected=P.filter(item=>item.selected);
+  if(!selected.length||!selected.every(item=>item.handle)){
+    const message='Нет доступа к оригиналам. Откройте приложение через localhost на этом компьютере, заново нажмите «Добавить папку» и разрешите запись.';
+    $('#notice').className='notice show';
+    $('#notice').textContent=message;
+    alert(message);
+    return;
+  }
+  const noticeBeforeUpdate=$('#notice').textContent;
+  await updateOriginalsHandler.call($('#save'),event);
+  if($('#notice').textContent===noticeBeforeUpdate||$('#notice').textContent.startsWith('Ошибка'))return;
+  const failed=[];
+  for(const item of selected){
+    try{
+      const writtenFile=await item.handle.getFile(),writtenDate=await readEmbeddedPhotoDate(writtenFile);
+      item.file=writtenFile;
+      if(!writtenDate||Math.abs(writtenDate-item.date)>=1000)failed.push(item.name);
+    }catch(error){failed.push(item.name)}
+  }
+  if(failed.length){
+    const message=`Не удалось подтвердить дату съёмки в оригиналах: ${failed.length}. Оригиналы не считаются обновлёнными.`;
+    $('#notice').className='notice show';$('#notice').textContent=message;alert(message);return;
+  }
+  $('#notice').className='notice show save-result';
+  $('#notice').innerHTML=`<strong>Оригиналы обновлены: ${selected.length}</strong><span>Дата съёмки записана и повторно проверена в каждом файле.</span>`;
+  selected.forEach(item=>{item.selected=false});
+  render();updateSelection();
+};
+
+async function downloadSelectedCopies(){
+  const items=P.filter(item=>item.selected);if(!items.length)return;
+  const year=date.value.slice(0,4),base=new Date(date.value),interval=Number($('#step').value)||0;
+  if(year.length!==4||Number(year)<1900||Number(year)>9999||Number.isNaN(base.getTime()))return alert('Укажите корректную дату.');
+  if(!confirm(`Создать новые файлы для выбранных: ${items.length}?`))return;
+  items.forEach((item,index)=>item.date=new Date(base.getTime()+index*interval*60000));
+  const button=$('#download');button.disabled=true;$('#status').textContent='Подготавливаю новые файлы…';
+  try{
+    for(const item of items){
+      const blob=await changed(item),video=item.file.type.startsWith('video/')||/\.(mp4|mov|m4v)$/i.test(item.name),extension=video?(item.name.match(/\.[^.]+$/)?.[0]||'.mp4'):'.jpg';
+      const url=URL.createObjectURL(blob),link=document.createElement('a');
+      link.href=url;link.download=item.name.replace(/\.[^.]+$/,'')+'_new-date'+extension;link.click();
+      setTimeout(()=>URL.revokeObjectURL(url),30000);await new Promise(resolve=>setTimeout(resolve,300));
+    }
+    $('#notice').className='notice show save-result';
+    $('#notice').innerHTML=`<strong>Подготовлено новых файлов: ${items.length}</strong><span>Оригиналы не изменены. Файлы сохранены через браузер.</span>`;
+  }catch(error){$('#notice').className='notice show';$('#notice').textContent='Ошибка: '+error.message}
+  updateSelection();
+}
+
+const mobileCopyHandler=updateOriginalsHandler;
+$('#download').onclick=()=>mobile?mobileCopyHandler.call($('#save')):downloadSelectedCopies();
+updateModeGuidance();
+</script>
+  </body>
+</html>

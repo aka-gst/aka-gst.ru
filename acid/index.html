@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#08070d">
+
+  <title>ACID UNO</title>
+
+    
+  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="effects.css?v=10">
+  <link rel="stylesheet" href="v9.1.css?v=10">
+  
+</head>
+
+
+<body>
+
+<div id="game">
+
+  <!-- ======================================
+       BACKGROUND
+  ======================================= -->
+
+  <div class="ambient ambientPurple"></div>
+  <div class="ambient ambientGreen"></div>
+  <div class="noise"></div>
+
+
+  <!-- ======================================
+       TOP BAR
+  ======================================= -->
+
+  <header class="topbar">
+
+    <div class="logo">
+      <span class="logoAcid">ACID</span>
+      <span class="logoUno">UNO</span>
+    </div>
+
+
+    <div
+      id="penalty"
+      class="penalty hidden"
+    >
+      ШТРАФ +2
+    </div>
+
+
+    <button
+      id="restart"
+      class="iconButton"
+      aria-label="Начать заново"
+    >
+      ↻
+    </button>
+
+  </header>
+
+
+  <!-- ======================================
+       BOT
+  ======================================= -->
+
+  <section
+    id="bot"
+    class="playerZone botZone"
+  >
+
+    <div
+      id="botTurnGlow"
+      class="turnGlow"
+    ></div>
+
+
+    <div class="botTitle">
+
+      <div class="botAvatar">
+        <span>🤖</span>
+      </div>
+
+      <div class="botInfo">
+
+        <strong>
+          ACID BOT
+        </strong>
+
+        <div id="botCount">
+          7 КАРТ
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="botCards"
+      class="botCards"
+    ></div>
+
+  </section>
+
+
+  <!-- ======================================
+       TABLE
+  ======================================= -->
+
+  <main id="table">
+
+    <div class="tableOuterGlow"></div>
+
+    <div class="tableInner">
+
+      <div class="tableGrid"></div>
+
+      <div class="tableLogo">
+        ACID
+      </div>
+
+
+      <!-- DECK + DISCARD -->
+
+      <div id="center">
+
+        <div class="deckArea">
+
+          <button
+            id="deck"
+            aria-label="Взять карту"
+          >
+
+            <div class="deckBack">
+
+              <span class="deckAcid">
+                ACID
+              </span>
+
+              <span class="deckUno">
+                UNO
+              </span>
+
+            </div>
+
+          </button>
+
+          <div id="deckCount">
+            0 КАРТ
+          </div>
+
+        </div>
+
+
+        <div
+          id="discard"
+          class="discardPile"
+        ></div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ======================================
+       ACTION / STATUS
+  ======================================= -->
+
+  <section class="actionHUD">
+
+    <div
+      id="actionIcon"
+      class="actionIcon hidden"
+    ></div>
+
+
+    <div
+      id="status"
+      class="status"
+    >
+      ТВОЙ ХОД
+    </div>
+
+
+    <div
+      id="currentColor"
+      class="currentColor"
+    >
+
+      <span>
+        ЦВЕТ
+      </span>
+
+      <i
+        id="currentColorDot"
+        class="colorDot"
+      ></i>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================
+       PLAYER
+  ======================================= -->
+
+  <section
+    id="playerArea"
+    class="playerZone playerZoneBottom"
+  >
+
+    <div
+      id="playerTurnGlow"
+      class="turnGlow active"
+    ></div>
+
+
+    <div
+      id="hand"
+      class="hand"
+    ></div>
+
+
+    <div class="playerHUD">
+
+      <span class="youLabel">
+        ТЫ
+      </span>
+
+      <span id="playerCount">
+        7 КАРТ
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================
+       ANIMATION LAYER
+
+       Все летающие карты создаются здесь.
+       Он расположен поверх всей игры.
+  ======================================= -->
+
+  <div
+    id="animationLayer"
+    class="animationLayer"
+  ></div>
+
+
+  <!-- ======================================
+       SCREEN FX
+  ======================================= -->
+
+  <div
+    id="screenFlash"
+    class="screenFlash"
+  ></div>
+
+
+  <div
+    id="impactRing"
+    class="impactRing hidden"
+  ></div>
+
+
+  <!-- ======================================
+       BIG ACTION TEXT
+  ======================================= -->
+
+  <div
+    id="actionBanner"
+    class="actionBanner hidden"
+  >
+
+    <div
+      id="actionBannerIcon"
+      class="actionBannerIcon"
+    >
+      ✋
+    </div>
+
+    <div
+      id="actionBannerText"
+      class="actionBannerText"
+    >
+      ПЕРЕХВАТ
+    </div>
+
+  </div>
+
+
+
+
+<!-- ========================================
+     COLOR PICKER
+========================================= -->
+
+<div
+  id="colorPicker"
+  class="overlay hidden"
+>
+
+  <div class="window colorWindow">
+
+    <div class="windowEyebrow">
+      WILD
+    </div>
+
+    <h2>
+      ВЫБЕРИ ЦВЕТ
+    </h2>
+
+
+    <div class="colors">
+
+      <button
+        class="pick red"
+        data-color="red"
+        aria-label="Красный"
+      >
+        <span></span>
+      </button>
+
+
+      <button
+        class="pick yellow"
+        data-color="yellow"
+        aria-label="Жёлтый"
+      >
+        <span></span>
+      </button>
+
+
+      <button
+        class="pick green"
+        data-color="green"
+        aria-label="Зелёный"
+      >
+        <span></span>
+      </button>
+
+
+      <button
+        class="pick blue"
+        data-color="blue"
+        aria-label="Синий"
+      >
+        <span></span>
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================
+     END SCREEN
+========================================= -->
+
+<div
+  id="endScreen"
+  class="overlay hidden"
+>
+
+  <div class="window endWindow">
+
+    <div class="endAcid">
+      ACID UNO
+    </div>
+
+
+    <h1 id="endText">
+      ТЫ ВЫИГРАЛ
+    </h1>
+
+
+    <div class="endLine"></div>
+
+
+    <button id="again">
+      ЕЩЁ РАЗ
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================
+     JS
+
+     animations.js обязательно идёт первым.
+========================================= -->
+
+<script src="animations.js?v=10"></script>
+<script src="game.js?v=10"></script>
+<script src="v9.1.js?v=10"></script>
+
+</body>
+</html>

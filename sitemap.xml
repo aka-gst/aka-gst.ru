@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Индекс карт сайта. Здесь перечислены только сгенерированные практикумы.
+  Карту собственных страниц сайта добавляйте сюда же отдельным <sitemap>.
+-->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://aka-gst.ru/praktikum/testirovanie/sitemap.xml</loc>
+    <lastmod>2026-08-13</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://aka-gst.ru/praktikum/llm/sitemap.xml</loc>
+    <lastmod>2026-08-28</lastmod>
+  </sitemap>
+</sitemapindex>

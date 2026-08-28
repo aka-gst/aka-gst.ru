@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Эксперимент 11. Экран и голос через gateway — Локальные AI-агенты, Git и DevOps</title>
+<meta name="description" content="Атомарная цель. Проверить один vision-запрос и один локальный voice cycle с контролем приватности и feedback loop.">
+<meta property="og:title" content="Эксперимент 11. Экран и голос через gateway — Локальные AI-агенты, Git и DevOps">
+<meta property="og:description" content="Атомарная цель. Проверить один vision-запрос и один локальный voice cycle с контролем приватности и feedback loop.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/testirovanie/experiment-11.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/testirovanie/experiment-11.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Эксперимент 11. Экран и голос через gateway", "description": "Атомарная цель. Проверить один vision-запрос и один локальный voice cycle с контролем приватности и feedback loop.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Локальные AI-агенты, Git и DevOps"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Локальные AI-агенты, Git и DevOps</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 11 · 3 мин</p><h1>Эксперимент 11. Экран и голос через gateway</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#chto-my-delaem-i-zachem">Что мы делаем и зачем</a></li><li><a href="#chto-dolzhno-byt-gotovo">Что должно быть готово</a></li><li><a href="#gde-vypolnyat">Где выполнять</a></li><li><a href="#scope">Scope</a></li><li><a href="#komandy-powershell">Команды PowerShell</a></li><li><a href="#kak-dei-stvovat-pri-zaprose-razresheniya">Как действовать при запросе разрешения</a></li><li><a href="#chto-dolzhno-poluchitsya">Что должно получиться</a></li><li><a href="#tipovye-oshibki-i-dei-stviya">Типовые ошибки и действия</a></li><li><a href="#artefakty-i-dokazatelstva">Артефакты и доказательства</a></li><li><a href="#kriterii-zaversheniya">Критерий завершения</a></li></ol></details><article><div class="callout"><p><strong>Атомарная цель. </strong>Проверить один vision-запрос и один локальный voice cycle с контролем приватности и feedback loop.</p></div><h3 id="chto-my-delaem-i-zachem">Что мы делаем и зачем</h3><p>Text-only тест не доказывает перенос изображения, а voice baseline не доказывает работу через gateway. Здесь связываются все компоненты: screenshot -&gt; VLM через gateway -&gt; ответ -&gt; локальный TTS, при этом аудио остаётся локальным.</p><h3 id="chto-dolzhno-byt-gotovo">Что должно быть готово</h3><ul><li>Эксперимент 10 PASS.</li><li>Подготовлен безопасный screenshot без имён, чатов, token и cookies.</li><li>Динамики на умеренной громкости.</li></ul><h3 id="gde-vypolnyat">Где выполнять</h3><p>Те же три окна процессов и браузер localhost. Логи собираются обезличенно.</p><h3 id="scope">Scope</h3><div class="tablewrap"><table><thead><tr><th><strong>Разрешено</strong></th><th>Только действия, прямо указанные в prompt и командах этого эксперимента.</th></tr></thead><tbody><tr><td><strong>Запрещено</strong></td><td>Секреты, изменение main/upstream, расширение scope и скрытое исправление новых ошибок.</td></tr><tr><td><strong>Результат</strong></td><td>Артефакты и критерии на третьей странице эксперимента.</td></tr></tbody></table></div><p>Откройте Codex из папки, указанной на предыдущей странице. Для независимого аудита обязательно создайте новую сессию. Скопируйте следующий prompt целиком, не вырезая ограничения.</p><p class="note"><strong>PROMPT ДЛЯ CODEX - КОПИРОВАТЬ ЦЕЛИКОМ</strong></p><div class="callout"><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>Проведи два ограниченных smoke test без изменения файлов.
+
+Тест A: отправь приложенный обезличенный screenshot в Open-LLM-VTuber и задай короткий вопрос о видимом объекте. Докажи по request_id, что payload прошёл через gateway к локальному qwen3-vl:4b.
+
+Тест B: один раз включи microphone capture и попроси меня произнести «Шлюз локального голоса 7319». В логах сохрани только метку [REDACTED SPEECH] и уникальное число 7319. После одного TTS-ответа попроси меня выключить микрофон и 15 секунд наблюдай отсутствие новых циклов.
+
+Не отправляй аудио в cloud API. Не сохраняй исходный audio. Не выводи полные prompt/response. Ничего не изменяй. В конце дай PASS/FAIL отдельно для vision, ASR, gateway, TTS и loop control.</code></pre></div></div><h3 id="komandy-powershell">Команды PowerShell</h3><p>Команды ниже нужны либо для ручного выполнения, либо для сверки предложения Codex. Строки после комментария «после подтверждения» не запускаются заранее.</p><p class="note"><strong>КОМАНДЫ - КОПИРОВАТЬ ПО ПОРЯДКУ</strong></p><div class="callout"><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code># Процессы уже запущены. Read-only проверки:
+Invoke-RestMethod http://127.0.0.1:8642/health
+Get-NetTCPConnection -LocalPort 11434,8642,12393 -State Listen
+git status --short</code></pre></div></div><h3 id="kak-dei-stvovat-pri-zaprose-razresheniya">Как действовать при запросе разрешения</h3><p>Прочитайте команду и рабочую папку; сразу сверьте их со scope этого эксперимента.</p><p>Для одной безопасной команды выберите разовое Yes, proceed.</p><p>Если команда читает секреты, пишет за пределами scope или меняет main - нажмите Esc и объясните ограничение.</p><h3 id="chto-dolzhno-poluchitsya">Что должно получиться</h3><ul><li>Vision-ответ относится к содержимому screenshot.</li><li>Request id связывает VTuber и gateway.</li><li>ASR transcript сохраняет число 7319.</li><li>TTS слышен локально; после выключения микрофона нет нового request_id.</li></ul><h3 id="tipovye-oshibki-i-dei-stviya">Типовые ошибки и действия</h3><ul><li>Screenshot содержит PII: заменить безопасным тестовым изображением.</li><li>Vision payload отсутствует: проверить frontend message type read-only.</li><li>Повторные циклы: немедленно выключить capture и классифицировать VAD/echo control.</li><li>Audio ушёл в cloud: FAIL и остановка эксперимента.</li></ul><h3 id="artefakty-i-dokazatelstva">Артефакты и доказательства</h3><ul class="checklist"><li><label><input type="checkbox"><span>Безопасный screenshot.</span></label></li><li><label><input type="checkbox"><span>Request id vision.</span></label></li><li><label><input type="checkbox"><span>Transcript с 7319.</span></label></li><li><label><input type="checkbox"><span>Ручное подтверждение TTS.</span></label></li><li><label><input type="checkbox"><span>15-секундное наблюдение loop.</span></label></li></ul><h3 id="kriterii-zaversheniya">Критерий завершения</h3><ul class="checklist"><li><label><input type="checkbox"><span>Vision, ASR, gateway и TTS имеют отдельные доказательства.</span></label></li><li><label><input type="checkbox"><span>Аудио не покидало машину.</span></label></li><li><label><input type="checkbox"><span>Нет feedback loop.</span></label></li></ul><p class="note"><strong>ГОТОВАЯ ЗАПИСЬ В ОТЧЁТ</strong></p><div class="callout"><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>Эксперимент 11: Экран и голос через gateway | Статус: PASS / FAIL / NOT PROVEN
+Доказательство: &lt;минимальный обезличенный вывод&gt; | Не доказано: &lt;ограничение&gt;
+Source tree: unchanged / &lt;известный diff&gt; | Следующий шаг: Проверить, нужен ли вообще adapter между VTuber и gateway.</code></pre></div></div></article><nav class="pager"><a class="prev" href="experiment-10.html"><span class="eyebrow">Назад</span>Эксперимент 10. Интеграция gateway с Open-LLM-VTuber</a><a class="next" href="experiment-12.html"><span class="eyebrow">Дальше</span>Эксперимент 12. Adapter только при доказанном разрыве</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>praktikum_codex_hermes_full_windows_macos_ru_v3.docx</code> · обновлён 2026-08-13 · <a href="https://github.com/aka-gst/agent-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

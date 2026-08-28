@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лабораторная работа 4: состояние, память и ограничения — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Продолжать диалог между отдельными запусками программы, изолировать сессии и сохранять проверяемый журнал действий.">
+<meta property="og:title" content="Лабораторная работа 4: состояние, память и ограничения — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Продолжать диалог между отдельными запусками программы, изолировать сессии и сохранять проверяемый журнал действий.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/lab-04.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/lab-04.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Лабораторная работа 4: состояние, память и ограничения", "description": "Продолжать диалог между отдельными запусками программы, изолировать сессии и сохранять проверяемый журнал действий.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 4 · 3 мин</p><h1>Лабораторная работа 4: состояние, память и ограничения</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#cel">Цель</a></li><li><a href="#chto-hranitsya">Что хранится</a></li><li><a href="#pervyi-zapros">Первый запрос</a></li><li><a href="#prodolzhenie-sessii">Продолжение сессии</a></li><li><a href="#prosmotr-dannyh">Просмотр данных</a></li><li><a href="#ochistka">Очистка</a></li><li><a href="#ogranicheniya">Ограничения</a></li><li><a href="#vazhno">Важно</a></li><li><a href="#testy">Тесты</a></li></ol></details><article><h2 id="cel">Цель</h2><p>Продолжать диалог между отдельными запусками программы, изолировать сессии и сохранять проверяемый журнал действий.</p><h2 id="chto-hranitsya">Что хранится</h2><ul><li>сообщения пользователя и финальные ответы агента;</li><li>ID сессии;</li><li>вызовы инструментов и их результаты;</li><li>число шагов и объём использованной истории.</li></ul><p>Данные записываются в <code>data/private/agent_memory.sqlite3</code>. Папка <code>data/private/</code> исключена из Git.</p><h2 id="pervyi-zapros">Первый запрос</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.memory_agent \
+  --session training \
+  &quot;Запомни: меня интересует заказ DEMO-1001.&quot;</code></pre></div><h2 id="prodolzhenie-sessii">Продолжение сессии</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.memory_agent \
+  --session training \
+  &quot;Какой у него статус и сколько стоят две штуки?&quot;</code></pre></div><p>Во втором запуске программа загрузит историю сессии <code>training</code>, поэтому модель сможет восстановить ID заказа.</p><h2 id="prosmotr-dannyh">Просмотр данных</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.memory_agent --session training --show-history
+uv run python -m agent_lab.memory_agent --session training --show-audit</code></pre></div><h2 id="ochistka">Очистка</h2><p>Удаление ограничено одной явно названной сессией:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.memory_agent --session training --clear</code></pre></div><h2 id="ogranicheniya">Ограничения</h2><ul><li>в модель передаётся не более 10 последних сообщений по умолчанию;</li><li>допустимо установить лимит истории только от 1 до 50;</li><li>agent loop ограничен четырьмя шагами;</li><li>ID сессии содержит только латинские буквы, цифры, <code>_</code> и <code>-</code>, максимум 64 символа;</li><li>разные сессии не видят историю друг друга;</li><li>память локальная и не синхронизируется между компьютерами.</li></ul><h2 id="vazhno">Важно</h2><p>Память агента — не изменение модели. Перед каждым запросом программа извлекает прошлые сообщения из SQLite и снова передаёт их модели как контекст.</p><p>Реальные секреты, пароли, платёжные данные и лишние персональные сведения сохранять в такую память нельзя.</p><h2 id="testy">Тесты</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run pytest</code></pre></div><p>Тесты используют временную SQLite-базу и проверяют изоляцию сессий, лимит истории, audit log, очистку и недопустимые ID.</p></article><nav class="pager"><a class="prev" href="lab-03.html"><span class="eyebrow">Назад</span>Лабораторная работа 3: инструменты и agent loop</a><a class="next" href="lab-05.html"><span class="eyebrow">Дальше</span>Лабораторная работа 5: embeddings и RAG</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

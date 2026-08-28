@@ -1,0 +1,658 @@
+{
+  "updated": "2026-08-28",
+  "site": {
+    "handle": "aka-gst",
+    "domain": "aka-gst.ru",
+    "github": "https://github.com/aka-gst"
+  },
+  "tracks": {
+    "work": {
+      "title": "Работа",
+      "subtitle": "Инженерия, тесты, продукты",
+      "order": [
+        "gateway",
+        "practicums",
+        "client-products",
+        "misc"
+      ]
+    },
+    "play": {
+      "title": "Игры",
+      "subtitle": "Браузерные проекты без регистрации",
+      "order": [
+        "playable",
+        "misc"
+      ]
+    }
+  },
+  "groups": {
+    "gateway": {
+      "title": "Флагман",
+      "track": "work"
+    },
+    "practicums": {
+      "title": "Практикумы и обучение",
+      "track": "work"
+    },
+    "client-products": {
+      "title": "Продукты с заказчиком",
+      "track": "work"
+    },
+    "playable": {
+      "title": "Играбельное",
+      "track": "play"
+    },
+    "misc": {
+      "title": "Остальное",
+      "track": "both"
+    }
+  },
+  "projects": [
+    {
+      "id": "local-agent-gateway",
+      "title": "Local Agent Gateway",
+      "kicker": "AI/LLM QA · Python",
+      "tagline": "Loopback-шлюз между OpenAI-совместимым клиентом и локальной Ollama — и полный тестовый контур вокруг него.",
+      "summary": "FastAPI-прокси с bearer-авторизацией, allowlist моделей и бэкендов, SSE-стримингом, таймаутами и защитой от утечки секретов в логи. Вокруг него собран слоёный QA-контур: контрактные и негативные API-тесты, реальный Chromium E2E по QA-консоли, детерминированные и live LLM-evaluation прогоны с метриками качества, стабильности, latency, токенов и стоимости, и prompt-injection canary.",
+      "role": "Автор: архитектура, тестовая стратегия, CI, документация, релиз.",
+      "kind": "tool",
+      "tracks": [
+        "work"
+      ],
+      "groups": [
+        "gateway"
+      ],
+      "feature": {
+        "work": 1
+      },
+      "status": {
+        "state": "released",
+        "label": "v0.3.0"
+      },
+      "year": 2026,
+      "stack": [
+        "Python 3.11+",
+        "FastAPI",
+        "pytest",
+        "httpx",
+        "Playwright",
+        "Allure",
+        "GitHub Actions",
+        "Docker Compose",
+        "Ollama",
+        "OpenRouter"
+      ],
+      "metricsFeed": {
+        "schema": "aka-gst.qa-metrics/1",
+        "live": "https://aka-gst.github.io/local-agent-gateway/qa-metrics.json",
+        "history": "https://aka-gst.github.io/local-agent-gateway/qa-metrics-history.json",
+        "snapshot": "/data/qa-metrics.json",
+        "render": "headline",
+        "note": "Числа этого проекта не хранятся здесь. headline[] — четыре карточки первого экрана, tests.suites[] — разбивка по слоям, coverage.threshold — порог CI, evaluation.live — прогон по модели с её окружением, project.version — метка релиза, generated_at и commit.run_url — когда и на каком прогоне это измерено. Порядок: сначала snapshot, затем live поверх него."
+      },
+      "links": [
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/local-agent-gateway"
+        },
+        {
+          "type": "report",
+          "label": "Allure-отчёт",
+          "url": "https://aka-gst.github.io/local-agent-gateway/"
+        }
+      ],
+      "accent": "signal"
+    },
+    {
+      "id": "praktikum-testing",
+      "title": "Практикум: тестирование локального AI-агента",
+      "kicker": "Практикум · веб + PDF",
+      "tagline": "Пошаговый разбор того, как построить и проверить loopback-шлюз к локальной модели.",
+      "summary": "Русскоязычное руководство по сборке контура Open-LLM-VTuber → шлюз → Ollama: аудит окружения, безопасность, автотесты, benchmark провайдеров и операционный runbook. Материал вырос из реального прогона, а не из абстрактного примера — все выводы подкреплены сохранёнными артефактами.",
+      "role": "Автор материала и всех прогонов.",
+      "kind": "course",
+      "tracks": [
+        "work"
+      ],
+      "groups": [
+        "practicums"
+      ],
+      "feature": {
+        "work": 2
+      },
+      "status": {
+        "state": "published",
+        "label": "v3"
+      },
+      "year": 2026,
+      "stack": [
+        "Python",
+        "FastAPI",
+        "Ollama",
+        "OpenRouter",
+        "PowerShell",
+        "pytest"
+      ],
+      "links": [
+        {
+          "type": "course",
+          "label": "Открыть практикум",
+          "url": "/praktikum/testirovanie/"
+        },
+        {
+          "type": "doc",
+          "label": "PDF",
+          "url": "https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf"
+        },
+        {
+          "type": "repo",
+          "label": "agent-lab",
+          "url": "https://github.com/aka-gst/agent-lab"
+        }
+      ],
+      "accent": "paper",
+      "courseFeed": {
+        "schema": "aka-gst.course/1",
+        "path": "praktikum/testirovanie/course.json",
+        "mount": "/praktikum/testirovanie/"
+      },
+      "analytics": {
+        "event": "project-open",
+        "slug": "praktikum-testirovanie"
+      }
+    },
+    {
+      "id": "ai-agent-service-lab",
+      "title": "Практикум: настройка LLM и агентов",
+      "kicker": "Практикум · веб + сервис",
+      "tagline": "Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.",
+      "summary": "Рабочий сервис-лаборатория: локальная генерация через Ollama и qwen3:8b, structured output с JSON Schema, agent loop с allowlist инструментов, память сессий и audit log в SQLite, RAG по документам с проверяемыми источниками, API-key guard, Docker Compose и backup/restore с SHA-256.",
+      "role": "Автор: архитектура, инструменты, evaluation-набор, тесты.",
+      "kind": "course",
+      "tracks": [
+        "work"
+      ],
+      "groups": [
+        "practicums"
+      ],
+      "feature": {
+        "work": 3
+      },
+      "status": {
+        "state": "wip",
+        "label": "в развитии"
+      },
+      "year": 2026,
+      "stack": [
+        "Python 3.12",
+        "FastAPI",
+        "Pydantic",
+        "SQLite",
+        "Ollama",
+        "qwen3:8b",
+        "qwen3-embedding:0.6b",
+        "Docker Compose",
+        "pytest"
+      ],
+      "metrics": [
+        {
+          "key": "tests",
+          "label": "Автотестов",
+          "value": "76"
+        },
+        {
+          "key": "evals",
+          "label": "Evaluation-сценариев",
+          "value": "6/6"
+        },
+        {
+          "key": "retrieval",
+          "label": "Retrieval hit rate",
+          "value": "100%"
+        }
+      ],
+      "links": [
+        {
+          "type": "course",
+          "label": "Открыть практикум",
+          "url": "/praktikum/llm/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/ai-agent-service-lab"
+        }
+      ],
+      "accent": "paper",
+      "courseFeed": {
+        "schema": "aka-gst.course/1",
+        "path": "praktikum/llm/course.json",
+        "mount": "/praktikum/llm/"
+      },
+      "analytics": {
+        "event": "project-open",
+        "slug": "praktikum-llm"
+      }
+    },
+    {
+      "id": "qa-quest",
+      "title": "QA Quest",
+      "kicker": "Обучение · браузер",
+      "tagline": "Игровая лаборатория для повторения Python и входа в QA Automation.",
+      "summary": "Часовой спринт из 14 миссий — от переменных до законченного консольного проекта QA Incident Tracker. Редактор кода, терминал и проверки прямо в браузере, всплывающий словарь терминов, XP и уровни, прогресс в localStorage. Дополнительные миссии — по pytest, API-тестированию, параметризации и LLM-evaluation.",
+      "role": "Автор: программа, задания, интерфейс.",
+      "kind": "app",
+      "tracks": [
+        "work",
+        "play"
+      ],
+      "groups": [
+        "practicums"
+      ],
+      "feature": {
+        "work": 4
+      },
+      "status": {
+        "state": "wip",
+        "label": "MVP"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "HTML",
+        "CSS",
+        "localStorage"
+      ],
+      "metrics": [
+        {
+          "key": "missions",
+          "label": "Миссий в MVP",
+          "value": "14"
+        },
+        {
+          "key": "deps",
+          "label": "Внешних JS-зависимостей",
+          "value": "0"
+        }
+      ],
+      "links": [
+        {
+          "type": "demo",
+          "label": "Открыть",
+          "url": "/qa-quest/"
+        }
+      ],
+      "deploy": {
+        "state": "planned",
+        "target": "/qa-quest/",
+        "source": "/Users/gst/dev/QA Quest"
+      },
+      "accent": "paper",
+      "analytics": {
+        "event": "project-open",
+        "slug": "qa-quest"
+      }
+    },
+    {
+      "id": "psy-ai-admin",
+      "title": "Psy AI Admin",
+      "kicker": "Продукт · демо",
+      "tagline": "Безопасный AI-администратор для сайта психологического центра.",
+      "summary": "Помощник отвечает только из утверждённой базы знаний: услуги, специалисты, расписание, формат и стоимость, переход на нужную страницу и заявка администратору. Явно не даёт медицинских рекомендаций и не заменяет экстренную помощь — границы зашиты в сценарии и проверяются тестами.",
+      "role": "Продуктовые требования, сценарии, ограничения безопасности, демо.",
+      "kind": "product",
+      "tracks": [
+        "work"
+      ],
+      "groups": [
+        "client-products"
+      ],
+      "feature": {
+        "work": 5
+      },
+      "status": {
+        "state": "demo",
+        "label": "MVP-демо"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "RAG",
+        "Node test"
+      ],
+      "metrics": [],
+      "links": [
+        {
+          "type": "demo",
+          "label": "Открыть демо",
+          "url": "/psy-admin/"
+        }
+      ],
+      "analytics": {
+        "event": "project-open",
+        "slug": "psy-admin"
+      },
+      "accent": "paper"
+    },
+    {
+      "id": "photo-meta-editor",
+      "title": "ФотоДата · Photo Meta Editor",
+      "kicker": "Продукт · local-first",
+      "tagline": "Пакетное изменение даты съёмки фото и видео прямо в браузере, без загрузки на сервер.",
+      "summary": "Меняет EXIF DateTime / DateTimeOriginal / DateTimeDigitized и временные поля MP4/MOV/M4V для одного файла, выбранной группы или целой папки. Приватность закреплена не обещанием, а политикой безопасности страницы: после загрузки интерфейсу запрещены сетевые соединения, и отсутствие API отправки данных проверяется отдельным автотестом.",
+      "role": "Продуктовые требования, выбор local-first подхода, ревью AI-правок, закрепление сценариев тестами.",
+      "kind": "product",
+      "tracks": [
+        "work"
+      ],
+      "groups": [
+        "client-products"
+      ],
+      "feature": {
+        "work": 6
+      },
+      "status": {
+        "state": "released",
+        "label": "v1.2.0"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "Node.js test",
+        "Next.js",
+        "GitHub Actions"
+      ],
+      "metrics": [
+        {
+          "key": "network",
+          "label": "Сетевых запросов после загрузки",
+          "value": "0",
+          "note": "закреплено CSP и автотестом"
+        }
+      ],
+      "links": [
+        {
+          "type": "demo",
+          "label": "Открыть",
+          "url": "/photodata/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/photo_meta_editer"
+        }
+      ],
+      "analytics": {
+        "event": "project-open",
+        "slug": "fotodata"
+      },
+      "accent": "paper"
+    },
+    {
+      "id": "acid-uno",
+      "title": "ACID UNO",
+      "kicker": "Игра · мобильная",
+      "tagline": "UNO с физичным drag-and-drop и неоновым cyberpunk-интерфейсом.",
+      "summary": "Мобильная версия классических правил: перетаскивание карт с инерцией, веер бота, режим UNO, адаптивные portrait- и landscape-раскладки. Дизайн-токены вынесены в отдельный блок, чтобы менять палитру и размеры карт в одном месте.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "playable"
+      ],
+      "feature": {
+        "play": 1
+      },
+      "status": {
+        "state": "live",
+        "label": "играть"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "CSS",
+        "HTML"
+      ],
+      "links": [
+        {
+          "type": "play",
+          "label": "Запустить",
+          "url": "/acid/"
+        }
+      ],
+      "deploy": {
+        "state": "planned",
+        "target": "/acid/",
+        "source": "/Users/gst/dev/acid-uno"
+      },
+      "accent": "acid",
+      "analytics": {
+        "event": "game-open",
+        "slug": "acid-uno"
+      }
+    },
+    {
+      "id": "tetcolor",
+      "title": "Тетколор",
+      "kicker": "Игра · головоломка",
+      "tagline": "Та самая цветная головоломка из 90-х.",
+      "summary": "Колонки из трёх цветных блоков, сборка линий по горизонтали, вертикали и диагонали, растущая скорость.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "playable"
+      ],
+      "feature": {
+        "play": 2
+      },
+      "status": {
+        "state": "live",
+        "label": "играть"
+      },
+      "year": 2026,
+      "stack": [
+        "TypeScript",
+        "Next.js"
+      ],
+      "links": [
+        {
+          "type": "play",
+          "label": "Запустить",
+          "url": "/tetcolor/"
+        }
+      ],
+      "analytics": {
+        "event": "game-open",
+        "slug": "tetcolor"
+      },
+      "leaderboard": "tetcolor",
+      "accent": "acid"
+    },
+    {
+      "id": "knb",
+      "title": "КНБ 2",
+      "kicker": "Игра · тактика",
+      "tagline": "Камень-ножницы-бумага, превращённые в компактную тактическую дуэль.",
+      "summary": "Четыре режима сложности, раунды из пяти действий и фехтовальный режим на одно действие, здоровье, урон, оглушение и супер-удары. Прототип исследует, что происходит с классической игрой, когда игрок собирает последовательность ходов и управляет ресурсами боя.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "playable"
+      ],
+      "feature": {
+        "play": 3
+      },
+      "status": {
+        "state": "alpha",
+        "label": "альфа-версия"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "Node test"
+      ],
+      "links": [
+        {
+          "type": "play",
+          "label": "Запустить",
+          "url": "/knb/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/knb-tactical-evolution"
+        }
+      ],
+      "analytics": {
+        "event": "game-open",
+        "slug": "knb-2"
+      },
+      "leaderboard": "knb-2",
+      "accent": "acid"
+    },
+    {
+      "id": "neon-lines",
+      "title": "Неон Линии",
+      "kicker": "Игра · головоломка",
+      "tagline": "Передвигай шарики по полю и выстраивай пять одинаковых в линию.",
+      "summary": "Классические «Линии» с неоновой палитрой и адаптацией под мобильные экраны.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "misc"
+      ],
+      "feature": {},
+      "status": {
+        "state": "live",
+        "label": "играть"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "CSS"
+      ],
+      "links": [
+        {
+          "type": "play",
+          "label": "Запустить",
+          "url": "/lines/"
+        }
+      ],
+      "analytics": {
+        "event": "game-open",
+        "slug": "neon-lines"
+      },
+      "leaderboard": "neon-lines",
+      "accent": "acid"
+    },
+    {
+      "id": "coin-flip",
+      "title": "Орёл или решка",
+      "kicker": "Игра · аркада",
+      "tagline": "Угадывай сторону монеты, собирай серии и попадай в глобальный топ.",
+      "summary": "Короткая аркада с серверным лидербордом: ежедневный топ и рекорды без регистрации.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "misc"
+      ],
+      "feature": {},
+      "status": {
+        "state": "live",
+        "label": "играть"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "Leaderboard API"
+      ],
+      "links": [
+        {
+          "type": "play",
+          "label": "Запустить",
+          "url": "/coin/"
+        }
+      ],
+      "analytics": {
+        "event": "game-open",
+        "slug": "coin-flip"
+      },
+      "leaderboard": "coin-flip",
+      "accent": "acid"
+    },
+    {
+      "id": "leela",
+      "title": "Лила",
+      "kicker": "Игра · прототип",
+      "tagline": "Путешествие по классическому полю из 72 клеток.",
+      "summary": "Выбор одного из четырёх проводников, плавное движение 3D-фигурки по полю 9 × 8, шкалы влияния, история ходов и дневник, который остаётся только в браузере.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "misc"
+      ],
+      "feature": {},
+      "status": {
+        "state": "wip",
+        "label": "в сборке"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "Python",
+        "SQLite"
+      ],
+      "links": [],
+      "deploy": {
+        "state": "not-deployed",
+        "source": "/Users/gst/dev/Zakriva/leela-mvp"
+      },
+      "accent": "acid"
+    },
+    {
+      "id": "buddhist-diary-bot",
+      "title": "Буддийский дневник",
+      "kicker": "Бот · Telegram",
+      "tagline": "Шесть ежедневных осознанных отметок, личные записи и циклические списки практик.",
+      "summary": "Отдельные дневники медитации и йоги с планом на день и на каждый день недели, недублирующиеся напоминания и приватные записи. У каждого пользователя свой seed: шесть обетов стабильны в течение дня и обновляются на следующий.",
+      "kind": "bot",
+      "tracks": [
+        "work",
+        "play"
+      ],
+      "groups": [
+        "misc"
+      ],
+      "feature": {},
+      "status": {
+        "state": "live",
+        "label": "работает"
+      },
+      "year": 2026,
+      "stack": [
+        "Python",
+        "Telegram Bot API"
+      ],
+      "links": [
+        {
+          "type": "telegram",
+          "label": "Открыть в Telegram",
+          "url": "https://t.me/Buddhist_Diary_bot"
+        }
+      ],
+      "accent": "paper"
+    }
+  ]
+}

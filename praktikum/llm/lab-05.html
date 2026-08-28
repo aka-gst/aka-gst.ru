@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лабораторная работа 5: embeddings и RAG — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Отвечать по локальным документам, которые можно обновлять без переобучения модели, и указывать проверяемые источники.">
+<meta property="og:title" content="Лабораторная работа 5: embeddings и RAG — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Отвечать по локальным документам, которые можно обновлять без переобучения модели, и указывать проверяемые источники.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/lab-05.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/lab-05.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Лабораторная работа 5: embeddings и RAG", "description": "Отвечать по локальным документам, которые можно обновлять без переобучения модели, и указывать проверяемые источники.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 5 · 3 мин</p><h1>Лабораторная работа 5: embeddings и RAG</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#cel">Цель</a></li><li><a href="#komponenty">Компоненты</a></li><li><a href="#postroenie-indeksa">Построение индекса</a></li><li><a href="#vopros">Вопрос</a></li><li><a href="#kak-rabotaet-rag">Как работает RAG</a></li><li><a href="#obnovlenie-dokumentov">Обновление документов</a></li><li><a href="#ogranicheniya">Ограничения</a></li><li><a href="#testy">Тесты</a></li></ol></details><article><h2 id="cel">Цель</h2><p>Отвечать по локальным документам, которые можно обновлять без переобучения модели, и указывать проверяемые источники.</p><h2 id="komponenty">Компоненты</h2><ul><li>демонстрационные документы: <code>data/demo/client-docs/</code>;</li><li>embedding-модель: <code>qwen3-embedding:0.6b</code>;</li><li>генеративная модель: <code>qwen3:8b</code>;</li><li>локальный индекс: <code>data/private/rag.sqlite3</code>;</li><li>поиск: cosine similarity;</li><li>формат ответа: Pydantic-модель <code>RagAnswer</code>.</li></ul><h2 id="postroenie-indeksa">Построение индекса</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.rag index</code></pre></div><p>Программа разбивает Markdown по заголовкам <code>##</code>, получает embedding каждого фрагмента и сохраняет вектор вместе с текстом и источником в SQLite.</p><h2 id="vopros">Вопрос</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.rag ask \
+  &quot;Сколько стоит доставка заказа на 4 000 рублей?&quot;</code></pre></div><p>Ожидается ответ <code>490 рублей</code> со ссылкой на <code>delivery.md#Стоимость</code>.</p><h2 id="kak-rabotaet-rag">Как работает RAG</h2><ol><li>Документы разбиваются на небольшие фрагменты.</li><li>Embedding-модель превращает каждый фрагмент в числовой вектор.</li><li>Вопрос пользователя тоже превращается в вектор.</li><li>По cosine similarity выбираются три ближайших фрагмента.</li><li>Только эти фрагменты передаются генеративной модели.</li><li>Модель формирует ответ и возвращает список источников.</li><li>Python отклоняет ссылку на источник, которого не было среди найденных фрагментов.</li></ol><h2 id="obnovlenie-dokumentov">Обновление документов</h2><p>После изменения Markdown-файлов индекс нужно построить повторно:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.rag index</code></pre></div><p>Это и есть важное отличие RAG от fine-tuning: новые факты подключаются переиндексацией документов, а веса модели не меняются.</p><h2 id="ogranicheniya">Ограничения</h2><ul><li>учебный поиск перебирает все векторы в SQLite и не рассчитан на миллионы фрагментов;</li><li>качество зависит от разбиения, embedding-модели и формулировки вопроса;</li><li>наличие источника не доказывает, что модель правильно истолковала текст;</li><li>демонстрационные документы вымышлены и не являются правилами реального магазина;</li><li>приватный индекс исключён из Git, но исходные demo-документы публикуются вместе с проектом.</li></ul><h2 id="testy">Тесты</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run pytest</code></pre></div><p>Тесты проверяют разбиение документов, сравнение векторов, ранжирование и блокировку выдуманного источника без обращения к модели.</p></article><nav class="pager"><a class="prev" href="lab-04.html"><span class="eyebrow">Назад</span>Лабораторная работа 4: состояние, память и ограничения</a><a class="next" href="lab-06.html"><span class="eyebrow">Дальше</span>Лабораторная работа 6: evaluation и pytest</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

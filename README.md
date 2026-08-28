@@ -1,0 +1,79 @@
+# aka-gst.ru
+
+Портфолио и витрина проектов. Статика под Caddy, без сборщика и зависимостей.
+
+## Как устроено
+
+Страница не пишется руками. Источник — два JSON, из них `build.mjs` собирает
+`index.html`:
+
+| Файл | Что описывает |
+|---|---|
+| `data/projects.json` | все проекты: треки, группы, статусы, ссылки, слаги аналитики |
+| `data/site.json` | шапка, подвал, контакты, навыки и опыт |
+| `data/qa-metrics.json` | снимок последнего прогона Local Agent Gateway |
+
+Новый проект добавляется одной записью в `data/projects.json` — карточка,
+строка в списке и событие аналитики появляются сами.
+
+```sh
+node build.mjs
+```
+
+Одна разметка и две оболочки поверх неё. Палитра переключается атрибутом
+`data-track` на `<html>`: `work` — сдержанная, `play` — неоновая. Выбор
+запоминается в `localStorage`, ссылки `#work` и `#games` открывают раздел
+напрямую.
+
+## Числа берутся из фидов, а не переписываются
+
+Первый экран «Работы» рендерится из `data/qa-metrics.json`, который публикует
+CI гейтвея. Сборка вклеивает снимок, `assets/app.js` поверх подтягивает живой
+файл с GitHub Pages и заменяет значения. Если сети нет, остаётся снимок.
+Карточки практикумов так же читают `praktikum/*/course.json`.
+
+Смысл в том, что цифры на витрине — те же, что проверил прогон. Подробности
+и схемы: `PORTFOLIO-FEEDS.md`.
+
+Обновить всё, что сайт отдаёт, но не пишет сам:
+
+```sh
+sh sync-portfolio.sh
+```
+
+## Предпросмотр
+
+```sh
+python3 -m http.server 4180
+```
+
+`/tetcolor/`, `/knb/`, `/lines/` и `/coin/` локально отдадут 404: они живут
+только на сервере.
+
+## Выкладка
+
+Статика едет в `/opt/zakriva/caddy/site`, где Caddy монтирует её как `/srv`
+только на чтение.
+
+```sh
+rsync -avz --exclude '.git/' --exclude '.claude/' --exclude 'build.mjs' \
+  --exclude 'sync-portfolio.sh' --exclude 'PORTFOLIO-FEEDS.md' \
+  --exclude 'Caddyfile' --exclude '.DS_Store' \
+  ./ bonita:/opt/zakriva/caddy/site/
+```
+
+**Без `--delete`.** Каталоги `coin/`, `lines/` и `knb/` выкладываются из своих
+репозиториев и в этом дереве отсутствуют — с этим флагом они будут снесены.
+
+`Caddyfile` копируется отдельно, конфиг перечитывается без простоя:
+
+```sh
+scp Caddyfile bonita:/opt/zakriva/caddy/Caddyfile
+ssh bonita 'docker exec caddy caddy validate --config /etc/caddy/Caddyfile && docker exec caddy caddy reload --config /etc/caddy/Caddyfile'
+```
+
+## Приватность
+
+Настоящего имени, почты и телефона на сайте нет. Подпись — `aka-gst`,
+связь через Telegram и GitHub. Резюме с контактными данными рассылается
+отдельно и в этот репозиторий не попадает.

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как это превращается в услугу — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Не «магический интеллект», а ограниченное решение конкретной задачи:">
+<meta property="og:title" content="Как это превращается в услугу — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Не «магический интеллект», а ограниченное решение конкретной задачи:">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/service.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/service.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Как это превращается в услугу", "description": "Не «магический интеллект», а ограниченное решение конкретной задачи:", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Раздел · 3 мин</p><h1>Как это превращается в услугу</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#chto-prodae-tsya">Что продаётся</a></li><li><a href="#voprosy-klientu-do-ocenki">Вопросы клиенту до оценки</a></li><li><a href="#minimalnye-pakety">Минимальные пакеты</a></li><li><a href="#diagnostika">Диагностика</a></li><li><a href="#lokalnyi-pomoschnik">Локальный помощник</a></li><li><a href="#agent-po-dokumentam">Агент по документам</a></li><li><a href="#chto-yavno-ne-vhodit">Что явно не входит</a></li></ol></details><article><h2 id="chto-prodae-tsya">Что продаётся</h2><p>Не «магический интеллект», а ограниченное решение конкретной задачи:</p><ul><li>интервью и фиксация требований;</li><li>выбор локальной или облачной модели;</li><li>установка и конфигурация;</li><li>подключение согласованных инструментов или документов;</li><li>тестовый набор и отчёт о качестве;</li><li>инструкция запуска, остановки и восстановления;</li><li>передача клиенту и один согласованный период поддержки.</li></ul><h2 id="voprosy-klientu-do-ocenki">Вопросы клиенту до оценки</h2><ol><li>Какую одну задачу должен решать агент?</li><li>Как выглядит правильный результат?</li><li>Какие данные он будет читать и где они хранятся?</li><li>Какие действия ему разрешено выполнять?</li><li>Должен ли он работать полностью локально?</li><li>Какая ОС и характеристики компьютера?</li><li>Какой допустимый бюджет на API?</li><li>Какие ошибки недопустимы?</li><li>Кто подтверждает внешние и необратимые действия?</li><li>Как измеряется приёмка результата?</li></ol><h2 id="minimalnye-pakety">Минимальные пакеты</h2><h3 id="diagnostika">Диагностика</h3><ul><li>анализ задачи и компьютера;</li><li>выбор архитектуры;</li><li>короткий proof of concept;</li><li>письменные рекомендации.</li></ul><h3 id="lokalnyi-pomoschnik">Локальный помощник</h3><ul><li>установка модели и приложения;</li><li>одна роль и до двух безопасных инструментов;</li><li>тесты и инструкция.</li></ul><h3 id="agent-po-dokumentam">Агент по документам</h3><ul><li>импорт согласованного набора документов;</li><li>RAG с указанием источников;</li><li>набор контрольных вопросов;</li><li>отчёт о качестве и ограничениях.</li></ul><h2 id="chto-yavno-ne-vhodit">Что явно не входит</h2><ul><li>обучение фундаментальной модели с нуля;</li><li>круглосуточная эксплуатация без отдельного договора;</li><li>действия от имени клиента без подтверждения;</li><li>работа с персональными или секретными данными без согласованной защиты;</li><li>гарантия безошибочности генеративной модели.</li></ul></article><nav class="pager"><a class="prev" href="architecture.html"><span class="eyebrow">Назад</span>Архитектура сервиса</a><a class="next" href="case-study.html"><span class="eyebrow">Дальше</span>Разбор кейса</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

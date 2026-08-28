@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лабораторная работа 8: безопасность и передача клиенту — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Подготовить сервис к контролируемой передаче: доступ, backup, acceptance criteria, rollback и честное описание ограничений.">
+<meta property="og:title" content="Лабораторная работа 8: безопасность и передача клиенту — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Подготовить сервис к контролируемой передаче: доступ, backup, acceptance criteria, rollback и честное описание ограничений.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/lab-08.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/lab-08.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Лабораторная работа 8: безопасность и передача клиенту", "description": "Подготовить сервис к контролируемой передаче: доступ, backup, acceptance criteria, rollback и честное описание ограничений.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 8 · 3 мин</p><h1>Лабораторная работа 8: безопасность и передача клиенту</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#cel">Цель</a></li><li><a href="#api-klyuch">API-ключ</a></li><li><a href="#rezervnaya-kopiya">Резервная копия</a></li><li><a href="#bezopasnoe-vosstanovlenie">Безопасное восстановление</a></li><li><a href="#komplekt-peredachi">Комплект передачи</a></li><li><a href="#kriterii-pass-fail">Критерии PASS/FAIL</a></li></ol></details><article><h2 id="cel">Цель</h2><p>Подготовить сервис к контролируемой передаче: доступ, backup, acceptance criteria, rollback и честное описание ограничений.</p><h2 id="api-klyuch">API-ключ</h2><p>Для локальной разработки ключ можно не задавать. Если сервис доступен другим пользователям, создайте секрет вне Git:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>python3 -c &#x27;import secrets; print(secrets.token_urlsafe(32))&#x27;</code></pre></div><p>Запишите значение в локальный <code>.env</code>:</p><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>SERVICE_API_KEY=полученное-значение</code></pre></div><p>Клиент передаёт ключ заголовком:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>curl http://127.0.0.1:8000/v1/rag/ask \
+  -H &quot;X-API-Key: $SERVICE_API_KEY&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;question&quot;:&quot;Каковы сроки доставки?&quot;}&#x27;</code></pre></div><p><code>/health</code> и <code>/ready</code> не требуют ключа, чтобы инфраструктура могла проверять состояние. Рабочие <code>/v1/*</code> защищены, когда <code>SERVICE_API_KEY</code> непустой.</p><h2 id="rezervnaya-kopiya">Резервная копия</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.backup create</code></pre></div><p>Архив содержит только <code>*.sqlite3</code>, манифест и SHA-256. Он сохраняется в исключённой из Git папке <code>artifacts/private/backups/</code>.</p><h2 id="bezopasnoe-vosstanovlenie">Безопасное восстановление</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.backup restore BACKUP.zip \
+  --target data/private-restored</code></pre></div><p>Программа отказывается писать в непустую папку и блокирует path traversal внутри ZIP. Рабочие базы автоматически не перезаписываются.</p><h2 id="komplekt-peredachi">Комплект передачи</h2><ul><li><code>templates/client-questionnaire.md</code>;</li><li><code>templates/acceptance-criteria.md</code>;</li><li><code>templates/handoff-checklist.md</code>;</li><li><code>templates/incident-rollback.md</code>;</li><li><code>docs/portfolio-case-study.md</code>.</li></ul><h2 id="kriterii-pass-fail">Критерии PASS/FAIL</h2><ul><li>неправильный или отсутствующий API-ключ даёт HTTP 401 без раскрытия секрета;</li><li>health check остаётся доступным;</li><li>backup восстанавливается с совпадающими контрольными суммами;</li><li>непустая папка назначения и небезопасный ZIP отклоняются;</li><li>все тесты и evaluation проходят;</li><li>инструкция rollback не уничтожает единственную рабочую копию.</li></ul></article><nav class="pager"><a class="prev" href="lab-07.html"><span class="eyebrow">Назад</span>Лабораторная работа 7: FastAPI и упаковка</a><a class="next" href="lab-09.html"><span class="eyebrow">Дальше</span>Лабораторная 09: помощник аналитика маркетплейса</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

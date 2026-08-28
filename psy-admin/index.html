@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Демонстрационная страница безопасного помощника по открытым материалам психологического центра «Орион».">
+    <title>Psy AI Admin — демонстрация</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a href="/" class="brand">aka-gst</a>
+      <span>Экспериментальный проект</span>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">PSY AI ADMIN · DEMO</p>
+        <h1 id="page-title">Помощник по открытой информации центра</h1>
+        <p>Спросите о программе, практикуме, мероприятии или консультации. Помощник кратко объяснит главное и покажет нужную страницу центра.</p>
+        <div class="notice"><strong>Это не психолог и не врач.</strong> Помощник не ставит диагнозы, не проводит терапию и не назначает лечение.</div>
+      </section>
+
+      <section class="assistant" aria-label="Диалог с помощником">
+        <div class="examples" id="examples" aria-label="Примеры вопросов">
+          <button type="button" data-question="Что входит в практикум по психосоматике?">Практикум по психосоматике</button>
+          <button type="button" data-question="Расскажите про программу Пилот-волна">Программа «Пилот-волна»</button>
+          <button type="button" data-question="Какие ближайшие мероприятия?">Ближайшие мероприятия</button>
+        </div>
+
+        <div class="controls">
+          <label for="quick-list"><strong>60</strong> готовых вопросов для проверки</label>
+          <select id="quick-list">
+            <option value="">Выберите вопрос…</option>
+          </select>
+          <form id="question-form">
+            <label for="question">Ваш вопрос</label>
+            <div class="input-row">
+              <input id="question" name="question" autocomplete="off" maxlength="500" placeholder="Например, расскажите про конкретный практикум">
+              <button type="submit">Получить ответ</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="messages" id="messages" aria-live="polite">
+          <article class="message answer welcome">
+            <h2>Здравствуйте!</h2>
+            <p>Напишите, что именно вас интересует. Например: «Что входит в практикум по психосоматике?»</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Независимая демонстрация на основе открытых страниц. Не является официальным сервисом центра «Орион».</p>
+    </footer>
+  </body>
+</html>

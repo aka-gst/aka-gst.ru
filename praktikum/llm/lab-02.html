@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лабораторная работа 2: structured output — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Получить от локальной модели не свободный текст, а данные по строгой JSON-схеме и проверить их перед использованием в программе.">
+<meta property="og:title" content="Лабораторная работа 2: structured output — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Получить от локальной модели не свободный текст, а данные по строгой JSON-схеме и проверить их перед использованием в программе.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/lab-02.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/lab-02.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Лабораторная работа 2: structured output", "description": "Получить от локальной модели не свободный текст, а данные по строгой JSON-схеме и проверить их перед использованием в программе.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 2 · 3 мин</p><h1>Лабораторная работа 2: structured output</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#cel">Цель</a></li><li><a href="#polzovatelskaya-zadacha">Пользовательская задача</a></li><li><a href="#kriterii-pass-fail">Критерии PASS/FAIL</a></li><li><a href="#podgotovka">Подготовка</a></li><li><a href="#zapusk">Запуск</a></li><li><a href="#avtomaticheskaya-proverka">Автоматическая проверка</a></li><li><a href="#chto-zdes-proishodit">Что здесь происходит</a></li><li><a href="#ogranichenie">Ограничение</a></li></ol></details><article><h2 id="cel">Цель</h2><p>Получить от локальной модели не свободный текст, а данные по строгой JSON-схеме и проверить их перед использованием в программе.</p><h2 id="polzovatelskaya-zadacha">Пользовательская задача</h2><p>Классифицировать обращение службы поддержки по трём полям:</p><ul><li><code>category</code>: <code>access</code>, <code>billing</code>, <code>technical</code> или <code>other</code>;</li><li><code>priority</code>: <code>low</code>, <code>medium</code> или <code>high</code>;</li><li><code>summary</code>: непустое краткое описание.</li></ul><h2 id="kriterii-pass-fail">Критерии PASS/FAIL</h2><p>PASS:</p><ul><li>Ollama возвращает JSON по схеме <code>SupportTicket</code>;</li><li>Pydantic принимает корректный ответ;</li><li>отсутствующие, лишние и недопустимые значения отклоняются;</li><li>для проблемы со входом выбирается категория <code>access</code>.</li></ul><p>FAIL — нарушен хотя бы один из этих пунктов.</p><h2 id="podgotovka">Подготовка</h2><p>Из корня проекта:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv sync --python 3.12</code></pre></div><p>Команда создаст <code>.venv</code>, установит Python 3.12, Pydantic и pytest. Системный Python при этом не изменяется.</p><h2 id="zapusk">Запуск</h2><p>Сначала запустите приложение Ollama, затем выполните:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.structured_output \
+  &quot;Не могу войти в аккаунт, а завтра нужно отправить важный отчёт.&quot;</code></pre></div><p>Ожидаемая структура:</p><div class="snippet" data-lang="json"><div class="snippet-bar"><span class="snippet-lang">json</span></div><pre><code>{
+  &quot;category&quot;: &quot;access&quot;,
+  &quot;priority&quot;: &quot;high&quot;,
+  &quot;summary&quot;: &quot;Клиент не может войти в аккаунт перед отправкой важного отчёта.&quot;
+}</code></pre></div><p>Точная формулировка <code>summary</code> может отличаться.</p><h2 id="avtomaticheskaya-proverka">Автоматическая проверка</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run pytest</code></pre></div><p>Тесты намеренно передают как правильные, так и неправильные данные. Pydantic должен отклонить неизвестную категорию, неправильный приоритет, отсутствующее поле и лишнее поле.</p><h2 id="chto-zdes-proishodit">Что здесь происходит</h2><ol><li><code>SupportTicket</code> описывает допустимые данные в Python.</li><li><code>model_json_schema()</code> превращает описание в JSON Schema для Ollama.</li><li>Ollama ограничивает структуру ответа модели этой схемой.</li><li><code>model_validate_json()</code> повторно проверяет фактический ответ.</li><li>Только после успешной проверки программа использует результат.</li></ol><h2 id="ogranichenie">Ограничение</h2><p>Structured output гарантирует форму данных, но не истинность и не правильность классификации. Поэтому правила задачи уточняются в system prompt, а смысловая корректность отдельно проверяется evaluation-тестами.</p></article><nav class="pager"><a class="prev" href="lab-01.html"><span class="eyebrow">Назад</span>Лабораторная работа 1: модель как API</a><a class="next" href="lab-03.html"><span class="eyebrow">Дальше</span>Лабораторная работа 3: инструменты и agent loop</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ru" data-track="work">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
+    <meta name="color-scheme" content="dark">
+    <title>aka-gst — AI/LLM QA, автоматизация, браузерные игры</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/site.css?v=1">
+    <script>
+      // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
+      try {
+        var t = location.hash === '#games' ? 'play'
+              : location.hash === '#work' ? 'work'
+              : localStorage.getItem('aka-gst:track');
+        if (t === 'play' || t === 'work') document.documentElement.dataset.track = t;
+      } catch (e) {}
+    </script>
+    <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">К содержимому</a>
+    <header class="topbar">
+      <a class="brand" href="/">aka<span>-</span>gst</a>
+      <div class="track-switch" role="group" aria-label="Раздел сайта">
+        <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">Работа</button>
+        <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play">Игры</button>
+      </div>
+      <nav class="socials" aria-label="Профили">
+<a class="social" href="https://github.com/aka-gst" target="_blank" rel="noopener me"
+          data-umami-event="social-open" data-umami-event-network="github"
+          data-umami-event-place="header" title="GitHub">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          <span class="sr-only">GitHub</span></a>
+<a class="social" href="https://x.com/aka_gst" target="_blank" rel="noopener me"
+          data-umami-event="social-open" data-umami-event-network="x"
+          data-umami-event-place="header" title="X">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          <span class="sr-only">X</span></a>
+<a class="social" href="https://t.me/gostinka27" target="_blank" rel="noopener me"
+          data-umami-event="social-open" data-umami-event-network="telegram"
+          data-umami-event-place="header" title="Telegram">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          <span class="sr-only">Telegram</span></a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <div class="panel" data-panel="work">
+      
+      <section class="report" aria-labelledby="flagship-title">
+        <div class="report-bar">
+          <span class="dot" data-status="passed" aria-hidden="true"></span>
+          <code>main @ 8c0115b · uv run pytest --cov</code>
+          <span class="verdict" data-metric-verdict data-status="passed">66 passed · 0 failed · 1948 ms</span>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-lede">
+            <p class="kicker">AI/LLM QA · Python · <span data-metric-version>v0.3.0</span></p>
+            <h1 id="flagship-title">Local Agent Gateway</h1>
+            <p class="tagline">Loopback-шлюз между OpenAI-совместимым клиентом и локальной Ollama — и полный тестовый контур вокруг него.</p>
+            <p class="summary">FastAPI-прокси с bearer-авторизацией, allowlist моделей и бэкендов, SSE-стримингом, таймаутами и защитой от утечки секретов в логи. Вокруг него собран слоёный QA-контур: контрактные и негативные API-тесты, реальный Chromium E2E по QA-консоли, детерминированные и live LLM-evaluation прогоны с метриками качества, стабильности, latency, токенов и стоимости, и prompt-injection canary.</p>
+            <ul class="stack"><li>Python 3.11+</li><li>FastAPI</li><li>pytest</li><li>httpx</li><li>Playwright</li><li>Allure</li><li>GitHub Actions</li><li>Docker Compose</li><li>Ollama</li><li>OpenRouter</li></ul>
+            <p class="card-links">
+              <a class="link link-repo" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Исходный код <b>↗</b></a>
+              <a class="link link-report" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">Allure-отчёт <b>↗</b></a>
+              <a class="link link-run" data-metric-run href="https://github.com/aka-gst/local-agent-gateway/actions/runs/33139799019" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>
+            </p>
+          </div>
+
+          <div class="report-metrics" aria-label="Результаты последнего прогона">
+            <div class="metric" data-metric="tests" data-status="passed">
+              <b class="value">66</b>
+              <span class="label">Автотестов</span>
+              <span class="note">Gateway API 28 · LLM evaluation 33 · End-to-end 5</span>
+            </div>
+            <div class="metric" data-metric="coverage" data-status="passed">
+              <b class="value">99%</b>
+              <span class="label">Покрытие кода</span>
+              <span class="note">порог CI — 90%</span>
+            </div>
+            <div class="metric" data-metric="pass_rate" data-status="passed">
+              <b class="value">100%</b>
+              <span class="label">Pass rate</span>
+              <span class="note">66 из 66 в последнем прогоне</span>
+            </div>
+            <div class="metric" data-metric="median_latency" data-status="passed">
+              <b class="value">3483 ms</b>
+              <span class="label">Median latency</span>
+              <span class="note">qwen3:8b, локальный прогон, p95 — 14912 мс</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-detail">
+          <div class="detail">
+            <p class="detail-head">Слои тестов</p>
+            <ul class="suites"><li data-status="passed">Gateway API <b>28/28</b></li><li data-status="passed">LLM evaluation <b>33/33</b></li><li data-status="passed">End-to-end <b>5/5</b></li></ul>
+          </div>
+          <div class="detail">
+            <p class="detail-head">Покрытие</p>
+            <p class="detail-body"><b>98.71%</b> при пороге CI 90% · 458 из 464 строк, не покрыто 6.</p>
+          </div>
+          <div class="detail">
+            <p class="detail-head">LLM-evaluation</p>
+            <p class="detail-body">Детерминированный набор «gateway-support-responses»: 3/3, mean score 0.855. Live-прогон qwen3:8b через ollama: 9/9, mean 0.755, median 3 483 мс, p95 14 912 мс, stability 1.000.</p>
+          </div>
+        </div>
+
+        <p class="report-context">
+          <span>Live-прогон — <b>recorded-local-run</b>: записан один раз 2026-08-15 на машине Apple Silicon M5, 24 GB unified memory (macOS, Ollama 0.32.12, Q4_K_M, 8.2B), профиль 3×3, temperature 0, seed 42. Это не проверяется каждым push — в отличие от тестов и покрытия.</span>
+          <span>Прогон от <time data-metric-updated datetime="2026-08-28T03:45:44Z">2026-08-28T03:45:44Z</time></span>
+        </p>
+      </section>
+
+      <section class="block" aria-labelledby="practicums-title">
+        <div class="block-head">
+          <p class="kicker">02</p>
+          <h2 id="practicums-title">Практикумы и обучение</h2>
+          <p>Материалы, которые собраны из реальных прогонов: инструкция, автотесты и сохранённые артефакты.</p>
+        </div>
+        <div class="grid">
+        <article class="card" id="p-praktikum-testing">
+          <div class="card-top"><span class="index">01</span><span class="status status-published">v3</span></div>
+          <p class="kicker">Практикум · веб + PDF</p>
+          <h3>Практикум: тестирование локального AI-агента</h3>
+          <p class="tagline">Пошаговый разбор того, как построить и проверить loopback-шлюз к локальной модели.</p>
+          <ul class="chips"><li><b>19</b> <span>разделов</span></li><li><b>16</b> <span>экспериментов</span></li><li><b>~82 мин</b> <span>чтения</span></li></ul>
+          <p class="summary">Русскоязычное руководство по сборке контура Open-LLM-VTuber → шлюз → Ollama: аудит окружения, безопасность, автотесты, benchmark провайдеров и операционный runbook. Материал вырос из реального прогона, а не из абстрактного примера — все выводы подкреплены сохранёнными артефактами.</p>
+          <ul class="stack"><li>Python</li><li>FastAPI</li><li>Ollama</li><li>OpenRouter</li><li>PowerShell</li><li>pytest</li></ul>
+          <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
+        </article>
+        <article class="card" id="p-ai-agent-service-lab">
+          <div class="card-top"><span class="index">02</span><span class="status status-wip">в развитии</span></div>
+          <p class="kicker">Практикум · веб + сервис</p>
+          <h3>Практикум: настройка LLM и агентов</h3>
+          <p class="tagline">Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.</p>
+          <ul class="chips"><li><b>16</b> <span>разделов</span></li><li><b>10</b> <span>лабораторных</span></li><li><b>~51 мин</b> <span>чтения</span></li></ul><ul class="chips"><li><b>76</b> <span>автотестов</span></li><li><b>6/6</b> <span>evaluation-сценариев</span></li><li><b>100%</b> <span>retrieval hit rate</span></li></ul>
+          <p class="summary">Рабочий сервис-лаборатория: локальная генерация через Ollama и qwen3:8b, structured output с JSON Schema, agent loop с allowlist инструментов, память сессий и audit log в SQLite, RAG по документам с проверяемыми источниками, API-key guard, Docker Compose и backup/restore с SHA-256.</p>
+          <ul class="stack"><li>Python 3.12</li><li>FastAPI</li><li>Pydantic</li><li>SQLite</li><li>Ollama</li><li>qwen3:8b</li><li>qwen3-embedding:0.6b</li><li>Docker Compose</li><li>pytest</li></ul>
+          <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
+        </article>
+        <article class="card" id="p-qa-quest">
+          <div class="card-top"><span class="index">03</span><span class="status status-wip">MVP</span></div>
+          <p class="kicker">Обучение · браузер</p>
+          <h3>QA Quest</h3>
+          <p class="tagline">Игровая лаборатория для повторения Python и входа в QA Automation.</p>
+          <ul class="chips"><li><b>14</b> <span>миссий в MVP</span></li><li><b>0</b> <span>внешних JS-зависимостей</span></li></ul>
+          <p class="summary">Часовой спринт из 14 миссий — от переменных до законченного консольного проекта QA Incident Tracker. Редактор кода, терминал и проверки прямо в браузере, всплывающий словарь терминов, XP и уровни, прогресс в localStorage. Дополнительные миссии — по pytest, API-тестированию, параметризации и LLM-evaluation.</p>
+          <ul class="stack"><li>JavaScript</li><li>HTML</li><li>CSS</li><li>localStorage</li></ul>
+          <p class="card-links"><a class="link link-demo" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть <b>→</b></a></p>
+        </article>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="products-title">
+        <div class="block-head">
+          <p class="kicker">03</p>
+          <h2 id="products-title">Продукты с заказчиком</h2>
+          <p>Работающие демо, где требования, границы безопасности и проверки описаны заранее.</p>
+        </div>
+        <div class="grid">
+        <article class="card" id="p-psy-ai-admin">
+          <div class="card-top"><span class="index">01</span><span class="status status-demo">MVP-демо</span></div>
+          <p class="kicker">Продукт · демо</p>
+          <h3>Psy AI Admin</h3>
+          <p class="tagline">Безопасный AI-администратор для сайта психологического центра.</p>
+          
+          <p class="summary">Помощник отвечает только из утверждённой базы знаний: услуги, специалисты, расписание, формат и стоимость, переход на нужную страницу и заявка администратору. Явно не даёт медицинских рекомендаций и не заменяет экстренную помощь — границы зашиты в сценарии и проверяются тестами.</p>
+          <ul class="stack"><li>JavaScript</li><li>RAG</li><li>Node test</li></ul>
+          <p class="card-links"><a class="link link-demo" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Открыть демо <b>→</b></a></p>
+        </article>
+        <article class="card" id="p-photo-meta-editor">
+          <div class="card-top"><span class="index">02</span><span class="status status-released">v1.2.0</span></div>
+          <p class="kicker">Продукт · local-first</p>
+          <h3>ФотоДата · Photo Meta Editor</h3>
+          <p class="tagline">Пакетное изменение даты съёмки фото и видео прямо в браузере, без загрузки на сервер.</p>
+          <ul class="chips"><li><b>0</b> <span>сетевых запросов после загрузки</span></li></ul>
+          <p class="summary">Меняет EXIF DateTime / DateTimeOriginal / DateTimeDigitized и временные поля MP4/MOV/M4V для одного файла, выбранной группы или целой папки. Приватность закреплена не обещанием, а политикой безопасности страницы: после загрузки интерфейсу запрещены сетевые соединения, и отсутствие API отправки данных проверяется отдельным автотестом.</p>
+          <ul class="stack"><li>JavaScript</li><li>Node.js test</li><li>Next.js</li><li>GitHub Actions</li></ul>
+          <p class="card-links"><a class="link link-demo" href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata">Открыть <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/photo_meta_editer" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
+        </article>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="profile-title">
+        <div class="block-head">
+          <p class="kicker">04</p>
+          <h2 id="profile-title">Опыт и навыки</h2>
+          <p>QA Automation / AI-LLM QA с техническим образованием и публичным портфолио автоматизации. Проверяю функциональность, интеграции, отказоустойчивость и безопасность данных; превращаю требования в тест-кейсы, баг-репорты и воспроизводимые проверки.</p>
+        </div>
+        <dl class="skills">
+          <div class="skill">
+            <dt>QA</dt>
+            <dd><span>функциональное</span><span>регрессионное</span><span>smoke</span><span>API</span><span>exploratory</span><span>тест-кейсы</span><span>чек-листы</span><span>баг-репорты</span><span>acceptance criteria</span></dd>
+          </div>
+          <div class="skill">
+            <dt>AI/LLM QA</dt>
+            <dd><span>оценка точности ответов</span><span>поиск галлюцинаций</span><span>пограничные сценарии</span><span>голосовой и текстовый интерфейс</span><span>сравнение моделей</span></dd>
+          </div>
+          <div class="skill">
+            <dt>Автоматизация</dt>
+            <dd><span>Python</span><span>pytest</span><span>httpx</span><span>FastAPI TestClient</span><span>Playwright</span><span>JavaScript</span><span>Node.js test</span><span>REST API</span><span>GitHub Actions</span><span>Docker/Compose</span><span>Allure</span></dd>
+          </div>
+          <div class="skill">
+            <dt>LLM evaluation</dt>
+            <dd><span>Ollama</span><span>OpenRouter</span><span>детерминированные и live-прогоны</span><span>quality / stability / latency / tokens / cost</span><span>prompt-injection canary</span><span>redaction</span></dd>
+          </div>
+          <div class="skill">
+            <dt>Инструменты</dt>
+            <dd><span>Git</span><span>CLI</span><span>PowerShell</span><span>uv</span><span>Codex</span><span>базовый SQL</span></dd>
+          </div>
+        </dl>
+        <div class="jobs">
+          <article class="job">
+            <p class="job-period">конец 2025 — сейчас</p>
+            <h3>Dharma AI</h3>
+            <p class="job-role">Тестирование AI/LLM-продукта · проектное участие</p>
+            <ul><li>Комплексно тестирую предрелизное iOS-приложение с персональным AI-наставником: пользовательские сценарии, стабильность диалогов, голосовой и текстовый интерфейсы.</li><li>Проверяю качество и фактическую точность ответов модели, работающей с внешней базой знаний; фиксирую ошибки и наблюдения.</li><li>Сравниваю модели и агентные инструменты, экспериментирую с локальным и удалённым развёртыванием.</li></ul>
+          </article>
+          <article class="job">
+            <p class="job-period">2026</p>
+            <h3>Local Agent Gateway / Agent Lab</h3>
+            <p class="job-role">Автор портфельного AI/LLM QA-проекта и практикума</p>
+            <ul><li>Построил тестовый контур FastAPI-шлюза: 66 автотестов уровней unit / API / integration / browser E2E / LLM-eval и 98.71% покрытия при пороге CI 90%.</li><li>Настроил pytest, Playwright, Allure, GitHub Actions и Docker/Compose; проверил авторизацию, SSE-стриминг, таймауты, повторы и отсутствие утечек секретов.</li><li>Реализовал детерминированный и live-evaluator для Ollama/OpenRouter с метриками pass rate, stability, latency, tokens и estimated cost.</li><li>Провёл benchmark qwen3:8b: 9/9 сценариев, mean score 0.755, stability 1.000; оформил Allure-отчёт и машиночитаемый фид метрик, публикуемый CI вместе с ним (v0.3.0).</li></ul>
+          </article>
+          <article class="job">
+            <p class="job-period">2020 — сейчас</p>
+            <h3>Международный образовательный проект</h3>
+            <p class="job-role">Мультимедийный контент и AI-инструменты · самозанятый</p>
+            <ul><li>Проверяю и улучшаю видео, субтитры, презентации и документы международной команды: ищу ошибки, контролирую комплектность и качество.</li><li>Несколько лет обрабатывал 50+ роликов в месяц, включая восстановление проблемных исходников и пакетный рендеринг.</li><li>Сейчас применяю AI для субтитров, преобразования документов и автоматизации повторяющихся операций.</li></ul>
+          </article>
+          <article class="job">
+            <p class="job-period">2018 — 2020</p>
+            <h3>Инди-студия образовательных игр</h3>
+            <p class="job-role">Геймдизайнер / Project Manager / креативный руководитель</p>
+            <ul><li>Координировал команду 9–10 человек: программисты, 3D-художники и геймдизайнер.</li><li>Спроектировал мир, системы, баланс и более 100 квестов образовательной RPG; проект доведён до двухчасовой играбельной альфы и протестирован на целевой аудитории.</li><li>Участвовал в выпущенных мобильных играх и проекте с удалённо управляемыми LEGO-роботами: игровая логика, физические лабиринты, тестовые сценарии.</li></ul>
+          </article>
+          <article class="job">
+            <p class="job-period">2010 — 2017</p>
+            <h3>Новосибирский государственный технический университет, АВТФ</h3>
+            <p class="job-role">Прикладная математика и информатика · квалификация «программист»</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="all-work-title">
+        <div class="block-head">
+          <p class="kicker">05</p>
+          <h2 id="all-work-title">Все проекты</h2>
+        </div>
+        <ul class="list">
+            <li>
+              <span class="list-title"><a href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Local Agent Gateway</a></span>
+              <span class="list-note">Loopback-шлюз между OpenAI-совместимым клиентом и локальной Ollama — и полный тестовый контур вокруг него.</span>
+              <span class="status status-released">v0.3.0</span>
+            </li>
+            <li>
+              <span class="list-title"><a href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></span>
+              <span class="list-note">Пошаговый разбор того, как построить и проверить loopback-шлюз к локальной модели.</span>
+              <span class="status status-published">v3</span>
+            </li>
+            <li>
+              <span class="list-title"><a href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></span>
+              <span class="list-note">Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.</span>
+              <span class="status status-wip">в развитии</span>
+            </li>
+            <li>
+              <span class="list-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></span>
+              <span class="list-note">Игровая лаборатория для повторения Python и входа в QA Automation.</span>
+              <span class="status status-wip">MVP</span>
+            </li>
+            <li>
+              <span class="list-title"><a href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Psy AI Admin</a></span>
+              <span class="list-note">Безопасный AI-администратор для сайта психологического центра.</span>
+              <span class="status status-demo">MVP-демо</span>
+            </li>
+            <li>
+              <span class="list-title"><a href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata">ФотоДата · Photo Meta Editor</a></span>
+              <span class="list-note">Пакетное изменение даты съёмки фото и видео прямо в браузере, без загрузки на сервер.</span>
+              <span class="status status-released">v1.2.0</span>
+            </li>
+            <li>
+              <span class="list-title"><a href="https://t.me/Buddhist_Diary_bot" target="_blank" rel="noopener">Буддийский дневник</a></span>
+              <span class="list-note">Шесть ежедневных осознанных отметок, личные записи и циклические списки практик.</span>
+              <span class="status status-live">работает</span>
+            </li>
+        </ul>
+      </section>
+
+      <section class="block contact" aria-labelledby="contact-title" id="contact">
+        <div class="block-head">
+          <p class="kicker">06</p>
+          <h2 id="contact-title">Связаться</h2>
+          <p>Почты и телефона на сайте нет. Напишите в Telegram или на GitHub — резюме с контактными данными вышлю в ответ.</p>
+        </div>
+        <div class="channels">
+          <a class="channel" href="https://t.me/gostinka27" target="_blank" rel="noopener me"
+             data-umami-event="contact-open" data-umami-event-network="telegram">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            <span><b>Telegram</b><i>t.me/gostinka27</i></span>
+            <b class="go">↗</b>
+          </a>
+          <a class="channel" href="https://github.com/aka-gst" target="_blank" rel="noopener me"
+             data-umami-event="contact-open" data-umami-event-network="github">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            <span><b>GitHub</b><i>github.com/aka-gst</i></span>
+            <b class="go">↗</b>
+          </a>
+        </div>
+      </section>
+      </div>
+      <div class="panel" data-panel="play">
+      <section class="ghero">
+        <div class="system-line"><span>AKA-GST / ARCADE NETWORK</span><span>STATUS: ONLINE</span></div>
+        <p class="kicker">Браузерные игры без регистрации</p>
+        <h1>aka<span>-</span>gst</h1>
+        <p class="intro">Открывай, запускай, играй. Без аккаунта, установки и лишних экранов.</p>
+        <div class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      </section>
+
+      <section class="block" aria-labelledby="playable-title">
+        <div class="block-head">
+          <p class="kicker">ВЫБЕРИ ИГРУ</p>
+          <h2 id="playable-title">Играбельное</h2>
+        </div>
+        <div class="ggrid">
+        <a class="gcard gcard-acid-uno" href="/acid/" data-umami-event="game-open" data-umami-event-game="acid-uno">
+          <div class="card-top"><span class="index">01</span><span class="status status-live">играть</span></div>
+          <h3>ACID UNO</h3>
+          <p>UNO с физичным drag-and-drop и неоновым cyberpunk-интерфейсом.</p>
+          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        </a>
+        <a class="gcard gcard-tetcolor" href="/tetcolor/" data-umami-event="game-open" data-umami-event-game="tetcolor">
+          <div class="card-top"><span class="index">02</span><span class="status status-live">играть</span></div>
+          <h3>Тетколор</h3>
+          <p>Та самая цветная головоломка из 90-х.</p>
+          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        </a>
+        <a class="gcard gcard-knb" href="/knb/" data-umami-event="game-open" data-umami-event-game="knb-2">
+          <div class="card-top"><span class="index">03</span><span class="status status-alpha">альфа-версия</span></div>
+          <h3>КНБ 2</h3>
+          <p>Камень-ножницы-бумага, превращённые в компактную тактическую дуэль.</p>
+          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        </a>
+          <aside class="records-card" aria-labelledby="records-title">
+            <div class="records-head"><span class="index">REC</span><span>СЕГОДНЯ · МСК</span></div>
+            <h3 id="records-title">Орёл / решка</h3>
+            <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
+            <p class="other-title">Другие игры сегодня</p>
+            <ul id="other-today">
+              <li data-game="tetcolor"><span>Тетколор</span><b>—</b></li>
+              <li data-game="knb-2"><span>КНБ 2</span><b>—</b></li>
+              <li data-game="neon-lines"><span>Неон Линии</span><b>—</b></li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="other-games-title">
+        <div class="block-head">
+          <p class="kicker">АРХИВ</p>
+          <h2 id="other-games-title">Все игры</h2>
+        </div>
+        <div class="ggrid">
+        <a class="gcard gcard-neon-lines" href="/lines/" data-umami-event="game-open" data-umami-event-game="neon-lines">
+          <div class="card-top"><span class="index">01</span><span class="status status-live">играть</span></div>
+          <h3>Неон Линии</h3>
+          <p>Передвигай шарики по полю и выстраивай пять одинаковых в линию.</p>
+          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        </a>
+        <a class="gcard gcard-coin-flip" href="/coin/" data-umami-event="game-open" data-umami-event-game="coin-flip">
+          <div class="card-top"><span class="index">02</span><span class="status status-live">играть</span></div>
+          <h3>Орёл или решка</h3>
+          <p>Угадывай сторону монеты, собирай серии и попадай в глобальный топ.</p>
+          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        </a>
+        <article class="gcard gcard-leela">
+          <div class="card-top"><span class="index">03</span><span class="status status-wip">в сборке</span></div>
+          <h3>Лила</h3>
+          <p>Путешествие по классическому полю из 72 клеток.</p>
+          <span class="launch">СКОРО</span>
+        </article>
+        </div>
+      </section>
+      </div>
+    </main>
+
+    <footer class="sitefoot">
+      <span>AKA-GST.RU</span>
+      <nav class="socials" aria-label="Профили в подвале">
+<a class="social" href="https://github.com/aka-gst" target="_blank" rel="noopener me"
+          data-umami-event="social-open" data-umami-event-network="github"
+          data-umami-event-place="footer" title="GitHub">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          <span class="sr-only">GitHub</span></a>
+<a class="social" href="https://x.com/aka_gst" target="_blank" rel="noopener me"
+          data-umami-event="social-open" data-umami-event-network="x"
+          data-umami-event-place="footer" title="X">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          <span class="sr-only">X</span></a>
+<a class="social" href="https://t.me/gostinka27" target="_blank" rel="noopener me"
+          data-umami-event="social-open" data-umami-event-network="telegram"
+          data-umami-event-place="footer" title="Telegram">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          <span class="sr-only">Telegram</span></a>
+      </nav>
+      <span class="foot-note">Без аккаунта и трекеров третьих сторон</span>
+    </footer>
+
+    <script src="/assets/app.js?v=1" defer></script>
+  </body>
+</html>

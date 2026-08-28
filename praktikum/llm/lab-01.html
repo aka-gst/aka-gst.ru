@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лабораторная работа 1: модель как API — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Научиться отличать модель, клиентское приложение и агента. На этом этапе агент ещё не создаётся: сначала нужно воспроизводимо получить ответ модели.">
+<meta property="og:title" content="Лабораторная работа 1: модель как API — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Научиться отличать модель, клиентское приложение и агента. На этом этапе агент ещё не создаётся: сначала нужно воспроизводимо получить ответ модели.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/lab-01.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/lab-01.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Лабораторная работа 1: модель как API", "description": "Научиться отличать модель, клиентское приложение и агента. На этом этапе агент ещё не создаётся: сначала нужно воспроизводимо получить ответ модели.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 1 · 3 мин</p><h1>Лабораторная работа 1: модель как API</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#cel">Цель</a></li><li><a href="#zadachi">Задачи</a></li><li><a href="#kriterii-zaversheniya">Критерии завершения</a></li><li><a href="#rezultat-vypolneniya">Результат выполнения</a></li><li><a href="#sleduyuschii-shag">Следующий шаг</a></li><li><a href="#rezultaty-vypolneniya">Результаты выполнения</a></li><li><a href="#sreda">Среда</a></li><li><a href="#testovyi-prompt">Тестовый prompt</a></li><li><a href="#proverka-cherez-cli">Проверка через CLI</a></li><li><a href="#proverka-cherez-http-api">Проверка через HTTP API</a></li><li><a href="#izmereniya">Измерения</a></li><li><a href="#nablyudeniya-i-ogranicheniya">Наблюдения и ограничения</a></li><li><a href="#povtornyi-zapusk">Повторный запуск</a></li><li><a href="#itog">Итог</a></li></ol></details><article><h2 id="cel">Цель</h2><p>Научиться отличать модель, клиентское приложение и агента. На этом этапе агент ещё не создаётся: сначала нужно воспроизводимо получить ответ модели.</p><h2 id="zadachi">Задачи</h2><ol><li>Установить и проверить Ollama.</li><li>Выбрать небольшую модель, подходящую компьютеру.</li><li>Выполнить запрос через CLI.</li><li>Выполнить тот же запрос через HTTP API.</li><li>Сохранить только обезличенный пример запроса и ответа.</li><li>Измерить время ответа и записать ограничения.</li></ol><h2 id="kriterii-zaversheniya">Критерии завершения</h2><ul><li>health check Ollama успешен;</li><li>модель отвечает на один и тот же тестовый запрос через CLI и API;</li><li>известны model id, время ответа и объём доступного контекста;</li><li>секреты и персональные пути не попали в Git;</li><li>написана короткая инструкция повторного запуска.</li></ul><h2 id="rezultat-vypolneniya">Результат выполнения</h2><p>Команды, обезличенные ответы, измерения и ограничения сохранены в RESULTS.md.</p><h2 id="sleduyuschii-shag">Следующий шаг</h2><p>Во второй лабораторной работе свободный ответ будет заменён на проверяемую JSON-структуру.</p><h2 id="rezultaty-vypolneniya">Результаты выполнения</h2><p>Дата проверки: 2026-08-14.</p><h2 id="sreda">Среда</h2><ul><li>macOS на Apple Silicon;</li><li>объединённая память: 24 ГБ;</li><li>Ollama: <code>0.32.12</code>;</li><li>модель: <code>qwen3:8b</code>;</li><li>размер модели на диске: около 5,2 ГБ;</li><li>заявленное моделью контекстное окно: 40K токенов;</li><li>локальный API: <code>http://127.0.0.1:11434</code>;</li><li>ускорение: Apple Metal.</li></ul><p>Персональные пути, идентификаторы устройства и ключи в отчёт не включены.</p><h2 id="testovyi-prompt">Тестовый prompt</h2><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>Ответь одним коротким предложением: что такое HTTP API?</code></pre></div><h2 id="proverka-cherez-cli">Проверка через CLI</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>ollama run qwen3:8b \
+  &quot;Ответь одним коротким предложением: что такое HTTP API?&quot;</code></pre></div><p>Полученный ответ:</p><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>HTTP API — это набор правил и методов для взаимодействия с веб-сервисами через HTTP-запросы.</code></pre></div><h2 id="proverka-cherez-http-api">Проверка через HTTP API</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>curl -s http://127.0.0.1:11434/api/chat \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{
+    &quot;model&quot;: &quot;qwen3:8b&quot;,
+    &quot;messages&quot;: [
+      {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;Ответь одним коротким предложением: что такое HTTP API?&quot;
+      }
+    ],
+    &quot;stream&quot;: false
+  }&#x27; | python3 -m json.tool</code></pre></div><p>Полученный <code>message.content</code>:</p><div class="snippet" data-lang="text"><div class="snippet-bar"><span class="snippet-lang"></span></div><pre><code>HTTP API — это интерфейс для взаимодействия между клиентом и сервером через HTTP-запросы и ответы, позволяющий обмениваться данными в веб-приложениях.</code></pre></div><p>Ключевые признаки успешного ответа:</p><div class="snippet" data-lang="json"><div class="snippet-bar"><span class="snippet-lang">json</span></div><pre><code>{
+  &quot;model&quot;: &quot;qwen3:8b&quot;,
+  &quot;done&quot;: true,
+  &quot;done_reason&quot;: &quot;stop&quot;,
+  &quot;prompt_eval_count&quot;: 27,
+  &quot;eval_count&quot;: 235
+}</code></pre></div><h2 id="izmereniya">Измерения</h2><p>Метрики первого сохранённого HTTP-запроса:</p><ul><li>полное время: около 10,85 с;</li><li>загрузка модели: около 0,09 с;</li><li>обработка prompt: около 0,05 с;</li><li>генерация: около 10,70 с;</li><li>скорость генерации: около 22 токенов/с.</li></ul><p>Время вычислено из полей Ollama, значения которых возвращаются в наносекундах. Скорость рассчитана как <code>eval_count / eval_duration</code>.</p><h2 id="nablyudeniya-i-ogranicheniya">Наблюдения и ограничения</h2><ul><li>ответы на одинаковый prompt могут отличаться, потому что генерация вероятностная;</li><li><code>qwen3:8b</code> может возвращать отдельное поле <code>thinking</code>, увеличивающее время и число сгенерированных токенов;</li><li>локальная модель не гарантирует фактическую точность ответа;</li><li>скорость зависит от свободной памяти, температуры устройства, длины контекста и параметров генерации;</li><li>при остановленном Ollama запрос к порту <code>11434</code> завершится ошибкой подключения.</li></ul><h2 id="povtornyi-zapusk">Повторный запуск</h2><ol><li>Запустить приложение Ollama.</li><li>Проверить сервер: <code>curl http://127.0.0.1:11434/api/version</code>.</li><li>Проверить модель: <code>ollama list</code>.</li><li>Повторить CLI- и HTTP-запросы выше.</li></ol><h2 id="itog">Итог</h2><p>Одна локальная модель успешно вызвана двумя клиентами: командой Ollama и HTTP-клиентом <code>curl</code>. Следующий этап — заменить свободный текст проверяемым structured output.</p></article><nav class="pager"><a class="prev" href="roadmap.html"><span class="eyebrow">Назад</span>Маршрут обучения</a><a class="next" href="lab-02.html"><span class="eyebrow">Дальше</span>Лабораторная работа 2: structured output</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

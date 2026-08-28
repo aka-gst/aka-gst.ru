@@ -1,0 +1,32 @@
+{
+  "schema": "aka-gst.qa-metrics-history/1",
+  "entries": [
+    {
+      "generated_at": "2026-08-28T02:27:17Z",
+      "commit": "b1b2987",
+      "status": "passed",
+      "tests": 66,
+      "pass_rate": 1.0,
+      "coverage": 98.71,
+      "duration_ms": 2361
+    },
+    {
+      "generated_at": "2026-08-28T03:42:48Z",
+      "commit": "fcfebd9",
+      "status": "passed",
+      "tests": 66,
+      "pass_rate": 1.0,
+      "coverage": 98.71,
+      "duration_ms": 2158
+    },
+    {
+      "generated_at": "2026-08-28T03:45:44Z",
+      "commit": "8c0115b",
+      "status": "passed",
+      "tests": 66,
+      "pass_rate": 1.0,
+      "coverage": 98.71,
+      "duration_ms": 1948
+    }
+  ]
+}

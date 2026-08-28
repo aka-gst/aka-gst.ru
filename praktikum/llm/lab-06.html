@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лабораторная работа 6: evaluation и pytest — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Проверять качество RAG на наборе заранее определённых вопросов, а не судить по одному удачному демо.">
+<meta property="og:title" content="Лабораторная работа 6: evaluation и pytest — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Проверять качество RAG на наборе заранее определённых вопросов, а не судить по одному удачному демо.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/lab-06.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/lab-06.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Лабораторная работа 6: evaluation и pytest", "description": "Проверять качество RAG на наборе заранее определённых вопросов, а не судить по одному удачному демо.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Эксперимент 6 · 3 мин</p><h1>Лабораторная работа 6: evaluation и pytest</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#cel">Цель</a></li><li><a href="#etalonnyi-nabor">Эталонный набор</a></li><li><a href="#zapusk">Запуск</a></li><li><a href="#metriki">Метрики</a></li><li><a href="#chto-eti-testy-ne-dokazyvayut">Что эти тесты не доказывают</a></li><li><a href="#modulnye-testy">Модульные тесты</a></li></ol></details><article><h2 id="cel">Цель</h2><p>Проверять качество RAG на наборе заранее определённых вопросов, а не судить по одному удачному демо.</p><h2 id="etalonnyi-nabor">Эталонный набор</h2><p>Файл <code>evals/rag_cases.json</code> содержит шесть сценариев:</p><ul><li>стоимость и сроки доставки;</li><li>срок возврата товара и денег;</li><li>работа поддержки в выходные;</li><li>вопрос о гарантии, ответа на который в документах нет.</li></ul><p>Каждый положительный сценарий задаёт ожидаемый источник и обязательные фрагменты ответа. Отрицательный сценарий требует отказа от ответа без источников.</p><h2 id="zapusk">Запуск</h2><p>Сначала должен быть построен RAG-индекс:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.rag index</code></pre></div><p>Затем запустите evaluation:</p><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run python -m agent_lab.evaluation</code></pre></div><p>Команда возвращает код <code>0</code>, только если прошли все сценарии. Отчёты сохраняются в:</p><ul><li><code>artifacts/evals/rag-eval.json</code> — данные для автоматической обработки;</li><li><code>artifacts/evals/rag-eval.md</code> — краткий отчёт для человека.</li></ul><h2 id="metriki">Метрики</h2><ul><li><code>pass_rate</code> — доля полностью успешных сценариев;</li><li><code>retrieval_hit_rate</code> — доля положительных вопросов, где ожидаемый источник попал в top-3;</li><li><code>source_pass</code> — модель сослалась на ожидаемый источник;</li><li><code>answer_pass</code> — ответ содержит обязательные контрольные фрагменты;</li><li><code>average_latency_seconds</code> — среднее время полного запроса.</li></ul><h2 id="chto-eti-testy-ne-dokazyvayut">Что эти тесты не доказывают</h2><p>Проверка ключевых фрагментов не понимает весь смысл ответа. Она может пропустить убедительно написанную ошибку или отклонить правильную переформулировку. Для клиентского проекта набор расширяют реальными обезличенными вопросами и периодически проверяют ответы вручную.</p><h2 id="modulnye-testy">Модульные тесты</h2><div class="snippet" data-lang="bash"><div class="snippet-bar"><span class="snippet-lang">bash</span></div><pre><code>uv run pytest</code></pre></div><p>Они не вызывают модель и быстро проверяют саму логику подсчёта PASS/FAIL и метрик.</p></article><nav class="pager"><a class="prev" href="lab-05.html"><span class="eyebrow">Назад</span>Лабораторная работа 5: embeddings и RAG</a><a class="next" href="lab-07.html"><span class="eyebrow">Дальше</span>Лабораторная работа 7: FastAPI и упаковка</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>

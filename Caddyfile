@@ -1,0 +1,73 @@
+aka-gst.ru, www.aka-gst.ru {
+  encode zstd gzip
+
+  header Cache-Control "no-cache, must-revalidate"
+
+  redir /tetris /tetcolor/ 308
+  redir /tetris/* /tetcolor/ 308
+  redir /tetcolor /tetcolor/ 308
+  redir /psy-admin /psy-admin/ 308
+  redir /photodata /photodata/ 308
+  redir /acid /acid/ 308
+  redir /qa-quest /qa-quest/ 308
+  redir /praktikum /praktikum/ 308
+
+  # Статика сайта версионируется строкой запроса, поэтому её можно кэшировать.
+  @assets path /assets/* /favicon.svg
+  header @assets Cache-Control "public, max-age=604800"
+
+  handle_path /api/leaderboard/* {
+    reverse_proxy leaderboard:8080
+  }
+
+  # Общий вход всего сайта. Сервис живёт на уровне сайта (ops/accounts), а не
+  # внутри какого-то проекта: одна учётная запись обслуживает Лилу, QA Quest и
+  # лидерборд. Префикс не срезается — сервис ждёт полный путь.
+  handle /api/auth/* {
+    reverse_proxy accounts:8080
+  }
+
+  handle /api/progress/* {
+    reverse_proxy accounts:8080
+  }
+
+  # Keep anonymous analytics collection on the trusted main origin. The Umami
+  # admin UI remains isolated on stats.aka-gst.ru.
+  handle_path /pulse/* {
+    reverse_proxy umami:3000
+  }
+
+  handle /_next/* {
+    reverse_proxy tetcolor:3000
+  }
+
+  handle_path /tetcolor/* {
+    reverse_proxy tetcolor:3000
+  }
+
+  handle_path /lines/* {
+    root * /srv/lines
+    file_server
+  }
+
+  handle_path /knb/* {
+    root * /srv/knb
+    file_server
+  }
+
+  handle_path /coin/* {
+    root * /srv/coin
+    file_server
+  }
+
+  root * /srv
+  file_server
+}
+
+stats.aka-gst.ru {
+  # The dashboard is private and is opened locally through an SSH tunnel.
+  # Keeping the login form off the public internet also prevents false
+  # phishing detections on this administrative subdomain.
+  header X-Robots-Tag "noindex, nofollow, noarchive"
+  respond "Private analytics dashboard" 404
+}

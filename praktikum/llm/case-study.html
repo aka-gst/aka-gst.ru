@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разбор кейса — Настройка LLM и AI-агентов под задачу</title>
+<meta name="description" content="Собрать локальный сервис, который классифицирует обращения, безопасно вызывает разрешённые инструменты и отвечает по документам с проверяемыми источниками.">
+<meta property="og:title" content="Разбор кейса — Настройка LLM и AI-агентов под задачу">
+<meta property="og:description" content="Собрать локальный сервис, который классифицирует обращения, безопасно вызывает разрешённые инструменты и отвечает по документам с проверяемыми источниками.">
+<meta property="og:type" content="article">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aka-gst.ru/praktikum/llm/case-study.html">
+<meta property="og:url" content="https://aka-gst.ru/praktikum/llm/case-study.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Разбор кейса", "description": "Собрать локальный сервис, который классифицирует обращения, безопасно вызывает разрешённые инструменты и отвечает по документам с проверяемыми источниками.", "inLanguage": "ru", "isPartOf": {"@type": "Course", "name": "Настройка LLM и AI-агентов под задачу"}}</script>
+</head><body>
+<header class="top"><div class="wrap"><a href="index.html">Настройка LLM и AI-агентов под задачу</a><span class="sep">/</span><a href="https://aka-gst.ru/">aka-gst</a></div></header><main><div class="wrap"><section class="unit-head"><p class="eyebrow">Раздел · 3 мин</p><h1>Разбор кейса</h1></section><details class="onpage"><summary>Содержание раздела</summary><ol><li><a href="#zadacha">Задача</a></li><li><a href="#reshenie">Решение</a></li><li><a href="#proverennyi-rezultat">Проверенный результат</a></li><li><a href="#obnaruzhennaya-oshibka">Обнаруженная ошибка</a></li><li><a href="#ogranicheniya">Ограничения</a></li></ol></details><article><h2 id="zadacha">Задача</h2><p>Собрать локальный сервис, который классифицирует обращения, безопасно вызывает разрешённые инструменты и отвечает по документам с проверяемыми источниками.</p><h2 id="reshenie">Решение</h2><ul><li>Ollama и <code>qwen3:8b</code> для локальной генерации;</li><li>Pydantic и JSON Schema для контрактов;</li><li>allowlist из двух узких инструментов;</li><li>SQLite для памяти, audit log и небольшого векторного индекса;</li><li><code>qwen3-embedding:0.6b</code> для поиска по русскоязычным документам;</li><li>FastAPI и Docker Compose для локального API;</li><li>pytest и эталонный RAG-набор для измеримой проверки.</li></ul><h2 id="proverennyi-rezultat">Проверенный результат</h2><ul><li>41 тест после добавления API-защиты и backup/restore;</li><li>RAG evaluation: 6/6 сценариев, retrieval hit rate 100%;</li><li>корректный отказ на вопрос, ответа на который нет в документах;</li><li>контейнер ARM64 проходит health/readiness и обращается к Ollama хоста.</li></ul><p>Цифры относятся к демонстрационному набору и не переносятся автоматически на данные клиента.</p><h2 id="obnaruzhennaya-oshibka">Обнаруженная ошибка</h2><p>На первом сквозном тесте модель перепутала цену <code>2490</code> с числом <code>1001</code> из ID заказа. Универсальный калькулятор был заменён узким инструментом <code>calculate_order_total</code>, который получает цену из доверенного справочника. Это устранило возможность самостоятельно подставить цену.</p><h2 id="ogranicheniya">Ограничения</h2><ul><li>demo-документы вымышлены;</li><li>SQLite-поиск рассчитан на небольшой объём;</li><li>локальная модель может ошибаться;</li><li>публичный доступ требует TLS, управления секретами, лимитов запросов и мониторинга;</li><li>качество нового клиентского набора должно измеряться отдельно.</li></ul></article><nav class="pager"><a class="prev" href="service.html"><span class="eyebrow">Назад</span>Как это превращается в услугу</a><a class="next" href="templates.html"><span class="eyebrow">Дальше</span>Шаблоны для работы с клиентом</a></nav></div></main><footer><div class="wrap">Практикум aka-gst · собран из <code>*.md</code> · обновлён 2026-08-28 · <a href="https://github.com/aka-gst/ai-agent-service-lab">исходники</a> · <a href="course.json">course.json</a></div></footer><script>document.querySelectorAll('.snippet').forEach(function(box){
+  var pre=box.querySelector('pre'), bar=box.querySelector('.snippet-bar');
+  if(!pre||!bar||!navigator.clipboard) return;
+  var button=document.createElement('button');
+  button.type='button'; button.className='copy'; button.textContent='Копировать';
+  button.addEventListener('click',function(){
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      button.textContent='Скопировано'; setTimeout(function(){button.textContent='Копировать';},1600);
+    });
+  });
+  bar.appendChild(button);
+});
+(function(){
+  var key='practicum:'+location.pathname;
+  var boxes=document.querySelectorAll('.checklist input');
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(error){saved={}}
+  boxes.forEach(function(box,index){
+    box.checked=saved[index]===true;
+    box.addEventListener('change',function(){
+      saved[index]=box.checked;
+      try{localStorage.setItem(key,JSON.stringify(saved))}catch(error){}
+    });
+  });
+})();</script>
+</body></html>
