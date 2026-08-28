@@ -95,6 +95,46 @@
       .catch(() => {});
   }
 
+  // ── Прокрутка по блокам и проявление ─────────────────────────────
+  const секции = [...document.querySelectorAll('.report, .block')];
+
+  // Раздел выше экрана привязывать нельзя: прокрутка внутри него должна
+  // оставаться свободной. Меряем, а не угадываем по числу карточек.
+  const пометитьВысокие = () => {
+    const порог = innerHeight * 0.85;
+    секции.forEach((s) => s.classList.toggle('is-tall', s.offsetHeight > порог));
+  };
+  пометитьВысокие();
+  addEventListener('resize', пометитьВысокие);
+  // Скрытая панель меряется в ноль, поэтому при загрузке размечается только
+  // активный трек. Пересчитываем после переключения — обработчик добавлен
+  // вторым, так что отработает уже по новому треку.
+  document.querySelectorAll('[data-track-to]').forEach((кнопка) =>
+    кнопка.addEventListener('click', () => requestAnimationFrame(пометитьВысокие))
+  );
+
+  // Проявление ставим только если браузер умеет наблюдать за видимостью и
+  // человек не просил убрать движение. Класс вешает скрипт, а не разметка:
+  // не выполнится — содержимое просто останется видимым.
+  const движениеРазрешено = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if ('IntersectionObserver' in window && движениеРазрешено) {
+    const показать = (el) => {
+      el.classList.add('is-visible');
+      наблюдатель.unobserve(el);
+    };
+    const наблюдатель = new IntersectionObserver(
+      (записи) => записи.forEach((з) => з.isIntersecting && показать(з.target)),
+      { rootMargin: '0px 0px -12% 0px' }
+    );
+    секции.forEach((s) => {
+      s.dataset.reveal = '';
+      наблюдатель.observe(s);
+    });
+    // Предохранитель: если наблюдатель почему-то не сработает, через две
+    // секунды показываем всё. Невидимая страница хуже отсутствия анимации.
+    setTimeout(() => секции.forEach((s) => s.classList.add('is-visible')), 2000);
+  }
+
   // ── Рекорды дня ───────────────────────────────────────────────────
   const scoreUrl = (game, limit) =>
     `/api/leaderboard/scores?game=${encodeURIComponent(game)}&period=today&limit=${limit}`;

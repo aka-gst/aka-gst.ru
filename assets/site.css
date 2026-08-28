@@ -223,6 +223,35 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 .report-context b { color: var(--warn); font-family: var(--mono); font-weight: 600; }
 .report-context time { font-family: var(--mono); }
 
+/* ── Прокрутка по блокам ─────────────────────────────────────────── */
+
+html { scroll-behavior: smooth; }
+
+/* Привязка мягкая (proximity), а не жёсткая: mandatory цепляет каждый блок
+   и внутри длинных разделов превращается в борьбу с пользователем. Мягкая
+   притягивает, только когда прокрутка и так остановилась рядом.
+   На узких экранах не включаем вовсе: там она мешает больше, чем помогает. */
+@media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
+  html { scroll-snap-type: y proximity; }
+  .report, .block { scroll-snap-align: start; scroll-margin-top: 78px; }
+  /* Раздел выше экрана привязку теряет — класс вешает app.js по замеру,
+     иначе список из пятнадцати проектов притягивало бы к началу. */
+  .report.is-tall, .block.is-tall { scroll-snap-align: none; }
+}
+
+/* Проявление блока при входе в экран. Класс data-reveal ставит app.js, а не
+   разметка: если скрипт не выполнится, содержимое просто останется видимым,
+   а не исчезнет навсегда. */
+[data-reveal] {
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .45s ease, transform .45s ease;
+}
+[data-reveal].is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+
 /* ── Общие блоки ──────────────────────────────────────────────────── */
 
 .block { margin-top: 64px; }
