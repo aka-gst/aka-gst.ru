@@ -5,7 +5,11 @@
    Touch drag / smooth play / mobile first
    ========================================================= */
 
-const COLORS = ["red", "yellow", "green", "blue"];
+/*
+  Правила игры целиком живут в src/rules.js.
+  Здесь остаётся состояние партии и отрисовка.
+*/
+const COLORS = AcidRules.COLORS;
 
 /*
   The small set of values most often tuned while polishing the UI.
@@ -16,11 +20,43 @@ const ACID_UI = Object.freeze({
 });
 
 let deck = [];
-let player = [];
-let bot = [];
 let discard = [];
 
+/*
+  Стол — кольцо из 2..7 мест. Место 0 всегда живое.
+  seats[i] = { index, kind, hand, uno }
+*/
+let seats = [];
+
+let tableSize = 2;
+
+let activeSeat = 0;
+
+let direction = 1;
+
+/*
+  player и bot — это не копии, а ссылки на руки из seats.
+  player всегда указывает на руку места 0, bot — на руку
+  того соперника, который ходит прямо сейчас.
+
+  turn остаётся строкой из двух значений: на неё завязана
+  вся отрисовка и весь ход партии. "player" — ходит место 0,
+  "bot" — ходит любой соперник; кто именно, знает activeSeat.
+*/
+let player = [];
+let bot = [];
+
 let turn = "player";
+
+/*
+  Ход, добор и вся анимация живут в v9.1.js. Здесь только
+  объявления, чтобы ему было куда присвоить: и game.js,
+  и v9.1.js работают в strict mode.
+*/
+let playerDraw;
+let playerPlay;
+let botTurn;
+let botPlay;
 let currentColor = "red";
 
 let drawPenalty = 0;
@@ -60,25 +96,69 @@ function random(max) {
   );
 }
 
-function shuffle(array) {
-  for (
-    let i = array.length - 1;
-    i > 0;
-    i--
-  ) {
-    const j = random(i + 1);
 
-    [
-      array[i],
-      array[j]
-    ] = [
-      array[j],
-      array[i]
-    ];
+
+/*
+  Снимок стола для чистых функций правил.
+*/
+function tableView() {
+  return {
+    top: topCard(),
+    currentColor,
+    drawPenalty,
+    penaltyType
+  };
+}
+
+/* =========================================================
+   МЕСТА
+   ========================================================= */
+
+/*
+  Имя места. Соперники нумеруются с единицы, чтобы
+  «БОТ 3» на экране совпадал с третьим значком сверху.
+*/
+function seatName(index) {
+
+  if (index === AcidStore.mySeat()) {
+    return "ТЫ";
   }
 
-  return array;
+  if (AcidStore.online()) {
+
+    return (
+      window.AcidRoom
+        ?.state
+        .names[index] ||
+      `ИГРОК ${index + 1}`
+    );
+  }
+
+  return seats.length > 2
+    ? `БОТ ${index}`
+    : "ACID BOT";
 }
+
+function seatCount() {
+  return seats.length;
+}
+
+function humanSeats() {
+  return seats.filter(
+    seat => seat.kind === "human"
+  );
+}
+
+function activeSeatObject() {
+  return seats[activeSeat] || seats[0];
+}
+
+
+/*
+  Передать ход после выложенной карты.
+  card = null — ход просто уходит соседу.
+*/
+
 
 function topCard() {
   return (
@@ -88,16 +168,6 @@ function topCard() {
   );
 }
 
-function makeCard(
-  color,
-  value
-) {
-  return {
-    id: nextCardId++,
-    color,
-    value
-  };
-}
 
 function cardLabel(value) {
   switch (value) {
@@ -139,216 +209,27 @@ function unavailable() {
    DECK
    ========================================================= */
 
-function createDeck() {
-  deck = [];
-
-  nextCardId = 1;
-
-  COLORS.forEach(color => {
-
-    deck.push(
-      makeCard(
-        color,
-        "0"
-      )
-    );
-
-    for (
-      let number = 1;
-      number <= 9;
-      number++
-    ) {
-      deck.push(
-        makeCard(
-          color,
-          String(number)
-        )
-      );
-
-      deck.push(
-        makeCard(
-          color,
-          String(number)
-        )
-      );
-    }
-
-    for (
-      let i = 0;
-      i < 2;
-      i++
-    ) {
-      deck.push(
-        makeCard(
-          color,
-          "skip"
-        )
-      );
-
-      deck.push(
-        makeCard(
-          color,
-          "reverse"
-        )
-      );
-
-      deck.push(
-        makeCard(
-          color,
-          "+2"
-        )
-      );
-    }
-  });
-
-  for (
-    let i = 0;
-    i < 4;
-    i++
-  ) {
-    deck.push(
-      makeCard(
-        "wild",
-        "wild"
-      )
-    );
-
-    deck.push(
-      makeCard(
-        "wild",
-        "+4"
-      )
-    );
-  }
-
-  shuffle(deck);
-}
 
 
 /* =========================================================
    DRAW / RECYCLE
    ========================================================= */
 
-function recycleDeck() {
-  if (deck.length > 0) {
-    return true;
-  }
 
-  if (discard.length <= 1) {
-    return false;
-  }
 
-  const top =
-    discard.pop();
-
-  deck =
-    discard.slice();
-
-  discard = [top];
-
-  shuffle(deck);
-
-  AcidFX.status(
-    "КОЛОДА ПЕРЕМЕШАНА"
-  );
-
-  return true;
-}
-
-function takeRaw() {
-  if (!recycleDeck()) {
-    return null;
-  }
-
-  return deck.pop() || null;
-}
-
-function takeMany(amount) {
-  const cards = [];
-
-  for (
-    let i = 0;
-    i < amount;
-    i++
-  ) {
-    const card =
-      takeRaw();
-
-    if (!card) {
-      break;
-    }
-
-    cards.push(card);
-  }
-
-  return cards;
-}
 
 
 /* =========================================================
    RULES
    ========================================================= */
 
-function normalPlayable(card) {
-  const top = topCard();
 
-  if (!top) {
-    return true;
-  }
-
-  if (card.color === "wild") {
-    return true;
-  }
-
-  return (
-    card.color ===
-      currentColor ||
-
-    card.value ===
-      top.value
-  );
-}
-
-function canDefendPenalty(card) {
-  if (drawPenalty <= 0) {
-    return false;
-  }
-
-  /*
-    ACID UNO:
-
-    +2 -> +2 / +4
-    +4 -> +4
-  */
-
-  if (
-    penaltyType === "+2"
-  ) {
-    return (
-      card.value === "+2" ||
-      card.value === "+4"
-    );
-  }
-
-  if (
-    penaltyType === "+4"
-  ) {
-    return (
-      card.value === "+4"
-    );
-  }
-
-  return false;
-}
 
 function canPlay(card) {
-  if (drawPenalty > 0) {
-    return (
-      canDefendPenalty(card)
-    );
-  }
-
-  return normalPlayable(card);
+  return AcidRules.canPlay(
+    card,
+    tableView()
+  );
 }
 
 
@@ -356,19 +237,9 @@ function canPlay(card) {
    INTERCEPT
    ========================================================= */
 
-function sameCard(a, b) {
-  if (!a || !b) {
-    return false;
-  }
-
-  return (
-    a.color === b.color &&
-    a.value === b.value
-  );
-}
 
 function canIntercept(card) {
-  return sameCard(
+  return AcidRules.canIntercept(
     card,
     topCard()
   );
@@ -379,45 +250,6 @@ function canIntercept(card) {
    APPLY CARD
    ========================================================= */
 
-function applyCardState(
-  card,
-  chosenColor
-) {
-  discard.push(card);
-
-  if (
-    card.color === "wild"
-  ) {
-    currentColor =
-      chosenColor ||
-      COLORS[
-        random(
-          COLORS.length
-        )
-      ];
-  } else {
-    currentColor =
-      card.color;
-  }
-
-  if (
-    card.value === "+2"
-  ) {
-    drawPenalty += 2;
-
-    if (!penaltyType) {
-      penaltyType = "+2";
-    }
-  }
-
-  if (
-    card.value === "+4"
-  ) {
-    drawPenalty += 4;
-
-    penaltyType = "+4";
-  }
-}
 
 
 /* =========================================================
@@ -428,82 +260,18 @@ function startGame() {
 
   cancelDrag(true);
 
-  deck = [];
-  player = [];
-  bot = [];
-  discard = [];
-
-  turn = "player";
-
-  currentColor = "red";
-
-  drawPenalty = 0;
-  penaltyType = null;
+  /*
+    Раздача целиком в редьюсере: колода, тасовка и первая
+    карта на столе живут в src/match.js.
+  */
+  AcidStore.reset({
+    seats: tableSize,
+    humans: 1
+  });
 
   pendingWild = null;
 
-  gameOver = false;
   actionBusy = false;
-
-  createDeck();
-
-  player.push(
-    ...takeMany(7)
-  );
-
-  bot.push(
-    ...takeMany(7)
-  );
-
-
-  /*
-    Стартуем с обычной
-    числовой карты.
-  */
-
-  let first =
-    takeRaw();
-
-  while (
-    first &&
-    (
-      first.color === "wild" ||
-      [
-        "skip",
-        "reverse",
-        "+2"
-      ].includes(
-        first.value
-      )
-    )
-  ) {
-    const position =
-      random(
-        deck.length + 1
-      );
-
-    deck.splice(
-      position,
-      0,
-      first
-    );
-
-    first =
-      takeRaw();
-  }
-
-  if (!first) {
-    first =
-      makeCard(
-        "red",
-        "0"
-      );
-  }
-
-  discard.push(first);
-
-  currentColor =
-    first.color;
 
   $("colorPicker")
     ?.classList
@@ -685,12 +453,52 @@ function getFanLayout(count) {
   const baseCardWidth =
     parseFloat(rootStyle.getPropertyValue("--card-w")) || 84;
 
+  const baseCardHeight =
+    parseFloat(rootStyle.getPropertyValue("--card-h")) || 126;
+
   const cardWidth =
     baseCardWidth * scale;
 
+  const cardHeight =
+    baseCardHeight * scale;
+
+  let angle =
+    Math.min(
+      29,
+      8 + count * 1.45
+    );
+
+  if (count > 18) {
+    angle = 25;
+  }
+
+  /*
+    Крайние карты веера повёрнуты на ±angle,
+    поэтому в экран должен помещаться габарит
+    ПОВЁРНУТОЙ карты, а не cardWidth / 2.
+
+    Точка вращения задана в v9.1.css:
+    #hand .handCard { transform-origin: 50% 100% },
+    то есть низ карты по центру. Значит наружу
+    карта выступает на
+
+      (cardWidth / 2) * cos(angle) +
+      cardHeight * sin(angle)
+
+    (высота берётся целиком, а не пополам, —
+    пивот на нижней кромке, а не в центре).
+  */
+
+  const angleRad =
+    angle * Math.PI / 180;
+
+  const rotatedHalfWidth =
+    cardWidth / 2 * Math.cos(angleRad) +
+    cardHeight * Math.sin(angleRad);
+
   const maxHalf =
     screenWidth / 2 -
-    cardWidth / 2 -
+    rotatedHalfWidth -
     7;
 
   let desiredHalf;
@@ -734,16 +542,6 @@ function getFanLayout(count) {
         desiredHalf
       )
     );
-
-  let angle =
-    Math.min(
-      29,
-      8 + count * 1.45
-    );
-
-  if (count > 18) {
-    angle = 25;
-  }
 
   return {
     scale,
@@ -893,18 +691,8 @@ function renderHand() {
         String(card.id);
 
       /*
-        POINTER EVENTS работают
-        и с пальцем, и с мышью.
+        Слушатели вешает bindV91Hand() в v9.1.js.
       */
-
-      el.addEventListener(
-        "pointerdown",
-        event =>
-          beginDrag(
-            event,
-            card.id
-          )
-      );
 
       hand.appendChild(el);
     }
@@ -1000,684 +788,49 @@ function playerIndex(cardId) {
    DROP GEOMETRY
    ========================================================= */
 
-function pointInsideRect(
-  x,
-  y,
-  rect
-) {
-  return (
-    x >= rect.left &&
-    x <= rect.right &&
-    y >= rect.top &&
-    y <= rect.bottom
-  );
-}
 
-function cardCenterInsideDropZone(
-  rect
-) {
-  const center =
-    $("center")
-      ?.getBoundingClientRect();
-
-  if (!center) {
-    return false;
-  }
-
-  const x =
-    rect.left +
-    rect.width / 2;
-
-  const y =
-    rect.top +
-    rect.height / 2;
-
-  /*
-    Чуть расширяем реальную
-    область попадания.
-
-    На телефоне не нужно
-    пиксель-перфект попадание.
-  */
-
-  const padding = 18;
-
-  const hitRect = {
-    left:
-      center.left -
-      padding,
-
-    right:
-      center.right +
-      padding,
-
-    top:
-      center.top -
-      padding,
-
-    bottom:
-      center.bottom +
-      padding
-  };
-
-  return pointInsideRect(
-    x,
-    y,
-    hitRect
-  );
-}
 
 
 /* =========================================================
    DRAG START
    ========================================================= */
 
-function beginDrag(
-  event,
-  cardId
-) {
-  if (
-    unavailable() ||
-    drag
-  ) {
-    return;
-  }
-
-  const index =
-    playerIndex(cardId);
-
-  if (index === -1) {
-    return;
-  }
-
-  const card =
-    player[index];
-
-  /*
-    В свой ход можно тащить
-    любую карту.
-
-    Если она не подходит —
-    центр покажет красный цвет
-    и карта вернётся.
-
-    В чужой ход разрешаем
-    трогать только карту,
-    способную сделать Перехват.
-  */
-
-  if (
-    turn !== "player" &&
-    !canIntercept(card)
-  ) {
-    return;
-  }
-
-  const element =
-    playerCardElement(
-      cardId
-    );
-
-  if (!element) {
-    return;
-  }
-
-  event.preventDefault();
-
-  try {
-    element.setPointerCapture(
-      event.pointerId
-    );
-  } catch (_) {}
-
-
-  const rect =
-    element
-      .getBoundingClientRect();
-
-  drag = {
-    pointerId:
-      event.pointerId,
-
-    cardId,
-
-    card,
-
-    element,
-
-    index,
-
-    startX:
-      event.clientX,
-
-    startY:
-      event.clientY,
-
-    x:
-      event.clientX,
-
-    y:
-      event.clientY,
-
-    originalRect: {
-      left:
-        rect.left,
-
-      top:
-        rect.top,
-
-      width:
-        rect.width,
-
-      height:
-        rect.height
-    },
-
-    offsetX:
-      event.clientX -
-      rect.left,
-
-    offsetY:
-      event.clientY -
-      rect.top,
-
-    started:
-      false,
-
-    inside:
-      false,
-
-    valid:
-      false
-  };
-
-
-  window.addEventListener(
-    "pointermove",
-    onDragMove,
-    {
-      passive: false
-    }
-  );
-
-  window.addEventListener(
-    "pointerup",
-    endDrag,
-    {
-      passive: false
-    }
-  );
-
-  window.addEventListener(
-    "pointercancel",
-    endDrag,
-    {
-      passive: false
-    }
-  );
-}
 
 
 /* =========================================================
    ACTIVATE DRAG
    ========================================================= */
 
-function activateDrag() {
-  if (
-    !drag ||
-    drag.started
-  ) {
-    return;
-  }
-
-  drag.started = true;
-
-  const el =
-    drag.element;
-
-  /*
-    Фиксируем реальный размер
-    карты перед переводом
-    в position: fixed.
-  */
-
-  el.style.width =
-    `${drag.originalRect.width}px`;
-
-  el.style.height =
-    `${drag.originalRect.height}px`;
-
-  el.classList.add(
-    "dragging"
-  );
-
-  /*
-    Карта слегка выше пальца,
-    чтобы палец не закрывал её.
-  */
-
-  updateDraggedCard(
-    drag.x,
-    drag.y
-  );
-
-  AcidFX.dragZone(
-    true,
-    false,
-    true
-  );
-}
 
 
 /* =========================================================
    MOVE DRAGGED CARD
    ========================================================= */
 
-function updateDraggedCard(
-  clientX,
-  clientY
-) {
-  if (!drag) {
-    return;
-  }
-
-  const el =
-    drag.element;
-
-  /*
-    Не держим карту ровно
-    под центром пальца.
-
-    Сохраняем точку,
-    за которую её взяли,
-    но поднимаем вверх.
-  */
-
-  const fingerLift = 34;
-
-  const left =
-    clientX -
-    drag.offsetX;
-
-  const top =
-    clientY -
-    drag.offsetY -
-    fingerLift;
-
-  /*
-    Небольшой естественный
-    наклон в зависимости
-    от горизонтального движения.
-  */
-
-  const dx =
-    clientX -
-    drag.x;
-
-  const rotation =
-    Math.max(
-      -8,
-      Math.min(
-        8,
-        dx * .45
-      )
-    );
-
-  drag.x =
-    clientX;
-
-  drag.y =
-    clientY;
-
-  el.style.transform = `
-    translate3d(
-      ${left}px,
-      ${top}px,
-      0
-    )
-    rotate(${rotation}deg)
-    scale(1.06)
-  `;
-
-
-  const rect = {
-    left,
-    top,
-
-    right:
-      left +
-      drag.originalRect.width,
-
-    bottom:
-      top +
-      drag.originalRect.height,
-
-    width:
-      drag.originalRect.width,
-
-    height:
-      drag.originalRect.height
-  };
-
-  const inside =
-    cardCenterInsideDropZone(
-      rect
-    );
-
-  let valid = false;
-
-  if (turn === "player") {
-    valid =
-      canPlay(
-        drag.card
-      );
-  } else {
-    valid =
-      canIntercept(
-        drag.card
-      );
-  }
-
-  drag.inside =
-    inside;
-
-  drag.valid =
-    valid;
-
-  el.classList.toggle(
-    "drag-valid",
-    inside && valid
-  );
-
-  el.classList.toggle(
-    "drag-invalid",
-    inside && !valid
-  );
-
-  AcidFX.dragZone(
-    true,
-    inside,
-    valid
-  );
-}
 
 
 /* =========================================================
    POINTER MOVE
    ========================================================= */
 
-function onDragMove(event) {
-  if (
-    !drag ||
-    event.pointerId !==
-      drag.pointerId
-  ) {
-    return;
-  }
-
-  event.preventDefault();
-
-  const distance =
-    Math.hypot(
-      event.clientX -
-        drag.startX,
-
-      event.clientY -
-        drag.startY
-    );
-
-  if (
-    !drag.started &&
-    distance >=
-      DRAG_THRESHOLD
-  ) {
-    activateDrag();
-  }
-
-  if (!drag.started) {
-    return;
-  }
-
-  updateDraggedCard(
-    event.clientX,
-    event.clientY
-  );
-}
 
 
 /* =========================================================
    END DRAG
    ========================================================= */
 
-async function endDrag(event) {
-  if (
-    !drag ||
-    event.pointerId !==
-      drag.pointerId
-  ) {
-    return;
-  }
-
-  event.preventDefault();
-
-  const state = drag;
-
-  removeDragListeners();
-
-
-  /*
-    Если человек просто
-    коснулся карты и отпустил —
-    ничего не играем.
-
-    В v7 ход делается именно
-    перетаскиванием.
-  */
-
-  if (!state.started) {
-    drag = null;
-
-    AcidFX.dragZone(
-      false
-    );
-
-    return;
-  }
-
-
-  /*
-    Последняя позиция карты
-    непосредственно перед
-    отпусканием.
-  */
-
-  const currentRect =
-    state.element
-      .getBoundingClientRect();
-
-  const releasedRect = {
-    left:
-      currentRect.left,
-
-    top:
-      currentRect.top,
-
-    width:
-      currentRect.width,
-
-    height:
-      currentRect.height
-  };
-
-
-  /*
-    Успешный drop.
-  */
-
-  if (
-    state.inside &&
-    state.valid
-  ) {
-    drag = null;
-
-    AcidFX.dragZone(
-      false
-    );
-
-    /*
-      Оригинальная карта
-      исчезает.
-
-      AcidFX создаст flyingCard
-      ровно на этом месте.
-    */
-
-    state.element.style.opacity =
-      "0";
-
-    state.element.classList.remove(
-      "dragging",
-      "drag-valid",
-      "drag-invalid"
-    );
-
-    await commitDraggedCard(
-      state.cardId,
-      releasedRect
-    );
-
-    return;
-  }
-
-
-  /*
-    Карта отпущена вне центра
-    или туда её класть нельзя.
-  */
-
-  await returnDraggedCard(
-    state
-  );
-}
 
 
 /* =========================================================
    REMOVE POINTER LISTENERS
    ========================================================= */
 
-function removeDragListeners() {
-  window.removeEventListener(
-    "pointermove",
-    onDragMove
-  );
-
-  window.removeEventListener(
-    "pointerup",
-    endDrag
-  );
-
-  window.removeEventListener(
-    "pointercancel",
-    endDrag
-  );
-}
 
 
 /* =========================================================
    RETURN CARD TO FAN
    ========================================================= */
 
-async function returnDraggedCard(
-  state
-) {
-  if (!state) {
-    return;
-  }
-
-  AcidFX.dragZone(
-    false
-  );
-
-  const el =
-    state.element;
-
-  const invalid =
-    state.inside &&
-    !state.valid;
-
-  el.classList.remove(
-    "drag-valid",
-    "drag-invalid"
-  );
-
-  el.classList.add(
-    "returning"
-  );
-
-
-  /*
-    Пока карта fixed,
-    возвращаем её в исходную
-    экранную позицию.
-  */
-
-  const current =
-    el.getBoundingClientRect();
-
-  const x =
-    state.originalRect.left -
-    current.left;
-
-  const y =
-    state.originalRect.top -
-    current.top;
-
-  el.style.transform = `
-    translate3d(
-      ${x}px,
-      ${y}px,
-      0
-    )
-    rotate(0deg)
-    scale(1)
-  `;
-
-  if (invalid) {
-    AcidFX.status(
-      drawPenalty > 0
-        ? `ШТРАФ +${drawPenalty}: ОТБЕЙ ИЛИ ЗАБЕРИ`
-        : "ЭТА КАРТА НЕ ПОДХОДИТ"
-    );
-  }
-
-  await sleep(560);
-
-  el.classList.remove(
-    "dragging",
-    "returning"
-  );
-
-  if (invalid) {
-    el.classList.add(
-      "invalid-return"
-    );
-  }
-
-  /*
-    Самый надёжный способ
-    вернуть веер:
-    перестроить его уже после
-    окончания fixed-анимации.
-  */
-
-  drag = null;
-
-  renderHand();
-
-  if (invalid) {
-    await sleep(150);
-  }
-}
 
 
 /* =========================================================
@@ -1690,8 +843,6 @@ function cancelDrag(
   if (!drag) {
     return;
   }
-
-  removeDragListeners();
 
   AcidFX.dragZone(
     false
@@ -1724,272 +875,18 @@ function cancelDrag(
    COMMIT DRAGGED CARD
    ========================================================= */
 
-async function commitDraggedCard(
-  cardId,
-  releasedRect
-) {
-  if (unavailable()) {
-    renderHand();
-    return;
-  }
-
-  const index =
-    playerIndex(
-      cardId
-    );
-
-  if (index === -1) {
-    renderHand();
-    return;
-  }
-
-  const card =
-    player[index];
-
-
-  /*
-    Перехват во время хода бота.
-  */
-
-  const intercept =
-    turn !== "player";
-
-
-  /*
-    Wild должен выбрать цвет.
-
-    Карту пока возвращаем
-    визуально в руку,
-    потому что overlay должен
-    появиться до окончательного хода.
-  */
-
-  if (
-    card.color === "wild"
-  ) {
-    pendingWild = {
-      cardId,
-      intercept,
-      releasedRect
-    };
-
-    renderHand();
-
-    $("colorPicker")
-      .classList
-      .remove("hidden");
-
-    return;
-  }
-
-
-  if (intercept) {
-    setBusy(true);
-
-    await AcidFX.intercept(
-      "player"
-    );
-
-    turn = "player";
-
-    setBusy(false);
-  }
-
-  await playerPlay(
-    cardId,
-    null,
-    intercept,
-    releasedRect
-  );
-}
 
 
 /* =========================================================
    PLAYER PLAY
    ========================================================= */
 
-async function playerPlay(
-  cardId,
-  chosenColor,
-  intercept,
-  releasedRect = null
-) {
-  if (unavailable()) {
-    return;
-  }
-
-  const index =
-    playerIndex(cardId);
-
-  if (index === -1) {
-    return;
-  }
-
-  const card =
-    player[index];
-
-  setBusy(true);
-
-
-  /*
-    Сначала движение карты.
-
-    Если она была перетащена,
-    продолжаем движение именно
-    из точки отпускания.
-  */
-
-  if (releasedRect) {
-    await AcidFX.finishPlayerDrop(
-      card,
-      releasedRect
-    );
-  } else {
-    const source =
-      playerCardElement(
-        cardId
-      );
-
-    await AcidFX.playPlayerCard(
-      card,
-      source
-    );
-  }
-
-
-  /*
-    Теперь меняем игру.
-  */
-
-  const freshIndex =
-    playerIndex(cardId);
-
-  if (freshIndex === -1) {
-    setBusy(false);
-    return;
-  }
-
-  player.splice(
-    freshIndex,
-    1
-  );
-
-  applyCardState(
-    card,
-    chosenColor
-  );
-
-  render();
-
-  await animateCardEffect(
-    card,
-    chosenColor
-  );
-
-
-  if (
-    player.length === 0
-  ) {
-    finish(true);
-
-    return;
-  }
-
-
-  /*
-    Skip / Reverse:
-    в игре 1 на 1
-    игрок ходит ещё раз.
-  */
-
-  if (
-    card.value === "skip" ||
-    card.value === "reverse"
-  ) {
-    turn = "player";
-
-    AcidFX.status(
-      card.value === "skip"
-        ? "БОТ ПРОПУСКАЕТ — ТВОЙ ХОД"
-        : "РАЗВОРОТ — ТВОЙ ХОД"
-    );
-
-    await AcidFX.turn(
-      "player"
-    );
-
-    setBusy(false);
-
-    render();
-
-    return;
-  }
-
-
-  turn = "bot";
-
-  render();
-
-  AcidFX.status(
-    drawPenalty > 0
-      ? `БОТ: ШТРАФ +${drawPenalty}`
-      : intercept
-        ? "ПЕРЕХВАТ — БОТ ОТВЕЧАЕТ"
-        : "ХОД БОТА"
-  );
-
-  await AcidFX.turn(
-    "bot"
-  );
-
-  setBusy(false);
-
-  /*
-    Даём глазу закончить
-    предыдущий ход.
-  */
-
-  await sleep(520);
-
-  botTurn();
-}
 
 
 /* =========================================================
    EFFECT
    ========================================================= */
 
-async function animateCardEffect(
-  card,
-  chosenColor
-) {
-  if (
-    card.value === "+2" ||
-    card.value === "+4"
-  ) {
-    await AcidFX.penalty(
-      drawPenalty
-    );
-  }
-
-  if (
-    card.value === "skip" ||
-    card.value === "reverse"
-  ) {
-    await AcidFX.special(
-      card.value
-    );
-  }
-
-  if (
-    card.color === "wild"
-  ) {
-    await AcidFX.wild(
-      chosenColor ||
-      currentColor
-    );
-  }
-}
 
 
 /* =========================================================
@@ -2039,172 +936,6 @@ async function chooseColor(
    PLAYER DRAW
    ========================================================= */
 
-async function playerDraw() {
-
-  if (
-    unavailable() ||
-    turn !== "player" ||
-    drag
-  ) {
-    return;
-  }
-
-  setBusy(true);
-
-
-  /*
-    Штраф.
-  */
-
-  if (drawPenalty > 0) {
-
-    const amount =
-      drawPenalty;
-
-    const cards =
-      takeMany(amount);
-
-    AcidFX.status(
-      `ЗАБИРАЕШЬ +${cards.length}`
-    );
-
-    await AcidFX.penalty(
-      amount
-    );
-
-    await AcidFX.drawSequence(
-      cards,
-      "player",
-
-      async card => {
-        player.push(card);
-        render();
-      }
-    );
-
-    drawPenalty = 0;
-    penaltyType = null;
-
-    render();
-
-    turn = "bot";
-
-    AcidFX.status(
-      "ХОД БОТА"
-    );
-
-    await AcidFX.turn(
-      "bot"
-    );
-
-    setBusy(false);
-
-    await sleep(520);
-
-    botTurn();
-
-    return;
-  }
-
-
-  /*
-    Добровольный добор.
-
-    Если уже есть допустимая карта,
-    можно взять одну и продолжить ход.
-  */
-
-  const alreadyPlayable =
-    player.some(
-      normalPlayable
-    );
-
-  if (alreadyPlayable) {
-
-    const card =
-      takeRaw();
-
-    if (card) {
-
-      AcidFX.status(
-        "БЕРЁШЬ КАРТУ"
-      );
-
-      await AcidFX.drawCard(
-        card,
-        "player"
-      );
-
-      player.push(card);
-
-      render();
-
-      await sleep(220);
-
-      AcidFX.status(
-        "ТВОЙ ХОД"
-      );
-    }
-
-    setBusy(false);
-
-    return;
-  }
-
-
-  /*
-    Ходить нечем:
-    берём до первой подходящей.
-  */
-
-  AcidFX.status(
-    "ИЩЕМ ПОДХОДЯЩУЮ..."
-  );
-
-  let amount = 0;
-  let found = false;
-
-  while (
-    !found &&
-    amount < 150
-  ) {
-    const card =
-      takeRaw();
-
-    if (!card) {
-      break;
-    }
-
-    amount++;
-
-    await AcidFX.drawCard(
-      card,
-      "player"
-    );
-
-    player.push(card);
-
-    render();
-
-    if (
-      normalPlayable(card)
-    ) {
-      found = true;
-    }
-
-    await sleep(125);
-  }
-
-  AcidFX.status(
-    found
-      ? amount === 1
-        ? "НАШЛАСЬ ПОДХОДЯЩАЯ"
-        : `ДОБРАНО ${amount} КАРТ`
-      : "КАРТ БОЛЬШЕ НЕТ"
-  );
-
-  setBusy(false);
-}
 
 
 /* =========================================================
@@ -2212,131 +943,33 @@ async function playerDraw() {
    ========================================================= */
 
 function botPlayableIndexes() {
-  const result = [];
-
-  bot.forEach(
-    (card, index) => {
-
-      if (canPlay(card)) {
-        result.push(index);
-      }
-    }
+  return AcidRules.playableIndexes(
+    bot,
+    tableView()
   );
-
-  return result;
 }
 
 function botInterceptIndex() {
-  const top =
-    topCard();
-
-  return bot.findIndex(
-    card =>
-      sameCard(
-        card,
-        top
-      )
+  return AcidRules.interceptIndex(
+    bot,
+    topCard()
   );
 }
 
 function bestBotColor(
   excludingIndex = -1
 ) {
-  const counts = {
-    red: 0,
-    yellow: 0,
-    green: 0,
-    blue: 0
-  };
-
-  bot.forEach(
-    (card, index) => {
-
-      if (
-        index !==
-          excludingIndex &&
-
-        COLORS.includes(
-          card.color
-        )
-      ) {
-        counts[
-          card.color
-        ]++;
-      }
-    }
-  );
-
-  return COLORS.reduce(
-    (best, color) =>
-      counts[color] >
-      counts[best]
-        ? color
-        : best,
-    "red"
+  return AcidRules.bestColor(
+    bot,
+    excludingIndex
   );
 }
 
 function botChoose(indexes) {
-
-  const priorities = {
-    "+4": 8,
-    "+2": 7,
-    "skip": 6,
-    "reverse": 6,
-    "wild": 2
-  };
-
-  let best =
-    indexes[0];
-
-  let score =
-    -Infinity;
-
-  indexes.forEach(
-    index => {
-
-      const card =
-        bot[index];
-
-      let current =
-        priorities[
-          card.value
-        ] || 3;
-
-      if (
-        card.color === "wild"
-      ) {
-        current -= 1;
-      }
-
-      if (
-        bot.length <= 3 &&
-        [
-          "+2",
-          "+4",
-          "skip",
-          "reverse"
-        ].includes(
-          card.value
-        )
-      ) {
-        current += 3;
-      }
-
-      current +=
-        Math.random() * .6;
-
-      if (
-        current > score
-      ) {
-        score = current;
-        best = index;
-      }
-    }
+  return AcidRules.chooseCard(
+    bot,
+    indexes
   );
-
-  return best;
 }
 
 
@@ -2344,378 +977,12 @@ function botChoose(indexes) {
    BOT TURN
    ========================================================= */
 
-async function botTurn() {
-
-  if (
-    gameOver ||
-    turn !== "bot" ||
-    unavailable()
-  ) {
-    return;
-  }
-
-  setBusy(true);
-
-  AcidFX.status(
-    "БОТ ДУМАЕТ..."
-  );
-
-  /*
-    Намеренная пауза.
-  */
-
-  await sleep(
-    820 +
-    random(550)
-  );
-
-
-  /*
-    BOT INTERCEPT
-  */
-
-  const interceptIndex =
-    botInterceptIndex();
-
-  if (
-    interceptIndex !== -1 &&
-    Math.random() < .82
-  ) {
-    await AcidFX.intercept(
-      "bot"
-    );
-
-    await sleep(260);
-
-    await botPlay(
-      interceptIndex,
-      true
-    );
-
-    setBusy(false);
-
-    return;
-  }
-
-
-  /*
-    PENALTY
-  */
-
-  if (drawPenalty > 0) {
-
-    const defense =
-      botPlayableIndexes();
-
-    if (
-      defense.length > 0
-    ) {
-      AcidFX.status(
-        "БОТ ОТБИВАЕТСЯ..."
-      );
-
-      await sleep(520);
-
-      const chosen =
-        botChoose(
-          defense
-        );
-
-      await botPlay(
-        chosen,
-        false
-      );
-
-      setBusy(false);
-
-      return;
-    }
-
-
-    const amount =
-      drawPenalty;
-
-    const cards =
-      takeMany(amount);
-
-    AcidFX.status(
-      `БОТ ЗАБИРАЕТ +${cards.length}`
-    );
-
-    await AcidFX.penalty(
-      amount
-    );
-
-    await AcidFX.drawSequence(
-      cards,
-      "bot",
-
-      async card => {
-        bot.push(card);
-        render();
-      }
-    );
-
-    drawPenalty = 0;
-    penaltyType = null;
-
-    render();
-
-    await sleep(350);
-
-    turn = "player";
-
-    AcidFX.status(
-      "ТВОЙ ХОД"
-    );
-
-    await AcidFX.turn(
-      "player"
-    );
-
-    setBusy(false);
-
-    return;
-  }
-
-
-  /*
-    NORMAL PLAY
-  */
-
-  let playable =
-    botPlayableIndexes();
-
-
-  /*
-    DRAW UNTIL PLAYABLE
-  */
-
-  if (
-    playable.length === 0
-  ) {
-
-    AcidFX.status(
-      "БОТ ДОБИРАЕТ..."
-    );
-
-    await sleep(420);
-
-    let found = -1;
-    let safety = 0;
-
-    while (
-      found === -1 &&
-      safety < 150
-    ) {
-      safety++;
-
-      const card =
-        takeRaw();
-
-      if (!card) {
-        break;
-      }
-
-      await AcidFX.drawCard(
-        card,
-        "bot"
-      );
-
-      bot.push(card);
-
-      render();
-
-      if (
-        normalPlayable(card)
-      ) {
-        found =
-          bot.length - 1;
-      }
-
-      await sleep(160);
-    }
-
-    if (
-      found !== -1
-    ) {
-      playable = [
-        found
-      ];
-    }
-  }
-
-
-  if (
-    playable.length === 0
-  ) {
-
-    turn = "player";
-
-    AcidFX.status(
-      "ТВОЙ ХОД"
-    );
-
-    await AcidFX.turn(
-      "player"
-    );
-
-    setBusy(false);
-
-    return;
-  }
-
-
-  AcidFX.status(
-    "БОТ ВЫБИРАЕТ КАРТУ..."
-  );
-
-  await sleep(520);
-
-  const chosen =
-    botChoose(
-      playable
-    );
-
-  await botPlay(
-    chosen,
-    false
-  );
-
-  setBusy(false);
-}
 
 
 /* =========================================================
    BOT PLAY
    ========================================================= */
 
-async function botPlay(
-  index,
-  intercept
-) {
-  const card =
-    bot[index];
-
-  if (!card) {
-    return;
-  }
-
-  let chosenColor =
-    null;
-
-  if (
-    card.color === "wild"
-  ) {
-    chosenColor =
-      bestBotColor(index);
-  }
-
-
-  AcidFX.status(
-    intercept
-      ? "БОТ ПЕРЕХВАТЫВАЕТ"
-      : "БОТ ХОДИТ"
-  );
-
-  await sleep(320);
-
-
-  /*
-    Сначала видим движение.
-  */
-
-  await AcidFX.playBotCard(
-    card
-  );
-
-
-  /*
-    Только после приземления
-    меняем игровое состояние.
-  */
-
-  bot.splice(
-    index,
-    1
-  );
-
-  applyCardState(
-    card,
-    chosenColor
-  );
-
-  render();
-
-  await animateCardEffect(
-    card,
-    chosenColor
-  );
-
-
-  if (
-    bot.length === 0
-  ) {
-    finish(false);
-    return;
-  }
-
-
-  /*
-    SKIP / REVERSE
-  */
-
-  if (
-    card.value === "skip" ||
-    card.value === "reverse"
-  ) {
-
-    turn = "bot";
-
-    AcidFX.status(
-      card.value === "skip"
-        ? "ТВОЙ ХОД ПРОПУЩЕН"
-        : "БОТ ХОДИТ ЕЩЁ"
-    );
-
-    await AcidFX.turn(
-      "bot"
-    );
-
-    await sleep(720);
-
-    setBusy(false);
-
-    botTurn();
-
-    return;
-  }
-
-
-  turn = "player";
-
-  render();
-
-  if (
-    drawPenalty > 0
-  ) {
-    AcidFX.status(
-      `ШТРАФ +${drawPenalty} — ОТБЕЙ ИЛИ ЗАБЕРИ`
-    );
-  } else if (intercept) {
-    AcidFX.status(
-      "БОТ ПЕРЕХВАТИЛ — ТВОЙ ХОД"
-    );
-  } else {
-    AcidFX.status(
-      "ТВОЙ ХОД"
-    );
-  }
-
-  await AcidFX.turn(
-    "player"
-  );
-}
 
 
 /* =========================================================
@@ -2739,7 +1006,7 @@ async function finish(
   $("endText").textContent =
     playerWon
       ? "ТЫ ВЫИГРАЛ"
-      : "БОТ ВЫИГРАЛ";
+      : `${seatName(activeSeat)} ВЫИГРАЛ`;
 
   $("endScreen")
     .classList
@@ -2750,12 +1017,6 @@ async function finish(
 /* =========================================================
    EVENTS
    ========================================================= */
-
-$("deck")
-  .addEventListener(
-    "click",
-    playerDraw
-  );
 
 $("restart")
   .addEventListener(

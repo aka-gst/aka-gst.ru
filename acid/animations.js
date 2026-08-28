@@ -51,7 +51,19 @@ const AcidFX = (() => {
   }
 
   function botRect() {
-    const el = $("botCards");
+
+    /*
+      От трёх мест веер соперника заменён рядом значков —
+      карта должна вылетать из значка того, кто ходит.
+    */
+    const el =
+      document.querySelector(
+        ".opponent.is-flying"
+      ) ||
+      document.querySelector(
+        ".opponent.is-active"
+      ) ||
+      $("botCards");
 
     if (!el) return null;
 
@@ -93,11 +105,15 @@ const AcidFX = (() => {
     el.className =
       `flyingCard ${card.color}`;
 
-    el.innerHTML = `
-      <div class="value">
-        ${label(card.value)}
-      </div>
-    `;
+    /*
+      Лицо строится тем же кодом, что и карта в руке,
+      иначе у летящей карты нет угловых индексов
+      и она читается как другая карта.
+    */
+    el.innerHTML =
+      typeof cardFaceHTML === "function"
+        ? cardFaceHTML(card)
+        : `<div class="value">${label(card.value)}</div>`;
 
     $("animationLayer")
       .appendChild(el);
@@ -109,6 +125,41 @@ const AcidFX = (() => {
   /* =======================================================
      PLACE ELEMENT FROM RECT
      ======================================================= */
+
+  /* =======================================================
+     ОЖИДАНИЕ КАДРА
+
+     В свёрнутой вкладке requestAnimationFrame не срабатывает.
+     Полёт карты, который его ждёт, повисает навсегда и
+     утаскивает за собой весь ход, поэтому ожидание
+     ограничено по времени.
+     ======================================================= */
+
+  function nextFrame(fallback = 140) {
+
+    return new Promise(resolve => {
+
+      let done = false;
+
+      const finish = () => {
+
+        if (done) {
+          return;
+        }
+
+        done = true;
+
+        resolve();
+      };
+
+      requestAnimationFrame(
+        () => requestAnimationFrame(finish)
+      );
+
+      setTimeout(finish, fallback);
+    });
+  }
+
 
   function placeFromRect(
     element,
@@ -501,13 +552,7 @@ const AcidFX = (() => {
       начальной позиции.
     */
 
-    await new Promise(resolve =>
-      requestAnimationFrame(() =>
-        requestAnimationFrame(
-          resolve
-        )
-      )
-    );
+    await nextFrame();
 
     const targetRotation =
       2 + Math.random() * 5;
@@ -583,13 +628,7 @@ const AcidFX = (() => {
       startRect
     );
 
-    await new Promise(resolve =>
-      requestAnimationFrame(() =>
-        requestAnimationFrame(
-          resolve
-        )
-      )
-    );
+    await nextFrame();
 
     flying.style.transform =
       transformToRect(
@@ -672,27 +711,20 @@ const AcidFX = (() => {
       маленькая карта из руки бота.
     */
 
+    /*
+      Карта живёт в натуральную величину и сжимается
+      трансформом.
+
+      Если задать элементу размер маленькой карты из веера
+      бота, скругление, рамка и цифра остаются абсолютными
+      пикселями: получается круглая карта с огромным числом,
+      не похожая ни на одну карту в руке игрока.
+    */
+
     placeFromRect(
       flying,
-      source,
-      1,
-      -4
+      target
     );
-
-    await sleep(180);
-
-    await new Promise(resolve =>
-      requestAnimationFrame(() =>
-        requestAnimationFrame(
-          resolve
-        )
-      )
-    );
-
-    /*
-      По пути карта увеличивается
-      до нормального размера.
-    */
 
     const sourceCenter =
       rectCenter(source);
@@ -700,26 +732,42 @@ const AcidFX = (() => {
     const targetCenter =
       rectCenter(target);
 
-    const x =
-      targetCenter.x -
-      sourceCenter.x;
+    const startScale =
+      Math.max(
+        source.width / target.width,
+        .1
+      );
 
-    const y =
-      targetCenter.y -
-      sourceCenter.y;
+    const dx =
+      sourceCenter.x -
+      targetCenter.x;
 
-    const scale =
-      target.width /
-      source.width;
+    const dy =
+      sourceCenter.y -
+      targetCenter.y;
 
     flying.style.transform = `
       translate3d(
-        ${x}px,
-        ${y}px,
+        ${dx}px,
+        ${dy}px,
         0
       )
+      rotate(-4deg)
+      scale(${startScale})
+    `;
+
+    await sleep(180);
+
+    await nextFrame();
+
+    /*
+      По пути карта вырастает до нормального размера.
+    */
+
+    flying.style.transform = `
+      translate3d(0, 0, 0)
       rotate(4deg)
-      scale(${scale})
+      scale(1)
     `;
 
     await sleep(690);
@@ -771,13 +819,7 @@ const AcidFX = (() => {
 
     await sleep(90);
 
-    await new Promise(resolve =>
-      requestAnimationFrame(() =>
-        requestAnimationFrame(
-          resolve
-        )
-      )
-    );
+    await nextFrame();
 
     let target;
 
