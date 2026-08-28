@@ -463,17 +463,15 @@ const gameCard = (project) => {
         </${tag}>`;
 };
 
-const playPanel = `
-      <section class="block" aria-labelledby="playable-title">
-        <div class="block-head">
-          <p class="kicker">ВЫБЕРИ ИГРУ</p>
-          <h2 id="playable-title">Играбельное</h2>
-          <p>${esc(site.tracks.play.intro)}</p>
-        </div>
-        <div class="ggrid">${playable.map(gameCard).join('')}
-          <aside class="records-card" aria-labelledby="records-title">
-            <div class="records-head"><span class="index">REC</span><span>СЕГОДНЯ · МСК</span></div>
-            <h3 id="records-title">Орёл / решка</h3>
+const recordsBlock = `
+        <section class="block" aria-labelledby="records-title">
+          <div class="block-head">
+            <p class="kicker">REC · СЕГОДНЯ · МСК</p>
+            <h2 id="records-title">Рекорды</h2>
+            <p>Обновляются в течение дня и обнуляются в полночь по Москве.</p>
+          </div>
+          <aside class="records-card">
+            <h3>Орёл / решка</h3>
             <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
             <p class="other-title">Другие игры сегодня</p>
             <ul id="other-today">${leaderboards
@@ -485,17 +483,28 @@ const playPanel = `
               .join('')}
             </ul>
           </aside>
-        </div>
-      </section>
+        </section>`;
 
-      <section class="block" aria-labelledby="other-games-title">
-        <div class="block-head">
-          <p class="kicker">АРХИВ</p>
-          <h2 id="other-games-title">Все игры</h2>
-        </div>
-        <div class="ggrid">${otherGames.map(gameCard).join('')}
-        </div>
-      </section>`;
+const playPanel = `
+        <section class="block" aria-labelledby="playable-title">
+          <div class="block-head">
+            <p class="kicker">ВЫБЕРИ ИГРУ</p>
+            <h2 id="playable-title">Топ</h2>
+            <p>${esc(site.tracks.play.intro)}</p>
+          </div>
+          <div class="ggrid">${playable.map(gameCard).join('')}
+          </div>
+        </section>
+
+        <section class="block" aria-labelledby="other-games-title">
+          <div class="block-head">
+            <p class="kicker">АРХИВ</p>
+            <h2 id="other-games-title">Все игры</h2>
+          </div>
+          <div class="ggrid">${otherGames.map(gameCard).join('')}
+          </div>
+        </section>
+${recordsBlock}`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
 const html = `<!doctype html>

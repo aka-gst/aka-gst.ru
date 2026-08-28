@@ -26,7 +26,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=9a1235ea">
+    <link rel="stylesheet" href="/assets/site.css?v=4b46a0a3">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -457,13 +457,13 @@
       </section>
       </div>
       <div class="panel" data-panel="play">
-      <section class="block" aria-labelledby="playable-title">
-        <div class="block-head">
-          <p class="kicker">ВЫБЕРИ ИГРУ</p>
-          <h2 id="playable-title">Играбельное</h2>
-          <p>Открывай, запускай, играй. Без аккаунта, установки и лишних экранов.</p>
-        </div>
-        <div class="ggrid">
+        <section class="block" aria-labelledby="playable-title">
+          <div class="block-head">
+            <p class="kicker">ВЫБЕРИ ИГРУ</p>
+            <h2 id="playable-title">Топ</h2>
+            <p>Открывай, запускай, играй. Без аккаунта, установки и лишних экранов.</p>
+          </div>
+          <div class="ggrid">
         <a class="gcard" data-art="uno" href="/acid/" data-umami-event="game-open" data-umami-event-game="acid-uno">
           <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
           <div class="gcard-body">
@@ -491,26 +491,15 @@
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
-          <aside class="records-card" aria-labelledby="records-title">
-            <div class="records-head"><span class="index">REC</span><span>СЕГОДНЯ · МСК</span></div>
-            <h3 id="records-title">Орёл / решка</h3>
-            <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
-            <p class="other-title">Другие игры сегодня</p>
-            <ul id="other-today">
-              <li data-game="tetcolor"><span>Тетколор</span><b>—</b></li>
-              <li data-game="knb-2"><span>KNB: Tactical Evolution</span><b>—</b></li>
-              <li data-game="neon-lines"><span>Неон Линии</span><b>—</b></li>
-            </ul>
-          </aside>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <section class="block" aria-labelledby="other-games-title">
-        <div class="block-head">
-          <p class="kicker">АРХИВ</p>
-          <h2 id="other-games-title">Все игры</h2>
-        </div>
-        <div class="ggrid">
+        <section class="block" aria-labelledby="other-games-title">
+          <div class="block-head">
+            <p class="kicker">АРХИВ</p>
+            <h2 id="other-games-title">Все игры</h2>
+          </div>
+          <div class="ggrid">
         <a class="gcard" data-art="orbs" href="/lines/" data-umami-event="game-open" data-umami-event-game="neon-lines">
           <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
           <div class="gcard-body">
@@ -538,8 +527,26 @@
             <span class="launch">СКОРО</span>
           </div>
         </article>
-        </div>
-      </section>
+          </div>
+        </section>
+
+        <section class="block" aria-labelledby="records-title">
+          <div class="block-head">
+            <p class="kicker">REC · СЕГОДНЯ · МСК</p>
+            <h2 id="records-title">Рекорды</h2>
+            <p>Обновляются в течение дня и обнуляются в полночь по Москве.</p>
+          </div>
+          <aside class="records-card">
+            <h3>Орёл / решка</h3>
+            <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
+            <p class="other-title">Другие игры сегодня</p>
+            <ul id="other-today">
+              <li data-game="tetcolor"><span>Тетколор</span><b>—</b></li>
+              <li data-game="knb-2"><span>KNB: Tactical Evolution</span><b>—</b></li>
+              <li data-game="neon-lines"><span>Неон Линии</span><b>—</b></li>
+            </ul>
+          </aside>
+        </section>
       </div>
     </main>
 

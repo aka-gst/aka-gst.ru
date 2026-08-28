@@ -510,11 +510,8 @@ article.gcard .launch { color: var(--dim); }
 
 .records-card {
   display: flex; flex-direction: column; gap: 8px;
+  max-width: 420px;
   padding: 20px; border: 1px dashed var(--line); border-radius: 16px; background: var(--bg-soft);
-}
-.records-head {
-  display: flex; justify-content: space-between;
-  font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--dim);
 }
 .records-card h3 { font-size: 16px; }
 .records-card ol, .records-card ul { display: grid; gap: 5px; }
