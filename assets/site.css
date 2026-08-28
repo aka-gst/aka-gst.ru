@@ -114,16 +114,26 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
 }
 .track-switch button {
   appearance: none; border: 0; cursor: pointer;
-  padding: 7px 16px; border-radius: 999px;
-  background: transparent; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 15px; border-radius: 999px;
+  background: transparent;
+  /* Неактивная вкладка была приглушённо-серой и читалась как надпись, а не
+     как выбор: живой человек не нашёл, как перейти к играм. Теперь она
+     полноцветная, и переключатель виден как переключатель. */
+  color: var(--text);
   font: inherit; font-size: 13px; font-weight: 600;
   transition: background .15s ease, color .15s ease;
 }
-.track-switch button:hover { color: var(--text); }
+/* Игры зовут ярче работы — за них и цепляется глаз. Значок геймпада
+   светится акцентом даже когда вкладка не выбрана. */
+.track-switch [data-track-to="play"] svg { color: var(--accent); }
+.track-switch button:hover { background: var(--bg-soft); }
 html[data-track="work"] .track-switch [data-track-to="work"],
 html[data-track="play"] .track-switch [data-track-to="play"] {
   background: var(--accent); color: #08120c; box-shadow: var(--glow);
 }
+/* У выбранной вкладки значок идёт цветом подложки, иначе акцент на акценте. */
+html[data-track="play"] .track-switch [data-track-to="play"] svg { color: #08120c; }
 
 .socials { display: flex; gap: 4px; }
 .social {

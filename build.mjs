@@ -48,6 +48,21 @@ const ICONS = {
     'M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z',
 };
 
+const TRACK_ICONS = {
+  // Работа — приглашение командной строки: сдержанный, «скучный» символ.
+  work: '<path d="M4 17l5-5-5-5" /><path d="M12 19h8" />',
+  // Игры — геймпад: узнаётся без подписи, за него и цепляется глаз.
+  games:
+    '<path d="M7 12h4M9 10v4" />' +
+    '<circle cx="16" cy="11" r=".6" fill="currentColor" stroke="none" />' +
+    '<circle cx="18" cy="13.5" r=".6" fill="currentColor" stroke="none" />' +
+    '<path d="M17.5 5.5h-11A4.5 4.5 0 0 0 2 10v5a4 4 0 0 0 7 2.6h6A4 4 0 0 0 22 15v-5a4.5 4.5 0 0 0-4.5-4.5z" />',
+};
+
+const trackIcon = (key) =>
+  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TRACK_ICONS[key]}</svg>`;
+
 const socials = site.socials.filter((item) => item.enabled && ICONS[item.id]);
 
 const socialLinks = (place) =>
@@ -554,12 +569,12 @@ const html = `<!doctype html>
     <header class="topbar">
       <a class="brand" href="/">aka<span>-</span>gst</a>
       <div class="track-switch" role="group" aria-label="Раздел сайта">
-        <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${esc(
-          site.tracks.work.label
-        )}</button>
-        <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play">${esc(
-          site.tracks.play.label
-        )}</button>
+        <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
+          'work'
+        )}<span>${esc(site.tracks.work.label)}</span></button>
+        <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play">${trackIcon(
+          'games'
+        )}<span>${esc(site.tracks.play.label)}</span></button>
       </div>
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}
