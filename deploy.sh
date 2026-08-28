@@ -15,6 +15,8 @@ set -eu
 HOST="${DEPLOY_HOST:-bonita}"
 ROOT="${DEPLOY_ROOT:-/opt/zakriva/caddy/site}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# Без таймаута недоступный сервер вешает выкладку на минуты.
+SSHOPTS="-o ConnectTimeout=15 -o BatchMode=yes"
 cd "$HERE"
 
 go=false
@@ -66,7 +68,8 @@ echo "== Caddyfile: сверка с живым =="
 # молча снести чужие маршруты; однажды так уехали звонки.
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
-if scp -q "$HOST:/opt/zakriva/caddy/Caddyfile" "$tmp" 2>/dev/null; then
+# shellcheck disable=SC2086
+if scp -q $SSHOPTS "$HOST:/opt/zakriva/caddy/Caddyfile" "$tmp" 2>/dev/null; then
   # Опасна только одна разница: строки, которые есть на сервере и нет у нас.
   # Их выкладка сотрёт. Собственные добавления — обычное дело.
   theirs=$(diff Caddyfile "$tmp" | grep '^>' || true)
@@ -105,7 +108,9 @@ fi
 if $caddy && $go; then
   echo
   echo "== конфиг Caddy =="
-  scp Caddyfile "$HOST:/opt/zakriva/caddy/Caddyfile"
-  ssh "$HOST" 'docker exec caddy caddy validate --config /etc/caddy/Caddyfile \
+  # shellcheck disable=SC2086
+  scp $SSHOPTS Caddyfile "$HOST:/opt/zakriva/caddy/Caddyfile"
+  # shellcheck disable=SC2086
+  ssh $SSHOPTS "$HOST" 'docker exec caddy caddy validate --config /etc/caddy/Caddyfile \
     && docker exec caddy caddy reload --config /etc/caddy/Caddyfile'
 fi
