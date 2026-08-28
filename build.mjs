@@ -512,7 +512,7 @@ ${socialLinks('header')}
       <nav class="socials" aria-label="Профили в подвале">
 ${socialLinks('footer')}
       </nav>
-      <span class="foot-note">Без аккаунта и трекеров третьих сторон</span>
+      <span class="foot-note">${esc(site.footerNote)}</span>
     </footer>
 
     <script src="/assets/app.js?v=1" defer></script>

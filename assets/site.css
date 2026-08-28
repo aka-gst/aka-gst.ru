@@ -226,6 +226,8 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 /* ── Общие блоки ──────────────────────────────────────────────────── */
 
 .block { margin-top: 64px; }
+/* После шапки-логотипа блок идёт ближе: сама шапка уже задаёт паузу. */
+.ghero + .block { margin-top: 36px; }
 .block-head { max-width: 720px; margin-bottom: 22px; }
 .block-head h2 { margin: 8px 0 10px; font-size: clamp(22px, 2.6vw, 30px); }
 .block-head > p:last-child { color: var(--muted); font-size: 14px; }
@@ -350,21 +352,21 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
 /* ── Экран «Игры» ─────────────────────────────────────────────────── */
 
-.ghero { padding: 54px 0 18px; }
+.ghero { padding: 26px 0 6px; }
 .system-line {
   display: flex; justify-content: space-between; gap: 12px;
   padding-bottom: 12px; border-bottom: 1px solid var(--line);
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; color: var(--dim);
 }
-.ghero .kicker { margin-top: 22px; color: var(--neon-2); }
+.ghero .kicker { margin-top: 16px; color: var(--neon-2); }
 .ghero h1 {
-  margin: 10px 0 14px; font-size: clamp(56px, 12vw, 130px); line-height: .92;
+  margin: 8px 0 12px; font-size: clamp(48px, 9vw, 104px); line-height: .92;
   background: linear-gradient(96deg, var(--accent), var(--neon-2) 45%, var(--neon));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .ghero h1 span { -webkit-text-fill-color: var(--neon); }
 .ghero .intro { max-width: 540px; color: var(--muted); font-size: 16px; }
-.signal { display: flex; gap: 5px; margin-top: 22px; }
+.signal { display: flex; gap: 5px; margin-top: 16px; }
 .signal i { width: 26px; height: 4px; border-radius: 2px; background: var(--line); animation: pulse 2.4s infinite; }
 .signal i:nth-child(2) { animation-delay: .2s; }
 .signal i:nth-child(3) { animation-delay: .4s; }

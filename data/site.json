@@ -171,5 +171,6 @@
   },
   "url": "https://aka-gst.ru",
   "ogImage": "/og.png",
-  "themeColor": "#0b0c0d"
+  "themeColor": "#0b0c0d",
+  "footerNote": "Аналитика своя, без трекеров третьих сторон"
 }
