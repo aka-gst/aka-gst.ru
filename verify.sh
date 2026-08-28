@@ -87,7 +87,12 @@ rm -f /tmp/verify-assets.$$
 echo
 echo "== выложено то же, что собрано =="
 if [ -f "$HERE/index.html" ]; then
-  live=$(printf '%s' "$page" | shasum -a 256 | cut -d' ' -f1)
+  # Хешируем ФАЙЛ, а не $page: подстановка $( ) срезает завершающий перевод
+  # строки, и сверка с файлом не совпала бы никогда — вечный ложный провал.
+  raw=$(mktemp)
+  curl -s --max-time 25 "$BASE/" -o "$raw"
+  live=$(shasum -a 256 "$raw" | cut -d' ' -f1)
+  rm -f "$raw"
   local_hash=$(shasum -a 256 "$HERE/index.html" | cut -d' ' -f1)
   if [ "$live" = "$local_hash" ]; then say_ok "index.html совпадает с локальной сборкой"
   else say_bad "index.html отличается от локальной сборки — выкладка не доведена"; fi
