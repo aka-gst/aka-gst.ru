@@ -1,5 +1,5 @@
 /*
- * АВТООТВЕТЧИК — оболочка.
+ * ОДИН УДАР — оболочка.
  *
  * Игра занимает весь экран, интерфейс лежит поверх холста. Всё, что
  * можно, сделано на CSS: развёртка, зерно и свечение не должны стоить
@@ -188,6 +188,11 @@ html, body {
 
 .ammo[data-empty="1"] i { background: #5b4b2a; }
 
+.hud-target b { color: var(--violet); }
+
+/* Время вышло за чужой результат — цель уже не побить, и это видно сразу. */
+.hud-target[data-late="1"] b { color: var(--pink); }
+
 .hud-points {
   position: relative;
   flex-direction: row;
@@ -230,70 +235,6 @@ html, body {
   from { transform: scale(1.25); }
   to { transform: scale(1); }
 }
-
-.hud-target b { color: var(--violet); }
-
-/* Время вышло за чужой результат — цель уже не побить, и это видно сразу. */
-.hud-target[data-late="1"] b { color: var(--pink); }
-
-.hud-stack {
-  flex-direction: row;
-  align-items: center;
-  gap: 7px;
-}
-
-.stack {
-  display: flex;
-  gap: 4px;
-}
-
-.stack i {
-  width: 15px;
-  height: 15px;
-  border: 1px solid #ffffff2a;
-  background: transparent;
-}
-
-/* Набираемая стихия мигает, пока не легла в очередь: это и есть та секунда,
-   которую игрок стоит замедленным. */
-.stack i.is-charging {
-  border-width: 2px;
-  animation: chargePulse .26s linear infinite;
-}
-
-@keyframes chargePulse {
-  from { opacity: .35; }
-  to { opacity: 1; }
-}
-
-.form {
-  color: var(--paper);
-  font: 900 13px var(--mono) !important;
-  letter-spacing: .1em;
-  white-space: nowrap;
-}
-
-.form[hidden] { display: none; }
-
-.daemons {
-  position: fixed;
-  left: max(10px, env(safe-area-inset-left));
-  bottom: max(18px, env(safe-area-inset-bottom));
-  z-index: 9;
-  display: none;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.daemon-key {
-  width: 54px;
-  height: 54px;
-  font: 900 13px var(--mono);
-}
-
-.daemon-key[data-element="fire"] { border-color: #ff5a1f; color: #ff5a1f; }
-.daemon-key[data-element="water"] { border-color: #4de1ff; color: #4de1ff; }
-.daemon-key[data-element="wind"] { border-color: #76ff9f; color: #76ff9f; }
 
 .mute {
   position: fixed;
@@ -413,7 +354,6 @@ html, body {
 /* Кнопки нужны только пальцу: мышь получает тот же ввод с клавиатуры. */
 @media (pointer: coarse) {
   .pad { display: grid; }
-  .daemons { display: flex; }
   .toast { bottom: max(30vh, 190px); }
 }
 

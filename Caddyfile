@@ -28,6 +28,7 @@ aka-gst.ru, www.aka-gst.ru {
   redir /photodata /photodata/ 308
   redir /acid /acid/ 308
   redir /avto /avto/ 308
+  redir /udar /udar/ 308
   redir /qa-quest /qa-quest/ 308
   redir /praktikum /praktikum/ 308
   redir /meet /meet/ 308

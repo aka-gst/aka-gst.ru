@@ -51,7 +51,7 @@ expect() {
 }
 
 echo "== страницы =="
-for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /qa-quest/ /acid/ /avto/ \
+for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /qa-quest/ /acid/ /avto/ /udar/ \
          /psy-admin/ /photodata/ /tetcolor/ /knb/ /lines/ /coin/ \
          /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
   expect "$p" 200

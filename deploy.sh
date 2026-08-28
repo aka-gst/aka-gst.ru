@@ -46,6 +46,7 @@ data
 praktikum
 acid
 avto
+udar
 qa-quest
 psy-admin
 photodata

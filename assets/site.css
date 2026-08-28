@@ -537,6 +537,17 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
 [data-art="tape"]:hover .gart i:nth-child(2) { transform: translateX(28px) scale(.84); }
 [data-art="tape"]:hover .gart i:nth-child(3) { transform: translateY(-18px) scaleX(.5); }
 
+/* Один удар — след от замаха: три полосы, сходящиеся при наведении. */
+[data-art="strike"] .gart i {
+  width: 56px; height: 5px; border-radius: 3px;
+  background: linear-gradient(90deg, transparent, var(--fail));
+}
+[data-art="strike"] .gart i:nth-child(1) { transform: rotate(-32deg) translate(-14px, -18px); }
+[data-art="strike"] .gart i:nth-child(2) { transform: rotate(-32deg); background: linear-gradient(90deg, transparent, var(--warn)); }
+[data-art="strike"] .gart i:nth-child(3) { transform: rotate(-32deg) translate(14px, 18px); }
+[data-art="strike"]:hover .gart i:nth-child(1) { transform: rotate(-32deg) translate(0, 0); }
+[data-art="strike"]:hover .gart i:nth-child(3) { transform: rotate(-32deg) translate(0, 0); }
+
 .gcard-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; flex: 1; }
 .gcard-top { display: flex; justify-content: flex-end; }
 .gcard-title { font-size: 22px; font-weight: var(--title-weight); letter-spacing: var(--title-spacing); }
