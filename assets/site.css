@@ -346,11 +346,15 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
 /* ── Опыт и навыки ────────────────────────────────────────────────── */
 
-.skills {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px;
-  background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+/* Раньше разделители рисовались фоном контейнера в зазорах сетки, и
+   неполный последний ряд превращался в светлый пустой блок. Теперь у каждой
+   группы своя рамка, а flex растягивает остаток ряда — дыре взяться неоткуда. */
+.skills { display: flex; flex-wrap: wrap; gap: 12px; }
+.skill {
+  flex: 1 1 200px; min-width: 0;
+  padding: 16px 18px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: var(--r);
 }
-.skill { padding: 16px 18px; background: var(--panel); }
 .skill dt {
   font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--accent); margin-bottom: 9px;
