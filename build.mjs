@@ -464,18 +464,11 @@ const gameCard = (project) => {
 };
 
 const playPanel = `
-      <section class="ghero">
-        <div class="system-line"><span>AKA-GST / ARCADE NETWORK</span><span>STATUS: ONLINE</span></div>
-        <p class="kicker">${esc(site.tracks.play.role)}</p>
-        <h1>aka<span>-</span>gst</h1>
-        <p class="intro">${esc(site.tracks.play.intro)}</p>
-        <div class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-      </section>
-
       <section class="block" aria-labelledby="playable-title">
         <div class="block-head">
           <p class="kicker">ВЫБЕРИ ИГРУ</p>
           <h2 id="playable-title">Играбельное</h2>
+          <p>${esc(site.tracks.play.intro)}</p>
         </div>
         <div class="ggrid">${playable.map(gameCard).join('')}
           <aside class="records-card" aria-labelledby="records-title">
