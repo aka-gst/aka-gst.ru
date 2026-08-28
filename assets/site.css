@@ -233,10 +233,19 @@ html { scroll-behavior: smooth; }
    На узких экранах не включаем вовсе: там она мешает больше, чем помогает. */
 @media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
   html { scroll-snap-type: y proximity; }
-  .report, .block { scroll-snap-align: start; scroll-margin-top: 78px; }
-  /* Раздел выше экрана привязку теряет — класс вешает app.js по замеру,
-     иначе список из пятнадцати проектов притягивало бы к началу. */
-  .report.is-tall, .block.is-tall { scroll-snap-align: none; }
+  .report, .block {
+    scroll-snap-align: start; scroll-margin-top: 78px;
+    /* Остановка обязательна: без неё proximity почти никогда не срабатывает
+       при инерционной прокрутке трекпадом, и «листания» не видно вовсе.
+       Действует только на блоки, которые остались точками привязки, —
+       длинные разделы ниже её теряют вместе с привязкой. */
+    scroll-snap-stop: always;
+  }
+  /* Раздел, который не помещается в экран, привязку к своему НАЧАЛУ
+     сохраняет — приятно попадать на заголовок. Он теряет обязательную
+     остановку, чтобы сквозь него можно было прокрутить не запинаясь.
+     Класс вешает app.js по замеру. */
+  .report.is-tall, .block.is-tall { scroll-snap-stop: normal; }
 }
 
 /* Проявление блока при входе в экран. Класс data-reveal ставит app.js, а не
