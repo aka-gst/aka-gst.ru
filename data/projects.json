@@ -180,8 +180,8 @@
         "work": 4
       },
       "status": {
-        "state": "wip",
-        "label": "в развитии"
+        "state": "live",
+        "label": "открыт"
       },
       "year": 2026,
       "stack": [
