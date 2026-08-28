@@ -160,7 +160,9 @@ const cardMetrics = (project) => {
     return [
       { value: t.units, label: 'разделов' },
       { value: t.experiments, label: project.id === 'ai-agent-service-lab' ? 'лабораторных' : 'экспериментов' },
-      { value: t.estimate_minutes ? `~${t.estimate_minutes} мин` : null, label: 'чтения' },
+      // Единицу держим в подписи, иначе «мин» переносится на вторую строку
+      // тем же крупным шрифтом и читается как часть числа.
+      { value: t.estimate_minutes ? `~${t.estimate_minutes}` : null, label: 'мин чтения' },
     ].filter((m) => m.value);
   }
   return (project.metrics || []).slice(0, 3);
