@@ -52,42 +52,30 @@ python3 -m http.server 4180
 
 ## Выкладка
 
-Статика едет в `/opt/zakriva/caddy/site`, где Caddy монтирует её как `/srv`
-только на чтение.
-
 ```sh
-rsync -avz --exclude '.git/' --exclude '.claude/' --exclude 'build.mjs' \
-  --exclude 'sync-portfolio.sh' --exclude 'PORTFOLIO-FEEDS.md' \
-  --exclude 'Caddyfile' --exclude '.DS_Store' \
-  ./ bonita:/opt/zakriva/caddy/site/
+sh deploy.sh          # показать, что изменится
+sh deploy.sh --go     # выложить
+sh deploy.sh --go --caddy   # ещё и обновить конфиг Caddy
 ```
 
-**Без `--delete`.** Каталоги `coin/`, `lines/` и `knb/` выкладываются из своих
-репозиториев и в этом дереве отсутствуют — с этим флагом они будут снесены.
+Список того, что едет на сервер, — **белый**, он задан в `deploy.sh`. Чёрный
+список однажды забывает новое: так `.githooks/` с локальным списком личных
+данных оказался в веб-корне только потому, что его не догадались исключить.
+Новый файл на сайте — значит, его надо дописать в `PAYLOAD`.
+
+`--delete` не используется: `coin/`, `lines/` и `knb/` выкладываются из своих
+репозиториев и в этом дереве отсутствуют — иначе они были бы снесены.
 
 ### Caddyfile правят несколько проектов
 
 В `/opt/zakriva/caddy/Caddyfile` пишет не только этот сайт: там же маршруты
 звонков (`/meet/`, `meet.aka-gst.ru`), Лилы (`/leela/`) и сервиса аккаунтов
-(`/api/auth/`, `/api/progress/`). Выкладка собранного у себя файла **молча
-удаляет чужие маршруты** — так однажды уехали звонки.
+(`/api/auth/`, `/api/progress/`). Выкладка собранного у себя файла молча
+удаляет чужие маршруты — так однажды уехали звонки.
 
-Поэтому сначала забрать живой файл и наложить правки на него:
-
-```sh
-scp bonita:/opt/zakriva/caddy/Caddyfile /tmp/Caddyfile.live
-diff Caddyfile /tmp/Caddyfile.live
-```
-
-Если разница только в ваших правках — выкладывайте. Если в живом файле есть
-чужие блоки, которых у вас нет, сначала перенесите их к себе и закоммитьте.
-
-```sh
-scp Caddyfile bonita:/opt/zakriva/caddy/Caddyfile
-ssh bonita 'docker exec caddy caddy validate --config /etc/caddy/Caddyfile && docker exec caddy caddy reload --config /etc/caddy/Caddyfile'
-```
-
-`validate` до `reload` обязателен: ошибка в конфиге положит все сайты сразу.
+`deploy.sh` перед выкладкой забирает живой файл и сравнивает. Собственные
+добавления он пропускает, а строки, которые есть на сервере и нет у вас,
+показывает и отменяет `--caddy`: их надо сначала перенести к себе.
 
 ## Защита от утечек
 
@@ -96,11 +84,15 @@ ssh bonita 'docker exec caddy caddy validate --config /etc/caddy/Caddyfile && do
 
 ```sh
 git config core.hooksPath .githooks
-cp .githooks/private-words.example .githooks/private-words.txt
+mkdir -p ~/.config/aka-gst && cp .githooks/private-words.example ~/.config/aka-gst/private-words.txt
+chmod 600 ~/.config/aka-gst/private-words.txt
 ```
 
-`private-words.txt` не версионируется — файл со списком имён сам был бы
-утечкой. Впишите туда имя, транслитерацию, личную почту и телефон.
+Список лежит **вне дерева сайта**: выкладка копирует файлы, а не индекс git,
+поэтому в `.githooks/` он оказался бы на публичном сервере. Хук блокирует
+коммит, если файл снова появится в дереве. Впишите туда имя, транслитерацию,
+личную почту и телефон — пустой список означает, что проверка стоит, но
+ничего не ищет.
 
 Хук смотрит индекс целиком, а не только изменённые файлы: первая найденная
 утечка лежала в файле, который в тот момент никто не трогал. Секреты ищутся по
