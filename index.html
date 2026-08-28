@@ -26,7 +26,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=1">
+    <link rel="stylesheet" href="/assets/site.css?v=3b3f9dc8">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -142,33 +142,87 @@
         </div>
         <div class="grid">
         <article class="card" id="p-praktikum-testing">
-          <div class="card-top"><span class="index">01</span><span class="status status-published">v3</span></div>
-          <p class="kicker">Практикум · веб + PDF</p>
+          <dl class="band" data-count="3">
+            <div>
+              <dt>19</dt>
+              <dd>разделов</dd>
+            </div>
+            <div>
+              <dt>16</dt>
+              <dd>экспериментов</dd>
+            </div>
+            <div>
+              <dt>~82 мин</dt>
+              <dd>чтения</dd>
+            </div>
+          </dl>
+          <div class="card-head">
+            <p class="kicker">Практикум · веб + PDF</p>
+            <span class="card-marks"><span class="status status-published">v3</span></span>
+          </div>
           <h3><a class="card-title" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></h3>
           <p class="tagline">Пошаговый разбор того, как построить и проверить loopback-шлюз к локальной модели.</p>
-          <ul class="chips"><li><b>19</b> <span>разделов</span></li><li><b>16</b> <span>экспериментов</span></li><li><b>~82 мин</b> <span>чтения</span></li></ul>
           <p class="summary">Русскоязычное руководство по сборке контура Open-LLM-VTuber → шлюз → Ollama: аудит окружения, безопасность, автотесты, benchmark провайдеров и операционный runbook. Материал вырос из реального прогона, а не из абстрактного примера — все выводы подкреплены сохранёнными артефактами.</p>
           <ul class="stack"><li>Python</li><li>FastAPI</li><li>Ollama</li><li>OpenRouter</li><li>PowerShell</li><li>pytest</li></ul>
           <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
         </article>
         <article class="card" id="p-ai-agent-service-lab">
-          <div class="card-top"><span class="index">02</span><span class="status status-wip">в развитии</span></div>
-          <p class="kicker">Практикум · веб + сервис</p>
+          <dl class="band" data-count="3">
+            <div>
+              <dt>16</dt>
+              <dd>разделов</dd>
+            </div>
+            <div>
+              <dt>10</dt>
+              <dd>лабораторных</dd>
+            </div>
+            <div>
+              <dt>~51 мин</dt>
+              <dd>чтения</dd>
+            </div>
+          </dl>
+          <div class="card-head">
+            <p class="kicker">Практикум · веб + сервис</p>
+            <span class="card-marks"><span class="evidence">
+              <button type="button" class="evidence-btn" aria-expanded="false"
+                aria-label="Чем покрыто тестами: Практикум: настройка LLM и агентов">✓</button>
+              <span class="evidence-panel" role="tooltip">
+                <b>Чем покрыто</b>
+                <code>uv run pytest --collect-only → 76 tests collected</code>
+                <ul><li>Structured output по JSON Schema и Pydantic — проверяется, что модель отдаёт разбираемый ответ, а не текст похожий на JSON.</li><li>Agent loop с allowlist инструментов: тесты закрывают путь, где агент пытается вызвать неразрешённое.</li><li>RAG с проверяемыми источниками — evaluation-набор 6/6, retrieval hit rate 100%.</li><li>Backup/restore с SHA-256 и защита от path traversal.</li></ul>
+                <p>Показывает работу с LLM не на уровне промптов, а на уровне контракта: что именно ломается и как это ловится автоматически.</p>
+              </span>
+            </span><span class="status status-wip">в развитии</span></span>
+          </div>
           <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
           <p class="tagline">Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.</p>
-          <ul class="chips"><li><b>16</b> <span>разделов</span></li><li><b>10</b> <span>лабораторных</span></li><li><b>~51 мин</b> <span>чтения</span></li></ul><ul class="chips"><li><b>76</b> <span>автотестов</span></li><li><b>6/6</b> <span>evaluation-сценариев</span></li><li><b>100%</b> <span>retrieval hit rate</span></li></ul>
           <p class="summary">Рабочий сервис-лаборатория: локальная генерация через Ollama и qwen3:8b, structured output с JSON Schema, agent loop с allowlist инструментов, память сессий и audit log в SQLite, RAG по документам с проверяемыми источниками, API-key guard, Docker Compose и backup/restore с SHA-256.</p>
           <ul class="stack"><li>Python 3.12</li><li>FastAPI</li><li>Pydantic</li><li>SQLite</li><li>Ollama</li><li>qwen3:8b</li><li>qwen3-embedding:0.6b</li><li>Docker Compose</li><li>pytest</li></ul>
           <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
         </article>
         <article class="card" id="p-qa-quest">
-          <div class="card-top"><span class="index">03</span><span class="status status-wip">MVP</span></div>
-          <p class="kicker">Обучение · браузер</p>
+          <dl class="band" data-count="3">
+            <div title="35 в тренажёре и 26 экспериментов практикума">
+              <dt>61</dt>
+              <dd>уроков</dd>
+            </div>
+            <div title="питон с нуля · тестирование · LLM">
+              <dt>3</dt>
+              <dd>ступени</dd>
+            </div>
+            <div title="Python отдаётся с этого домена, к чужим CDN страница не обращается">
+              <dt>0</dt>
+              <dd>внешних зависимостей</dd>
+            </div>
+          </dl>
+          <div class="card-head">
+            <p class="kicker">Обучение · браузер</p>
+            <span class="card-marks"><span class="status status-live">открыт</span></span>
+          </div>
           <h3><a class="card-title" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></h3>
-          <p class="tagline">Игровая лаборатория для повторения Python и входа в QA Automation.</p>
-          <ul class="chips"><li><b>14</b> <span>миссий в MVP</span></li><li><b>0</b> <span>внешних JS-зависимостей</span></li></ul>
-          <p class="summary">Часовой спринт из 14 миссий — от переменных до законченного консольного проекта QA Incident Tracker. Редактор кода, терминал и проверки прямо в браузере, всплывающий словарь терминов, XP и уровни, прогресс в localStorage. Дополнительные миссии — по pytest, API-тестированию, параметризации и LLM-evaluation.</p>
-          <ul class="stack"><li>JavaScript</li><li>HTML</li><li>CSS</li><li>localStorage</li></ul>
+          <p class="tagline">Курс питона, тестирования и работы с LLM. Код выполняется прямо в браузере — устанавливать ничего не нужно.</p>
+          <p class="summary">Три ступени: питон с нуля для тех, кто не программировал никогда; тестирование; работа и тесты с LLM. На первой ступени 15 уроков с автоматической проверкой кода на странице. На второй и третьей — тренажёр в браузере, а за ним настоящие практикумы, те же, что в разделе «Практикумы». Прогресс сохраняется в учётной записи сайта и переезжает между устройствами.</p>
+          <ul class="stack"><li>Python</li><li>Pyodide</li><li>JavaScript</li><li>HTML</li><li>CSS</li><li>общий вход aka-gst</li></ul>
           <p class="card-links"><a class="link link-demo" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть <b>→</b></a></p>
         </article>
         </div>
@@ -182,31 +236,82 @@
         </div>
         <div class="grid">
         <article class="card" id="p-dharma-ai">
-          <div class="card-top"><span class="index">01</span><span class="status status-live">валидатор запущен</span></div>
-          <p class="kicker">Продукт заказчика · AI/LLM QA</p>
+          <dl class="band" data-count="1">
+            <div title="доказательства, рассуждение, полномочия">
+              <dt>3</dt>
+              <dd>проверки перед действием</dd>
+            </div>
+          </dl>
+          <div class="card-head">
+            <p class="kicker">Продукт заказчика · AI/LLM QA</p>
+            <span class="card-marks"><span class="status status-live">валидатор запущен</span></span>
+          </div>
           <h3><a class="card-title" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">Dharma AI</a></h3>
           <p class="tagline">Персональный AI-наставник в предрелизном iOS-приложении — и валидатор агентов, уже запущенный на сайте команды.</p>
-          
           <p class="summary">Основное направление — приложение с персональным AI-наставником, который отвечает на основе внешней базы знаний: связность диалога, голосовой и текстовый интерфейсы, фактическая точность ответов. Второй продукт, публично запущенный, — валидационный шлюз для агентных систем: перед действием или передачей управления проверяются доказательная база ответа, цепочка рассуждения и полномочия на этот шаг.</p>
           
           <p class="card-links"><a class="link link-site" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">dharma-ai.io <b>↗</b></a></p>
         </article>
         <article class="card" id="p-psy-ai-admin">
-          <div class="card-top"><span class="index">02</span><span class="status status-demo">MVP-демо</span></div>
-          <p class="kicker">Продукт · демо</p>
+          <dl class="band" data-count="2">
+            <div>
+              <dt>8</dt>
+              <dd>автотестов безопасности</dd>
+            </div>
+            <div>
+              <dt>38</dt>
+              <dd>сценариев в базе</dd>
+            </div>
+          </dl>
+          <div class="card-head">
+            <p class="kicker">Продукт · демо</p>
+            <span class="card-marks"><span class="evidence">
+              <button type="button" class="evidence-btn" aria-expanded="false"
+                aria-label="Чем покрыто тестами: Psy AI Admin">✓</button>
+              <span class="evidence-panel" role="tooltip">
+                <b>Чем покрыто</b>
+                <code>node --test test/safety.test.js → 8 tests, 8 pass</code>
+                <ul><li>Ассистент отвечает только из утверждённой базы: тесты ловят выход за её пределы.</li><li>Запрет на медицинские рекомендации и подмену экстренной помощи проверяется сценариями, а не ревью.</li><li>38 сценариев в базе знаний демо.</li></ul>
+                <p>Границы безопасности AI-ассистента заданы до разработки и закреплены автотестами — то, что чаще всего забывают в чат-ботах.</p>
+              </span>
+            </span><span class="status status-demo">MVP-демо</span></span>
+          </div>
           <h3><a class="card-title" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Psy AI Admin</a></h3>
           <p class="tagline">Безопасный AI-администратор для сайта психологического центра.</p>
-          
           <p class="summary">Помощник отвечает только из утверждённой базы знаний: услуги, специалисты, расписание, формат и стоимость, переход на нужную страницу и заявка администратору. Явно не даёт медицинских рекомендаций и не заменяет экстренную помощь — границы зашиты в сценарии и проверяются тестами.</p>
           <ul class="stack"><li>JavaScript</li><li>RAG</li><li>Node test</li></ul>
           <p class="card-links"><a class="link link-demo" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Открыть демо <b>→</b></a></p>
         </article>
         <article class="card" id="p-photo-meta-editor">
-          <div class="card-top"><span class="index">03</span><span class="status status-released">v1.2.0</span></div>
-          <p class="kicker">Продукт · local-first</p>
+          <dl class="band" data-count="3">
+            <div>
+              <dt>19</dt>
+              <dd>автотестов</dd>
+            </div>
+            <div title="закреплено CSP и отдельным тестом">
+              <dt>0</dt>
+              <dd>сетевых запросов</dd>
+            </div>
+            <div>
+              <dt>v1.2.0</dt>
+              <dd>релиз</dd>
+            </div>
+          </dl>
+          <div class="card-head">
+            <p class="kicker">Продукт · local-first</p>
+            <span class="card-marks"><span class="evidence">
+              <button type="button" class="evidence-btn" aria-expanded="false"
+                aria-label="Чем покрыто тестами: ФотоДата · Photo Meta Editor">✓</button>
+              <span class="evidence-panel" role="tooltip">
+                <b>Чем покрыто</b>
+                <code>npm test → 19 tests, 19 pass</code>
+                <ul><li>privacy.test.mjs проверяет, что в коде нет API отправки данных: приватность закреплена тестом, а не обещанием в README.</li><li>Регрессии импорта файлов и перетаскивания.</li><li>Проверка собранной страницы целиком, а не отдельных функций.</li></ul>
+                <p>Пример, когда продуктовое обещание переведено в проверяемое утверждение — это и есть работа QA, а не тестирование ради покрытия.</p>
+              </span>
+            </span><span class="status status-released">v1.2.0</span></span>
+          </div>
           <h3><a class="card-title" href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata">ФотоДата · Photo Meta Editor</a></h3>
           <p class="tagline">Пакетное изменение даты съёмки фото и видео прямо в браузере, без загрузки на сервер.</p>
-          <ul class="chips"><li><b>0</b> <span>сетевых запросов после загрузки</span></li></ul>
           <p class="summary">Меняет EXIF DateTime / DateTimeOriginal / DateTimeDigitized и временные поля MP4/MOV/M4V для одного файла, выбранной группы или целой папки. Приватность закреплена не обещанием, а политикой безопасности страницы: после загрузки интерфейсу запрещены сетевые соединения, и отсутствие API отправки данных проверяется отдельным автотестом.</p>
           <ul class="stack"><li>JavaScript</li><li>Node.js test</li><li>Next.js</li><li>GitHub Actions</li></ul>
           <p class="card-links"><a class="link link-demo" href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata">Открыть <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/photo_meta_editer" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
@@ -298,8 +403,8 @@
             </li>
             <li>
               <span class="list-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></span>
-              <span class="list-note">Игровая лаборатория для повторения Python и входа в QA Automation.</span>
-              <span class="status status-wip">MVP</span>
+              <span class="list-note">Курс питона, тестирования и работы с LLM. Код выполняется прямо в браузере — устанавливать ничего не нужно.</span>
+              <span class="status status-live">открыт</span>
             </li>
             <li>
               <span class="list-title"><a href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">Dharma AI</a></span>
@@ -317,7 +422,7 @@
               <span class="status status-released">v1.2.0</span>
             </li>
             <li>
-              <span class="list-title"><span>Воки-Токи</span></span>
+              <span class="list-title"><a href="https://github.com/aka-gst/voki-toki" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="voki-toki">Воки-Токи</a></span>
               <span class="list-note">Видеозвонки на собственном сервере, которые работают в России без VPN.</span>
               <span class="status status-live">работает</span>
             </li>
@@ -366,23 +471,32 @@
           <h2 id="playable-title">Играбельное</h2>
         </div>
         <div class="ggrid">
-        <a class="gcard gcard-acid-uno" href="/acid/" data-umami-event="game-open" data-umami-event-game="acid-uno">
-          <div class="card-top"><span class="index">01</span><span class="status status-live">играть</span></div>
-          <h3>ACID UNO</h3>
-          <p>UNO с физичным drag-and-drop и неоновым cyberpunk-интерфейсом.</p>
-          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        <a class="gcard" data-art="uno" href="/acid/" data-umami-event="game-open" data-umami-event-game="acid-uno">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-live">играть</span></div>
+            <h3 class="gcard-title">ACID UNO</h3>
+            <p class="gcard-text">UNO с физичным drag-and-drop и неоновым cyberpunk-интерфейсом.</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
         </a>
-        <a class="gcard gcard-tetcolor" href="/tetcolor/" data-umami-event="game-open" data-umami-event-game="tetcolor">
-          <div class="card-top"><span class="index">02</span><span class="status status-live">играть</span></div>
-          <h3>Тетколор</h3>
-          <p>Та самая цветная головоломка из 90-х.</p>
-          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        <a class="gcard" data-art="cubes" href="/tetcolor/" data-umami-event="game-open" data-umami-event-game="tetcolor">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-live">играть</span></div>
+            <h3 class="gcard-title">Тетколор</h3>
+            <p class="gcard-text">Та самая цветная головоломка из 90-х.</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
         </a>
-        <a class="gcard gcard-knb" href="/knb/" data-umami-event="game-open" data-umami-event-game="knb-2">
-          <div class="card-top"><span class="index">03</span><span class="status status-alpha">альфа-версия</span></div>
-          <h3>KNB: Tactical Evolution</h3>
-          <p>Дуэль магов на трёх стихиях, где выигрывает не жест, а чтение противника.</p>
-          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        <a class="gcard" data-art="rps" href="/knb/" data-umami-event="game-open" data-umami-event-game="knb-2">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-alpha">альфа-версия</span></div>
+            <h3 class="gcard-title">KNB: Tactical Evolution</h3>
+            <p class="gcard-text">Дуэль магов на трёх стихиях, где выигрывает не жест, а чтение противника.</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
         </a>
           <aside class="records-card" aria-labelledby="records-title">
             <div class="records-head"><span class="index">REC</span><span>СЕГОДНЯ · МСК</span></div>
@@ -404,23 +518,32 @@
           <h2 id="other-games-title">Все игры</h2>
         </div>
         <div class="ggrid">
-        <a class="gcard gcard-neon-lines" href="/lines/" data-umami-event="game-open" data-umami-event-game="neon-lines">
-          <div class="card-top"><span class="index">01</span><span class="status status-live">играть</span></div>
-          <h3>Неон Линии</h3>
-          <p>Передвигай шарики по полю и выстраивай пять одинаковых в линию.</p>
-          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        <a class="gcard" data-art="orbs" href="/lines/" data-umami-event="game-open" data-umami-event-game="neon-lines">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-live">играть</span></div>
+            <h3 class="gcard-title">Неон Линии</h3>
+            <p class="gcard-text">Передвигай шарики по полю и выстраивай пять одинаковых в линию.</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
         </a>
-        <a class="gcard gcard-coin-flip" href="/coin/" data-umami-event="game-open" data-umami-event-game="coin-flip">
-          <div class="card-top"><span class="index">02</span><span class="status status-live">играть</span></div>
-          <h3>Орёл или решка</h3>
-          <p>Угадывай сторону монеты, собирай серии и попадай в глобальный топ.</p>
-          <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+        <a class="gcard" data-art="coin" href="/coin/" data-umami-event="game-open" data-umami-event-game="coin-flip">
+          <span class="gart" aria-hidden="true"><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-live">играть</span></div>
+            <h3 class="gcard-title">Орёл или решка</h3>
+            <p class="gcard-text">Угадывай сторону монеты, собирай серии и попадай в глобальный топ.</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
         </a>
-        <article class="gcard gcard-leela">
-          <div class="card-top"><span class="index">03</span><span class="status status-wip">в сборке</span></div>
-          <h3>Лила</h3>
-          <p>Путешествие по классическому полю из 72 клеток.</p>
-          <span class="launch">СКОРО</span>
+        <article class="gcard" data-art="dice">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-wip">в сборке</span></div>
+            <h3 class="gcard-title">Лила</h3>
+            <p class="gcard-text">Путешествие по классическому полю из 72 клеток.</p>
+            <span class="launch">СКОРО</span>
+          </div>
         </article>
         </div>
       </section>
@@ -449,6 +572,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=1" defer></script>
+    <script src="/assets/app.js?v=ed8c4fed" defer></script>
   </body>
 </html>

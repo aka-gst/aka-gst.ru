@@ -236,11 +236,14 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
 .card {
   display: flex; flex-direction: column; gap: 10px;
-  padding: 20px; border: 1px solid var(--line); border-radius: var(--r);
+  padding: 0 0 20px; border: 1px solid var(--line); border-radius: var(--r);
   background: var(--panel);
-  transition: border-color .15s ease, background .15s ease;
+  /* Без overflow: hidden — иначе карточка обрезает всплывающую панель
+     «чем покрыто». Скругление верха берёт на себя сама полоса чисел. */
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
-.card:hover { border-color: var(--dim); background: var(--card-hover); }
+.card:hover { border-color: var(--dim); background: var(--card-hover); transform: translateY(-2px); }
+.card > *:not(.band) { margin-left: 20px; margin-right: 20px; }
 .card h3 { font-size: 19px; }
 .card-title {
   color: inherit; text-decoration: none;
@@ -254,18 +257,69 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 .card .tagline { font-size: 14px; }
 .card .summary { font-size: 13px; color: var(--muted); }
 
+/* Полоса чисел наверху — та же интонация, что у отчёта на первом экране. */
+.band {
+  display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+  gap: 1px; margin: 0 0 4px; padding: 0; overflow: hidden;
+  border-radius: calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0;
+  background: var(--line); border-bottom: 1px solid var(--line);
+}
+.band[data-count="1"] { --n: 1; }
+.band[data-count="2"] { --n: 2; }
+.band > div { padding: 14px 16px 12px; background: var(--bg-soft); }
+.band dt {
+  font-family: var(--mono); font-size: 23px; font-weight: 700;
+  letter-spacing: -.03em; line-height: 1.05; color: var(--text);
+}
+.band dd {
+  margin: 4px 0 0; font-size: 11px; line-height: 1.35; color: var(--dim);
+}
+.band > div[title] { cursor: help; }
+
+.card-head { position: relative; display: flex; align-items: center; gap: 10px; padding-top: 14px; }
+.card-marks { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+/* Значок «чем покрыто». Раскрывается по наведению и по касанию:
+   на телефоне тап ставит фокус, и :focus-within делает то же самое. */
+/* Панель прицеплена к строке заголовка, а не к самому значку: значок узкий
+   и стоит не у края, поэтому на узком экране панель уходила за левый край. */
+.evidence { display: inline-flex; }
+.evidence-btn {
+  width: 20px; height: 20px; padding: 0; cursor: pointer;
+  border: 1px solid var(--accent-dim); border-radius: 50%;
+  background: var(--accent-dim); color: var(--accent);
+  font: 600 11px/1 var(--mono);
+}
+.evidence-panel {
+  position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; width: min(320px, 78vw);
+  display: grid; gap: 8px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg-soft); box-shadow: 0 14px 34px rgba(0, 0, 0, .5);
+  /* Появление держится на visibility, а не на прозрачности: если бы
+     переход по opacity не отработал, панель осталась бы невидимой в
+     «видимом» состоянии — отказ, который никто не заметит. */
+  visibility: hidden; pointer-events: none; transform: translateY(-4px);
+  transition: transform .15s ease;
+}
+.evidence:hover .evidence-panel,
+.evidence:focus-within .evidence-panel {
+  visibility: visible; pointer-events: auto; transform: none;
+}
+.evidence-panel b { font-size: 13px; }
+.evidence-panel code {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  padding: 6px 8px; border-radius: 6px; background: var(--accent-dim);
+  overflow-wrap: anywhere;
+}
+.evidence-panel ul { display: grid; gap: 6px; }
+.evidence-panel li {
+  position: relative; padding-left: 14px; font-size: 12px; line-height: 1.45; color: var(--muted);
+}
+.evidence-panel li::before { content: "—"; position: absolute; left: 0; color: var(--dim); }
+.evidence-panel p { font-size: 12px; line-height: 1.45; color: var(--dim); border-top: 1px solid var(--line); padding-top: 8px; }
+
 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .index { font-family: var(--mono); font-size: 11px; color: var(--dim); }
-
-.status {
-  padding: 3px 9px; border-radius: 999px;
-  font-family: var(--mono); font-size: 10px; font-weight: 600;
-  letter-spacing: .06em; text-transform: uppercase;
-  border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
-}
-.status-released, .status-live, .status-published { border-color: var(--accent-dim); background: var(--accent-dim); color: var(--accent); }
-.status-alpha, .status-demo { border-color: #4a3a18; background: #2a2110; color: var(--warn); }
-.status-wip { color: var(--dim); }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips li {
@@ -375,21 +429,100 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 @keyframes pulse { 0%, 100% { background: var(--line); } 40% { background: var(--accent); box-shadow: 0 0 10px var(--accent); } }
 
 .ggrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: 14px; }
+
+/* Игровая карточка: сначала графика, потом название и описание.
+   Картинку рисует CSS — отдельных файлов и загрузок нет. */
 .gcard {
-  display: flex; flex-direction: column; gap: 10px; min-height: 200px;
-  padding: 20px; border: 1px solid var(--line); border-radius: 16px;
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 16px;
   background: linear-gradient(160deg, var(--panel), var(--bg-soft));
   text-decoration: none; color: inherit;
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
-a.gcard:hover, a.gcard.is-mobile-active {
-  transform: translateY(-3px); border-color: var(--neon); box-shadow: var(--glow);
+a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
+  transform: translateY(-4px); border-color: var(--neon); box-shadow: var(--glow);
 }
-.gcard h3 { font-size: 23px; }
-.gcard p { font-size: 13.5px; color: var(--muted); }
+
+.gart {
+  position: relative; display: grid; place-items: center;
+  height: 132px; flex: none; overflow: hidden;
+  background: radial-gradient(circle at 50% 120%, rgba(154, 99, 255, .3), transparent 62%), var(--bg-soft);
+  border-bottom: 1px solid var(--line);
+}
+.gart i {
+  position: absolute; display: block;
+  transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;
+}
+
+/* ACID UNO — веер карт. */
+[data-art="uno"] .gart i {
+  width: 34px; height: 50px; border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  background: linear-gradient(150deg, var(--neon), var(--fail));
+}
+[data-art="uno"] .gart i:nth-child(1) { transform: rotate(-16deg) translateX(-26px); }
+[data-art="uno"] .gart i:nth-child(2) { transform: translateY(-4px); background: linear-gradient(150deg, var(--neon-2), var(--neon)); }
+[data-art="uno"] .gart i:nth-child(3) { transform: rotate(16deg) translateX(26px); background: linear-gradient(150deg, var(--warn), var(--accent)); }
+[data-art="uno"]:hover .gart i:nth-child(1) { transform: rotate(-26deg) translateX(-40px) translateY(-6px); }
+[data-art="uno"]:hover .gart i:nth-child(2) { transform: translateY(-14px) scale(1.06); }
+[data-art="uno"]:hover .gart i:nth-child(3) { transform: rotate(26deg) translateX(40px) translateY(-6px); }
+
+/* Тетколор — падающая колонка из трёх кубиков. */
+[data-art="cubes"] .gart i { width: 30px; height: 30px; border-radius: 5px; }
+[data-art="cubes"] .gart i:nth-child(1) { transform: translateY(-32px); background: var(--fail); }
+[data-art="cubes"] .gart i:nth-child(2) { background: var(--warn); }
+[data-art="cubes"] .gart i:nth-child(3) { transform: translateY(32px); background: var(--accent); }
+[data-art="cubes"]:hover .gart i:nth-child(1) { transform: translateY(-4px); }
+[data-art="cubes"]:hover .gart i:nth-child(2) { transform: translateY(28px); }
+[data-art="cubes"]:hover .gart i:nth-child(3) { transform: translateY(60px); opacity: 0; }
+
+/* КНБ — три метки по дуге. */
+[data-art="rps"] .gart i { width: 34px; height: 34px; border: 2px solid var(--neon-2); }
+[data-art="rps"] .gart i:nth-child(1) { border-radius: 50%; transform: translateX(-40px); }
+[data-art="rps"] .gart i:nth-child(2) { border-radius: 4px; transform: rotate(45deg); }
+[data-art="rps"] .gart i:nth-child(3) { border-radius: 3px; transform: translateX(40px); border-color: var(--accent); }
+[data-art="rps"]:hover .gart i:nth-child(1) { transform: translateX(-46px) translateY(-8px) scale(1.1); }
+[data-art="rps"]:hover .gart i:nth-child(2) { transform: rotate(225deg) scale(1.1); }
+[data-art="rps"]:hover .gart i:nth-child(3) { transform: translateX(46px) translateY(8px) scale(1.1); }
+
+/* Неон Линии — шары, выстраивающиеся в линию. */
+[data-art="orbs"] .gart i {
+  width: 26px; height: 26px; border-radius: 50%;
+  box-shadow: 0 0 14px currentColor;
+}
+[data-art="orbs"] .gart i:nth-child(1) { background: var(--fail); color: var(--fail); transform: translate(-34px, -14px); }
+[data-art="orbs"] .gart i:nth-child(2) { background: var(--neon-2); color: var(--neon-2); transform: translate(4px, 16px); }
+[data-art="orbs"] .gart i:nth-child(3) { background: var(--accent); color: var(--accent); transform: translate(38px, -6px); }
+[data-art="orbs"]:hover .gart i:nth-child(1) { transform: translate(-36px, 0); }
+[data-art="orbs"]:hover .gart i:nth-child(2) { transform: translate(0, 0); }
+[data-art="orbs"]:hover .gart i:nth-child(3) { transform: translate(36px, 0); }
+
+/* Орёл или решка — монета, переворачивающаяся при наведении. */
+[data-art="coin"] .gart { perspective: 420px; }
+[data-art="coin"] .gart i {
+  width: 58px; height: 58px; border-radius: 50%;
+  border: 2px solid var(--warn); background: radial-gradient(circle at 34% 30%, #3a3016, #16130a);
+}
+[data-art="coin"] .gart i:nth-child(2) { border-color: var(--accent); opacity: 0; }
+[data-art="coin"]:hover .gart i:nth-child(1) { transform: rotateY(180deg) scale(.9); opacity: 0; }
+[data-art="coin"]:hover .gart i:nth-child(2) { transform: rotateY(360deg); opacity: 1; }
+
+/* Лила — пять клеток поля. */
+[data-art="dice"] .gart i { width: 16px; height: 16px; border-radius: 3px; background: var(--line); border: 1px solid var(--dim); }
+[data-art="dice"] .gart i:nth-child(1) { transform: translate(-30px, -20px); }
+[data-art="dice"] .gart i:nth-child(2) { transform: translate(0, -20px); }
+[data-art="dice"] .gart i:nth-child(3) { transform: translate(30px, 0); }
+[data-art="dice"] .gart i:nth-child(4) { transform: translate(0, 20px); }
+[data-art="dice"] .gart i:nth-child(5) { transform: translate(-30px, 20px); }
+[data-art="dice"]:hover .gart i:nth-child(3) { background: var(--accent); border-color: var(--accent); }
+
+.gcard-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; flex: 1; }
+.gcard-top { display: flex; justify-content: flex-end; }
+.gcard-title { font-size: 22px; font-weight: var(--title-weight); letter-spacing: var(--title-spacing); }
+.gcard-text { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
 .gcard .launch {
-  margin-top: auto; font-family: var(--mono); font-size: 11px;
-  letter-spacing: .1em; color: var(--accent);
+  margin-top: auto; padding-top: 6px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--accent);
 }
 article.gcard .launch { color: var(--dim); }
 

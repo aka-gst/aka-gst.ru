@@ -2,6 +2,7 @@
 // Генерирует index.html из data/site.json и data/projects.json.
 // Запуск: node build.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -11,6 +12,16 @@ const read = (name) => JSON.parse(readFileSync(join(root, 'data', name), 'utf8')
 const site = read('site.json');
 const db = read('projects.json');
 const qa = read('qa-metrics.json');
+
+// Версия ассета — от его содержимого. Раньше в ссылке стояло ?v=1 вручную:
+// Caddy отдаёт /assets/* с кэшем на неделю, поэтому вернувшийся посетитель
+// получал новую разметку со старыми стилями, пока кто-нибудь не вспомнит
+// поднять число.
+const assetVersion = (relative) =>
+  createHash('sha256').update(readFileSync(join(root, relative))).digest('hex').slice(0, 8);
+
+const cssVersion = assetVersion('assets/site.css');
+const jsVersion = assetVersion('assets/app.js');
 
 // Практикумы отдают свои числа так же, как гейтвей: карточка не хранит их у себя.
 const readCourse = (relative) => {
@@ -141,15 +152,61 @@ const cardTitle = (project) => {
   }${analytics(project)}>${esc(project.title)}</a>`;
 };
 
+// Числа для верхней полосы карточки. У практикумов их даёт course.json,
+// у остальных — projects.json. Больше трёх в строку не помещается.
+const cardMetrics = (project) => {
+  if (project.courseFeed) {
+    const t = readCourse(project.courseFeed.path)?.totals || {};
+    return [
+      { value: t.units, label: 'разделов' },
+      { value: t.experiments, label: project.id === 'ai-agent-service-lab' ? 'лабораторных' : 'экспериментов' },
+      { value: t.estimate_minutes ? `~${t.estimate_minutes} мин` : null, label: 'чтения' },
+    ].filter((m) => m.value);
+  }
+  return (project.metrics || []).slice(0, 3);
+};
+
+const metricBand = (project) => {
+  const items = cardMetrics(project);
+  if (!items.length) return '';
+  return `
+          <dl class="band" data-count="${items.length}">${items
+    .map(
+      (m) => `
+            <div${m.note ? ` title="${esc(m.note)}"` : ''}>
+              <dt>${esc(m.value)}</dt>
+              <dd>${esc(m.label)}</dd>
+            </div>`
+    )
+    .join('')}
+          </dl>`;
+};
+
+// Значок «чем покрыто» ставится только там, где прогон подтверждён.
+// Раскрывается по наведению и по касанию: :focus-within срабатывает на тап.
+const evidenceMark = (project) => {
+  const e = project.evidence;
+  if (!e) return '';
+  return `<span class="evidence">
+              <button type="button" class="evidence-btn" aria-expanded="false"
+                aria-label="Чем покрыто тестами: ${esc(project.title)}">✓</button>
+              <span class="evidence-panel" role="tooltip">
+                <b>${esc(e.title)}</b>
+                <code>${esc(e.run)}</code>
+                <ul>${e.points.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>
+                <p>${esc(e.why)}</p>
+              </span>
+            </span>`;
+};
+
 const card = (project, index) => `
-        <article class="card" id="p-${esc(project.id)}">
-          <div class="card-top"><span class="index">${String(index + 1).padStart(2, '0')}</span>${statusBadge(
-  project
-)}</div>
-          <p class="kicker">${esc(project.kicker)}</p>
+        <article class="card" id="p-${esc(project.id)}">${metricBand(project)}
+          <div class="card-head">
+            <p class="kicker">${esc(project.kicker)}</p>
+            <span class="card-marks">${evidenceMark(project)}${statusBadge(project)}</span>
+          </div>
           <h3>${cardTitle(project)}</h3>
           <p class="tagline">${esc(project.tagline)}</p>
-          ${metricChips(project)}
           <p class="summary">${esc(project.summary)}</p>
           ${stackRow(project)}
           ${linkRow(project)}
@@ -386,18 +443,23 @@ const workPanel = `
       </section>`;
 
 // ── Панель «Игры» ────────────────────────────────────────────────────
-const gameCard = (project, index) => {
+const gameCard = (project) => {
   const link = primaryLink(project);
   const tag = link ? 'a' : 'article';
   const href = link ? ` href="${esc(link.url)}"` : '';
+  // Графика собирается из пустых <i>: рисует её CSS, лишних файлов нет.
+  const pips = { uno: 3, cubes: 3, rps: 3, orbs: 3, coin: 2, dice: 5 }[project.art] || 3;
   return `
-        <${tag} class="gcard gcard-${esc(project.id)}"${href}${link ? analytics(project) : ''}>
-          <div class="card-top"><span class="index">${String(index + 1).padStart(2, '0')}</span>${statusBadge(
-    project
-  )}</div>
-          <h3>${esc(project.title)}</h3>
-          <p>${esc(project.tagline)}</p>
-          <span class="launch">${link ? 'ЗАПУСТИТЬ <b>↗</b>' : 'СКОРО'}</span>
+        <${tag} class="gcard"${
+    project.art ? ` data-art="${esc(project.art)}"` : ''
+  }${href}${link ? analytics(project) : ''}>
+          <span class="gart" aria-hidden="true">${'<i></i>'.repeat(pips)}</span>
+          <div class="gcard-body">
+            <div class="gcard-top">${statusBadge(project)}</div>
+            <h3 class="gcard-title">${esc(project.title)}</h3>
+            <p class="gcard-text">${esc(project.tagline)}</p>
+            <span class="launch">${link ? 'ЗАПУСТИТЬ <b>↗</b>' : 'СКОРО'}</span>
+          </div>
         </${tag}>`;
 };
 
@@ -471,7 +533,7 @@ const html = `<!doctype html>
     <meta name="twitter:title" content="${esc(site.title)}">
     <meta name="twitter:description" content="${esc(site.description)}">
     <meta name="twitter:image" content="${esc(site.url)}${esc(site.ogImage)}">
-    <link rel="stylesheet" href="/assets/site.css?v=1">
+    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -515,7 +577,7 @@ ${socialLinks('footer')}
       <span class="foot-note">${esc(site.footerNote)}</span>
     </footer>
 
-    <script src="/assets/app.js?v=1" defer></script>
+    <script src="/assets/app.js?v=${jsVersion}" defer></script>
   </body>
 </html>
 `;
@@ -556,7 +618,7 @@ const praktikumPage = `<!doctype html>
     <title>Практикумы — ${esc(site.handle)}</title>
     <link rel="canonical" href="${esc(site.url)}/praktikum/">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/site.css?v=1">
+    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
   </head>
   <body>
@@ -594,7 +656,7 @@ const notFound = `<!doctype html>
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>Страница не найдена — ${esc(site.handle)}</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/site.css?v=1">
+    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>
     <header class="topbar">
@@ -641,7 +703,7 @@ const unavailable = `<!doctype html>
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>Сервис недоступен — ${esc(site.handle)}</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/site.css?v=1">
+    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>
     <header class="topbar">
