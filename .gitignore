@@ -4,3 +4,8 @@ node_modules/
 # Локальные разрешения Claude Code; launch.json нужен для предпросмотра и хранится.
 .claude/settings.local.json
 .githooks/private-words.txt
+
+# Локальная копия Pyodide для QA Quest: 13 МБ бинарников. Не версионируется —
+# воспроизводится tools/fetch-pyodide.sh из репозитория QA Quest, который
+# владеет версией и контрольными суммами. deploy.sh добывает её перед выкладкой.
+qa-quest/vendor/

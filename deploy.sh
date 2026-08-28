@@ -62,6 +62,46 @@ if [ -n "$missing" ]; then
   exit 1
 fi
 
+# qa-quest/vendor не версионируется: это 13 МБ бинарников Pyodide, которые
+# воспроизводятся скриптом с зафиксированными контрольными суммами. Но в бою
+# они нужны — без них приложение молча уходит на чужой CDN. Поэтому добываем
+# ДО выкладки, а не обнаруживаем пропажу после.
+VENDOR="qa-quest/vendor/pyodide"
+VENDOR_FILES="pyodide.mjs pyodide.asm.mjs pyodide.asm.wasm python_stdlib.zip pyodide-lock.json"
+
+if [ ! -f "$VENDOR/pyodide.mjs" ]; then
+  echo
+  echo "== qa-quest: локальной копии Pyodide нет, добываем =="
+  # Версия и суммы живут в репозитории QA Quest — он им владеет. Второй копии
+  # не заводим: разъехавшиеся суммы хуже отсутствующих. Путь ищем перебором,
+  # потому что каталоги уже дважды переезжали.
+  quest=""
+  for candidate in "$HOME/dev/QA Quest" "$HOME/dev/qa-quest" "$HOME/dev/Zakriva/QA Quest"; do
+    if [ -f "$candidate/tools/fetch-pyodide.sh" ]; then quest="$candidate"; break; fi
+  done
+  if [ -z "$quest" ]; then
+    echo "ОШИБКА: не найден репозиторий QA Quest с tools/fetch-pyodide.sh." >&2
+    echo "        В нём зафиксированы версия Pyodide и контрольные суммы." >&2
+    echo "        Без него выкладка отправила бы браузеры посетителей на jsDelivr." >&2
+    exit 1
+  fi
+  ( cd "$quest" && sh tools/fetch-pyodide.sh )
+  mkdir -p "$VENDOR"
+  cp -R "$quest/vendor/pyodide/." "$VENDOR/"
+  echo "  скопировано из $quest"
+fi
+
+# Проверяем все пять, а не только точку входа: pyodide.mjs весит 18 КБ из 13 МБ,
+# и его наличие ничего не говорит о судьбе wasm на 9,6 МБ.
+vendor_missing=""
+for file in $VENDOR_FILES; do
+  [ -f "$VENDOR/$file" ] || vendor_missing="$vendor_missing $file"
+done
+if [ -n "$vendor_missing" ]; then
+  echo "ОШИБКА: в $VENDOR не хватает:$vendor_missing" >&2
+  exit 1
+fi
+
 echo
 echo "== Caddyfile: сверка с живым =="
 # Конфиг правят несколько проектов. Выложить собранный у себя — значит
