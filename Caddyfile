@@ -89,6 +89,20 @@ aka-gst.ru, www.aka-gst.ru {
     reverse_proxy meet-auth:8090
   }
 
+  # Комнаты ACID UNO. Статика игры лежит в /srv/acid и отдаётся файлово —
+  # сюда уходят только запросы комнаты. Префикс /acid срезаем: сервер ждёт
+  # /api/..., ровно как при локальном запуске.
+  #
+  # flush_interval -1 обязателен. Состояние стола приходит потоком SSE, и с
+  # буферизацией по умолчанию он копится в прокси: у игроков просто замирает
+  # стол, без единой ошибки в журнале.
+  handle /acid/api/* {
+    uri strip_prefix /acid
+    reverse_proxy acid-uno:4173 {
+      flush_interval -1
+    }
+  }
+
   root * /srv
   file_server
 
