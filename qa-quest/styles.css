@@ -144,6 +144,36 @@ button:disabled { cursor: not-allowed; }
 .continue-card small { color: var(--muted); font-size: 14px; }
 .continue-go { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); color: var(--mint); font: 600 14px Manrope; }
 
+.welcome {
+  border: 1px solid #2c5768; border-radius: var(--radius); padding: 22px 26px;
+  background: linear-gradient(120deg, #102b38, #0b1a24 70%);
+  display: grid; gap: 20px 40px; align-items: center;
+}
+/* На широком экране текст не должен жаться в левую треть, оставляя половину
+   карточки пустой: факты уезжают во вторую колонку и заполняют её. */
+@media (min-width: 900px) { .welcome { grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr); } }
+.welcome h2 { margin: 7px 0 10px; font-size: 26px; line-height: 1.2; }
+.welcome-text p { margin: 0 0 18px; color: #c5d2d8; font-size: 15px; line-height: 1.6; }
+.welcome-facts {
+  margin: 0; padding: 14px 16px 14px 34px; list-style: none;
+  border: 1px solid var(--line); border-radius: 12px; background: rgba(9, 21, 30, .5);
+  color: var(--muted); font-size: 13px; line-height: 1.55;
+}
+.welcome-facts li { position: relative; padding: 5px 0; }
+.welcome-facts li::before {
+  content: "→"; position: absolute; left: -20px; color: var(--cyan); font-size: 12px;
+}
+.welcome-start {
+  border: 0; background: var(--mint); color: #052116;
+  border-radius: 10px; padding: 13px 22px; font: 700 14px Manrope;
+}
+.welcome-start:hover { filter: brightness(1.06); }
+
+.mode-hint { color: var(--cyan); white-space: nowrap; }
+
+.stuck-button { display: block; width: calc(100% - 32px); margin: 0 16px 14px; text-align: center; }
+.stuck-button:disabled { color: var(--mint); }
+
 .tier {
   border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px;
   background: linear-gradient(150deg, rgba(16, 27, 37, .9), rgba(9, 18, 26, .9));
@@ -307,6 +337,10 @@ code, .task-card code, .brief code {
   width: 100%; height: 100%; border: 0; outline: 0; resize: none; padding: 16px;
   background: transparent; color: #dff6f2; font: 14px/1.62 "Roboto Mono", monospace;
   tab-size: 4; caret-color: var(--mint);
+  /* Строка кода не переносится, а уезжает вбок — как в любом редакторе.
+     С переносом номер строки указывал бы не на ту строку, а сообщения об
+     ошибках Python ссылаются именно на номера. */
+  white-space: pre; overflow-x: auto;
 }
 
 .lab-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
@@ -476,7 +510,21 @@ code, .task-card code, .brief code {
   .lesson-aside { max-height: none; }
   .aside-list { display: none; }
   .back-button { border-bottom: 0; padding: 12px 14px; }
+  /* Подсказка про режим на телефоне нужнее, чем на большом экране: там
+     переключатель занимает всю ширину и без пояснения выглядит загадкой. */
   .progress-hint { display: none; }
+
+  /* Кнопка старта во всю ширину: на телефоне узкая кнопка посреди блока
+     читается как второстепенная, а это главное действие экрана. */
+  .welcome-start { width: 100%; }
+
+  /* iOS сам приближает страницу, когда фокус попадает в поле со шрифтом
+     мельче 16 пикселей, и человеку приходится отодвигать её руками. Лечится
+     размером шрифта, а не запретом масштабирования: запрет сломал бы
+     увеличение тем, кому оно нужно. Междустрочный интервал тот же, иначе
+     номера строк разъедутся с кодом. */
+  .code-editor, .gutter { font-size: 16px; line-height: 1.62; }
+  .dialog-body input { font-size: 16px; }
   .status-strip { justify-content: space-between; }
   .brief { max-height: none; }
   .editor-wrap { min-height: 260px; }

@@ -7,7 +7,6 @@
   <title>QA Quest — питон, тестирование и LLM в браузере</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
@@ -41,6 +40,7 @@
 
     <div class="status-strip">
       <span id="pythonChip" class="python-chip" data-status="idle">Python: не загружен</span>
+      <span id="modeHint" class="mode-hint"></span>
       <span id="progressHint" class="progress-hint">Прогресс сохраняется в этом браузере</span>
       <button type="button" id="resetProgress" class="text-button">Сбросить прогресс</button>
     </div>
@@ -61,6 +61,9 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <!-- Тот же обезличенный счётчик, что на главной: без кук и профилей.
+       Нужен, чтобы видеть, на каком уроке люди останавливаются. -->
+  <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>

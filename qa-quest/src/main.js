@@ -27,7 +27,14 @@ const runnerConfig = (async () => {
   try {
     const response = await fetch('vendor/pyodide/pyodide.mjs', { method: 'HEAD' });
     if (response.ok) return { base: new URL('vendor/pyodide/', location.href).href };
-  } catch (_) { /* локальной копии нет — это норма */ }
+  } catch (_) { /* сеть или файла нет — разбираемся ниже */ }
+  // Молчать здесь нельзя: неполная выкладка отправит браузеры всех посетителей
+  // на чужой CDN, и следа об этом не останется. При разработке это норма,
+  // на домене — повод пересобрать выкладку.
+  console.warn(
+    'QA Quest: локальная копия Pyodide не найдена, Python будет загружен с cdn.jsdelivr.net. '
+    + 'Если это боевой сайт — выкладка неполная, нужен tools/fetch-pyodide.sh и повторный деплой.',
+  );
   return {};
 })();
 
@@ -87,6 +94,12 @@ function renderHeader() {
     button.classList.toggle('active', button.dataset.mode === store.state.mode);
     button.setAttribute('aria-pressed', String(button.dataset.mode === store.state.mode));
   });
+
+  // Переключатель без объяснения выглядит бесполезным: человек видит две
+  // кнопки и не понимает, что изменится. Говорим прямо, что он делает.
+  $('modeHint').textContent = store.state.mode === 'sprint'
+    ? 'Пробежать: в уроке суть и одна задача'
+    : 'Разобрать: объяснение, примеры и три задачи в уроке';
 }
 
 /* ---------- события прогресса ---------- */

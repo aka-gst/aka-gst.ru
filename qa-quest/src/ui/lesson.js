@@ -14,6 +14,7 @@ import {
 } from '../store.js';
 import { runPython, runner, onRunnerChange } from '../runner.js';
 import { decorateGlossary } from '../glossary.js';
+import { track } from '../analytics.js';
 import { el, clear } from './dom.js';
 
 const view = {
@@ -110,6 +111,10 @@ function editorPanel() {
   const editor = el('textarea', {
     class: 'code-editor',
     spellcheck: 'false',
+    // Без переноса: иначе длинная строка занимает две визуальные и номера
+    // перестают соответствовать коду. В обучении это не косметика — ошибки
+    // Python указывают на номер строки, и он должен показывать на неё.
+    wrap: 'off',
     'aria-label': 'Редактор Python',
     oninput: () => {
       syncLines();
@@ -239,6 +244,21 @@ function writeConsole(text, tone = '') {
   output.textContent = text;
 }
 
+/**
+ * Прямая обратная связь от ученика. Кнопка ничего не чинит — она отмечает
+ * место, где человек застрял, чтобы потом было видно, какой именно урок
+ * переписывать. Без неё остаётся гадать по числу брошенных попыток.
+ */
+function stuckButton(task) {
+  const button = el('button', { class: 'text-button stuck-button' }, 'Здесь непонятно');
+  button.addEventListener('click', () => {
+    track.stuck(view.lesson, task);
+    button.textContent = 'Спасибо, отмечено';
+    button.disabled = true;
+  });
+  return button;
+}
+
 function hintButton(task) {
   const box = el('div', { class: 'hint-box', hidden: true });
   const button = el('button', {
@@ -277,6 +297,7 @@ function consolePanel() {
     el('div', { class: 'checks' }, [el('h2', { text: 'ПРОВЕРКИ' }), checkList]),
     button,
     box,
+    stuckButton(task),
   ]);
 
   const previous = view.results.get(resultKey());
@@ -324,6 +345,7 @@ function checklistPanel(rerender) {
     el('a', { class: 'page-link', href: lesson.page, target: '_blank', rel: 'noopener' }, 'Разобрать подробно →'),
     button,
     box,
+    stuckButton(task),
   ]);
 }
 
@@ -396,11 +418,14 @@ async function run() {
   const passed = showResult(result);
 
   if (!passed) {
+    track.taskFailed(lesson, task, result);
     view.attempted = true;
     return;
   }
 
-  const outcome = completeTask(lesson, task, { firstTry: !view.attempted && view.hintLevel === 0 });
+  const firstTry = !view.attempted && view.hintLevel === 0;
+  track.taskSolved(lesson, task, { firstTry });
+  const outcome = completeTask(lesson, task, { firstTry });
   view.attempted = false;
   if (!outcome.already) view.onProgress(outcome, lesson, task);
 }
@@ -417,6 +442,7 @@ export function renderLesson(root, lesson, context) {
     view.taskIndex = 0;
     view.hintLevel = 0;
     view.attempted = false;
+    track.lessonOpened(lesson);
   }
   const tasks = visibleTasks();
   if (view.taskIndex >= tasks.length) view.taskIndex = tasks.length - 1;
@@ -449,7 +475,7 @@ export function renderLesson(root, lesson, context) {
           el('div', {}, [
             el('div', { class: 'eyebrow' }, [
               lab ? el('b', { class: 'lab-badge', text: 'ПРАКТИКУМ' }) : null,
-              `${lesson.skill.toUpperCase()} · ${progress.doneCount}/${progress.total}`,
+              `${lesson.skill.toUpperCase()} · ${progress.requiredDone}/${progress.requiredTotal}`,
             ]),
             el('h1', { text: lesson.title }),
             el('p', { class: 'brief-subtitle', text: lesson.subtitle }),
