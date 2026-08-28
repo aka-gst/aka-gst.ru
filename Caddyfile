@@ -1,3 +1,19 @@
+{
+	# Журнал ошибок нужен, чтобы чинить несоединившийся звонок,
+	# но адреса и заголовки посетителей в нём не остаются.
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>remote_ip delete
+				request>client_ip delete
+				request>remote_port delete
+				request>headers delete
+			}
+		}
+	}
+}
+
 aka-gst.ru, www.aka-gst.ru {
   encode zstd gzip
 
@@ -13,6 +29,7 @@ aka-gst.ru, www.aka-gst.ru {
   redir /acid /acid/ 308
   redir /qa-quest /qa-quest/ 308
   redir /praktikum /praktikum/ 308
+  redir /meet /meet/ 308
 
   # Статика сайта версионируется строкой запроса, поэтому её можно кэшировать.
   @assets path /assets/* /favicon.svg
@@ -66,6 +83,12 @@ aka-gst.ru, www.aka-gst.ru {
     file_server
   }
 
+  # Страница звонка и выдача токенов. Сам медиатрафик сюда не идёт —
+  # он уходит напрямую на meet.aka-gst.ru, минуя Caddy.
+  handle_path /meet/* {
+    reverse_proxy meet-auth:8090
+  }
+
   root * /srv
   file_server
 
@@ -76,6 +99,15 @@ aka-gst.ru, www.aka-gst.ru {
       rewrite * /404.html
       file_server
     }
+
+    # Маршруты соседних проектов проксируют на контейнеры, которые могут
+    # быть ещё не подняты. Голый 502 читается как сломанный сайт.
+    @unavailable expression {err.status_code} >= 502 && {err.status_code} <= 504
+    handle @unavailable {
+      rewrite * /503.html
+      file_server
+    }
+
     respond "{err.status_code} {err.status_text}"
   }
 }
@@ -86,4 +118,12 @@ stats.aka-gst.ru {
   # phishing detections on this administrative subdomain.
   header X-Robots-Tag "noindex, nofollow, noarchive"
   respond "Private analytics dashboard" 404
+}
+
+meet.aka-gst.ru {
+  # Сигналинг LiveKit (WebSocket). Медиа идёт мимо Caddy, напрямую по UDP.
+  # 172.18.0.1 — хост со стороны zakriva-net: LiveKit работает в host-сети,
+  # поэтому по имени контейнера он недоступен.
+  header X-Robots-Tag "noindex, nofollow"
+  reverse_proxy 172.18.0.1:7880
 }

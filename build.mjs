@@ -74,6 +74,7 @@ const analytics = (project) =>
 
 const primaryLink = (project) =>
   project.links.find((l) => l.type === 'course') ||
+  project.links.find((l) => l.type === 'site') ||
   project.links.find((l) => l.type === 'play') ||
   project.links.find((l) => l.type === 'demo') ||
   project.links.find((l) => l.type === 'telegram') ||
@@ -616,6 +617,52 @@ const notFound = `<!doctype html>
 
 writeFileSync(join(root, '404.html'), notFound);
 
+// ── Страница «сервис не отвечает» ────────────────────────────────────
+// Часть маршрутов проксирует на контейнеры соседних проектов. Пока их
+// не подняли, Caddy отдаёт голый 502, и это читается как сломанный сайт.
+const unavailable = `<!doctype html>
+<html lang="ru" data-track="work">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="${esc(site.themeColor)}">
+    <title>Сервис недоступен — ${esc(site.handle)}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/site.css?v=1">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">aka<span>-</span>gst</a>
+    </header>
+    <main id="main">
+      <section class="report" style="margin-top:34px">
+        <div class="report-bar">
+          <span class="dot" data-status="failed" aria-hidden="true"></span>
+          <code>upstream — no healthy backend</code>
+          <span class="verdict" data-status="failed">unavailable</span>
+        </div>
+        <div class="report-grid">
+          <div class="report-lede">
+            <p class="kicker">Раздел ещё не запущен</p>
+            <h1>Сервис не отвечает</h1>
+            <p class="tagline">Этот раздел сейчас разворачивается. Остальной сайт работает.</p>
+            <p class="card-links">
+              <a class="link" href="/#work">На главную <b>→</b></a>
+              <a class="link" href="/#games">К играм <b>→</b></a>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="sitefoot"><span>AKA-GST.RU</span></footer>
+  </body>
+</html>
+`;
+
+writeFileSync(join(root, '503.html'), unavailable);
+
 // ── Карта собственных страниц ────────────────────────────────────────
 const pageUrls = [
   '/',
@@ -643,7 +690,7 @@ ${[...new Set(pageUrls)]
 writeFileSync(join(root, 'sitemap-pages.xml'), pagesSitemap);
 
 console.log(
-  `собрано: index.html, praktikum/index.html, 404.html, sitemap-pages.xml — ${db.projects.length} проектов, ${socials.length} соцсети, ${
+  `собрано: index.html, praktikum/index.html, 404.html, 503.html, sitemap-pages.xml — ${db.projects.length} проектов, ${socials.length} соцсети, ${
     html.length
   } байт`
 );

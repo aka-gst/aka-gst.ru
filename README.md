@@ -65,12 +65,29 @@ rsync -avz --exclude '.git/' --exclude '.claude/' --exclude 'build.mjs' \
 **Без `--delete`.** Каталоги `coin/`, `lines/` и `knb/` выкладываются из своих
 репозиториев и в этом дереве отсутствуют — с этим флагом они будут снесены.
 
-`Caddyfile` копируется отдельно, конфиг перечитывается без простоя:
+### Caddyfile правят несколько проектов
+
+В `/opt/zakriva/caddy/Caddyfile` пишет не только этот сайт: там же маршруты
+звонков (`/meet/`, `meet.aka-gst.ru`), Лилы (`/leela/`) и сервиса аккаунтов
+(`/api/auth/`, `/api/progress/`). Выкладка собранного у себя файла **молча
+удаляет чужие маршруты** — так однажды уехали звонки.
+
+Поэтому сначала забрать живой файл и наложить правки на него:
+
+```sh
+scp bonita:/opt/zakriva/caddy/Caddyfile /tmp/Caddyfile.live
+diff Caddyfile /tmp/Caddyfile.live
+```
+
+Если разница только в ваших правках — выкладывайте. Если в живом файле есть
+чужие блоки, которых у вас нет, сначала перенесите их к себе и закоммитьте.
 
 ```sh
 scp Caddyfile bonita:/opt/zakriva/caddy/Caddyfile
 ssh bonita 'docker exec caddy caddy validate --config /etc/caddy/Caddyfile && docker exec caddy caddy reload --config /etc/caddy/Caddyfile'
 ```
+
+`validate` до `reload` обязателен: ошибка в конфиге положит все сайты сразу.
 
 ## Защита от утечек
 
