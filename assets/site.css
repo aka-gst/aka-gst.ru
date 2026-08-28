@@ -521,6 +521,22 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
 [data-art="dice"] .gart i:nth-child(5) { transform: translate(-30px, 20px); }
 [data-art="dice"]:hover .gart i:nth-child(3) { background: var(--accent); border-color: var(--accent); }
 
+/* Автоответчик — кассета: две катушки и лента, которая перематывается. */
+[data-art="tape"] .gart i {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid var(--neon-2);
+  background: radial-gradient(circle at 50% 50%, var(--bg-soft) 30%, transparent 31%);
+}
+[data-art="tape"] .gart i:nth-child(1) { transform: translateX(-28px); }
+[data-art="tape"] .gart i:nth-child(2) { transform: translateX(28px); border-color: var(--fail); }
+[data-art="tape"] .gart i:nth-child(3) {
+  width: 58px; height: 4px; border: none; border-radius: 0;
+  background: var(--warn); box-shadow: 0 0 12px var(--warn);
+}
+[data-art="tape"]:hover .gart i:nth-child(1) { transform: translateX(-28px) scale(1.14); }
+[data-art="tape"]:hover .gart i:nth-child(2) { transform: translateX(28px) scale(.84); }
+[data-art="tape"]:hover .gart i:nth-child(3) { transform: translateY(-18px) scaleX(.5); }
+
 .gcard-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; flex: 1; }
 .gcard-top { display: flex; justify-content: flex-end; }
 .gcard-title { font-size: 22px; font-weight: var(--title-weight); letter-spacing: var(--title-spacing); }

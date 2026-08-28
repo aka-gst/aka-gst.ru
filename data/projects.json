@@ -585,6 +585,51 @@
       "art": "uno"
     },
     {
+      "id": "avtootvetchik",
+      "title": "АВТООТВЕТЧИК",
+      "kicker": "Игра · экшен сверху",
+      "tagline": "Быстрый top-down экшен: с одного удара умирают все, включая тебя.",
+      "summary": "Прототип боёвки в духе Hotline Miami, но со своей графикой и палитрой: сектор зрения у каждого врага, шум выстрела собирает этаж, кулак сбивает с ног, а добивает уже что угодно. Этаж целиком помещается в короткую строку — уровнями можно обмениваться кодом, без сервера и без файлов. Играется мышью и клавиатурой или двумя пальцами: правый стик сам бьёт, когда цель под прицелом.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "playable"
+      ],
+      "feature": {
+        "play": 2
+      },
+      "status": {
+        "state": "alpha",
+        "label": "прототип"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "Canvas",
+        "WebAudio"
+      ],
+      "links": [
+        {
+          "type": "play",
+          "label": "Запустить",
+          "url": "/avto/"
+        }
+      ],
+      "deploy": {
+        "state": "planned",
+        "target": "/avto/",
+        "source": "/Users/gst/dev/avtootvetchik"
+      },
+      "accent": "acid",
+      "analytics": {
+        "event": "game-open",
+        "slug": "avtootvetchik"
+      },
+      "art": "tape"
+    },
+    {
       "id": "tetcolor",
       "title": "Тетколор",
       "kicker": "Игра · головоломка",
@@ -598,7 +643,7 @@
         "playable"
       ],
       "feature": {
-        "play": 2
+        "play": 3
       },
       "status": {
         "state": "live",
@@ -638,7 +683,7 @@
         "playable"
       ],
       "feature": {
-        "play": 3
+        "play": 4
       },
       "status": {
         "state": "alpha",

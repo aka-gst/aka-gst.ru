@@ -45,6 +45,7 @@ assets
 data
 praktikum
 acid
+avto
 qa-quest
 psy-admin
 photodata
