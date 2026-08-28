@@ -52,7 +52,7 @@ expect() {
 
 echo "== страницы =="
 for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /qa-quest/ /acid/ \
-         /psy-admin/ /photodata/ /tetcolor/ /knb/ /lines/ /coin/ \
+         /psy-admin/ /photodata/ /tetcolor/ /stihii/ /lines/ /coin/ \
          /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
   expect "$p" 200
 done
@@ -63,6 +63,20 @@ for p in /.githooks/private-words.txt /.githooks/pre-commit /.gitignore /README.
          /build.mjs /deploy.sh /verify.sh /Caddyfile /sync-portfolio.sh; do
   expect "$p" 404
 done
+
+echo
+echo "== старые адреса перенаправляют, а не теряются =="
+# Имена функций и переменных в sh только латиницей: кириллица здесь
+# не идентификатор, и скрипт падает на разборе.
+moved() {
+  from="$1"; to="$2"
+  # shellcheck disable=SC2086
+  target=$(curl -s $RETRY -o /dev/null -w '%{redirect_url}' "$BASE$from")
+  if [ "$target" = "$BASE$to" ]; then say_ok "$from -> $to"
+  else say_bad "$from ведёт на «$target», ждали $BASE$to"; fi
+}
+moved /knb/ /stihii/
+moved /tetris/ /tetcolor/
 
 echo
 echo "== опечатка в адресе даёт страницу, а не пустоту =="
