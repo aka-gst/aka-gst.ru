@@ -3,65 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Интерактивная игра для изучения Python, QA Automation и AI/LLM QA." />
-  <title>QA Quest — игровая лаборатория</title>
+  <meta name="description" content="Интерактивный курс: питон с нуля, тестирование и работа с LLM. Python запускается прямо в браузере — устанавливать ничего не нужно." />
+  <title>QA Quest — питон, тестирование и LLM в браузере</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
+
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="QA Quest — на главную">
+      <a class="brand" href="#/" aria-label="QA Quest — к карте курса">
         <span class="brand-mark">Q<span>_</span></span>
-        <span><strong>QA QUEST</strong><small>LEARN · BREAK · VERIFY</small></span>
+        <span><strong>QA QUEST</strong><small>ПИТОН · ТЕСТЫ · LLM</small></span>
       </a>
+
+      <div class="mode-switch" role="group" aria-label="Режим подачи">
+        <button type="button" data-mode="sprint" aria-pressed="true">Пробежать</button>
+        <button type="button" data-mode="deep" aria-pressed="false">Разобрать</button>
+      </div>
+
       <div class="profile-strip">
+        <button type="button" id="streakChip" class="streak-chip" title="Серия дней">🔥 0</button>
         <div class="level-chip"><span>УРОВЕНЬ</span><strong id="profileLevel">1</strong></div>
-        <div class="xp-block"><div><span>ОПЫТ</span><b id="xpLabel">0 / 100 XP</b></div><div class="xp-track"><i id="xpBar"></i></div></div>
-        <button class="icon-button" id="soundToggle" title="Звук" aria-label="Переключить звук">♪</button>
+        <div class="xp-block">
+          <div><span>ОПЫТ</span><b id="xpLabel">0 / 120 XP</b></div>
+          <div class="xp-track"><i id="xpBar"></i></div>
+        </div>
+        <button type="button" id="accountButton" class="account-button">Войти</button>
       </div>
     </header>
 
-    <main class="workspace">
-      <aside class="campaign-panel panel">
-        <div class="panel-heading"><span>КАМПАНИЯ · ВСЁ ОТКРЫТО</span><button id="resetProgress" class="text-button">Сбросить</button></div>
-        <div id="campaignList" class="campaign-list"></div>
-      </aside>
+    <div class="status-strip">
+      <span id="pythonChip" class="python-chip" data-status="idle">Python: не загружен</span>
+      <span id="progressHint" class="progress-hint">Прогресс сохраняется в этом браузере</span>
+      <button type="button" id="resetProgress" class="text-button">Сбросить прогресс</button>
+    </div>
 
-      <section class="mission-column">
-        <article class="briefing panel">
-          <div class="eyebrow" id="missionChapter">PYTHON BOOTCAMP · 01</div>
-          <div class="mission-title-row"><div><h1 id="missionTitle">Сигнал пробуждения</h1><p id="missionSubtitle">Верни терминалу голос.</p></div><div class="reward">+<b id="missionXp">40</b> XP</div></div>
-              <p id="missionTheory" class="theory"></p>
-              <div id="missionNotes" class="lesson-notes">
-                <div><span>ГДЕ ПРИМЕНЯЕТСЯ</span><p id="missionWhy"></p></div>
-                <div><span>ТИПИЧНАЯ ОШИБКА</span><p id="missionPitfall"></p></div>
-              </div>
-          <div class="task-card"><span>ЗАДАЧА</span><p id="missionTask"></p></div>
-          <details class="example-box"><summary>Разобрать пример</summary><div id="missionExample"></div></details>
-        </article>
-
-        <section class="editor-panel panel">
-          <div class="editor-toolbar"><div class="file-tab"><span class="status-dot"></span><span id="fileName">mission_01.py</span></div><div class="editor-actions"><button id="resetCode" class="ghost-button">Вернуть код</button><button id="runCode" class="run-button"><span>▶</span> Запустить <kbd>⌘↵</kbd></button></div></div>
-          <div class="editor-wrap"><pre id="lineNumbers" aria-hidden="true">1</pre><textarea id="codeEditor" aria-label="Редактор Python-кода" spellcheck="false"></textarea></div>
-        </section>
-      </section>
-
-      <aside class="lab-panel panel">
-        <div class="panel-heading"><span>ЖИВАЯ ЛАБОРАТОРИЯ</span><span class="live-dot">LIVE</span></div>
-        <div id="visualStage" class="visual-stage"></div>
-        <div class="console"><div class="console-title"><span>ТЕРМИНАЛ</span><span id="runState">ожидает запуска</span></div><pre id="consoleOutput">&gt; Система готова. Запусти код, когда будешь готов.</pre></div>
-        <div class="checks"><h2>ПРОВЕРКИ</h2><div id="checkList"></div></div>
-        <button id="hintButton" class="hint-button">Получить подсказку <span>бесплатно в MVP</span></button>
-        <div id="hintBox" class="hint-box" hidden></div>
-      </aside>
+    <main>
+      <section id="mapScreen" class="map-screen"></section>
+      <section id="lessonScreen" class="workspace" hidden></section>
     </main>
   </div>
+
+  <dialog id="accountDialog" class="account-dialog">
+    <div class="dialog-head">
+      <strong>Общий вход aka-gst</strong>
+      <button type="button" id="closeDialog" class="text-button" aria-label="Закрыть">✕</button>
+    </div>
+    <div id="accountBody" class="dialog-body"></div>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js"></script>
+
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>
