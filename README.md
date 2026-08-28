@@ -72,6 +72,30 @@ scp Caddyfile bonita:/opt/zakriva/caddy/Caddyfile
 ssh bonita 'docker exec caddy caddy validate --config /etc/caddy/Caddyfile && docker exec caddy caddy reload --config /etc/caddy/Caddyfile'
 ```
 
+## Защита от утечек
+
+Репозиторий публичный, поэтому проверка на секреты и личные данные встроена в
+`git`, а не держится на внимательности. Хук лежит в самом репозитории:
+
+```sh
+git config core.hooksPath .githooks
+cp .githooks/private-words.example .githooks/private-words.txt
+```
+
+`private-words.txt` не версионируется — файл со списком имён сам был бы
+утечкой. Впишите туда имя, транслитерацию, личную почту и телефон.
+
+Хук смотрит индекс целиком, а не только изменённые файлы: первая найденная
+утечка лежала в файле, который в тот момент никто не трогал. Секреты ищутся по
+форме ключа, поэтому проза вроде «Invalid GitHub token» не срабатывает, а
+чужие публичные контакты в `psy-admin/` не блокируют коммит. Если сама
+проверка сломается, коммит не пройдёт: молча пропустить хуже, чем ложно
+остановить.
+
+```sh
+sh .githooks/test-pre-commit
+```
+
 ## Приватность
 
 Настоящего имени, почты и телефона на сайте нет. Подпись — `aka-gst`,

@@ -3,3 +3,4 @@ node_modules/
 
 # Локальные разрешения Claude Code; launch.json нужен для предпросмотра и хранится.
 .claude/settings.local.json
+.githooks/private-words.txt
