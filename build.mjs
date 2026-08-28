@@ -130,13 +130,24 @@ const metricChips = (project) => {
   return fromCourse + fromProject;
 };
 
+// Заголовок ведёт туда же, куда основная ссылка карточки: по названию
+// кликают раньше, чем ищут строку со ссылками внизу.
+const cardTitle = (project) => {
+  const link = primaryLink(project);
+  if (!link) return esc(project.title);
+  const external = link.url.startsWith('http');
+  return `<a class="card-title" href="${esc(link.url)}"${
+    external ? ' target="_blank" rel="noopener"' : ''
+  }${analytics(project)}>${esc(project.title)}</a>`;
+};
+
 const card = (project, index) => `
         <article class="card" id="p-${esc(project.id)}">
           <div class="card-top"><span class="index">${String(index + 1).padStart(2, '0')}</span>${statusBadge(
   project
 )}</div>
           <p class="kicker">${esc(project.kicker)}</p>
-          <h3>${esc(project.title)}</h3>
+          <h3>${cardTitle(project)}</h3>
           <p class="tagline">${esc(project.tagline)}</p>
           ${metricChips(project)}
           <p class="summary">${esc(project.summary)}</p>

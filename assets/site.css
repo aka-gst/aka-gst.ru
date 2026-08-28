@@ -240,6 +240,15 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 }
 .card:hover { border-color: var(--dim); background: var(--card-hover); }
 .card h3 { font-size: 19px; }
+.card-title {
+  color: inherit; text-decoration: none;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0 1px; background-position: 0 100%; background-repeat: no-repeat;
+  transition: background-size .18s ease, color .15s ease;
+}
+.card-title:hover { color: var(--accent); background-size: 100% 1px; }
+/* Ссылка — само название, а не вся карточка: растянутая на карточку
+   невидимая область не даёт выделить мышью текст описания. */
 .card .tagline { font-size: 14px; }
 .card .summary { font-size: 13px; color: var(--muted); }
 
