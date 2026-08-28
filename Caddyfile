@@ -3,6 +3,8 @@ aka-gst.ru, www.aka-gst.ru {
 
   header Cache-Control "no-cache, must-revalidate"
 
+  # Без завершающего слэша относительные адреса внутри игры уехали бы в корень.
+  redir /leela /leela/ 308
   redir /tetris /tetcolor/ 308
   redir /tetris/* /tetcolor/ 308
   redir /tetcolor /tetcolor/ 308
@@ -45,6 +47,10 @@ aka-gst.ru, www.aka-gst.ru {
     reverse_proxy tetcolor:3000
   }
 
+  handle_path /leela/* {
+    reverse_proxy leela:8765
+  }
+
   handle_path /lines/* {
     root * /srv/lines
     file_server
@@ -62,6 +68,16 @@ aka-gst.ru, www.aka-gst.ru {
 
   root * /srv
   file_server
+
+  # Свой 404 вместо пустой страницы: с ссылками обратно в разделы.
+  handle_errors {
+    @notfound expression {err.status_code} == 404
+    handle @notfound {
+      rewrite * /404.html
+      file_server
+    }
+    respond "{err.status_code} {err.status_text}"
+  }
 }
 
 stats.aka-gst.ru {

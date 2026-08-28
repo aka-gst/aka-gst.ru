@@ -438,8 +438,27 @@ const html = `<!doctype html>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="${esc(site.description)}">
     <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>${esc(site.title)}</title>
+    <link rel="canonical" href="${esc(site.url)}/">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+    <!-- Ссылку на портфолио чаще всего открывают из мессенджера или письма:
+         без этих тегов превью разворачивается пустым. -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="${esc(site.handle)}">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="${esc(site.url)}/">
+    <meta property="og:title" content="${esc(site.title)}">
+    <meta property="og:description" content="${esc(site.description)}">
+    <meta property="og:image" content="${esc(site.url)}${esc(site.ogImage)}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="aka-gst — отчёт прогона Local Agent Gateway">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${esc(site.title)}">
+    <meta name="twitter:description" content="${esc(site.description)}">
+    <meta name="twitter:image" content="${esc(site.url)}${esc(site.ogImage)}">
     <link rel="stylesheet" href="/assets/site.css?v=1">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
@@ -490,8 +509,141 @@ ${socialLinks('footer')}
 `;
 
 writeFileSync(join(root, 'index.html'), html);
+
+// ── Индекс раздела практикумов ───────────────────────────────────────
+// Редирект /praktikum вёл в пустоту, пока этой страницы не было.
+const courses = db.projects.filter((p) => p.courseFeed);
+
+const courseRows = courses
+  .map((project) => {
+    const course = readCourse(project.courseFeed.path);
+    const t = course?.totals || {};
+    return `
+        <a class="card" href="${esc(project.courseFeed.mount)}">
+          <p class="kicker">${esc(project.kicker)}</p>
+          <h3>${esc(course?.title || project.title)}</h3>
+          <p class="tagline">${esc(course?.subtitle || project.tagline)}</p>
+          <ul class="chips">
+            <li><b>${esc(t.units ?? '—')}</b> <span>разделов</span></li>
+            <li><b>${esc(t.experiments ?? '—')}</b> <span>практических работ</span></li>
+            <li><b>~${esc(t.estimate_minutes ?? '—')} мин</b> <span>чтения</span></li>
+          </ul>
+          <span class="link">Открыть <b>→</b></span>
+        </a>`;
+  })
+  .join('');
+
+const praktikumPage = `<!doctype html>
+<html lang="ru" data-track="work">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Практикумы aka-gst: тестирование локального AI-агента и настройка LLM под задачу.">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="${esc(site.themeColor)}">
+    <title>Практикумы — ${esc(site.handle)}</title>
+    <link rel="canonical" href="${esc(site.url)}/praktikum/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/site.css?v=1">
+    <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">aka<span>-</span>gst</a>
+    </header>
+    <main id="main">
+      <section class="block" style="margin-top:34px">
+        <div class="block-head">
+          <p class="kicker">Практикумы</p>
+          <h2>Материалы, собранные из реальных прогонов</h2>
+          <p>Каждый шаг доведён до проверяемого результата: команда, ожидаемый вывод и что делать, когда вывод другой.</p>
+        </div>
+        <div class="grid">${courseRows}
+        </div>
+      </section>
+    </main>
+    <footer class="sitefoot">
+      <span><a href="/" style="text-decoration:none">← AKA-GST.RU</a></span>
+    </footer>
+  </body>
+</html>
+`;
+
+writeFileSync(join(root, 'praktikum', 'index.html'), praktikumPage);
+
+// ── Страница 404 ─────────────────────────────────────────────────────
+const notFound = `<!doctype html>
+<html lang="ru" data-track="work">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="${esc(site.themeColor)}">
+    <title>Страница не найдена — ${esc(site.handle)}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/site.css?v=1">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">aka<span>-</span>gst</a>
+    </header>
+    <main id="main">
+      <section class="report" style="margin-top:34px">
+        <div class="report-bar">
+          <span class="dot" data-status="failed" aria-hidden="true"></span>
+          <code>GET — 404 Not Found</code>
+          <span class="verdict" data-status="failed">not found</span>
+        </div>
+        <div class="report-grid">
+          <div class="report-lede">
+            <p class="kicker">Такой страницы нет</p>
+            <h1>404</h1>
+            <p class="tagline">Ссылка устарела или в адресе опечатка.</p>
+            <p class="card-links">
+              <a class="link" href="/#work">На главную <b>→</b></a>
+              <a class="link" href="/#games">К играм <b>→</b></a>
+              <a class="link" href="/praktikum/">К практикумам <b>→</b></a>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="sitefoot"><span>AKA-GST.RU</span></footer>
+  </body>
+</html>
+`;
+
+writeFileSync(join(root, '404.html'), notFound);
+
+// ── Карта собственных страниц ────────────────────────────────────────
+const pageUrls = [
+  '/',
+  '/praktikum/',
+  ...courses.map((p) => p.courseFeed.mount),
+  ...db.projects
+    .flatMap((p) => p.links.map((l) => l.url))
+    .filter((url) => url.startsWith('/')),
+];
+
+const today = qa.generated_at.slice(0, 10);
+const pagesSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${[...new Set(pageUrls)]
+  .map(
+    (url) => `  <url>
+    <loc>${esc(site.url)}${esc(url)}</loc>
+    <lastmod>${esc(today)}</lastmod>
+  </url>`
+  )
+  .join('\n')}
+</urlset>
+`;
+
+writeFileSync(join(root, 'sitemap-pages.xml'), pagesSitemap);
+
 console.log(
-  `index.html собран: ${db.projects.length} проектов, ${socials.length} соцсети, ${
+  `собрано: index.html, praktikum/index.html, 404.html, sitemap-pages.xml — ${db.projects.length} проектов, ${socials.length} соцсети, ${
     html.length
   } байт`
 );

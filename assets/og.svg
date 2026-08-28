@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0b0c0d"/>
+  <rect x="64" y="64" width="1072" height="502" rx="18" fill="#14171a" stroke="#23282d" stroke-width="2"/>
+  <rect x="64" y="64" width="1072" height="62" rx="18" fill="#111315"/>
+  <rect x="64" y="108" width="1072" height="18" fill="#111315"/>
+  <line x1="64" y1="126" x2="1136" y2="126" stroke="#23282d" stroke-width="2"/>
+  <circle cx="102" cy="95" r="7" fill="#5ee39b"/>
+  <text x="126" y="102" font-family="Menlo, Consolas, monospace" font-size="19" fill="#636b72">main · uv run pytest --cov</text>
+  <rect x="948" y="79" width="152" height="32" rx="16" fill="#1d3d2c"/>
+  <text x="1024" y="101" font-family="Menlo, Consolas, monospace" font-size="17" fill="#5ee39b" text-anchor="middle">PASSED</text>
+
+  <text x="110" y="232" font-family="Menlo, Consolas, monospace" font-size="20" fill="#636b72" letter-spacing="3">AI/LLM QA · QA AUTOMATION</text>
+  <text x="104" y="344" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="108" font-weight="600" fill="#eef1f3" letter-spacing="-4">aka<tspan fill="#5ee39b">-</tspan>gst</text>
+  <text x="110" y="404" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27" fill="#8b949c">Тестовые контуры для AI-агентов, практикумы,</text>
+  <text x="110" y="442" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27" fill="#8b949c">продукты и браузерные игры</text>
+
+  <g font-family="Menlo, Consolas, monospace" font-size="18" fill="#636b72">
+    <rect x="110" y="482" width="188" height="44" rx="10" fill="#111315" stroke="#23282d"/>
+    <text x="204" y="510" text-anchor="middle" fill="#8b949c">Python · pytest</text>
+    <rect x="314" y="482" width="188" height="44" rx="10" fill="#111315" stroke="#23282d"/>
+    <text x="408" y="510" text-anchor="middle" fill="#8b949c">Playwright</text>
+    <rect x="518" y="482" width="188" height="44" rx="10" fill="#111315" stroke="#23282d"/>
+    <text x="612" y="510" text-anchor="middle" fill="#8b949c">LLM evaluation</text>
+    <rect x="722" y="482" width="188" height="44" rx="10" fill="#111315" stroke="#23282d"/>
+    <text x="816" y="510" text-anchor="middle" fill="#8b949c">Ollama</text>
+  </g>
+  <text x="1096" y="512" font-family="Menlo, Consolas, monospace" font-size="20" fill="#5ee39b" text-anchor="end">aka-gst.ru</text>
+</svg>
