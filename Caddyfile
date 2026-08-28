@@ -102,10 +102,17 @@ aka-gst.ru, www.aka-gst.ru {
 
     # Маршруты соседних проектов проксируют на контейнеры, которые могут
     # быть ещё не подняты. Голый 502 читается как сломанный сайт.
+    #
+    # Код приводим к 503: 502 значит «апстрим ответил мусором», а здесь
+    # ситуация другая — сервис временно не поднят. Поисковики и мониторинги
+    # трактуют 503 как временное и не выбрасывают адрес из индекса.
     @unavailable expression {err.status_code} >= 502 && {err.status_code} <= 504
     handle @unavailable {
       rewrite * /503.html
-      file_server
+      header Retry-After 300
+      file_server {
+        status 503
+      }
     }
 
     respond "{err.status_code} {err.status_text}"

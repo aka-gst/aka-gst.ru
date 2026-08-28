@@ -70,21 +70,39 @@ tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 # shellcheck disable=SC2086
 if scp -q $SSHOPTS "$HOST:/opt/zakriva/caddy/Caddyfile" "$tmp" 2>/dev/null; then
-  # Опасна только одна разница: строки, которые есть на сервере и нет у нас.
-  # Их выкладка сотрёт. Собственные добавления — обычное дело.
-  theirs=$(diff Caddyfile "$tmp" | grep '^>' || true)
-  mine=$(diff Caddyfile "$tmp" | grep '^<' || true)
-  if [ -z "$theirs" ] && [ -z "$mine" ]; then
-    echo "  совпадает с живым"
-  elif [ -z "$theirs" ]; then
-    echo "  ваш файл впереди живого, чужого ничего не теряется:"
-    printf '%s\n' "$mine" | sed 's/^</    +/' | head -20
-  else
-    echo "  ОСТОРОЖНО: на сервере есть строки, которых у вас нет."
+  # Сравниваем МАРШРУТЫ, а не строки. Построчный diff считает потерей любую
+  # изменённую строку — например, file_server, переписанный на file_server
+  # со статусом. Страж, который ругается по пустякам, начнут обходить, и он
+  # промолчит там, где важно. Опасна ровно одна пропажа: адрес или апстрим,
+  # который есть на сервере и которого нет у нас. Так уехали звонки.
+  routes() {
+    grep -oE '^[[:space:]]*(redir|handle|handle_path|reverse_proxy|root)[[:space:]]+[^{]*|^[a-z0-9_.*-]+([[:space:]]*,[[:space:]]*[a-z0-9_.*-]+)*[[:space:]]*\{' "$1" \
+      | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; s/[[:space:]]\{1,\}/ /g' | sort -u
+  }
+  # Через временные файлы, а не подстановкой процессов: sh её не умеет,
+  # и «sh deploy.sh» падал бы на ней с кодом 0 — вызывающий решил бы,
+  # что выкладка удалась.
+  rmine=$(mktemp); rlive=$(mktemp)
+  routes Caddyfile > "$rmine"
+  routes "$tmp" > "$rlive"
+  lost=$(comm -13 "$rmine" "$rlive")
+  added=$(comm -23 "$rmine" "$rlive")
+  rm -f "$rmine" "$rlive"
+
+  if [ -n "$lost" ]; then
+    echo "  ОСТОРОЖНО: на сервере есть маршруты, которых у вас нет."
     echo "  Выкладка конфига их сотрёт:"
-    printf '%s\n' "$theirs" | sed 's/^>/    -/' | head -20
+    printf '%s\n' "$lost" | sed 's/^/    - /'
     echo "  Перенесите их к себе и закоммитьте, прежде чем выкладывать конфиг."
     if $caddy; then echo "  --caddy отменён." >&2; exit 1; fi
+  elif [ -n "$added" ]; then
+    echo "  новые маршруты у вас, на сервере ничего не теряется:"
+    printf '%s\n' "$added" | sed 's/^/    + /'
+  elif diff -q Caddyfile "$tmp" >/dev/null; then
+    echo "  совпадает с живым"
+  else
+    echo "  маршруты совпадают, отличаются только настройки внутри блоков:"
+    diff Caddyfile "$tmp" | grep '^<' | sed 's/^</    ~/' | head -10
   fi
 else
   echo "  не удалось забрать живой файл — конфиг не трогаю"
