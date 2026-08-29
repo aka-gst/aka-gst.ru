@@ -490,7 +490,7 @@ const recordsBlock = `
             <p>Обновляются в течение дня и обнуляются в полночь по Москве.</p>
           </div>
           <aside class="records-card">
-            <h3>Орёл / решка</h3>
+            <h3>Деревня</h3>
             <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
             <p class="other-title">Другие игры сегодня</p>
             <ul id="other-today">${leaderboards
