@@ -588,15 +588,49 @@ const recTicker = `
         </span>
       </div>`;
 
+// Полоса над играми — ровня строке прогона на «Работе». Она держит верх
+// обеих вкладок на одном уровне и говорит то же самое по сути: из чего
+// собрано и в каком это состоянии. Числа считаются из базы, чтобы не
+// разъехались с карточками при следующей игре.
+const plural = (n, forms) => {
+  const a = Math.abs(n) % 100;
+  const b = a % 10;
+  if (a > 10 && a < 20) return forms[2];
+  if (b > 1 && b < 5) return forms[1];
+  if (b === 1) return forms[0];
+  return forms[2];
+};
+
+const playCount = (state) => allPlay.filter((p) => p.status.state === state).length;
+const playState = [
+  [playCount('live'), 'готовых'],
+  [playCount('alpha') + playCount('beta'), 'в альфе'],
+  [playCount('wip'), 'в сборке'],
+]
+  .filter(([n]) => n)
+  .map(([n, label]) => `${n} ${label}`)
+  .join(' · ');
+
+const playBar = `
+        <div class="play-bar">
+          <span class="dot" aria-hidden="true"></span>
+          <code>${allPlay.length} ${plural(
+  allPlay.length,
+  ['игра', 'игры', 'игр']
+)} · открываются по ссылке · без установки и аккаунта</code>
+          <span class="verdict">${esc(playState)}</span>
+        </div>`;
+
 const playPanel = `
         <section class="block block--lead" aria-label="Играбельное">
+${playBar}
           <div class="ggrid">${playable.map(gameCard).join('')}
           </div>
         </section>
 
         <section class="block" aria-labelledby="other-games-title">
           <div class="block-head">
-            <h2 id="other-games-title">Все игры</h2>
+            <h2 id="other-games-title">Остальное</h2>
           </div>
           <div class="ggrid">${otherGames.map(gameCard).join('')}
           </div>

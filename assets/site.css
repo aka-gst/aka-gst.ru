@@ -733,6 +733,24 @@ a.gcard.is-lit .gshot { opacity: .92; transform: scale(1.06); }
 }
 article.gcard .launch { color: var(--dim); }
 
+/* Полоса над играми. Повторяет строку прогона на «Работе» по шрифту и
+   высоте, поэтому карточки обеих вкладок начинаются на одном уровне.
+   В отличие от неё стоит сама по себе, а не сверху панели, — отсюда своя
+   рамка и скругление. */
+.play-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 11px 18px; margin-bottom: 14px;
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--bg-soft);
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+}
+.play-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+.play-bar code { color: var(--dim); }
+.play-bar .verdict {
+  margin-left: auto; padding: 3px 10px; border-radius: 999px;
+  background: var(--accent-dim); color: var(--accent); font-weight: 600;
+}
+
 /* ── Рекорды строкой в шапке ─────────────────────────────────────── */
 /* Раньше это был блок в самом низу вкладки «Игры»: чтобы его увидеть, надо
    было пролистать все карточки, и он читался как ещё один экран. Здесь это
