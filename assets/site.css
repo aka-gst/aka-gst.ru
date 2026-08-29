@@ -133,7 +133,28 @@ html[data-track="play"] .track-switch [data-track-to="play"] {
   background: var(--accent); color: #08120c; box-shadow: var(--glow);
 }
 /* У выбранной вкладки значок идёт цветом подложки, иначе акцент на акценте. */
-html[data-track="play"] .track-switch [data-track-to="play"] svg { color: #08120c; }
+html[data-track="play"] .track-switch [data-track-to="play"] {
+  /* Игровой трек светится своим цветом, а не общим зелёным. */
+  background: var(--neon); color: #f6f2ff;
+  box-shadow: 0 0 22px rgba(154, 99, 255, .5);
+}
+html[data-track="play"] .track-switch [data-track-to="play"] svg { color: #f6f2ff; }
+
+/* Выбранная вкладка чуть дышит — тем же приёмом, что полоски в шапке игр. */
+@media (prefers-reduced-motion: no-preference) {
+  .track-switch button[aria-pressed="true"] { animation: tabGlow 3.2s ease-in-out infinite; }
+}
+@keyframes tabGlow {
+  0%, 100% { box-shadow: 0 0 14px rgba(94, 227, 155, .28); }
+  50%      { box-shadow: 0 0 26px rgba(94, 227, 155, .55); }
+}
+html[data-track="play"] .track-switch button[aria-pressed="true"] {
+  animation-name: tabGlowPlay;
+}
+@keyframes tabGlowPlay {
+  0%, 100% { box-shadow: 0 0 16px rgba(154, 99, 255, .35); }
+  50%      { box-shadow: 0 0 30px rgba(154, 99, 255, .65); }
+}
 
 .socials { display: flex; gap: 4px; }
 .social {
@@ -277,7 +298,10 @@ html { scroll-behavior: smooth; }
 .block { margin-top: 64px; }
 /* Первому блоку панели верхний отступ не нужен: над ним только шапка сайта. */
 .panel > .block:first-child { margin-top: 34px; }
-/* После шапки-логотипа блок идёт ближе: сама шапка уже задаёт паузу. */
+/* Без заголовка блоку не нужен прежний отступ — карточки поднимаются выше. */
+.block--lead { margin-top: 20px; }
+.block-head--tight { margin-bottom: 14px; }
+.block-head--tight .kicker + p { margin-top: 6px; }
 .block-head { max-width: 720px; margin-bottom: 22px; }
 .block-head h2 { margin: 8px 0 10px; font-size: clamp(22px, 2.6vw, 30px); }
 .block-head > p:last-child { color: var(--muted); font-size: 14px; }
@@ -648,7 +672,15 @@ article.gcard .launch { color: var(--dim); }
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
-  .track-switch { order: 3; width: 100%; margin-left: 0; justify-content: center; }
+  /* На телефоне переключатель — главный элемент шапки: две крупные цели
+     во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь
+     переход к играм именно потому, что цель была маленькой и тусклой. */
+  .track-switch { order: 3; width: 100%; margin-left: 0; padding: 4px; }
+  .track-switch button {
+    flex: 1 1 0; justify-content: center;
+    padding: 12px 14px; font-size: 15px; gap: 9px;
+  }
+  .track-switch button svg { width: 19px; height: 19px; }
   .socials { margin-left: auto; }
   .sitefoot { padding: 20px 16px 36px; }
   .report-metrics { grid-template-columns: 1fr; }

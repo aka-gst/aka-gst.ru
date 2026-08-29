@@ -503,10 +503,9 @@ const recordsBlock = `
         </section>`;
 
 const playPanel = `
-        <section class="block" aria-labelledby="playable-title">
-          <div class="block-head">
+        <section class="block block--lead" aria-label="Играбельное">
+          <div class="block-head block-head--tight">
             <p class="kicker">ВЫБЕРИ ИГРУ</p>
-            <h2 id="playable-title">Топ</h2>
             <p>${esc(site.tracks.play.intro)}</p>
           </div>
           <div class="ggrid">${playable.map(gameCard).join('')}
