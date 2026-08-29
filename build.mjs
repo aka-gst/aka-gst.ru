@@ -461,7 +461,9 @@ const workPanel = `
 
 // ── Панель «Игры» ────────────────────────────────────────────────────
 const gameCard = (project) => {
-  const link = primaryLink(project);
+  // Только ссылка на саму игру. Иначе карточка звала «ЗАПУСТИТЬ», а вела
+  // в репозиторий с кодом — обещание, которого страница не выполняет.
+  const link = project.links.find((l) => l.type === 'play') || null;
   const tag = link ? 'a' : 'article';
   const href = link ? ` href="${esc(link.url)}"` : '';
   // Графика собирается из пустых <i>: рисует её CSS, лишних файлов нет.

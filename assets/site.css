@@ -609,6 +609,48 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
 [data-art="coin"]:hover .gart i:nth-child(2),
 [data-art="coin"].is-mobile-active .gart i:nth-child(2) { transform: rotateY(360deg); opacity: 1; }
 
+/* Кольчатый — три звена цепи, растягивающиеся при наведении. */
+[data-art="chain"] .gart i {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 3px solid var(--neon-2); background: none;
+}
+[data-art="chain"] .gart i:nth-child(1) { transform: translateX(-22px); }
+[data-art="chain"] .gart i:nth-child(3) { transform: translateX(22px); border-color: var(--accent); }
+[data-art="chain"]:hover .gart i:nth-child(1),
+[data-art="chain"].is-mobile-active .gart i:nth-child(1) { transform: translate(-44px, -10px); }
+[data-art="chain"]:hover .gart i:nth-child(3),
+[data-art="chain"].is-mobile-active .gart i:nth-child(3) { transform: translate(44px, 10px); }
+
+/* Один удар — клинок и след от рывка. */
+[data-art="blade"] .gart i:nth-child(1) {
+  width: 4px; height: 62px; border-radius: 2px; background: var(--fail);
+  transform: rotate(28deg);
+}
+[data-art="blade"] .gart i:nth-child(2) {
+  width: 54px; height: 2px; background: linear-gradient(90deg, transparent, var(--warn));
+  transform: translate(-6px, 16px);
+}
+[data-art="blade"] .gart i:nth-child(3) {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--warn);
+  transform: translate(26px, -22px);
+}
+[data-art="blade"]:hover .gart i:nth-child(1),
+[data-art="blade"].is-mobile-active .gart i:nth-child(1) { transform: rotate(-32deg) scale(1.05); }
+[data-art="blade"]:hover .gart i:nth-child(2),
+[data-art="blade"].is-mobile-active .gart i:nth-child(2) { transform: translate(14px, 16px) scaleX(1.4); }
+
+/* Техномагия — руна из трёх граней. */
+[data-art="rune"] .gart i {
+  width: 30px; height: 30px; border: 2px solid var(--neon); background: none;
+}
+[data-art="rune"] .gart i:nth-child(1) { transform: rotate(45deg) translateY(-14px); }
+[data-art="rune"] .gart i:nth-child(2) { border-radius: 50%; border-color: var(--neon-2); }
+[data-art="rune"] .gart i:nth-child(3) { transform: rotate(45deg) translateY(14px); }
+[data-art="rune"]:hover .gart i:nth-child(1),
+[data-art="rune"].is-mobile-active .gart i:nth-child(1) { transform: rotate(135deg) translateY(-20px); }
+[data-art="rune"]:hover .gart i:nth-child(3),
+[data-art="rune"].is-mobile-active .gart i:nth-child(3) { transform: rotate(-45deg) translateY(20px); }
+
 /* Лила — пять клеток поля. */
 [data-art="dice"] .gart i { width: 16px; height: 16px; border-radius: 3px; background: var(--line); border: 1px solid var(--dim); }
 [data-art="dice"] .gart i:nth-child(1) { transform: translate(-30px, -20px); }
