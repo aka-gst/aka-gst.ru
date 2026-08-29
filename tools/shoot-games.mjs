@@ -31,19 +31,35 @@ const only = process.argv.slice(2);
 
 const PLAN = [
   { id: 'acid',     url: 'https://aka-gst.ru/acid/',
-    steps: [['ПОНЯТНО', 1500], ['ИГРАТЬ', 2500], ['ПОНЯТНО', 1500], ['НАЧАТЬ ПАРТИЮ', 4000]] },
+    // Сверху ряд кнопок — обрезаем его, оставляем стол и руку.
+    steps: [['ПОНЯТНО', 1500], ['ИГРАТЬ', 2500], ['ПОНЯТНО', 1500], ['НАЧАТЬ ПАРТИЮ', 4000]],
+    clip: { x: 0, y: 108, width: 1200, height: 552 } },
   // clip — область кадра. Нужна там, где рядом с полем висит таблица
   // рекордов: чужие ники не должны застывать картинкой на портфолио,
   // хотя на живой странице они и так видны и меняются.
   { id: 'tetcolor', url: 'https://aka-gst.ru/tetcolor/',
-    steps: [['СТАРТ', 3000]], clip: { x: 462, y: 60, width: 540, height: 562 } },
+    // У игры появилось обучение поверх поля — пропускаем его. Область
+    // берём по низу стакана: по пустой сетке не понять, что это за игра,
+    // а слева от неё висит таблица рекордов с чужими никами.
+    steps: [['СТАРТ', 3500], ['ПРОПУСТИТЬ', 1500]], play: { drops: 6, wait: 2500 },
+    clip: { x: 458, y: 392, width: 300, height: 228 } },
   { id: 'lines',    url: 'https://aka-gst.ru/lines/',
-    steps: [['НАЧАТЬ', 2500]], clip: { x: 198, y: 20, width: 596, height: 590 } },
+    // Обучение теперь всплывает поверх поля.
+    steps: [['НАЧАТЬ', 2000], ['ПРОПУСТИТЬ', 1500]],
+    clip: { x: 200, y: 24, width: 590, height: 470 } },
   { id: 'stihii',   url: 'https://aka-gst.ru/stihii/',
-    steps: [['СВОБОДНЫЙ БОЙ', 1200], ['ЛЁГКИЙ', 2500]] },
-  { id: 'worm',     url: 'https://aka-gst.ru/worm/', steps: [] },
+    // Берём арену с обоими магами: пропорции близки к полосе карточки,
+    // поэтому обрезка по краям не съест бойцов.
+    steps: [['СВОБОДНЫЙ БОЙ', 1200], ['ЛЁГКИЙ', 2500]],
+    clip: { x: 12, y: 82, width: 1176, height: 420 } },
+  { id: 'worm',     url: 'https://aka-gst.ru/worm/', steps: [['ЦЕП', 3000]] },
+  { id: 'technomagic', url: 'https://aka-gst.ru/technomagic/',
+    steps: [['ВЗЯТЬ КЛЮЧИ', 3500]] },
   { id: 'coin',     url: 'https://aka-gst.ru/coin/',
-    steps: [['ПОНЯТНО, НАЧИНАЕМ', 2500], ['ДОИТЬ', 1500]] },
+    // Вводное окно теперь обязательное: проходим его и снимаем саму монету,
+    // а не панели показателей по краям.
+    steps: [['ПОКАЖИ, КАК ИГРАТЬ', 2000], ['ПРОПУСТИТЬ', 1800]],
+    clip: { x: 382, y: 96, width: 436, height: 396 } },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -103,6 +119,15 @@ const run = async () => {
   const send = session(ws);
   await send('Page.enable');
 
+  const press = async (key, code, times) => {
+    for (let i = 0; i < times; i += 1) {
+      for (const type of ['keyDown', 'keyUp']) {
+        await send('Input.dispatchKeyEvent', { type, key, code, windowsVirtualKeyCode: key === ' ' ? 32 : 40 });
+      }
+      await sleep(140);
+    }
+  };
+
   for (const game of PLAN) {
     if (only.length && !only.includes(game.id)) continue;
     const log = [];
@@ -116,6 +141,11 @@ const run = async () => {
             const hit = await send('Runtime.evaluate', { expression: clickScript(label), returnByValue: true });
             log.push(`${label}${hit.result.value ? '+' : '-'}`);
             if (hit.result.value) await sleep(pause);
+          }
+          if (game.play) {
+            // Даём игре пожить: пустое поле на карточке ничего не говорит.
+            await press(' ', 'Space', game.play.drops || 0);
+            await sleep(game.play.wait || 0);
           }
         })(),
         sleep(30000).then(() => { throw new Error('слишком долго'); }),
