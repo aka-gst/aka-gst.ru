@@ -69,7 +69,7 @@ sh deploy.sh --go --caddy   # ещё и обновить конфиг Caddy
 ### Caddyfile правят несколько проектов
 
 В `/opt/zakriva/caddy/Caddyfile` пишет не только этот сайт: там же маршруты
-звонков (`/meet/`, `meet.aka-gst.ru`), Лилы (`/leela/`) и сервиса аккаунтов
+звонков (`/meet/`, `meet.aka-gst.ru`) и сервиса аккаунтов
 (`/api/auth/`, `/api/progress/`). Выкладка собранного у себя файла молча
 удаляет чужие маршруты — так однажды уехали звонки.
 
@@ -184,7 +184,7 @@ sh .githooks/test-pre-commit
 прокликивает путь до игрового экрана и только потом снимает:
 
 ```sh
-node tools/shoot-games.mjs acid leela
+node tools/shoot-games.mjs acid coin
 ```
 
 «Наотмашь» управляется камерой и в headless не стартует — у неё снят экран

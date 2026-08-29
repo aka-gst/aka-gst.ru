@@ -889,51 +889,6 @@
       "art": "coin"
     },
     {
-      "id": "leela",
-      "title": "Лила",
-      "kicker": "Игра · прототип",
-      "tagline": "Путешествие по классическому полю из 72 клеток.",
-      "summary": "Выбор одного из четырёх проводников, плавное движение фигурки по полю 9 × 8, шкалы влияния и переходы. История ходов и дневник сохраняются в учётной записи сайта.",
-      "kind": "game",
-      "tracks": [
-        "play"
-      ],
-      "groups": [
-        "misc"
-      ],
-      "feature": {},
-      "status": {
-        "state": "live",
-        "label": "играть"
-      },
-      "year": 2026,
-      "stack": [
-        "JavaScript",
-        "Python",
-        "SQLite"
-      ],
-      "links": [
-        {
-          "type": "play",
-          "label": "Запустить",
-          "url": "/leela/"
-        }
-      ],
-      "shots": [
-        {
-          "file": "game-leela.jpg",
-          "alt": "Выбор проводника в Лиле: четыре фигурки на фоне игрового поля",
-          "caption": "Выбор проводника перед началом пути по полю."
-        }
-      ],
-      "accent": "acid",
-      "art": "dice",
-      "analytics": {
-        "event": "game-open",
-        "slug": "leela"
-      }
-    },
-    {
       "id": "buddhist-diary-bot",
       "title": "Буддийский дневник",
       "kicker": "Бот · Telegram",
