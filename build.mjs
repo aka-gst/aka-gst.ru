@@ -579,17 +579,12 @@ const recTicker = `
 
 const playPanel = `
         <section class="block block--lead" aria-label="Играбельное">
-          <div class="block-head block-head--tight">
-            <p class="kicker">ВЫБЕРИ ИГРУ</p>
-            <p>${esc(site.tracks.play.intro)}</p>
-          </div>
           <div class="ggrid">${playable.map(gameCard).join('')}
           </div>
         </section>
 
         <section class="block" aria-labelledby="other-games-title">
           <div class="block-head">
-            <p class="kicker">АРХИВ</p>
             <h2 id="other-games-title">Все игры</h2>
           </div>
           <div class="ggrid">${otherGames.map(gameCard).join('')}
