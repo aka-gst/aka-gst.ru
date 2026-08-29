@@ -5,9 +5,8 @@
       "name": "aka-gst.ru",
       "runtimeExecutable": "python3",
       "runtimeArgs": [
-        "-m",
-        "http.server",
-        "4180"
+        "-c",
+        "import http.server as h; h.ThreadingHTTPServer.allow_reuse_address = True; h.test(HandlerClass=h.SimpleHTTPRequestHandler, ServerClass=h.ThreadingHTTPServer, port=4180, bind='127.0.0.1')"
       ],
       "port": 4180
     }

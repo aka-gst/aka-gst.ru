@@ -152,35 +152,25 @@
   const scoreUrl = (game, limit) =>
     `/api/leaderboard/scores?game=${encodeURIComponent(game)}&period=today&limit=${limit}`;
 
-  const coinToday = document.querySelector('#coin-today');
-  if (coinToday) {
-    fetch(scoreUrl('coin-flip', 3))
-      .then((r) => r.json())
-      .then(({ scores = [] }) => {
-        if (!scores.length) return;
-        coinToday.replaceChildren(
-          ...scores.map((entry, index) => {
-            const li = document.createElement('li');
-            const name = document.createElement('span');
-            const score = document.createElement('b');
-            name.textContent = `${index + 1}. ${entry.nickname}`;
-            score.textContent = entry.score;
-            li.append(name, score);
-            return li;
-          })
-        );
-      })
-      .catch(() => {});
+  // Рекорды заполняют строку в шапке. Список в ней выведен дважды — так
+  // лента едет по кругу без стыка, — поэтому один ответ кладём в обе копии,
+  // а не запрашиваем игру два раза.
+  const rec = document.querySelector('.rec');
+  if (rec) {
+    const games = [...new Set([...rec.querySelectorAll('[data-game]')].map((el) => el.dataset.game))];
+    for (const game of games) {
+      fetch(scoreUrl(game, 1))
+        .then((r) => r.json())
+        .then(({ scores = [] }) => {
+          const top = scores[0];
+          if (!top) return;
+          for (const item of rec.querySelectorAll(`[data-game="${CSS.escape(game)}"] b`)) {
+            item.textContent = `${top.nickname} · ${top.score}`;
+          }
+        })
+        .catch(() => {});
+    }
   }
-
-  document.querySelectorAll('#other-today [data-game]').forEach((row) => {
-    fetch(scoreUrl(row.dataset.game, 1))
-      .then((r) => r.json())
-      .then(({ scores = [] }) => {
-        if (scores[0]) row.querySelector('b').textContent = `${scores[0].nickname} · ${scores[0].score}`;
-      })
-      .catch(() => {});
-  });
 
   // ── Подсветка карточки, на которой остановились ──────────────────
   // Класс один на оба способа ввода, и в стилях у игровых карточек нет

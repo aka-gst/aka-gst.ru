@@ -556,27 +556,26 @@ const gameCard = (project) => {
         </${tag}>`;
 };
 
-const recordsBlock = `
-        <section class="block" aria-labelledby="records-title">
-          <div class="block-head">
-            <p class="kicker">REC · СЕГОДНЯ · МСК</p>
-            <h2 id="records-title">Рекорды</h2>
-            <p>Обновляются в течение дня и обнуляются в полночь по Москве.</p>
-          </div>
-          <aside class="records-card">
-            <h3>Деревня</h3>
-            <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
-            <p class="other-title">Другие игры сегодня</p>
-            <ul id="other-today">${leaderboards
-              .filter((p) => p.leaderboard !== 'coin-flip')
-              .map(
-                (p) => `
-              <li data-game="${esc(p.leaderboard)}"><span>${esc(p.title)}</span><b>—</b></li>`
-              )
-              .join('')}
-            </ul>
-          </aside>
-        </section>`;
+// Рекорды переехали из блока внизу вкладки «Игры» в строку шапки: до
+// блока надо было пролистать все карточки, и он читался как ещё один
+// экран, хотя это сводка на один взгляд. Список выводится дважды — так
+// лента прокручивается по кругу без стыка на склейке.
+const recItems = [...leaderboards]
+  .sort((a, b) => (a.leaderboard === 'coin-flip' ? -1 : b.leaderboard === 'coin-flip' ? 1 : 0))
+  .map(
+    (p) => `<span class="rec-item" data-game="${esc(p.leaderboard)}"><i>${esc(
+      p.title
+    )}</i><b>—</b></span>`
+  )
+  .join('');
+
+const recTicker = `
+      <div class="rec" aria-label="Рекорды сегодня, время московское">
+        <span class="rec-label">REC · СЕГОДНЯ</span>
+        <span class="rec-view">
+          <span class="rec-run">${recItems}${recItems}</span>
+        </span>
+      </div>`;
 
 const playPanel = `
         <section class="block block--lead" aria-label="Играбельное">
@@ -595,8 +594,7 @@ const playPanel = `
           </div>
           <div class="ggrid">${otherGames.map(gameCard).join('')}
           </div>
-        </section>
-${recordsBlock}`;
+        </section>`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
 const html = `<!doctype html>
@@ -651,6 +649,7 @@ const html = `<!doctype html>
           'games'
         )}<span>${esc(site.tracks.play.label)}</span></button>
       </div>
+${recTicker}
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}
       </nav>
