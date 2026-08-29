@@ -714,13 +714,15 @@ article.gcard .launch { color: var(--dim); }
    было пролистать все карточки, и он читался как ещё один экран. Здесь это
    сводка на один взгляд. Лента едет только под курсором — сама по себе она
    дёргала бы глаз на каждой странице. */
-.rec { display: none; }
-html[data-track="play"] .rec {
+/* Место под ленту занято на обеих вкладках, даже когда её не видно: иначе
+   переключатель «Работа/Игры» переезжал бы при каждой смене раздела. */
+.rec {
   display: flex; align-items: center; gap: 10px;
   flex: 1 1 200px; min-width: 0;
 }
+html[data-track="work"] .rec { visibility: hidden; }
 .rec-label {
-  flex: none; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em;
+  flex: none; font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--dim); white-space: nowrap;
 }
 /* Края растворяются, иначе строка обрывается на полуслове по границе. */
@@ -734,11 +736,13 @@ html[data-track="play"] .rec {
   animation: rec-run 30s linear infinite; animation-play-state: paused;
 }
 .rec-item {
-  display: inline-flex; align-items: baseline; gap: 7px;
-  white-space: nowrap; font-size: 12px; color: var(--muted);
+  display: inline-flex; align-items: baseline; gap: 6px;
+  white-space: nowrap; font-size: 10.5px; color: var(--dim);
 }
 .rec-item i { font-style: normal; }
-.rec-item b { font-family: var(--mono); color: var(--accent); font-weight: 600; }
+/* Зелёный здесь — сигнальный цвет всего сайта, и в бегущей строке он кричал.
+   Счёт остаётся заметнее названия, но уже не спорит с карточками. */
+.rec-item b { font-family: var(--mono); color: var(--muted); font-weight: 500; }
 /* Список выведен дважды, поэтому сдвиг ровно на половину замыкает круг. */
 @keyframes rec-run { to { transform: translateX(-50%); } }
 
@@ -794,6 +798,7 @@ html[data-track="play"] .rec {
      в первую строку между подписью и соцсетями, а ярлык прячем — «Деревня
      vlkirr · 4» читается и без слова REC. */
   html[data-track="play"] .rec { flex: 1 1 70px; }
+  html[data-track="work"] .rec { display: none; }
   .rec-label { display: none; }
   .sitefoot { padding: 20px 16px 36px; }
   .report-metrics { grid-template-columns: 1fr; }

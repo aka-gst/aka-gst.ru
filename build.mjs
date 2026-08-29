@@ -641,6 +641,7 @@ const html = `<!doctype html>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
       <a class="brand" href="/">aka<span>-</span>gst</a>
+${recTicker}
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
           'work'
@@ -649,7 +650,6 @@ const html = `<!doctype html>
           'games'
         )}<span>${esc(site.tracks.play.label)}</span></button>
       </div>
-${recTicker}
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}
       </nav>
