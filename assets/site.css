@@ -645,6 +645,18 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
 [data-art="orbs"]:hover .gart i:nth-child(3),
 [data-art="orbs"].is-mobile-active .gart i:nth-child(3) { transform: translate(36px, 0); }
 
+/* Техномагия — три стихии. Врозь они лежат по углам, при наведении
+   сходятся в одну точку: в этом вся игра. */
+[data-art="elements"] .gart i {
+  width: 24px; height: 24px; border-radius: 50%;
+  box-shadow: 0 0 16px currentColor;
+}
+[data-art="elements"] .gart i:nth-child(1) { background: #ff5a1f; color: #ff5a1f; transform: translate(-38px, 10px); }
+[data-art="elements"] .gart i:nth-child(2) { background: #4de1ff; color: #4de1ff; transform: translate(0, -18px); }
+[data-art="elements"] .gart i:nth-child(3) { background: #ffe14d; color: #ffe14d; transform: translate(38px, 10px); }
+[data-art="elements"]:hover .gart i,
+[data-art="elements"].is-mobile-active .gart i { transform: translate(0, 0); opacity: .85; }
+
 /* Орёл или решка — монета, переворачивающаяся при наведении. */
 [data-art="coin"] .gart { perspective: 420px; }
 [data-art="coin"] .gart i {

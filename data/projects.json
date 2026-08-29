@@ -747,6 +747,51 @@
       "art": "rps"
     },
     {
+      "id": "technomagic",
+      "title": "ТЕХНОМАГИЯ",
+      "kicker": "Игра · клавиатура и мышь",
+      "tagline": "Изометрический экшен про техно-магов. Смешивай стихии и смотри, что осталось на полу.",
+      "summary": "Оружия у мага нет: есть очередь из трёх стихий. Состав решает, что прилетело, порядок — куда. Вещество остаётся на полу и встречается со следующим заклинанием: разбей огнём бочку, налей воды под ноги врагам и ударь в лужу разрядом. Двадцать пять составов и десять именных заклинаний, которые надо найти самому.",
+      "kind": "game",
+      "tracks": [
+        "play"
+      ],
+      "groups": [
+        "playable"
+      ],
+      "feature": {
+        "play": 4
+      },
+      "status": {
+        "state": "alpha",
+        "label": "альфа"
+      },
+      "year": 2026,
+      "stack": [
+        "JavaScript",
+        "Canvas",
+        "HTML"
+      ],
+      "links": [
+        {
+          "type": "play",
+          "label": "Запустить",
+          "url": "/technomagic/"
+        }
+      ],
+      "deploy": {
+        "state": "planned",
+        "target": "/technomagic/",
+        "source": "/Users/gst/dev/technomagic"
+      },
+      "accent": "acid",
+      "analytics": {
+        "event": "game-open",
+        "slug": "technomagic"
+      },
+      "art": "elements"
+    },
+    {
       "id": "neon-lines",
       "title": "Неон Линии",
       "kicker": "Игра · головоломка",

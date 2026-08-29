@@ -44,6 +44,7 @@ player-name.js
 assets
 data
 praktikum
+technomagic
 qa-quest
 psy-admin
 photodata
