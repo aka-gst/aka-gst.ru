@@ -221,8 +221,32 @@ const evidenceMark = (project) => {
 // до вернувшегося посетителя.
 const shotSrc = (file) => `/assets/shots/${file}?v=${assetVersion(`assets/shots/${file}`)}`;
 
-const shotImg = (shot) => `<img src="${esc(shotSrc(shot.file))}" alt="${esc(shot.alt)}"
-                width="1200" height="750" decoding="async" loading="lazy">`;
+// Размер картинки без внешних зависимостей: у PNG он в IHDR, у JPEG — в
+// маркере SOFn. Нужен в разметке, чтобы браузер занял место под снимок до
+// загрузки: иначе текст под ним прыгает, а прокрутка по блокам промахивается.
+const imageSize = (file) => {
+  const bytes = readFileSync(join(root, 'assets/shots', file));
+  if (bytes.readUInt32BE(0) === 0x89504e47) {
+    return { w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20) };
+  }
+  let i = 2;
+  while (i + 9 < bytes.length) {
+    if (bytes[i] !== 0xff) { i += 1; continue; }
+    const marker = bytes[i + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+      return { h: bytes.readUInt16BE(i + 5), w: bytes.readUInt16BE(i + 7) };
+    }
+    i += 2 + bytes.readUInt16BE(i + 2);
+  }
+  throw new Error(`не прочитан размер: ${file}`);
+};
+
+const shotImg = (shot) => {
+  const { w, h } = imageSize(shot.file);
+  return `<img src="${esc(shotSrc(shot.file))}" alt="${esc(shot.alt)}"
+                width="${w}" height="${h}" decoding="async" loading="lazy">`;
+};
 
 // На первом экране снимок подписан: там он читается как часть отчёта.
 const figure = (shot) => `
@@ -499,11 +523,19 @@ const gameCard = (project) => {
   const href = link ? ` href="${esc(link.url)}"` : '';
   // Графика собирается из пустых <i>: рисует её CSS, лишних файлов нет.
   const pips = { uno: 3, cubes: 3, rps: 3, orbs: 3, coin: 2, dice: 5 }[project.art] || 3;
+  // Кадр из самой игры — фоном под анимацией. Он не заменяет её, а даёт
+  // карточке настоящую палитру игры вместо абстрактного градиента.
+  // alt пустой: родитель и так aria-hidden, картинка здесь декоративная.
+  const back = project.shots?.length
+    ? (({ file }, { w, h } = imageSize(file)) =>
+        `<img class="gshot" src="${esc(shotSrc(file))}" alt=""
+                width="${w}" height="${h}" decoding="async" loading="lazy">`)(project.shots[0])
+    : '';
   return `
         <${tag} class="gcard"${
     project.art ? ` data-art="${esc(project.art)}"` : ''
   }${href}${link ? analytics(project) : ''}>
-          <span class="gart" aria-hidden="true">${'<i></i>'.repeat(pips)}</span>
+          <span class="gart" aria-hidden="true">${back}${'<i></i>'.repeat(pips)}</span>
           <div class="gcard-body">
             <div class="gcard-top">${statusBadge(project)}</div>
             <h3 class="gcard-title">${esc(project.title)}</h3>

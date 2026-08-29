@@ -573,6 +573,18 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
   background: radial-gradient(circle at 50% 120%, rgba(154, 99, 255, .3), transparent 62%), var(--bg-soft);
   border-bottom: 1px solid var(--line);
 }
+/* Кадр из игры лежит под пипсами: они идут следом в разметке и потому
+   рисуются поверх — анимация остаётся главной, картинка даёт палитру.
+   На наведении она разгорается и чуть наезжает, .gart её обрезает. */
+.gshot {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: .2; filter: saturate(1.15);
+  transition: opacity .25s ease, transform .35s ease;
+}
+a.gcard:hover .gshot,
+a.gcard:focus-visible .gshot,
+a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
+
 .gart i {
   position: absolute; display: block;
   transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;

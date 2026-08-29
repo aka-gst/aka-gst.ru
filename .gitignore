@@ -10,3 +10,4 @@ node_modules/
 # владеет версией и контрольными суммами. deploy.sh добывает её перед выкладкой.
 qa-quest/vendor/
 acid/
+.shots/
