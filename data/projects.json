@@ -102,6 +102,18 @@
           "url": "https://aka-gst.github.io/local-agent-gateway/"
         }
       ],
+      "shots": [
+        {
+          "file": "allure-gateway.png",
+          "alt": "Allure-отчёт прогона Local Agent Gateway: 66 тест-кейсов, 100% пройдено, слои tests и tests.e2e",
+          "caption": "Тот же прогон в Allure: 66 кейсов, 100%, разбивка по слоям и рост набора."
+        },
+        {
+          "file": "gateway-console.jpg",
+          "alt": "Gateway QA Console: поля bearer-токена, разрешённой модели и промпта, кнопки отправки запроса и запуска evaluation",
+          "caption": "QA-консоль: тот же контур руками — токен, allowlist моделей, SSE, evaluation."
+        }
+      ],
       "accent": "signal"
     },
     {
@@ -304,6 +316,13 @@
           "url": "/qa-quest/"
         }
       ],
+      "shots": [
+        {
+          "file": "qa-quest-lesson.jpg",
+          "alt": "Урок QA Quest: задача вывести строку Q-Bot online, терминал с Python в браузере и список проверок",
+          "caption": "Урок: задача, терминал с Python в браузере, проверки под ним."
+        }
+      ],
       "deploy": {
         "state": "planned",
         "target": "/qa-quest/",
@@ -405,6 +424,13 @@
           "url": "/psy-admin/"
         }
       ],
+      "shots": [
+        {
+          "file": "psy-admin.jpg",
+          "alt": "Страница Psy AI Admin: заголовок помощника, предупреждение «это не психолог и не врач», быстрые вопросы и поле для своего вопроса",
+          "caption": "Границы демо заявлены в самом интерфейсе, а не в описании под ним."
+        }
+      ],
       "analytics": {
         "event": "project-open",
         "slug": "psy-admin"
@@ -477,6 +503,13 @@
           "type": "repo",
           "label": "Исходный код",
           "url": "https://github.com/aka-gst/photo_meta_editer"
+        }
+      ],
+      "shots": [
+        {
+          "file": "photodata.jpg",
+          "alt": "Интерфейс ФотоДаты: шаги обработки, список папок и панель установки даты съёмки",
+          "caption": "Файлы не уходят с устройства — обработка идёт в браузере."
         }
       ],
       "analytics": {

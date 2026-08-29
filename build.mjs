@@ -216,8 +216,32 @@ const evidenceMark = (project) => {
             </span>`;
 };
 
+// Снимки экрана лежат в assets/shots и версионируются так же, как css и js:
+// Caddy держит /assets/* неделю, без ?v= обновлённая картинка не доедет
+// до вернувшегося посетителя.
+const shotSrc = (file) => `/assets/shots/${file}?v=${assetVersion(`assets/shots/${file}`)}`;
+
+const shotImg = (shot) => `<img src="${esc(shotSrc(shot.file))}" alt="${esc(shot.alt)}"
+                width="1200" height="750" decoding="async" loading="lazy">`;
+
+// На первом экране снимок подписан: там он читается как часть отчёта.
+const figure = (shot) => `
+            <figure class="shot">
+              ${shotImg(shot)}
+              <figcaption>${esc(shot.caption)}</figcaption>
+            </figure>`;
+
+// На карточке — только первый снимок и без подписи. Подпись встала бы между
+// картинкой и названием: читатель увидел бы снимок раньше, чем узнал, чей он.
+// Смысл подписи там несёт alt, а рядом уже стоит строка описания.
+const cardShot = (project) =>
+  project.shots?.length
+    ? `
+          <figure class="shot">${shotImg(project.shots[0])}</figure>`
+    : '';
+
 const card = (project, index) => `
-        <article class="card" id="p-${esc(project.id)}">${metricBand(project)}
+        <article class="card" id="p-${esc(project.id)}">${metricBand(project)}${cardShot(project)}
           <div class="card-head">
             <p class="kicker">${esc(project.kicker)}</p>
             <span class="card-marks">${evidenceMark(project)}${statusBadge(project)}</span>
@@ -269,6 +293,13 @@ const suiteRows = qa.tests.suites
 
 const live = qa.evaluation.live;
 const det = qa.evaluation.deterministic;
+
+// Доказательство к числам выше: сам отчёт и консоль, которой их снимали.
+const reportProof = flagship.shots?.length
+  ? `
+        <div class="report-proof">${flagship.shots.map(figure).join('')}
+        </div>`
+  : '';
 
 const reportScreen = `
       <section class="report" aria-labelledby="flagship-title">
@@ -332,7 +363,7 @@ const reportScreen = `
 )} мс, stability ${esc(live.stability.min.toFixed(3))}.</p>
           </div>
         </div>
-
+${reportProof}
         <p class="report-context">
           <span>Live-прогон — <b>${esc(
             live.source

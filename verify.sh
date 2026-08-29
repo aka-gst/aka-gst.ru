@@ -95,7 +95,7 @@ echo "== ассеты, на которые ссылается сама стра�
 # shellcheck disable=SC2086
 page=$(curl -s $RETRY "$BASE/")
 printf '%s' "$page" \
-  | grep -oE '(href|src)="/[^"]+\.(css|js|svg|png)(\?[^"]*)?"' \
+  | grep -oE '(href|src)="/[^"]+\.(css|js|svg|png|jpg)(\?[^"]*)?"' \
   | sed 's/.*="//; s/"$//' | sort -u \
   | while IFS= read -r asset; do
       got=$(code "$BASE$asset")
@@ -124,7 +124,8 @@ fi
 
 echo
 echo "== содержимое, а не только код ответа =="
-for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="social"'; do
+for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="social"' \
+              'class="shot"' 'assets/shots/allure-gateway.png'; do
   if printf '%s' "$page" | grep -q "$needle"; then say_ok "на странице есть $needle"
   else say_bad "на странице НЕТ $needle"; fi
 done

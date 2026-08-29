@@ -254,6 +254,42 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 .report-context b { color: var(--warn); font-family: var(--mono); font-weight: 600; }
 .report-context time { font-family: var(--mono); }
 
+/* ── Снимки экрана ───────────────────────────────────────────────── */
+/* Снимок здесь не украшение, а доказательство к числам рядом: отчёт,
+   консоль, урок. width/height проставлены в разметке, чтобы место под
+   картинку резервировалось до загрузки и текст под ней не прыгал. */
+.shot { margin: 0; }
+.shot img {
+  display: block; width: 100%; height: auto;
+  object-fit: cover; object-position: top center;
+  background: var(--bg-soft);
+}
+.shot figcaption { font-size: 11.5px; line-height: 1.45; color: var(--dim); }
+
+/* На первом экране снимки показываем целиком: это продолжение отчёта,
+   поэтому и сетка, и фон те же, что у «Слоёв тестов» над ними. */
+.report-proof {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px;
+  background: var(--line); border-top: 1px solid var(--line);
+}
+.report-proof .shot { padding: 18px 22px; background: var(--panel); }
+.report-proof .shot img {
+  aspect-ratio: 8 / 5;
+  border: 1px solid var(--line); border-radius: 8px;
+}
+.report-proof .shot figcaption { padding-top: 10px; }
+
+/* На карточке снимок идёт во всю ширину — как полоса чисел над ним,
+   поэтому его выводим из общего правила с полями по 20px. */
+.card > .shot { margin: 0; }
+.card > .shot img {
+  /* Обрезаем низ, а не верх: в интерфейсах смысл собран в шапке экрана. */
+  aspect-ratio: 16 / 9;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+/* Полоса чисел уже закрыла стык своей нижней линией — вторая дала бы 2px. */
+.band + .shot img { border-top: 0; }
+
 /* ── Прокрутка по блокам ─────────────────────────────────────────── */
 
 html { scroll-behavior: smooth; }
@@ -317,7 +353,8 @@ html { scroll-behavior: smooth; }
   transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
 .card:hover { border-color: var(--dim); background: var(--card-hover); transform: translateY(-2px); }
-.card > *:not(.band) { margin-left: 20px; margin-right: 20px; }
+/* Полоса чисел и снимок идут во всю ширину карточки, остальное — с полями. */
+.card > *:not(.band):not(.shot) { margin-left: 20px; margin-right: 20px; }
 .card h3 { font-size: 19px; }
 .card-title {
   color: inherit; text-decoration: none;
@@ -420,7 +457,6 @@ html { scroll-behavior: smooth; }
 }
 .status-alpha, .status-demo { border-color: #4a3a18; background: #2a2110; color: var(--warn); }
 .status-wip { color: var(--dim); }
-
 
 /* Используются на /praktikum/: карточки главной перешли на .band, но
    индекс раздела по-прежнему рисует чипы. */
@@ -705,6 +741,7 @@ article.gcard .launch { color: var(--dim); }
 @media (max-width: 900px) {
   .report-grid { grid-template-columns: 1fr; gap: 26px; padding: 24px 20px; }
   .report-detail { grid-template-columns: 1fr; }
+  .report-proof { grid-template-columns: 1fr; }
   .job { grid-template-columns: 1fr; }
   .job-period { grid-row: auto; }
   .list li { grid-template-columns: 1fr auto; }
