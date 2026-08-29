@@ -222,12 +222,12 @@
         },
         {
           "key": "evals",
-          "label": "Evaluation-сценариев",
+          "label": "evaluation",
           "value": "6/6"
         },
         {
           "key": "retrieval",
-          "label": "Retrieval hit rate",
+          "label": "retrieval hit",
           "value": "100%"
         }
       ],
@@ -318,7 +318,7 @@
         },
         {
           "key": "deps",
-          "label": "внешних зависимостей",
+          "label": "зависимостей",
           "value": "0",
           "note": "Python отдаётся с этого домена, к чужим CDN страница не обращается"
         }
@@ -374,7 +374,7 @@
       "metrics": [
         {
           "key": "checks",
-          "label": "проверки перед действием",
+          "label": "проверки",
           "value": "3",
           "note": "доказательства, рассуждение, полномочия"
         }
@@ -429,12 +429,12 @@
       "metrics": [
         {
           "key": "tests",
-          "label": "автотестов безопасности",
+          "label": "тестов защиты",
           "value": "8"
         },
         {
           "key": "intents",
-          "label": "сценариев в базе",
+          "label": "сценариев",
           "value": "38"
         }
       ],
