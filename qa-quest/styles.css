@@ -36,6 +36,7 @@ body {
   background:
     url("bg-grid.svg") repeat,
     radial-gradient(circle at 70% 0%, #102638 0, transparent 32%),
+    url("bg-night.jpg") center / cover no-repeat,
     linear-gradient(145deg, #071017, #0a1119 55%, #08131b);
   overflow-x: hidden;
 }
@@ -51,10 +52,18 @@ body {
      полоса прокрутки всей страницы там, где прокручивать нечего. */
   display: flex; flex-direction: column; min-height: 100vh;
 }
-/* На экране урока высота задана точно, а не «не меньше»: иначе оболочка
-   растёт под содержимое, страница оказывается выше экрана и появляется
-   полоса прокрутки там, где прокручивать нечего. */
-body.lesson-open, body.lesson-open .app-shell { height: 100vh; min-height: 0; overflow: hidden; }
+/* На большом экране урок помещается целиком, и высота задана точно, а не
+   «не меньше»: иначе оболочка растёт под содержимое, страница оказывается
+   выше экрана и появляется полоса прокрутки там, где прокручивать нечего.
+   Но правило обязано остаться правилом большого экрана. Пока оно было
+   безусловным, на телефоне выходило вот что: там вёрстка урока нарочно
+   вытягивается в столбец и становится выше экрана, а overflow: hidden
+   отменял прокрутку — редактор кода уходил под нижний край, и добраться до
+   него было нельзя вовсе. Человек видел задачу и кнопку «Запустить», но не
+   поле, куда писать. */
+@media (min-width: 861px) {
+  body.lesson-open, body.lesson-open .app-shell { height: 100vh; min-height: 0; overflow: hidden; }
+}
 .app-shell > main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
 .panel {
