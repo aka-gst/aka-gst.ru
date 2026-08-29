@@ -285,6 +285,17 @@ const byGroup = (group) =>
 // ── Экран-отчёт: флагман ─────────────────────────────────────────────
 // Цифры не живут в projects.json: они приходят из qa-metrics.json, который
 // собирает CI гейтвея. Сборка вклеивает снимок, app.js поверх кладёт живой фид.
+// Повторный id — это две карточки одной игры и два одинаковых id в
+// разметке: якоря начинают вести не туда, а страница перестаёт быть
+// валидной. Один раз так и вышло, когда игру добавили заново, не убрав
+// старую запись «в сборке». Ошибка должна ронять сборку, а не всплывать
+// на боевом.
+const ids = db.projects.map((p) => p.id);
+const dup = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+if (dup.length) {
+  throw new Error(`в projects.json повторяются id: ${dup.join(', ')}`);
+}
+
 const flagship = db.projects.find((p) => p.feature?.work === 1);
 
 if (flagship.status.label !== `v${qa.project.version}`) {

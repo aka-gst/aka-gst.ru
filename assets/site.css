@@ -563,7 +563,8 @@ html { scroll-behavior: smooth; }
   text-decoration: none; color: inherit;
   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
-a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
+a.gcard:focus-visible,
+a.gcard.is-lit {
   transform: translateY(-4px); border-color: var(--neon); box-shadow: var(--glow);
 }
 
@@ -581,9 +582,8 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
   object-fit: cover; opacity: .2; filter: saturate(1.15);
   transition: opacity .25s ease, transform .35s ease;
 }
-a.gcard:hover .gshot,
 a.gcard:focus-visible .gshot,
-a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
+a.gcard.is-lit .gshot { opacity: .4; transform: scale(1.08); }
 
 .gart i {
   position: absolute; display: block;
@@ -599,36 +599,27 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
 [data-art="uno"] .gart i:nth-child(1) { transform: rotate(-16deg) translateX(-26px); }
 [data-art="uno"] .gart i:nth-child(2) { transform: translateY(-4px); background: linear-gradient(150deg, var(--neon-2), var(--neon)); }
 [data-art="uno"] .gart i:nth-child(3) { transform: rotate(16deg) translateX(26px); background: linear-gradient(150deg, var(--warn), var(--accent)); }
-[data-art="uno"]:hover .gart i:nth-child(1),
-[data-art="uno"].is-mobile-active .gart i:nth-child(1) { transform: rotate(-26deg) translateX(-40px) translateY(-6px); }
-[data-art="uno"]:hover .gart i:nth-child(2),
-[data-art="uno"].is-mobile-active .gart i:nth-child(2) { transform: translateY(-14px) scale(1.06); }
-[data-art="uno"]:hover .gart i:nth-child(3),
-[data-art="uno"].is-mobile-active .gart i:nth-child(3) { transform: rotate(26deg) translateX(40px) translateY(-6px); }
+[data-art="uno"].is-lit .gart i:nth-child(1) { transform: rotate(-26deg) translateX(-40px) translateY(-6px); }
+[data-art="uno"].is-lit .gart i:nth-child(2) { transform: translateY(-14px) scale(1.06); }
+[data-art="uno"].is-lit .gart i:nth-child(3) { transform: rotate(26deg) translateX(40px) translateY(-6px); }
 
 /* Тетколор — падающая колонка из трёх кубиков. */
 [data-art="cubes"] .gart i { width: 30px; height: 30px; border-radius: 5px; }
 [data-art="cubes"] .gart i:nth-child(1) { transform: translateY(-32px); background: var(--fail); }
 [data-art="cubes"] .gart i:nth-child(2) { background: var(--warn); }
 [data-art="cubes"] .gart i:nth-child(3) { transform: translateY(32px); background: var(--accent); }
-[data-art="cubes"]:hover .gart i:nth-child(1),
-[data-art="cubes"].is-mobile-active .gart i:nth-child(1) { transform: translateY(-4px); }
-[data-art="cubes"]:hover .gart i:nth-child(2),
-[data-art="cubes"].is-mobile-active .gart i:nth-child(2) { transform: translateY(28px); }
-[data-art="cubes"]:hover .gart i:nth-child(3),
-[data-art="cubes"].is-mobile-active .gart i:nth-child(3) { transform: translateY(60px); opacity: 0; }
+[data-art="cubes"].is-lit .gart i:nth-child(1) { transform: translateY(-4px); }
+[data-art="cubes"].is-lit .gart i:nth-child(2) { transform: translateY(28px); }
+[data-art="cubes"].is-lit .gart i:nth-child(3) { transform: translateY(60px); opacity: 0; }
 
 /* КНБ — три метки по дуге. */
 [data-art="rps"] .gart i { width: 34px; height: 34px; border: 2px solid var(--neon-2); }
 [data-art="rps"] .gart i:nth-child(1) { border-radius: 50%; transform: translateX(-40px); }
 [data-art="rps"] .gart i:nth-child(2) { border-radius: 4px; transform: rotate(45deg); }
 [data-art="rps"] .gart i:nth-child(3) { border-radius: 3px; transform: translateX(40px); border-color: var(--accent); }
-[data-art="rps"]:hover .gart i:nth-child(1),
-[data-art="rps"].is-mobile-active .gart i:nth-child(1) { transform: translateX(-46px) translateY(-8px) scale(1.1); }
-[data-art="rps"]:hover .gart i:nth-child(2),
-[data-art="rps"].is-mobile-active .gart i:nth-child(2) { transform: rotate(225deg) scale(1.1); }
-[data-art="rps"]:hover .gart i:nth-child(3),
-[data-art="rps"].is-mobile-active .gart i:nth-child(3) { transform: translateX(46px) translateY(8px) scale(1.1); }
+[data-art="rps"].is-lit .gart i:nth-child(1) { transform: translateX(-46px) translateY(-8px) scale(1.1); }
+[data-art="rps"].is-lit .gart i:nth-child(2) { transform: rotate(225deg) scale(1.1); }
+[data-art="rps"].is-lit .gart i:nth-child(3) { transform: translateX(46px) translateY(8px) scale(1.1); }
 
 /* Неон Линии — шары, выстраивающиеся в линию. */
 [data-art="orbs"] .gart i {
@@ -638,12 +629,9 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
 [data-art="orbs"] .gart i:nth-child(1) { background: var(--fail); color: var(--fail); transform: translate(-34px, -14px); }
 [data-art="orbs"] .gart i:nth-child(2) { background: var(--neon-2); color: var(--neon-2); transform: translate(4px, 16px); }
 [data-art="orbs"] .gart i:nth-child(3) { background: var(--accent); color: var(--accent); transform: translate(38px, -6px); }
-[data-art="orbs"]:hover .gart i:nth-child(1),
-[data-art="orbs"].is-mobile-active .gart i:nth-child(1) { transform: translate(-36px, 0); }
-[data-art="orbs"]:hover .gart i:nth-child(2),
-[data-art="orbs"].is-mobile-active .gart i:nth-child(2) { transform: translate(0, 0); }
-[data-art="orbs"]:hover .gart i:nth-child(3),
-[data-art="orbs"].is-mobile-active .gart i:nth-child(3) { transform: translate(36px, 0); }
+[data-art="orbs"].is-lit .gart i:nth-child(1) { transform: translate(-36px, 0); }
+[data-art="orbs"].is-lit .gart i:nth-child(2) { transform: translate(0, 0); }
+[data-art="orbs"].is-lit .gart i:nth-child(3) { transform: translate(36px, 0); }
 
 /* Техномагия — три стихии. Врозь они лежат по углам, при наведении
    сходятся в одну точку: в этом вся игра. */
@@ -654,8 +642,7 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
 [data-art="elements"] .gart i:nth-child(1) { background: #ff5a1f; color: #ff5a1f; transform: translate(-38px, 10px); }
 [data-art="elements"] .gart i:nth-child(2) { background: #4de1ff; color: #4de1ff; transform: translate(0, -18px); }
 [data-art="elements"] .gart i:nth-child(3) { background: #ffe14d; color: #ffe14d; transform: translate(38px, 10px); }
-[data-art="elements"]:hover .gart i,
-[data-art="elements"].is-mobile-active .gart i { transform: translate(0, 0); opacity: .85; }
+[data-art="elements"].is-lit .gart i { transform: translate(0, 0); opacity: .85; }
 
 /* Орёл или решка — монета, переворачивающаяся при наведении. */
 [data-art="coin"] .gart { perspective: 420px; }
@@ -664,10 +651,8 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
   border: 2px solid var(--warn); background: radial-gradient(circle at 34% 30%, #3a3016, #16130a);
 }
 [data-art="coin"] .gart i:nth-child(2) { border-color: var(--accent); opacity: 0; }
-[data-art="coin"]:hover .gart i:nth-child(1),
-[data-art="coin"].is-mobile-active .gart i:nth-child(1) { transform: rotateY(180deg) scale(.9); opacity: 0; }
-[data-art="coin"]:hover .gart i:nth-child(2),
-[data-art="coin"].is-mobile-active .gart i:nth-child(2) { transform: rotateY(360deg); opacity: 1; }
+[data-art="coin"].is-lit .gart i:nth-child(1) { transform: rotateY(180deg) scale(.9); opacity: 0; }
+[data-art="coin"].is-lit .gart i:nth-child(2) { transform: rotateY(360deg); opacity: 1; }
 
 /* Кольчатый — три звена цепи, растягивающиеся при наведении. */
 [data-art="chain"] .gart i {
@@ -676,10 +661,8 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
 }
 [data-art="chain"] .gart i:nth-child(1) { transform: translateX(-22px); }
 [data-art="chain"] .gart i:nth-child(3) { transform: translateX(22px); border-color: var(--accent); }
-[data-art="chain"]:hover .gart i:nth-child(1),
-[data-art="chain"].is-mobile-active .gart i:nth-child(1) { transform: translate(-44px, -10px); }
-[data-art="chain"]:hover .gart i:nth-child(3),
-[data-art="chain"].is-mobile-active .gart i:nth-child(3) { transform: translate(44px, 10px); }
+[data-art="chain"].is-lit .gart i:nth-child(1) { transform: translate(-44px, -10px); }
+[data-art="chain"].is-lit .gart i:nth-child(3) { transform: translate(44px, 10px); }
 
 /* Один удар — клинок и след от рывка. */
 [data-art="blade"] .gart i:nth-child(1) {
@@ -694,10 +677,8 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
   width: 10px; height: 10px; border-radius: 50%; background: var(--warn);
   transform: translate(26px, -22px);
 }
-[data-art="blade"]:hover .gart i:nth-child(1),
-[data-art="blade"].is-mobile-active .gart i:nth-child(1) { transform: rotate(-32deg) scale(1.05); }
-[data-art="blade"]:hover .gart i:nth-child(2),
-[data-art="blade"].is-mobile-active .gart i:nth-child(2) { transform: translate(14px, 16px) scaleX(1.4); }
+[data-art="blade"].is-lit .gart i:nth-child(1) { transform: rotate(-32deg) scale(1.05); }
+[data-art="blade"].is-lit .gart i:nth-child(2) { transform: translate(14px, 16px) scaleX(1.4); }
 
 /* Техномагия — руна из трёх граней. */
 [data-art="rune"] .gart i {
@@ -706,10 +687,8 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
 [data-art="rune"] .gart i:nth-child(1) { transform: rotate(45deg) translateY(-14px); }
 [data-art="rune"] .gart i:nth-child(2) { border-radius: 50%; border-color: var(--neon-2); }
 [data-art="rune"] .gart i:nth-child(3) { transform: rotate(45deg) translateY(14px); }
-[data-art="rune"]:hover .gart i:nth-child(1),
-[data-art="rune"].is-mobile-active .gart i:nth-child(1) { transform: rotate(135deg) translateY(-20px); }
-[data-art="rune"]:hover .gart i:nth-child(3),
-[data-art="rune"].is-mobile-active .gart i:nth-child(3) { transform: rotate(-45deg) translateY(20px); }
+[data-art="rune"].is-lit .gart i:nth-child(1) { transform: rotate(135deg) translateY(-20px); }
+[data-art="rune"].is-lit .gart i:nth-child(3) { transform: rotate(-45deg) translateY(20px); }
 
 /* Лила — пять клеток поля. */
 [data-art="dice"] .gart i { width: 16px; height: 16px; border-radius: 3px; background: var(--line); border: 1px solid var(--dim); }
@@ -718,8 +697,7 @@ a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
 [data-art="dice"] .gart i:nth-child(3) { transform: translate(30px, 0); }
 [data-art="dice"] .gart i:nth-child(4) { transform: translate(0, 20px); }
 [data-art="dice"] .gart i:nth-child(5) { transform: translate(-30px, 20px); }
-[data-art="dice"]:hover .gart i:nth-child(3),
-[data-art="dice"].is-mobile-active .gart i:nth-child(3) { background: var(--accent); border-color: var(--accent); }
+[data-art="dice"].is-lit .gart i:nth-child(3) { background: var(--accent); border-color: var(--accent); }
 
 .gcard-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; flex: 1; }
 .gcard-top { display: flex; justify-content: flex-end; }
