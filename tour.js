@@ -35,9 +35,15 @@
     '  box-shadow:0 10px 40px rgba(0,0,0,.6);box-sizing:border-box}',
     '.tour-box p{margin:0 0 12px}',
     '.tour-row{display:flex;align-items:center;gap:10px}',
-    '.tour-row span{flex:1;text-align:center;color:#8ea0b5;font-size:11px}',
+    '.tour-row span{flex:1 1 auto;text-align:center;color:#8ea0b5;font-size:11px;',
+    '  white-space:nowrap}',
+    // width/min-width/flex — защита от правил игры-хозяина. У аркад часто
+    // встречается button{width:100%}, оно протекает сюда, кнопки карточки
+    // раздуваются, и счётчику «1 из 4» не остаётся места: он ломается
+    // на три строки. Без враждебного правила эти свойства ничего не меняют.
     '.tour-box button{font:inherit;font-size:12px;cursor:pointer;border:1px solid #35455a;',
-    '  background:#1a2432;color:#8ea0b5;padding:8px 13px;touch-action:manipulation}',
+    '  background:#1a2432;color:#8ea0b5;padding:8px 13px;touch-action:manipulation;',
+    '  width:auto;min-width:0;flex:0 0 auto}',
     '.tour-box button.tour-next{border:2px solid #7fd98a;background:#1d4a30;color:#fff;font-weight:700}'
   ].join('');
 
