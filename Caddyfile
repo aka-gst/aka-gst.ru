@@ -19,8 +19,31 @@ aka-gst.ru, www.aka-gst.ru {
 
   header Cache-Control "no-cache, must-revalidate"
 
+  # Заголовки безопасности. Ставятся один раз на весь сайт.
+  header {
+    # Год HTTPS без права передумать. Без preload: попадание в списки
+    # браузеров необратимо, а домен ещё меняется.
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # Браузер не должен угадывать тип файла вопреки заголовку.
+    X-Content-Type-Options "nosniff"
+    # Чужому сайту уходит только origin, и только по HTTPS.
+    Referrer-Policy "strict-origin-when-cross-origin"
+    # Сайт нельзя открыть в чужом фрейме: защита от кликджекинга.
+    X-Frame-Options "SAMEORIGIN"
+    # Камера и микрофон разрешены СВОЕМУ origin — на нём живут звонки,
+    # глухой запрет сломал бы /meet/. Геолокация не нужна никому.
+    Permissions-Policy "camera=(self), microphone=(self), geolocation=()"
+    # Не сообщаем, какой сервер и какой версии тут стоит.
+    -Server
+  }
+
   # Без завершающего слэша относительные адреса внутри игры уехали бы в корень.
   redir /leela /leela/ 308
+  # Игра переехала с /knb/ на /stihii/. Старый адрес расходился ссылками,
+  # поэтому он не удаляется, а перенаправляется.
+  redir /knb /stihii/ 308
+  redir /knb/* /stihii/ 308
+
   redir /tetris /tetcolor/ 308
   redir /tetris/* /tetcolor/ 308
   redir /tetcolor /tetcolor/ 308

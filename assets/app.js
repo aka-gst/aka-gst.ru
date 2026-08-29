@@ -95,6 +95,59 @@
       .catch(() => {});
   }
 
+  // ── Прокрутка по блокам и проявление ─────────────────────────────
+  const секции = [...document.querySelectorAll('.report, .block')];
+
+  // Раздел выше экрана привязывать нельзя: прокрутка внутри него должна
+  // оставаться свободной. Меряем, а не угадываем по числу карточек.
+  const пометитьВысокие = () => {
+    // Порог — вся высота окна, а не доля от неё. С 85% на обычном ноутбуке
+    // почти каждый раздел оказывался «высоким», и привязка отключалась
+    // везде, то есть выглядела как неработающая.
+    // Нижняя граница на случай, если высота окна ещё не определена: без неё
+    // порог схлопывается в ноль и высокими становятся все разделы подряд.
+    const порог = Math.max(innerHeight, 480);
+    секции.forEach((s) => s.classList.toggle('is-tall', s.offsetHeight > порог));
+  };
+  пометитьВысокие();
+  addEventListener('resize', пометитьВысокие);
+  // Замер зависит от того, когда он выполнен: до загрузки шрифтов высоты
+  // другие, а скрытая панель меряется в ноль. Поэтому пересчитываем ещё раз
+  // после отрисовки и после готовности шрифтов — дважды лишний раз дешевле,
+  // чем один раз не вовремя.
+  requestAnimationFrame(пометитьВысокие);
+  addEventListener('load', пометитьВысокие);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(пометитьВысокие);
+  // Скрытая панель меряется в ноль, поэтому при загрузке размечается только
+  // активный трек. Пересчитываем после переключения — обработчик добавлен
+  // вторым, так что отработает уже по новому треку.
+  document.querySelectorAll('[data-track-to]').forEach((кнопка) =>
+    кнопка.addEventListener('click', () => requestAnimationFrame(пометитьВысокие))
+  );
+
+  const движениеРазрешено = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Проявление ставим только если браузер умеет наблюдать за видимостью и
+  // человек не просил убрать движение. Класс вешает скрипт, а не разметка:
+  // не выполнится — содержимое просто останется видимым.
+  if ('IntersectionObserver' in window && движениеРазрешено) {
+    const показать = (el) => {
+      el.classList.add('is-visible');
+      наблюдатель.unobserve(el);
+    };
+    const наблюдатель = new IntersectionObserver(
+      (записи) => записи.forEach((з) => з.isIntersecting && показать(з.target)),
+      { rootMargin: '0px 0px -12% 0px' }
+    );
+    секции.forEach((s) => {
+      s.dataset.reveal = '';
+      наблюдатель.observe(s);
+    });
+    // Предохранитель: если наблюдатель почему-то не сработает, через две
+    // секунды показываем всё. Невидимая страница хуже отсутствия анимации.
+    setTimeout(() => секции.forEach((s) => s.classList.add('is-visible')), 2000);
+  }
+
   // ── Рекорды дня ───────────────────────────────────────────────────
   const scoreUrl = (game, limit) =>
     `/api/leaderboard/scores?game=${encodeURIComponent(game)}&period=today&limit=${limit}`;
@@ -129,38 +182,43 @@
       .catch(() => {});
   });
 
-  // ── Подсветка карточки в центре экрана на тач-устройствах ─────────
+  // ── Подсветка карточки, на которой остановились ──────────────────
+  // Раньше класс пересчитывался на каждом кадре прокрутки, и анимации
+  // проигрывались волной по очереди, пока листаешь. Теперь наоборот: в
+  // движении гасим все, а включаем ту, что оказалась в центре, когда
+  // прокрутка остановилась.
   const gameCards = [...document.querySelectorAll('a.gcard')];
   if (gameCards.length) {
-    let queued = false;
-    const activate = () => {
-      queued = false;
-      if (!matchMedia('(hover:none)').matches) {
-        gameCards.forEach((card) => card.classList.remove('is-mobile-active'));
-        return;
+    let dwell;
+
+    const снять = () => gameCards.forEach((c) => c.classList.remove('is-mobile-active'));
+
+    const включитьЦентральную = () => {
+      if (!matchMedia('(hover:none)').matches) return снять();
+      const центр = innerHeight / 2;
+      let лучшая = null;
+      let ближе = Infinity;
+      for (const card of gameCards) {
+        const r = card.getBoundingClientRect();
+        if (r.bottom <= 0 || r.top >= innerHeight) continue;
+        const d = Math.abs(r.top + r.height / 2 - центр);
+        if (d < ближе) { ближе = d; лучшая = card; }
       }
-      const center = innerHeight / 2;
-      let best = null;
-      let bestDistance = Infinity;
-      gameCards.forEach((card) => {
-        const rect = card.getBoundingClientRect();
-        if (rect.bottom <= 0 || rect.top >= innerHeight) return;
-        const distance = Math.abs(rect.top + rect.height / 2 - center);
-        if (distance < bestDistance) {
-          best = card;
-          bestDistance = distance;
-        }
-      });
-      gameCards.forEach((card) => card.classList.toggle('is-mobile-active', card === best));
+      gameCards.forEach((c) => c.classList.toggle('is-mobile-active', c === лучшая));
     };
-    const queue = () => {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(activate);
+
+    const приДвижении = () => {
+      снять();
+      clearTimeout(dwell);
+      // Инерция продолжает слать события и сбрасывать таймер, поэтому
+      // подсветка включится только когда палец отпущен и страница встала.
+      dwell = setTimeout(включитьЦентральную, 220);
     };
-    addEventListener('scroll', queue, { passive: true });
-    addEventListener('resize', queue);
-    activate();
+
+    addEventListener('scroll', приДвижении, { passive: true });
+    addEventListener('resize', приДвижении);
+    включитьЦентральную();
   }
+
 
 })();

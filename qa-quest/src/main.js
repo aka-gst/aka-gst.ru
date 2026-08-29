@@ -27,7 +27,14 @@ const runnerConfig = (async () => {
   try {
     const response = await fetch('vendor/pyodide/pyodide.mjs', { method: 'HEAD' });
     if (response.ok) return { base: new URL('vendor/pyodide/', location.href).href };
-  } catch (_) { /* локальной копии нет — это норма */ }
+  } catch (_) { /* сеть или файла нет — разбираемся ниже */ }
+  // Молчать здесь нельзя: неполная выкладка отправит браузеры всех посетителей
+  // на чужой CDN, и следа об этом не останется. При разработке это норма,
+  // на домене — повод пересобрать выкладку.
+  console.warn(
+    'QA Quest: локальная копия Pyodide не найдена, Python будет загружен с cdn.jsdelivr.net. '
+    + 'Если это боевой сайт — выкладка неполная, нужен tools/fetch-pyodide.sh и повторный деплой.',
+  );
   return {};
 })();
 
@@ -54,6 +61,9 @@ function route() {
   if (lesson) {
     screens.map.hidden = true;
     screens.lesson.hidden = false;
+    // Урок занимает ровно экран и прокручивается внутри своих панелей. Карта
+    // длинная и прокручивается страницей. Разные режимы — разный класс.
+    document.body.classList.add('lesson-open');
     // Практикуму Python не нужен: там работа идёт на своей машине.
     if (lesson.kind !== 'lab') runnerConfig.then(bootRunner);
     renderLesson(screens.lesson, lesson, {
@@ -64,6 +74,7 @@ function route() {
   } else {
     screens.lesson.hidden = true;
     screens.map.hidden = false;
+    document.body.classList.remove('lesson-open');
     renderMap(screens.map, { onOpen: openLesson });
   }
 }
@@ -78,7 +89,8 @@ function renderHeader() {
 
   const streak = store.state.streak;
   const streakChip = $('streakChip');
-  streakChip.textContent = streak.current > 0 ? `🔥 ${streak.current}` : '🔥 0';
+  streakChip.hidden = streak.current === 0;
+  streakChip.textContent = `🔥 ${streak.current}`;
   streakChip.title = streak.current > 0
     ? `Серия: ${streak.current} дн. подряд, рекорд ${streak.best}`
     : 'Реши задачу сегодня, чтобы начать серию';
@@ -87,6 +99,13 @@ function renderHeader() {
     button.classList.toggle('active', button.dataset.mode === store.state.mode);
     button.setAttribute('aria-pressed', String(button.dataset.mode === store.state.mode));
   });
+
+  // Переключатель без объяснения выглядит бесполезным: человек видит две
+  // кнопки и не понимает, что изменится. Говорим прямо, что он делает.
+  // Без названия режима: оно и так написано на нажатой кнопке прямо над строкой.
+  $('modeHint').textContent = store.state.mode === 'sprint'
+    ? 'в уроке суть и одна задача'
+    : 'в уроке объяснение, примеры и три задачи';
 }
 
 /* ---------- события прогресса ---------- */
@@ -116,7 +135,9 @@ function renderAccount() {
   // Почта необязательна, выводить имя из адреса больше нельзя — только ник.
   button.textContent = auth.status === 'signed' ? auth.nickname : 'Войти';
   button.classList.toggle('signed', auth.status === 'signed');
-  $('progressHint').textContent = progressHint();
+  const hint = $('progressHint');
+  hint.hidden = auth.status !== 'signed';
+  hint.textContent = progressHint();
 }
 
 /** Коды восстановления показываются один раз — без них дороги назад нет. */

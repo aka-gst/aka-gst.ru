@@ -26,7 +26,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=052ceba2">
+    <link rel="stylesheet" href="/assets/site.css?v=7e94cbec">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -43,8 +43,10 @@
     <header class="topbar">
       <a class="brand" href="/">aka<span>-</span>gst</a>
       <div class="track-switch" role="group" aria-label="Раздел сайта">
-        <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">Работа</button>
-        <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play">Игры</button>
+        <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5-5-5" /><path d="M12 19h8" /></svg><span>Работа</span></button>
+        <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h4M9 10v4" /><circle cx="16" cy="11" r=".6" fill="currentColor" stroke="none" /><circle cx="18" cy="13.5" r=".6" fill="currentColor" stroke="none" /><path d="M17.5 5.5h-11A4.5 4.5 0 0 0 2 10v5a4 4 0 0 0 7 2.6h6A4 4 0 0 0 22 15v-5a4.5 4.5 0 0 0-4.5-4.5z" /></svg><span>Игры</span></button>
       </div>
       <nav class="socials" aria-label="Профили">
 <a class="social" href="https://github.com/aka-gst" target="_blank" rel="noopener me"
@@ -128,6 +130,18 @@
           </div>
         </div>
 
+        <div class="report-proof">
+            <figure class="shot">
+              <img src="/assets/shots/allure-gateway.png?v=ff284351" alt="Allure-отчёт прогона Local Agent Gateway: 66 тест-кейсов, 100% пройдено, слои tests и tests.e2e"
+                width="1200" height="750" decoding="async" loading="lazy">
+              <figcaption>Тот же прогон в Allure: 66 кейсов, 100%, разбивка по слоям и рост набора.</figcaption>
+            </figure>
+            <figure class="shot">
+              <img src="/assets/shots/gateway-console.jpg?v=3d8e9ce2" alt="Gateway QA Console: поля bearer-токена, разрешённой модели и промпта, кнопки отправки запроса и запуска evaluation"
+                width="1200" height="750" decoding="async" loading="lazy">
+              <figcaption>QA-консоль: тот же контур руками — токен, allowlist моделей, SSE, evaluation.</figcaption>
+            </figure>
+        </div>
         <p class="report-context">
           <span>Live-прогон — <b>recorded-local-run</b>: записан один раз 2026-08-15 на машине Apple Silicon M5, 24 GB unified memory (macOS, Ollama 0.32.12, Q4_K_M, 8.2B), профиль 3×3, temperature 0, seed 42. Это не проверяется каждым push — в отличие от тестов и покрытия.</span>
           <span>Прогон от <time data-metric-updated datetime="2026-08-28T03:45:44Z">2026-08-28T03:45:44Z</time></span>
@@ -141,6 +155,33 @@
           <p>Материалы, которые собраны из реальных прогонов: инструкция, автотесты и сохранённые артефакты.</p>
         </div>
         <div class="grid">
+        <article class="card" id="p-qa-quest">
+          <dl class="band" data-count="3">
+            <div title="36 в тренажёре и 26 экспериментов практикума">
+              <dt>62</dt>
+              <dd>уроков</dd>
+            </div>
+            <div title="питон с нуля · тестирование · LLM">
+              <dt>3</dt>
+              <dd>ступени</dd>
+            </div>
+            <div title="Python отдаётся с этого домена, к чужим CDN страница не обращается">
+              <dt>0</dt>
+              <dd>внешних зависимостей</dd>
+            </div>
+          </dl>
+          <figure class="shot"><img src="/assets/shots/qa-quest-lesson.jpg?v=913ff986" alt="Урок QA Quest: задача вывести строку Q-Bot online, терминал с Python в браузере и список проверок"
+                width="1200" height="750" decoding="async" loading="lazy"></figure>
+          <div class="card-head">
+            <p class="kicker">Обучение · браузер</p>
+            <span class="card-marks"><span class="status status-live">открыт</span></span>
+          </div>
+          <h3><a class="card-title" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></h3>
+          <p class="tagline">Курс питона, тестирования и работы с LLM. Код выполняется прямо в браузере — устанавливать ничего не нужно.</p>
+          <p class="summary">Три ступени: питон с нуля для тех, кто не программировал никогда; тестирование; работа и тесты с LLM. На первой ступени 15 уроков с автоматической проверкой кода на странице. На второй и третьей — тренажёр в браузере, а за ним настоящие практикумы, те же, что в разделе «Практикумы». Прогресс сохраняется в учётной записи сайта и переезжает между устройствами.</p>
+          <ul class="stack"><li>Python</li><li>Pyodide</li><li>JavaScript</li><li>HTML</li><li>CSS</li><li>общий вход aka-gst</li></ul>
+          <p class="card-links"><a class="link link-demo" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть <b>→</b></a></p>
+        </article>
         <article class="card" id="p-praktikum-testing">
           <dl class="band" data-count="3">
             <div>
@@ -156,6 +197,8 @@
               <dd>мин чтения</dd>
             </div>
           </dl>
+          <figure class="shot"><img src="/assets/shots/praktikum-testing.jpg?v=b4612688" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов, 16 экспериментов, кнопки чтения, PDF и DOCX, список частей"
+                width="1200" height="750" decoding="async" loading="lazy"></figure>
           <div class="card-head">
             <p class="kicker">Практикум · веб + PDF</p>
             <span class="card-marks"><span class="status status-published">v3</span></span>
@@ -181,6 +224,8 @@
               <dd>мин чтения</dd>
             </div>
           </dl>
+          <figure class="shot"><img src="/assets/shots/praktikum-llm.jpg?v=29ddccb6" alt="Страница практикума «Настройка LLM и AI-агентов под задачу»: 16 разделов, 10 экспериментов, маршрут обучения и лабораторные работы"
+                width="1200" height="750" decoding="async" loading="lazy"></figure>
           <div class="card-head">
             <p class="kicker">Практикум · веб + сервис</p>
             <span class="card-marks"><span class="evidence">
@@ -192,38 +237,13 @@
                 <ul><li>Structured output по JSON Schema и Pydantic — проверяется, что модель отдаёт разбираемый ответ, а не текст похожий на JSON.</li><li>Agent loop с allowlist инструментов: тесты закрывают путь, где агент пытается вызвать неразрешённое.</li><li>RAG с проверяемыми источниками — evaluation-набор 6/6, retrieval hit rate 100%.</li><li>Backup/restore с SHA-256 и защита от path traversal.</li></ul>
                 <p>Показывает работу с LLM не на уровне промптов, а на уровне контракта: что именно ломается и как это ловится автоматически.</p>
               </span>
-            </span><span class="status status-wip">в развитии</span></span>
+            </span><span class="status status-live">открыт</span></span>
           </div>
           <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
           <p class="tagline">Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.</p>
           <p class="summary">Рабочий сервис-лаборатория: локальная генерация через Ollama и qwen3:8b, structured output с JSON Schema, agent loop с allowlist инструментов, память сессий и audit log в SQLite, RAG по документам с проверяемыми источниками, API-key guard, Docker Compose и backup/restore с SHA-256.</p>
           <ul class="stack"><li>Python 3.12</li><li>FastAPI</li><li>Pydantic</li><li>SQLite</li><li>Ollama</li><li>qwen3:8b</li><li>qwen3-embedding:0.6b</li><li>Docker Compose</li><li>pytest</li></ul>
           <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
-        </article>
-        <article class="card" id="p-qa-quest">
-          <dl class="band" data-count="3">
-            <div title="35 в тренажёре и 26 экспериментов практикума">
-              <dt>61</dt>
-              <dd>уроков</dd>
-            </div>
-            <div title="питон с нуля · тестирование · LLM">
-              <dt>3</dt>
-              <dd>ступени</dd>
-            </div>
-            <div title="Python отдаётся с этого домена, к чужим CDN страница не обращается">
-              <dt>0</dt>
-              <dd>внешних зависимостей</dd>
-            </div>
-          </dl>
-          <div class="card-head">
-            <p class="kicker">Обучение · браузер</p>
-            <span class="card-marks"><span class="status status-live">открыт</span></span>
-          </div>
-          <h3><a class="card-title" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></h3>
-          <p class="tagline">Курс питона, тестирования и работы с LLM. Код выполняется прямо в браузере — устанавливать ничего не нужно.</p>
-          <p class="summary">Три ступени: питон с нуля для тех, кто не программировал никогда; тестирование; работа и тесты с LLM. На первой ступени 15 уроков с автоматической проверкой кода на странице. На второй и третьей — тренажёр в браузере, а за ним настоящие практикумы, те же, что в разделе «Практикумы». Прогресс сохраняется в учётной записи сайта и переезжает между устройствами.</p>
-          <ul class="stack"><li>Python</li><li>Pyodide</li><li>JavaScript</li><li>HTML</li><li>CSS</li><li>общий вход aka-gst</li></ul>
-          <p class="card-links"><a class="link link-demo" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть <b>→</b></a></p>
         </article>
         </div>
       </section>
@@ -242,8 +262,10 @@
               <dd>проверки перед действием</dd>
             </div>
           </dl>
+          <figure class="shot"><img src="/assets/shots/dharma-ai.jpg?v=c5c7d8b5" alt="Главная страница Dharma AI: валидатор проверяет доказательства, рассуждение и полномочия агента перед решением"
+                width="1200" height="750" decoding="async" loading="lazy"></figure>
           <div class="card-head">
-            <p class="kicker">Продукт заказчика · AI/LLM QA</p>
+            <p class="kicker">Продукт заказчика</p>
             <span class="card-marks"><span class="status status-live">валидатор запущен</span></span>
           </div>
           <h3><a class="card-title" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">Dharma AI</a></h3>
@@ -263,6 +285,8 @@
               <dd>сценариев в базе</dd>
             </div>
           </dl>
+          <figure class="shot"><img src="/assets/shots/psy-admin.jpg?v=d3cc029a" alt="Страница Psy AI Admin: заголовок помощника, предупреждение «это не психолог и не врач», быстрые вопросы и поле для своего вопроса"
+                width="1200" height="750" decoding="async" loading="lazy"></figure>
           <div class="card-head">
             <p class="kicker">Продукт · демо</p>
             <span class="card-marks"><span class="evidence">
@@ -297,6 +321,8 @@
               <dd>релиз</dd>
             </div>
           </dl>
+          <figure class="shot"><img src="/assets/shots/photodata.jpg?v=b44360da" alt="Интерфейс ФотоДаты: шаги обработки, список папок и панель установки даты съёмки"
+                width="1200" height="750" decoding="async" loading="lazy"></figure>
           <div class="card-head">
             <p class="kicker">Продукт · local-first</p>
             <span class="card-marks"><span class="evidence">
@@ -399,7 +425,7 @@
             <li>
               <span class="list-title"><a href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></span>
               <span class="list-note">Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.</span>
-              <span class="status status-wip">в развитии</span>
+              <span class="status status-live">открыт</span>
             </li>
             <li>
               <span class="list-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></span>
@@ -438,15 +464,9 @@
         <div class="block-head">
           <p class="kicker">06</p>
           <h2 id="contact-title">Связаться</h2>
-          <p>Почты и телефона на сайте нет. Напишите в Telegram или на GitHub — резюме с контактными данными вышлю в ответ.</p>
+          <p>Почты и телефона на сайте нет. Напишите на GitHub — резюме с контактными данными вышлю в ответ.</p>
         </div>
         <div class="channels">
-          <a class="channel" href="https://t.me/gostinka27" target="_blank" rel="noopener me"
-             data-umami-event="contact-open" data-umami-event-network="telegram">
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-            <span><b>Telegram</b><i>t.me/gostinka27</i></span>
-            <b class="go">↗</b>
-          </a>
           <a class="channel" href="https://github.com/aka-gst" target="_blank" rel="noopener me"
              data-umami-event="contact-open" data-umami-event-network="github">
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
@@ -457,15 +477,15 @@
       </section>
       </div>
       <div class="panel" data-panel="play">
-        <section class="block" aria-labelledby="playable-title">
-          <div class="block-head">
+        <section class="block block--lead" aria-label="Играбельное">
+          <div class="block-head block-head--tight">
             <p class="kicker">ВЫБЕРИ ИГРУ</p>
-            <h2 id="playable-title">Топ</h2>
             <p>Открывай, запускай, играй. Без аккаунта, установки и лишних экранов.</p>
           </div>
           <div class="ggrid">
         <a class="gcard" data-art="uno" href="/acid/" data-umami-event="game-open" data-umami-event-game="acid-uno">
-          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-acid.jpg?v=fab230c4" alt=""
+                width="900" height="497" decoding="async" loading="lazy"><i></i><i></i><i></i></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">играть</span></div>
             <h3 class="gcard-title">ACID UNO</h3>
@@ -473,26 +493,9 @@
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
-        <a class="gcard" data-art="tape" href="/avto/" data-umami-event="game-open" data-umami-event-game="avtootvetchik">
-          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
-          <div class="gcard-body">
-            <div class="gcard-top"><span class="status status-alpha">прототип</span></div>
-            <h3 class="gcard-title">АВТООТВЕТЧИК</h3>
-            <p class="gcard-text">Магия вместо оружия: набери очередь из трёх стихий и выпусти.</p>
-            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
-          </div>
-        </a>
-        <a class="gcard" data-art="strike" href="/udar/" data-umami-event="game-open" data-umami-event-game="odin-udar">
-          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
-          <div class="gcard-body">
-            <div class="gcard-top"><span class="status status-alpha">прототип</span></div>
-            <h3 class="gcard-title">ОДИН УДАР</h3>
-            <p class="gcard-text">Быстро бежишь, бьёшь мгновенно, умираешь с одного касания.</p>
-            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
-          </div>
-        </a>
         <a class="gcard" data-art="cubes" href="/tetcolor/" data-umami-event="game-open" data-umami-event-game="tetcolor">
-          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-tetcolor.jpg?v=154d0775" alt=""
+                width="768" height="800" decoding="async" loading="lazy"><i></i><i></i><i></i></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">играть</span></div>
             <h3 class="gcard-title">Тетколор</h3>
@@ -500,12 +503,22 @@
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
-        <a class="gcard" data-art="rps" href="/knb/" data-umami-event="game-open" data-umami-event-game="knb-2">
-          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+        <a class="gcard" data-art="rps" href="/stihii/" data-umami-event="game-open" data-umami-event-game="knb-2">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-stihii.jpg?v=36ad61b7" alt=""
+                width="900" height="497" decoding="async" loading="lazy"><i></i><i></i><i></i></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-alpha">альфа-версия</span></div>
-            <h3 class="gcard-title">KNB: Tactical Evolution</h3>
-            <p class="gcard-text">Дуэль магов на трёх стихиях, где выигрывает не жест, а чтение противника.</p>
+            <h3 class="gcard-title">Битва Стихий</h3>
+            <p class="gcard-text">Огонь, вода и ветер вместо камня, ножниц и бумаги — с ходами, уроном и суперударом.</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
+        </a>
+        <a class="gcard" data-art="elements" href="/technomagic/" data-umami-event="game-open" data-umami-event-game="technomagic">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
+            <h3 class="gcard-title">ТЕХНОМАГИЯ</h3>
+            <p class="gcard-text">Изометрический экшен про техно-магов. Смешивай стихии и смотри, что осталось на полу.</p>
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
@@ -519,7 +532,8 @@
           </div>
           <div class="ggrid">
         <a class="gcard" data-art="orbs" href="/lines/" data-umami-event="game-open" data-umami-event-game="neon-lines">
-          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-lines.jpg?v=4e8876f4" alt=""
+                width="800" height="792" decoding="async" loading="lazy"><i></i><i></i><i></i></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">играть</span></div>
             <h3 class="gcard-title">Неон Линии</h3>
@@ -528,16 +542,18 @@
           </div>
         </a>
         <a class="gcard" data-art="coin" href="/coin/" data-umami-event="game-open" data-umami-event-game="coin-flip">
-          <span class="gart" aria-hidden="true"><i></i><i></i></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-coin.jpg?v=4734bbc2" alt=""
+                width="900" height="497" decoding="async" loading="lazy"><i></i><i></i></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">играть</span></div>
-            <h3 class="gcard-title">Орёл или решка</h3>
-            <p class="gcard-text">Угадывай сторону монеты, собирай серии и попадай в глобальный топ.</p>
+            <h3 class="gcard-title">Деревня</h3>
+            <p class="gcard-text">Монетка выросла в деревню: коровы, молоко, золото и корабль.</p>
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
         <a class="gcard" data-art="dice" href="/leela/" data-umami-event="game-open" data-umami-event-game="leela">
-          <span class="gart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-leela.jpg?v=881595b1" alt=""
+                width="800" height="764" decoding="async" loading="lazy"><i></i><i></i><i></i><i></i><i></i></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">играть</span></div>
             <h3 class="gcard-title">Лила</h3>
@@ -545,6 +561,34 @@
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
+        <a class="gcard" data-art="chain" href="/worm/" data-umami-event="game-open" data-umami-event-game="worm">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-worm.jpg?v=67cb3bb5" alt=""
+                width="900" height="497" decoding="async" loading="lazy"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-live">играть</span></div>
+            <h3 class="gcard-title">Кольчатый</h3>
+            <p class="gcard-text">Проба физики удара: урон считает скорость, а не кнопка.</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
+        </a>
+        <article class="gcard" data-art="blade">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-wip">в сборке</span></div>
+            <h3 class="gcard-title">Один удар</h3>
+            <p class="gcard-text">Быстрый экшен сверху вниз: с одного удара умирают все, включая игрока.</p>
+            <span class="launch">СКОРО</span>
+          </div>
+        </article>
+        <article class="gcard" data-art="rune">
+          <span class="gart" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-wip">в сборке</span></div>
+            <h3 class="gcard-title">Техномагия</h3>
+            <p class="gcard-text">Изометрический экшен про техно-магов в ночном кибер-парке.</p>
+            <span class="launch">СКОРО</span>
+          </div>
+        </article>
           </div>
         </section>
 
@@ -555,12 +599,12 @@
             <p>Обновляются в течение дня и обнуляются в полночь по Москве.</p>
           </div>
           <aside class="records-card">
-            <h3>Орёл / решка</h3>
+            <h3>Деревня</h3>
             <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
             <p class="other-title">Другие игры сегодня</p>
             <ul id="other-today">
               <li data-game="tetcolor"><span>Тетколор</span><b>—</b></li>
-              <li data-game="knb-2"><span>KNB: Tactical Evolution</span><b>—</b></li>
+              <li data-game="knb-2"><span>Битва Стихий</span><b>—</b></li>
               <li data-game="neon-lines"><span>Неон Линии</span><b>—</b></li>
             </ul>
           </aside>
@@ -590,6 +634,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=ed8c4fed" defer></script>
+    <script src="/assets/app.js?v=a2011e84" defer></script>
   </body>
 </html>

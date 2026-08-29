@@ -118,11 +118,16 @@ export function requiredTasks(lesson, mode = store.state.mode) {
 export function lessonState(lesson) {
   const done = lesson.tasks.filter((task) => isTaskDone(lesson.id, task.id));
   const required = requiredTasks(lesson);
-  const requiredDone = required.every((task) => isTaskDone(lesson.id, task.id));
+  const doneRequired = required.filter((task) => isTaskDone(lesson.id, task.id));
   return {
     doneCount: done.length,
     total: lesson.tasks.length,
-    complete: requiredDone,
+    // Сколько нужно именно в текущем режиме: в «пробежать» это одна задача,
+    // в «разобрать» — все. Интерфейс показывает это число, поэтому
+    // переключатель режима сразу видно на карте, а не только внутри урока.
+    requiredDone: doneRequired.length,
+    requiredTotal: required.length,
+    complete: doneRequired.length === required.length,
     mastered: done.length === lesson.tasks.length,
     xp: done.reduce((sum, task) => sum + task.xp, 0),
   };

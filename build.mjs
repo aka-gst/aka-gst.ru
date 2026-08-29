@@ -48,6 +48,21 @@ const ICONS = {
     'M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z',
 };
 
+const TRACK_ICONS = {
+  // Работа — приглашение командной строки: сдержанный, «скучный» символ.
+  work: '<path d="M4 17l5-5-5-5" /><path d="M12 19h8" />',
+  // Игры — геймпад: узнаётся без подписи, за него и цепляется глаз.
+  games:
+    '<path d="M7 12h4M9 10v4" />' +
+    '<circle cx="16" cy="11" r=".6" fill="currentColor" stroke="none" />' +
+    '<circle cx="18" cy="13.5" r=".6" fill="currentColor" stroke="none" />' +
+    '<path d="M17.5 5.5h-11A4.5 4.5 0 0 0 2 10v5a4 4 0 0 0 7 2.6h6A4 4 0 0 0 22 15v-5a4.5 4.5 0 0 0-4.5-4.5z" />',
+};
+
+const trackIcon = (key) =>
+  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TRACK_ICONS[key]}</svg>`;
+
 const socials = site.socials.filter((item) => item.enabled && ICONS[item.id]);
 
 const socialLinks = (place) =>
@@ -201,8 +216,56 @@ const evidenceMark = (project) => {
             </span>`;
 };
 
+// Снимки экрана лежат в assets/shots и версионируются так же, как css и js:
+// Caddy держит /assets/* неделю, без ?v= обновлённая картинка не доедет
+// до вернувшегося посетителя.
+const shotSrc = (file) => `/assets/shots/${file}?v=${assetVersion(`assets/shots/${file}`)}`;
+
+// Размер картинки без внешних зависимостей: у PNG он в IHDR, у JPEG — в
+// маркере SOFn. Нужен в разметке, чтобы браузер занял место под снимок до
+// загрузки: иначе текст под ним прыгает, а прокрутка по блокам промахивается.
+const imageSize = (file) => {
+  const bytes = readFileSync(join(root, 'assets/shots', file));
+  if (bytes.readUInt32BE(0) === 0x89504e47) {
+    return { w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20) };
+  }
+  let i = 2;
+  while (i + 9 < bytes.length) {
+    if (bytes[i] !== 0xff) { i += 1; continue; }
+    const marker = bytes[i + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+      return { h: bytes.readUInt16BE(i + 5), w: bytes.readUInt16BE(i + 7) };
+    }
+    i += 2 + bytes.readUInt16BE(i + 2);
+  }
+  throw new Error(`не прочитан размер: ${file}`);
+};
+
+const shotImg = (shot) => {
+  const { w, h } = imageSize(shot.file);
+  return `<img src="${esc(shotSrc(shot.file))}" alt="${esc(shot.alt)}"
+                width="${w}" height="${h}" decoding="async" loading="lazy">`;
+};
+
+// На первом экране снимок подписан: там он читается как часть отчёта.
+const figure = (shot) => `
+            <figure class="shot">
+              ${shotImg(shot)}
+              <figcaption>${esc(shot.caption)}</figcaption>
+            </figure>`;
+
+// На карточке — только первый снимок и без подписи. Подпись встала бы между
+// картинкой и названием: читатель увидел бы снимок раньше, чем узнал, чей он.
+// Смысл подписи там несёт alt, а рядом уже стоит строка описания.
+const cardShot = (project) =>
+  project.shots?.length
+    ? `
+          <figure class="shot">${shotImg(project.shots[0])}</figure>`
+    : '';
+
 const card = (project, index) => `
-        <article class="card" id="p-${esc(project.id)}">${metricBand(project)}
+        <article class="card" id="p-${esc(project.id)}">${metricBand(project)}${cardShot(project)}
           <div class="card-head">
             <p class="kicker">${esc(project.kicker)}</p>
             <span class="card-marks">${evidenceMark(project)}${statusBadge(project)}</span>
@@ -254,6 +317,13 @@ const suiteRows = qa.tests.suites
 
 const live = qa.evaluation.live;
 const det = qa.evaluation.deterministic;
+
+// Доказательство к числам выше: сам отчёт и консоль, которой их снимали.
+const reportProof = flagship.shots?.length
+  ? `
+        <div class="report-proof">${flagship.shots.map(figure).join('')}
+        </div>`
+  : '';
 
 const reportScreen = `
       <section class="report" aria-labelledby="flagship-title">
@@ -317,7 +387,7 @@ const reportScreen = `
 )} мс, stability ${esc(live.stability.min.toFixed(3))}.</p>
           </div>
         </div>
-
+${reportProof}
         <p class="report-context">
           <span>Live-прогон — <b>${esc(
             live.source
@@ -446,16 +516,26 @@ const workPanel = `
 
 // ── Панель «Игры» ────────────────────────────────────────────────────
 const gameCard = (project) => {
-  const link = primaryLink(project);
+  // Только ссылка на саму игру. Иначе карточка звала «ЗАПУСТИТЬ», а вела
+  // в репозиторий с кодом — обещание, которого страница не выполняет.
+  const link = project.links.find((l) => l.type === 'play') || null;
   const tag = link ? 'a' : 'article';
   const href = link ? ` href="${esc(link.url)}"` : '';
   // Графика собирается из пустых <i>: рисует её CSS, лишних файлов нет.
   const pips = { uno: 3, cubes: 3, rps: 3, orbs: 3, coin: 2, dice: 5 }[project.art] || 3;
+  // Кадр из самой игры — фоном под анимацией. Он не заменяет её, а даёт
+  // карточке настоящую палитру игры вместо абстрактного градиента.
+  // alt пустой: родитель и так aria-hidden, картинка здесь декоративная.
+  const back = project.shots?.length
+    ? (({ file }, { w, h } = imageSize(file)) =>
+        `<img class="gshot" src="${esc(shotSrc(file))}" alt=""
+                width="${w}" height="${h}" decoding="async" loading="lazy">`)(project.shots[0])
+    : '';
   return `
         <${tag} class="gcard"${
     project.art ? ` data-art="${esc(project.art)}"` : ''
   }${href}${link ? analytics(project) : ''}>
-          <span class="gart" aria-hidden="true">${'<i></i>'.repeat(pips)}</span>
+          <span class="gart" aria-hidden="true">${back}${'<i></i>'.repeat(pips)}</span>
           <div class="gcard-body">
             <div class="gcard-top">${statusBadge(project)}</div>
             <h3 class="gcard-title">${esc(project.title)}</h3>
@@ -473,7 +553,7 @@ const recordsBlock = `
             <p>Обновляются в течение дня и обнуляются в полночь по Москве.</p>
           </div>
           <aside class="records-card">
-            <h3>Орёл / решка</h3>
+            <h3>Деревня</h3>
             <ol id="coin-today"><li><span>Рекордов пока нет</span><b>—</b></li></ol>
             <p class="other-title">Другие игры сегодня</p>
             <ul id="other-today">${leaderboards
@@ -488,10 +568,9 @@ const recordsBlock = `
         </section>`;
 
 const playPanel = `
-        <section class="block" aria-labelledby="playable-title">
-          <div class="block-head">
+        <section class="block block--lead" aria-label="Играбельное">
+          <div class="block-head block-head--tight">
             <p class="kicker">ВЫБЕРИ ИГРУ</p>
-            <h2 id="playable-title">Топ</h2>
             <p>${esc(site.tracks.play.intro)}</p>
           </div>
           <div class="ggrid">${playable.map(gameCard).join('')}
@@ -554,12 +633,12 @@ const html = `<!doctype html>
     <header class="topbar">
       <a class="brand" href="/">aka<span>-</span>gst</a>
       <div class="track-switch" role="group" aria-label="Раздел сайта">
-        <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${esc(
-          site.tracks.work.label
-        )}</button>
-        <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play">${esc(
-          site.tracks.play.label
-        )}</button>
+        <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
+          'work'
+        )}<span>${esc(site.tracks.work.label)}</span></button>
+        <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play">${trackIcon(
+          'games'
+        )}<span>${esc(site.tracks.play.label)}</span></button>
       </div>
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}

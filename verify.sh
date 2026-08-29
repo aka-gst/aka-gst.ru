@@ -51,8 +51,8 @@ expect() {
 }
 
 echo "== страницы =="
-for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /qa-quest/ /acid/ /avto/ /udar/ \
-         /psy-admin/ /photodata/ /tetcolor/ /knb/ /lines/ /coin/ \
+for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /qa-quest/ /acid/ \
+         /psy-admin/ /photodata/ /tetcolor/ /stihii/ /lines/ /coin/ \
          /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
   expect "$p" 200
 done
@@ -63,6 +63,20 @@ for p in /.githooks/private-words.txt /.githooks/pre-commit /.gitignore /README.
          /build.mjs /deploy.sh /verify.sh /Caddyfile /sync-portfolio.sh; do
   expect "$p" 404
 done
+
+echo
+echo "== старые адреса перенаправляют, а не теряются =="
+# Имена функций и переменных в sh только латиницей: кириллица здесь
+# не идентификатор, и скрипт падает на разборе.
+moved() {
+  from="$1"; to="$2"
+  # shellcheck disable=SC2086
+  target=$(curl -s $RETRY -o /dev/null -w '%{redirect_url}' "$BASE$from")
+  if [ "$target" = "$BASE$to" ]; then say_ok "$from -> $to"
+  else say_bad "$from ведёт на «$target», ждали $BASE$to"; fi
+}
+moved /knb/ /stihii/
+moved /tetris/ /tetcolor/
 
 echo
 echo "== опечатка в адресе даёт страницу, а не пустоту =="
@@ -81,7 +95,7 @@ echo "== ассеты, на которые ссылается сама стра�
 # shellcheck disable=SC2086
 page=$(curl -s $RETRY "$BASE/")
 printf '%s' "$page" \
-  | grep -oE '(href|src)="/[^"]+\.(css|js|svg|png)(\?[^"]*)?"' \
+  | grep -oE '(href|src)="/[^"]+\.(css|js|svg|png|jpg)(\?[^"]*)?"' \
   | sed 's/.*="//; s/"$//' | sort -u \
   | while IFS= read -r asset; do
       got=$(code "$BASE$asset")
@@ -110,7 +124,8 @@ fi
 
 echo
 echo "== содержимое, а не только код ответа =="
-for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="social"'; do
+for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="social"' \
+              'class="shot"' 'assets/shots/allure-gateway.png'; do
   if printf '%s' "$page" | grep -q "$needle"; then say_ok "на странице есть $needle"
   else say_bad "на странице НЕТ $needle"; fi
 done

@@ -114,15 +114,46 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
 }
 .track-switch button {
   appearance: none; border: 0; cursor: pointer;
-  padding: 7px 16px; border-radius: 999px;
-  background: transparent; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 15px; border-radius: 999px;
+  background: transparent;
+  /* Неактивная вкладка была приглушённо-серой и читалась как надпись, а не
+     как выбор: живой человек не нашёл, как перейти к играм. Теперь она
+     полноцветная, и переключатель виден как переключатель. */
+  color: var(--text);
   font: inherit; font-size: 13px; font-weight: 600;
   transition: background .15s ease, color .15s ease;
 }
-.track-switch button:hover { color: var(--text); }
+/* Игры зовут ярче работы — за них и цепляется глаз. Значок геймпада
+   светится акцентом даже когда вкладка не выбрана. */
+.track-switch [data-track-to="play"] svg { color: var(--accent); }
+.track-switch button:hover { background: var(--bg-soft); }
 html[data-track="work"] .track-switch [data-track-to="work"],
 html[data-track="play"] .track-switch [data-track-to="play"] {
   background: var(--accent); color: #08120c; box-shadow: var(--glow);
+}
+/* У выбранной вкладки значок идёт цветом подложки, иначе акцент на акценте. */
+html[data-track="play"] .track-switch [data-track-to="play"] {
+  /* Игровой трек светится своим цветом, а не общим зелёным. */
+  background: var(--neon); color: #f6f2ff;
+  box-shadow: 0 0 22px rgba(154, 99, 255, .5);
+}
+html[data-track="play"] .track-switch [data-track-to="play"] svg { color: #f6f2ff; }
+
+/* Выбранная вкладка чуть дышит — тем же приёмом, что полоски в шапке игр. */
+@media (prefers-reduced-motion: no-preference) {
+  .track-switch button[aria-pressed="true"] { animation: tabGlow 3.2s ease-in-out infinite; }
+}
+@keyframes tabGlow {
+  0%, 100% { box-shadow: 0 0 14px rgba(94, 227, 155, .28); }
+  50%      { box-shadow: 0 0 26px rgba(94, 227, 155, .55); }
+}
+html[data-track="play"] .track-switch button[aria-pressed="true"] {
+  animation-name: tabGlowPlay;
+}
+@keyframes tabGlowPlay {
+  0%, 100% { box-shadow: 0 0 16px rgba(154, 99, 255, .35); }
+  50%      { box-shadow: 0 0 30px rgba(154, 99, 255, .65); }
 }
 
 .socials { display: flex; gap: 4px; }
@@ -223,12 +254,90 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 .report-context b { color: var(--warn); font-family: var(--mono); font-weight: 600; }
 .report-context time { font-family: var(--mono); }
 
+/* ── Снимки экрана ───────────────────────────────────────────────── */
+/* Снимок здесь не украшение, а доказательство к числам рядом: отчёт,
+   консоль, урок. width/height проставлены в разметке, чтобы место под
+   картинку резервировалось до загрузки и текст под ней не прыгал. */
+.shot { margin: 0; }
+.shot img {
+  display: block; width: 100%; height: auto;
+  object-fit: cover; object-position: top center;
+  background: var(--bg-soft);
+}
+.shot figcaption { font-size: 11.5px; line-height: 1.45; color: var(--dim); }
+
+/* На первом экране снимки показываем целиком: это продолжение отчёта,
+   поэтому и сетка, и фон те же, что у «Слоёв тестов» над ними. */
+.report-proof {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px;
+  background: var(--line); border-top: 1px solid var(--line);
+}
+.report-proof .shot { padding: 18px 22px; background: var(--panel); }
+.report-proof .shot img {
+  aspect-ratio: 8 / 5;
+  border: 1px solid var(--line); border-radius: 8px;
+}
+.report-proof .shot figcaption { padding-top: 10px; }
+
+/* На карточке снимок идёт во всю ширину — как полоса чисел над ним,
+   поэтому его выводим из общего правила с полями по 20px. */
+.card > .shot { margin: 0; }
+.card > .shot img {
+  /* Обрезаем низ, а не верх: в интерфейсах смысл собран в шапке экрана. */
+  aspect-ratio: 16 / 9;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+/* Полоса чисел уже закрыла стык своей нижней линией — вторая дала бы 2px. */
+.band + .shot img { border-top: 0; }
+
+/* ── Прокрутка по блокам ─────────────────────────────────────────── */
+
+html { scroll-behavior: smooth; }
+
+/* Родная привязка оставлена запасным вариантом на случай, если скрипт не
+   выполнится. Жёсткую (mandatory) ставить нельзя: проверено — она делает
+   раздел выше экрана нечитаемым, прокрутка упирается и не пускает вниз.
+   Когда app.js берёт магнит на себя, он гасит эту привязку сам.
+   На узких экранах не включаем вовсе: там она мешает больше, чем помогает. */
+@media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
+  html { scroll-snap-type: y proximity; }
+  .report, .block {
+    scroll-snap-align: start; scroll-margin-top: 88px;
+    /* Остановка обязательна: без неё proximity почти никогда не срабатывает
+       при инерционной прокрутке трекпадом, и «листания» не видно вовсе.
+       Действует только на блоки, которые остались точками привязки, —
+       длинные разделы ниже её теряют вместе с привязкой. */
+    scroll-snap-stop: always;
+  }
+  /* Раздел, который не помещается в экран, привязку к своему НАЧАЛУ
+     сохраняет — приятно попадать на заголовок. Он теряет обязательную
+     остановку, чтобы сквозь него можно было прокрутить не запинаясь.
+     Класс вешает app.js по замеру. */
+  .report.is-tall, .block.is-tall { scroll-snap-stop: normal; }
+}
+
+/* Проявление блока при входе в экран. Класс data-reveal ставит app.js, а не
+   разметка: если скрипт не выполнится, содержимое просто останется видимым,
+   а не исчезнет навсегда. */
+[data-reveal] {
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .6s cubic-bezier(.22, .61, .36, 1), transform .6s cubic-bezier(.22, .61, .36, 1);
+}
+[data-reveal].is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+
 /* ── Общие блоки ──────────────────────────────────────────────────── */
 
 .block { margin-top: 64px; }
 /* Первому блоку панели верхний отступ не нужен: над ним только шапка сайта. */
 .panel > .block:first-child { margin-top: 34px; }
-/* После шапки-логотипа блок идёт ближе: сама шапка уже задаёт паузу. */
+/* Без заголовка блоку не нужен прежний отступ — карточки поднимаются выше. */
+.block--lead { margin-top: 20px; }
+.block-head--tight { margin-bottom: 14px; }
+.block-head--tight .kicker + p { margin-top: 6px; }
 .block-head { max-width: 720px; margin-bottom: 22px; }
 .block-head h2 { margin: 8px 0 10px; font-size: clamp(22px, 2.6vw, 30px); }
 .block-head > p:last-child { color: var(--muted); font-size: 14px; }
@@ -244,7 +353,8 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
   transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
 .card:hover { border-color: var(--dim); background: var(--card-hover); transform: translateY(-2px); }
-.card > *:not(.band) { margin-left: 20px; margin-right: 20px; }
+/* Полоса чисел и снимок идут во всю ширину карточки, остальное — с полями. */
+.card > *:not(.band):not(.shot) { margin-left: 20px; margin-right: 20px; }
 .card h3 { font-size: 19px; }
 .card-title {
   color: inherit; text-decoration: none;
@@ -275,13 +385,23 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 }
 .band dd {
   margin: 3px 0 0; font-size: 10px; line-height: 1.3; color: var(--dim);
+  /* Две строки резервируются всегда: иначе подпись вроде «внешних
+     зависимостей» переносится, полоса становится выше соседних, и весь
+     текст карточки съезжает вниз относительно других в ряду. */
+  min-height: 2.6em;
 }
 .band > div[title] { cursor: help; }
 
 .card-head { position: relative; display: flex; align-items: center; gap: 10px; padding-top: 14px; }
 /* Служебная строка карточки: у .kicker своё правило, наследование его не
    перебивает, поэтому задаём размер явно. */
-.card-head .kicker { font-size: 10px; }
+.card-head .kicker {
+  font-size: 10px;
+  /* Перенос запрещён: длинная подпись раньше уводила заголовок карточки
+     на строку ниже соседних по ряду, и заметить это можно было только
+     линейкой. Теперь она обрежется — видимо, а не молча. */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
 .card-marks { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 
 /* Значок «чем покрыто». Раскрывается по наведению и по касанию:
@@ -337,7 +457,6 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 }
 .status-alpha, .status-demo { border-color: #4a3a18; background: #2a2110; color: var(--warn); }
 .status-wip { color: var(--dim); }
-
 
 /* Используются на /praktikum/: карточки главной перешли на .band, но
    индекс раздела по-прежнему рисует чипы. */
@@ -454,6 +573,18 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
   background: radial-gradient(circle at 50% 120%, rgba(154, 99, 255, .3), transparent 62%), var(--bg-soft);
   border-bottom: 1px solid var(--line);
 }
+/* Кадр из игры лежит под пипсами: они идут следом в разметке и потому
+   рисуются поверх — анимация остаётся главной, картинка даёт палитру.
+   На наведении она разгорается и чуть наезжает, .gart её обрезает. */
+.gshot {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: .2; filter: saturate(1.15);
+  transition: opacity .25s ease, transform .35s ease;
+}
+a.gcard:hover .gshot,
+a.gcard:focus-visible .gshot,
+a.gcard.is-mobile-active .gshot { opacity: .4; transform: scale(1.08); }
+
 .gart i {
   position: absolute; display: block;
   transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;
@@ -468,27 +599,36 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
 [data-art="uno"] .gart i:nth-child(1) { transform: rotate(-16deg) translateX(-26px); }
 [data-art="uno"] .gart i:nth-child(2) { transform: translateY(-4px); background: linear-gradient(150deg, var(--neon-2), var(--neon)); }
 [data-art="uno"] .gart i:nth-child(3) { transform: rotate(16deg) translateX(26px); background: linear-gradient(150deg, var(--warn), var(--accent)); }
-[data-art="uno"]:hover .gart i:nth-child(1) { transform: rotate(-26deg) translateX(-40px) translateY(-6px); }
-[data-art="uno"]:hover .gart i:nth-child(2) { transform: translateY(-14px) scale(1.06); }
-[data-art="uno"]:hover .gart i:nth-child(3) { transform: rotate(26deg) translateX(40px) translateY(-6px); }
+[data-art="uno"]:hover .gart i:nth-child(1),
+[data-art="uno"].is-mobile-active .gart i:nth-child(1) { transform: rotate(-26deg) translateX(-40px) translateY(-6px); }
+[data-art="uno"]:hover .gart i:nth-child(2),
+[data-art="uno"].is-mobile-active .gart i:nth-child(2) { transform: translateY(-14px) scale(1.06); }
+[data-art="uno"]:hover .gart i:nth-child(3),
+[data-art="uno"].is-mobile-active .gart i:nth-child(3) { transform: rotate(26deg) translateX(40px) translateY(-6px); }
 
 /* Тетколор — падающая колонка из трёх кубиков. */
 [data-art="cubes"] .gart i { width: 30px; height: 30px; border-radius: 5px; }
 [data-art="cubes"] .gart i:nth-child(1) { transform: translateY(-32px); background: var(--fail); }
 [data-art="cubes"] .gart i:nth-child(2) { background: var(--warn); }
 [data-art="cubes"] .gart i:nth-child(3) { transform: translateY(32px); background: var(--accent); }
-[data-art="cubes"]:hover .gart i:nth-child(1) { transform: translateY(-4px); }
-[data-art="cubes"]:hover .gart i:nth-child(2) { transform: translateY(28px); }
-[data-art="cubes"]:hover .gart i:nth-child(3) { transform: translateY(60px); opacity: 0; }
+[data-art="cubes"]:hover .gart i:nth-child(1),
+[data-art="cubes"].is-mobile-active .gart i:nth-child(1) { transform: translateY(-4px); }
+[data-art="cubes"]:hover .gart i:nth-child(2),
+[data-art="cubes"].is-mobile-active .gart i:nth-child(2) { transform: translateY(28px); }
+[data-art="cubes"]:hover .gart i:nth-child(3),
+[data-art="cubes"].is-mobile-active .gart i:nth-child(3) { transform: translateY(60px); opacity: 0; }
 
 /* КНБ — три метки по дуге. */
 [data-art="rps"] .gart i { width: 34px; height: 34px; border: 2px solid var(--neon-2); }
 [data-art="rps"] .gart i:nth-child(1) { border-radius: 50%; transform: translateX(-40px); }
 [data-art="rps"] .gart i:nth-child(2) { border-radius: 4px; transform: rotate(45deg); }
 [data-art="rps"] .gart i:nth-child(3) { border-radius: 3px; transform: translateX(40px); border-color: var(--accent); }
-[data-art="rps"]:hover .gart i:nth-child(1) { transform: translateX(-46px) translateY(-8px) scale(1.1); }
-[data-art="rps"]:hover .gart i:nth-child(2) { transform: rotate(225deg) scale(1.1); }
-[data-art="rps"]:hover .gart i:nth-child(3) { transform: translateX(46px) translateY(8px) scale(1.1); }
+[data-art="rps"]:hover .gart i:nth-child(1),
+[data-art="rps"].is-mobile-active .gart i:nth-child(1) { transform: translateX(-46px) translateY(-8px) scale(1.1); }
+[data-art="rps"]:hover .gart i:nth-child(2),
+[data-art="rps"].is-mobile-active .gart i:nth-child(2) { transform: rotate(225deg) scale(1.1); }
+[data-art="rps"]:hover .gart i:nth-child(3),
+[data-art="rps"].is-mobile-active .gart i:nth-child(3) { transform: translateX(46px) translateY(8px) scale(1.1); }
 
 /* Неон Линии — шары, выстраивающиеся в линию. */
 [data-art="orbs"] .gart i {
@@ -498,9 +638,24 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
 [data-art="orbs"] .gart i:nth-child(1) { background: var(--fail); color: var(--fail); transform: translate(-34px, -14px); }
 [data-art="orbs"] .gart i:nth-child(2) { background: var(--neon-2); color: var(--neon-2); transform: translate(4px, 16px); }
 [data-art="orbs"] .gart i:nth-child(3) { background: var(--accent); color: var(--accent); transform: translate(38px, -6px); }
-[data-art="orbs"]:hover .gart i:nth-child(1) { transform: translate(-36px, 0); }
-[data-art="orbs"]:hover .gart i:nth-child(2) { transform: translate(0, 0); }
-[data-art="orbs"]:hover .gart i:nth-child(3) { transform: translate(36px, 0); }
+[data-art="orbs"]:hover .gart i:nth-child(1),
+[data-art="orbs"].is-mobile-active .gart i:nth-child(1) { transform: translate(-36px, 0); }
+[data-art="orbs"]:hover .gart i:nth-child(2),
+[data-art="orbs"].is-mobile-active .gart i:nth-child(2) { transform: translate(0, 0); }
+[data-art="orbs"]:hover .gart i:nth-child(3),
+[data-art="orbs"].is-mobile-active .gart i:nth-child(3) { transform: translate(36px, 0); }
+
+/* Техномагия — три стихии. Врозь они лежат по углам, при наведении
+   сходятся в одну точку: в этом вся игра. */
+[data-art="elements"] .gart i {
+  width: 24px; height: 24px; border-radius: 50%;
+  box-shadow: 0 0 16px currentColor;
+}
+[data-art="elements"] .gart i:nth-child(1) { background: #ff5a1f; color: #ff5a1f; transform: translate(-38px, 10px); }
+[data-art="elements"] .gart i:nth-child(2) { background: #4de1ff; color: #4de1ff; transform: translate(0, -18px); }
+[data-art="elements"] .gart i:nth-child(3) { background: #ffe14d; color: #ffe14d; transform: translate(38px, 10px); }
+[data-art="elements"]:hover .gart i,
+[data-art="elements"].is-mobile-active .gart i { transform: translate(0, 0); opacity: .85; }
 
 /* Орёл или решка — монета, переворачивающаяся при наведении. */
 [data-art="coin"] .gart { perspective: 420px; }
@@ -509,8 +664,52 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
   border: 2px solid var(--warn); background: radial-gradient(circle at 34% 30%, #3a3016, #16130a);
 }
 [data-art="coin"] .gart i:nth-child(2) { border-color: var(--accent); opacity: 0; }
-[data-art="coin"]:hover .gart i:nth-child(1) { transform: rotateY(180deg) scale(.9); opacity: 0; }
-[data-art="coin"]:hover .gart i:nth-child(2) { transform: rotateY(360deg); opacity: 1; }
+[data-art="coin"]:hover .gart i:nth-child(1),
+[data-art="coin"].is-mobile-active .gart i:nth-child(1) { transform: rotateY(180deg) scale(.9); opacity: 0; }
+[data-art="coin"]:hover .gart i:nth-child(2),
+[data-art="coin"].is-mobile-active .gart i:nth-child(2) { transform: rotateY(360deg); opacity: 1; }
+
+/* Кольчатый — три звена цепи, растягивающиеся при наведении. */
+[data-art="chain"] .gart i {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 3px solid var(--neon-2); background: none;
+}
+[data-art="chain"] .gart i:nth-child(1) { transform: translateX(-22px); }
+[data-art="chain"] .gart i:nth-child(3) { transform: translateX(22px); border-color: var(--accent); }
+[data-art="chain"]:hover .gart i:nth-child(1),
+[data-art="chain"].is-mobile-active .gart i:nth-child(1) { transform: translate(-44px, -10px); }
+[data-art="chain"]:hover .gart i:nth-child(3),
+[data-art="chain"].is-mobile-active .gart i:nth-child(3) { transform: translate(44px, 10px); }
+
+/* Один удар — клинок и след от рывка. */
+[data-art="blade"] .gart i:nth-child(1) {
+  width: 4px; height: 62px; border-radius: 2px; background: var(--fail);
+  transform: rotate(28deg);
+}
+[data-art="blade"] .gart i:nth-child(2) {
+  width: 54px; height: 2px; background: linear-gradient(90deg, transparent, var(--warn));
+  transform: translate(-6px, 16px);
+}
+[data-art="blade"] .gart i:nth-child(3) {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--warn);
+  transform: translate(26px, -22px);
+}
+[data-art="blade"]:hover .gart i:nth-child(1),
+[data-art="blade"].is-mobile-active .gart i:nth-child(1) { transform: rotate(-32deg) scale(1.05); }
+[data-art="blade"]:hover .gart i:nth-child(2),
+[data-art="blade"].is-mobile-active .gart i:nth-child(2) { transform: translate(14px, 16px) scaleX(1.4); }
+
+/* Техномагия — руна из трёх граней. */
+[data-art="rune"] .gart i {
+  width: 30px; height: 30px; border: 2px solid var(--neon); background: none;
+}
+[data-art="rune"] .gart i:nth-child(1) { transform: rotate(45deg) translateY(-14px); }
+[data-art="rune"] .gart i:nth-child(2) { border-radius: 50%; border-color: var(--neon-2); }
+[data-art="rune"] .gart i:nth-child(3) { transform: rotate(45deg) translateY(14px); }
+[data-art="rune"]:hover .gart i:nth-child(1),
+[data-art="rune"].is-mobile-active .gart i:nth-child(1) { transform: rotate(135deg) translateY(-20px); }
+[data-art="rune"]:hover .gart i:nth-child(3),
+[data-art="rune"].is-mobile-active .gart i:nth-child(3) { transform: rotate(-45deg) translateY(20px); }
 
 /* Лила — пять клеток поля. */
 [data-art="dice"] .gart i { width: 16px; height: 16px; border-radius: 3px; background: var(--line); border: 1px solid var(--dim); }
@@ -519,7 +718,8 @@ a.gcard:hover, a.gcard:focus-visible, a.gcard.is-mobile-active {
 [data-art="dice"] .gart i:nth-child(3) { transform: translate(30px, 0); }
 [data-art="dice"] .gart i:nth-child(4) { transform: translate(0, 20px); }
 [data-art="dice"] .gart i:nth-child(5) { transform: translate(-30px, 20px); }
-[data-art="dice"]:hover .gart i:nth-child(3) { background: var(--accent); border-color: var(--accent); }
+[data-art="dice"]:hover .gart i:nth-child(3),
+[data-art="dice"].is-mobile-active .gart i:nth-child(3) { background: var(--accent); border-color: var(--accent); }
 
 /* Автоответчик — кассета: две катушки и лента, которая перематывается. */
 [data-art="tape"] .gart i {
@@ -592,6 +792,7 @@ article.gcard .launch { color: var(--dim); }
 @media (max-width: 900px) {
   .report-grid { grid-template-columns: 1fr; gap: 26px; padding: 24px 20px; }
   .report-detail { grid-template-columns: 1fr; }
+  .report-proof { grid-template-columns: 1fr; }
   .job { grid-template-columns: 1fr; }
   .job-period { grid-row: auto; }
   .list li { grid-template-columns: 1fr auto; }
@@ -601,7 +802,15 @@ article.gcard .launch { color: var(--dim); }
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
-  .track-switch { order: 3; width: 100%; margin-left: 0; justify-content: center; }
+  /* На телефоне переключатель — главный элемент шапки: две крупные цели
+     во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь
+     переход к играм именно потому, что цель была маленькой и тусклой. */
+  .track-switch { order: 3; width: 100%; margin-left: 0; padding: 4px; }
+  .track-switch button {
+    flex: 1 1 0; justify-content: center;
+    padding: 12px 14px; font-size: 15px; gap: 9px;
+  }
+  .track-switch button svg { width: 19px; height: 19px; }
   .socials { margin-left: auto; }
   .sitefoot { padding: 20px 16px 36px; }
   .report-metrics { grid-template-columns: 1fr; }

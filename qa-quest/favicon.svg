@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0b0713"/>
-  <path d="M14 43 32 12l18 31h-9l-3-6H26l-3 6Zm16-14h4l-2-5Z" fill="#86ffad"/>
-  <path d="M16 47h32" stroke="#b976ff" stroke-width="5" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="QA Quest">
+  <!-- Знак квеста, тот же что в шапке: Q с курсором. В сеттинге ночного
+       взлома он читается как приглашение терминала, ждущего команду.
+       Формы намеренно толстые: иконка живёт размером 16 пикселей. -->
+  <rect width="64" height="64" rx="14" fill="#081018"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="none" stroke="#1d4256" stroke-width="3"/>
+  <circle cx="25" cy="28" r="11.5" fill="none" stroke="#67e8f9" stroke-width="7"/>
+  <path d="M29 34 L37 43" stroke="#67e8f9" stroke-width="7" stroke-linecap="round"/>
+  <path d="M43 43 h9" stroke="#72f1b8" stroke-width="6.5" stroke-linecap="round"/>
 </svg>
