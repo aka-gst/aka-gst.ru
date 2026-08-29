@@ -44,7 +44,6 @@ player-name.js
 assets
 data
 praktikum
-acid
 qa-quest
 psy-admin
 photodata
@@ -151,6 +150,9 @@ fi
 
 echo
 echo "== содержимое сайта =="
+# acid/ здесь намеренно нет: игра выкладывается из github.com/aka-gst/acid-uno
+# своей сессией. Моя копия отставала, и выкладка клала её поверх свежей —
+# на телефоне это выглядело как «всё ещё старое».
 # --delete-excluded не используем: coin/, lines/ и knb/ выкладываются
 # из своих репозиториев и в этом дереве отсутствуют.
 if $go; then

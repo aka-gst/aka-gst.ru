@@ -47,6 +47,10 @@ function briefing() {
   const mode = store.state.mode;
   const body = el('div', { class: 'brief-body' });
 
+  // Сюжетная рамка идёт отдельным блоком и намеренно не смешивается с
+  // объяснением: обстановка помогает дойти до финала, но учит не она.
+  if (lesson.story) body.append(el('p', { class: 'brief-story', text: lesson.story }));
+
   if (mode === 'sprint') {
     body.append(el('div', { class: 'brief-idea', html: lesson.sprint.idea }));
     if (lesson.tasks.length > 1) {
@@ -70,6 +74,15 @@ function briefing() {
         ])),
       ]));
     }
+  }
+
+  // Сеттинг не должен съесть предмет: за сюжетной рамкой человек обязан видеть,
+  // какой именно навык он унёс. Строка показывается в обоих режимах.
+  if (lesson.learned) {
+    body.append(el('p', { class: 'brief-learned' }, [
+      el('span', { text: 'Чему ты здесь научился: ' }),
+      lesson.learned,
+    ]));
   }
 
   decorateGlossary(body);
@@ -250,9 +263,26 @@ function writeConsole(text, tone = '') {
  * переписывать. Без неё остаётся гадать по числу брошенных попыток.
  */
 function stuckButton(task) {
+  const lesson = view.lesson;
+
+  // Если бот заведён, кнопка ведёт прямо в переписку с автором и приносит
+  // туда контекст: он сразу знает, на каком шаге человек застрял. Молча
+  // отмеченное место в счётчике не помогает тому, кто застрял сейчас.
+  const bot = window.QA_QUEST_BOT;
+  if (bot) {
+    const link = el('a', {
+      class: 'text-button stuck-button',
+      href: `https://t.me/${bot}?start=stuck-${lesson.id}-${task.id}`,
+      target: '_blank',
+      rel: 'noopener',
+    }, 'Здесь непонятно — спросить автора');
+    link.addEventListener('click', () => track.stuck(lesson, task));
+    return link;
+  }
+
   const button = el('button', { class: 'text-button stuck-button' }, 'Здесь непонятно');
   button.addEventListener('click', () => {
-    track.stuck(view.lesson, task);
+    track.stuck(lesson, task);
     button.textContent = 'Спасибо, отмечено';
     button.disabled = true;
   });
@@ -430,6 +460,38 @@ async function run() {
   if (!outcome.already) view.onProgress(outcome, lesson, task);
 }
 
+/** Показывает, что в прокручиваемом блоке осталось нечитанное. */
+function setupScrollHint(panel) {
+  if (!panel) return;
+  const hint = el('button', {
+    class: 'scroll-hint',
+    type: 'button',
+    'aria-label': 'Прокрутить разбор дальше',
+    onclick: () => panel.scrollBy({ top: panel.clientHeight * 0.8, behavior: 'smooth' }),
+  }, '↓');
+  // Подсказка живёт в обёртке, а не внутри прокрутки: иначе её появление
+  // меняло бы высоту содержимого и блок дёргался бы на последних пикселях.
+  (panel.parentElement || panel).append(hint);
+
+  const update = () => {
+    const left = panel.scrollHeight - panel.scrollTop - panel.clientHeight;
+    (panel.parentElement || panel).classList.toggle('has-more', left > 8);
+  };
+  panel.addEventListener('scroll', update, { passive: true });
+
+  // Одного кадра мало: на первом проходе шрифты и вёрстка ещё не устоялись, и
+  // расчёт давал «прокручивать нечего» там, где текст на деле не помещался.
+  // Наблюдатель за размером сам пересчитает, когда высота станет настоящей —
+  // и при изменении окна тоже.
+  if (typeof ResizeObserver === 'function') {
+    const observer = new ResizeObserver(update);
+    observer.observe(panel);
+    const inner = panel.firstElementChild;
+    if (inner) observer.observe(inner);
+  }
+  requestAnimationFrame(() => requestAnimationFrame(update));
+}
+
 /* ---------- сборка экрана ---------- */
 
 export function renderLesson(root, lesson, context) {
@@ -470,7 +532,7 @@ export function renderLesson(root, lesson, context) {
     ]),
 
     el('div', { class: 'lesson-main' }, [
-      el('article', { class: 'brief panel' }, [
+      el('div', { class: 'brief-wrap panel' }, el('article', { class: 'brief' }, [
         el('div', { class: 'brief-head' }, [
           el('div', {}, [
             el('div', { class: 'eyebrow' }, [
@@ -483,7 +545,7 @@ export function renderLesson(root, lesson, context) {
           el('div', { class: 'reward', text: `+${currentTask().xp} XP` }),
         ]),
         briefing(),
-      ]),
+      ])),
       // Задача живёт вне прокручиваемого разбора: в режиме «разобрать»
       // теория длинная, и условие не должно уезжать за край экрана.
       el('div', { class: 'task-block panel' }, [
@@ -498,6 +560,11 @@ export function renderLesson(root, lesson, context) {
 
     lab ? checklistPanel(rerender) : consolePanel(),
   );
+
+  // Разбор прокручивается, но на macOS полоса прокрутки скрыта, и текст
+  // просто обрывается на полуслове — со стороны это выглядит как конец урока.
+  // Затемнение снизу и кнопка говорят, что там есть ещё, и доводят до конца.
+  setupScrollHint(root.querySelector('.brief'));
 
   decorateGlossary(root.querySelector('.task-card'));
   if (!lab) {

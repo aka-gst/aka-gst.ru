@@ -257,3 +257,29 @@ def count_tokens(text):
 def dialog_tokens(messages):
     return sum(count_tokens(message['content']) for message in messages)
 `;
+
+/**
+ * Стенд финальной миссии: сервер, который можно защищать и ломать.
+ *
+ * Дыра в weak_allow выбрана не случайно — это ровно та ошибка, о которой
+ * предупреждает урок про логические операторы: or там, где нужно and. Сюжет
+ * тем самым окупает пройденное, а не украшает его.
+ */
+export const SERVER = String.raw`
+SECRET_TOKEN = 'ice-7f3a-9b2c'
+ALLOWED_ROLES = ('admin', 'operator')
+
+ACCESS_LOG = []
+
+
+def weak_allow(user):
+    """Чужая защита. Выглядит разумно, но пропускает не только своих."""
+    return user.get('token') == SECRET_TOKEN or user.get('role') == 'admin'
+
+
+def try_enter(check, user):
+    """Пробует пройти защиту и записывает попытку в журнал."""
+    passed = bool(check(user))
+    ACCESS_LOG.append({'user': dict(user), 'passed': passed})
+    return passed
+`;
