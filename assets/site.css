@@ -745,7 +745,9 @@ article.gcard .launch { color: var(--dim); }
   font-family: var(--mono); font-size: 12px; color: var(--muted);
 }
 .play-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
-.play-bar code { color: var(--dim); }
+/* Текст остаётся на строке с точкой и переносится внутри себя: иначе он
+   уезжал целиком на следующую строку, а точка оставалась одна на своей. */
+.play-bar code { flex: 1 1 200px; min-width: 0; color: var(--dim); }
 .play-bar .verdict {
   margin-left: auto; padding: 3px 10px; border-radius: 999px;
   background: var(--accent-dim); color: var(--accent); font-weight: 600;
@@ -839,6 +841,9 @@ html[data-track="work"] .rec { visibility: hidden; }
   /* Шапка липкая: третья строка съела бы пятую часть экрана. Лента встаёт
      в первую строку между подписью и соцсетями, а ярлык прячем — «Деревня
      vlkirr · 4» читается и без слова REC. */
+  /* На телефоне значок встаёт под текстом слева, а не жмётся к правому краю. */
+  .play-bar { gap: 8px 10px; padding: 10px 14px; }
+  .play-bar .verdict { margin-left: 0; }
   html[data-track="play"] .rec { flex: 1 1 70px; }
   html[data-track="work"] .rec { display: none; }
   .rec-label { display: none; }
