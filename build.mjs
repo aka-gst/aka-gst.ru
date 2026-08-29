@@ -436,7 +436,13 @@ const experienceBlock = profile.experience
     (e) => `
           <article class="job">
             <p class="job-period">${esc(e.period)}</p>
-            <h3>${esc(e.org)}</h3>
+            <h3>${
+              e.site
+                ? `<a class="job-site" href="${esc(e.site)}" target="_blank" rel="noopener">${esc(
+                    e.org
+                  )} <b>↗</b></a>`
+                : esc(e.org)
+            }</h3>
             <p class="job-role">${esc(e.role)}</p>
             <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
           </article>`
@@ -542,11 +548,16 @@ const gameCard = (project) => {
         `<img class="gshot" src="${esc(shotSrc(file))}" alt=""
                 width="${w}" height="${h}" decoding="async" loading="lazy">`)(project.shots[0])
     : '';
+  // Абстрактная графика — замена кадру, а не добавка к нему. Пока кадра не
+  // было, она и была картинкой карточки; поверх настоящего снимка игры она
+  // говорит то же самое второй раз и грубее. Остаётся там, где снимать пока
+  // нечего.
+  const pipsHtml = back ? '' : '<i></i>'.repeat(pips);
   return `
         <${tag} class="gcard"${
     project.art ? ` data-art="${esc(project.art)}"` : ''
   }${href}${link ? analytics(project) : ''}>
-          <span class="gart" aria-hidden="true">${back}${'<i></i>'.repeat(pips)}</span>
+          <span class="gart" aria-hidden="true">${back}${pipsHtml}</span>
           <div class="gcard-body">
             <div class="gcard-top">${statusBadge(project)}</div>
             <h3 class="gcard-title">${esc(project.title)}</h3>
