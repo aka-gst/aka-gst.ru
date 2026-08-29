@@ -41,6 +41,7 @@ sitemap.xml
 sitemap-pages.xml
 game-menu.css
 player-name.js
+tour.js
 assets
 data
 praktikum
