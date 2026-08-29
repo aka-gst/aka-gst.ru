@@ -19,7 +19,7 @@
 <style>
 /* Lightweight visual layer: hierarchy, workflow steps and responsive polish. */
 :root{--bg:#0b0d0c;--p:#111512;--c:#171b18;--l:#2b312d;--t:#f3f5f3;--m:#969d98;--g:#6ee7a0;--v:#a8b5ad}
-body{background:radial-gradient(circle at 12% -10%,#173024 0,transparent 32%),var(--bg);font-family:Inter,"Segoe UI",Arial,sans-serif}.app{max-width:1560px}.app-header{height:56px;font:700 16px Inter,"Segoe UI",Arial,sans-serif}.brand{display:flex;align-items:center;gap:10px;color:var(--t);text-decoration:none}.logo{width:32px;height:32px;background:var(--g);border-radius:10px;font-family:Georgia,serif}.home-link{display:flex;align-items:center;gap:7px;margin-left:18px;padding:7px 10px;border:1px solid var(--l);border-radius:9px;background:#151916;color:var(--t);font-size:11px;font-weight:700;text-decoration:none;transition:border-color .15s ease,background .15s ease}.home-link span{color:var(--g);font-size:15px}.home-link:hover{border-color:var(--g);background:#18231c}.privacy-note{margin-left:auto;color:var(--m);font-size:11px;font-weight:500;display:flex;align-items:center;gap:8px}.privacy-note i{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 0 4px #6ee7a018}
+body{background:radial-gradient(circle at 12% -10%,#173024 0,transparent 32%),var(--bg);font-family:Inter,"Segoe UI",Arial,sans-serif}.app{max-width:1560px}.app-header{height:56px;font:700 16px Inter,"Segoe UI",Arial,sans-serif}.brand{display:flex;align-items:center;gap:10px;color:var(--t);text-decoration:none}.logo{width:32px;height:32px;background:var(--g);border-radius:10px;font-family:Georgia,serif}.home-link span{color:var(--g);font-size:15px}.privacy-note{margin-left:auto;color:var(--m);font-size:11px;font-weight:500;display:flex;align-items:center;gap:8px}.privacy-note i{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 0 4px #6ee7a018}
 .hero{padding:18px 0 14px;align-items:center}.eyebrow{margin:0 0 7px;color:var(--g);font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.hero h1{max-width:980px;font:500 clamp(30px,3.2vw,44px)/1.05 Inter,"Segoe UI",Arial,sans-serif;letter-spacing:-.045em;background:none;color:var(--t)}.hero-copy{margin:8px 0 0;color:var(--m);font-size:12px}.add{background:var(--g);border-color:var(--g);color:#07110b;box-shadow:0 8px 24px #6ee7a01c;transition:transform .15s ease,filter .15s ease}.add:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .steps{list-style:none;margin:0 0 12px;padding:0 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;color:#707872;font-size:11px}.steps li{display:flex;align-items:center;gap:8px;position:relative}.steps li:not(:last-child)::after{content:"";height:1px;background:var(--l);position:absolute;left:108px;right:10px}.steps b,.step-badge{width:24px;height:24px;border:1px solid var(--l);border-radius:50%;display:grid;place-items:center;font-size:10px}.steps .active{color:var(--t)}.steps .active b,.step-badge{background:#183324;border-color:#315b40;color:var(--g)}
 .capability-note{display:flex;align-items:center;gap:9px;margin:0 0 12px;padding:10px 13px;border:1px solid var(--l);border-radius:10px;background:#111512;color:var(--m);font-size:11px}.capability-note::before{content:"i";flex:none;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#1c3224;color:var(--g);font-weight:800}.capability-note strong{color:var(--t)}
@@ -37,12 +37,12 @@ body{background:radial-gradient(circle at 12% -10%,#173024 0,transparent 32%),va
 .add-actions{display:flex;gap:8px}.add-video{display:none}@media(max-width:750px){.add-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.add-video{display:block}.add-actions .add{width:100%}.gallery{touch-action:pan-y;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch}.card{cursor:default}.card .media,.card .check{cursor:pointer}.check{padding:0}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.add,.card{transition:none}.mobile-save-queue.attention{animation:none}}
 </style>
-  </head>
+  <link rel="stylesheet" href="/game-menu.css"></head>
   <body>
     <main class="app">
       <header class="app-header">
         <a class="brand" href="#" aria-label="ФотоДата — на главную"><span class="logo" aria-hidden="true">Ф</span><span>ФотоДата</span></a>
-        <a class="home-link" href="https://aka-gst.ru/" aria-label="Вернуться на главную aka-gst.ru"><span aria-hidden="true">⌂</span> На главную</a>
+        <a class="site-home" href="https://aka-gst.ru/" aria-label="Вернуться на главную aka-gst.ru">← На главную</a>
         <span class="privacy-note"><i></i> Обработка только на устройстве</span>
       </header>
       <section class="hero" aria-labelledby="page-title">

@@ -25,6 +25,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="/game-menu.css">
 </head>
 <body>
   <div class="ambient ambient-one"></div>
@@ -54,10 +55,9 @@
     </header>
 
     <div class="status-strip">
-      <!-- Возврат на сайт. Общесайтовая кнопка .game-home-menu прибита к
-           правому верхнему углу и накрыла бы «Войти» и полосу опыта, поэтому
-           здесь свой вариант — как у практикумов и photodata. -->
-      <a class="site-back" href="https://aka-gst.ru/">← aka-gst.ru</a>
+      <!-- Возврат на сайт: общий для всего сайта вид .site-home. Слева-сверху,
+        а не в правом углу, — там «Войти» и полоса опыта. -->
+      <a class="site-home" href="https://aka-gst.ru/">← На главную</a>
       <span id="pythonChip" class="python-chip" data-status="idle">Python: не загружен</span>
       <span id="modeHint" class="mode-hint"></span>
       <span id="progressHint" class="progress-hint">Прогресс сохраняется в этом браузере</span>

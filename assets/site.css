@@ -654,7 +654,7 @@ a.gcard.is-lit .gshot { opacity: .4; transform: scale(1.08); }
 [data-art="coin"].is-lit .gart i:nth-child(1) { transform: rotateY(180deg) scale(.9); opacity: 0; }
 [data-art="coin"].is-lit .gart i:nth-child(2) { transform: rotateY(360deg); opacity: 1; }
 
-/* Кольчатый — три звена цепи, растягивающиеся при наведении. */
+/* Наотмашь — три звена цепи, растягивающиеся при наведении. */
 [data-art="chain"] .gart i {
   width: 26px; height: 26px; border-radius: 50%;
   border: 3px solid var(--neon-2); background: none;
