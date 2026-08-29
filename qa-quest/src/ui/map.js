@@ -3,6 +3,7 @@
  */
 
 import { TIERS } from '../content/index.js';
+import { stepIcon } from '../content/icons.js';
 import { store, tierState, lessonState, isLessonOpen, nextLesson, unlockTier } from '../store.js';
 import { decorateGlossary } from '../glossary.js';
 import { el, clear } from './dom.js';
@@ -19,8 +20,17 @@ function lessonNode(lesson, index, onOpen) {
   if (!open) classes.push('locked');
   if (isNext) classes.push('next');
 
-  const badge = progress.mastered ? '★' : progress.complete ? '✓' : open ? String(index + 1).padStart(2, '0') : '🔒';
   if (lesson.kind === 'lab') classes.push('lab');
+
+  // Иконка стоит всегда, а состояние показывает цвет и рамка. Если подменять
+  // её галочкой и замком, на карте новичка остаётся один значок из шестнадцати,
+  // и смысл иконок пропадает ровно там, где он нужен больше всего.
+  const icon = stepIcon(lesson.id);
+  const badge = el('span', { class: 'node-badge' }, icon
+    ? el('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', html: icon })
+    : String(index + 1).padStart(2, '0'));
+  if (progress.mastered) badge.append(el('i', { class: 'node-flag', text: '★' }));
+  else if (progress.complete) badge.append(el('i', { class: 'node-flag', text: '✓' }));
 
   return el('button', {
     class: classes.join(' '),
@@ -28,7 +38,7 @@ function lessonNode(lesson, index, onOpen) {
     onclick: () => open && onOpen(lesson),
     title: open ? lesson.subtitle : 'Сначала закончи предыдущий урок',
   }, [
-    el('span', { class: 'node-badge', text: badge }),
+    badge,
     el('span', { class: 'node-copy' }, [
       el('strong', { text: lesson.title }),
       el('small', { text: lesson.skill }),

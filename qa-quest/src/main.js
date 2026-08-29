@@ -119,6 +119,35 @@ function toast(message, tone = '') {
   toastTimer = setTimeout(() => { node.className = 'toast'; }, 2600);
 }
 
+/**
+ * Экран после последнего шага. До сих пор человек проходил финал и получал
+ * всплывающую подпись на две секунды — а это единственный момент курса,
+ * которым хочется похвастаться. И единственный, когда он готов позвать
+ * друга: поэтому кнопка здесь одна и она про это.
+ */
+const QUEST_LINK = 'https://aka-gst.ru/qa-quest/';
+
+function showFinale() {
+  const dialog = $('finaleDialog');
+  $('finaleText').textContent = 'Ты написал защиту, нашёл в чужой дыру и доказал, '
+    + 'что у себя её нет. Это и есть работа тестировщика — с той разницей, что за неё платят.';
+  const share = $('finaleShare');
+  share.textContent = 'Позвать друга';
+  share.onclick = async () => {
+    const payload = { title: 'QA Quest — питон с нуля', text: 'Питон прямо в браузере, ставить ничего не надо', url: QUEST_LINK };
+    try {
+      // На телефоне это открывает обычный лист «поделиться» с телеграмом —
+      // самый короткий путь от «мне понравилось» до второго человека.
+      if (navigator.share) await navigator.share(payload);
+      else {
+        await navigator.clipboard.writeText(QUEST_LINK);
+        share.textContent = 'Ссылка скопирована';
+      }
+    } catch (_) { /* человек передумал делиться — это не ошибка */ }
+  };
+  dialog.showModal();
+}
+
 function celebrate(outcome, lesson, task) {
   const parts = [`Задача решена · +${outcome.xp} XP`];
   if (outcome.streakGrew && store.state.streak.current > 1) parts.push(`серия ${store.state.streak.current} дн.`);
@@ -126,6 +155,8 @@ function celebrate(outcome, lesson, task) {
   if (outcome.tierUnlocked) parts.push('открыта новая ступень');
   toast(parts.join(' · '), 'ok');
   route();
+
+  if (lesson.id === 'py-ice') showFinale();
 }
 
 /* ---------- вход ---------- */
@@ -268,6 +299,7 @@ document.querySelectorAll('.mode-switch button').forEach((button) => {
 
 $('accountButton').addEventListener('click', () => accountDialog());
 $('closeDialog').addEventListener('click', () => $('accountDialog').close());
+$('finaleClose').addEventListener('click', () => $('finaleDialog').close());
 $('resetProgress').addEventListener('click', () => {
   if (confirm('Сбросить весь прогресс, XP и сохранённый код?')) {
     resetProgress();

@@ -231,9 +231,20 @@ button:disabled { cursor: not-allowed; }
 }
 .node:hover:not(:disabled) { border-color: #315368; background: #12222d; transform: translateY(-1px); }
 .node-badge {
-  width: 28px; height: 28px; display: grid; place-items: center;
+  width: 30px; height: 30px; display: grid; place-items: center; position: relative;
   border: 1px solid #335064; border-radius: 9px; font: 600 11px "Roboto Mono", monospace; color: var(--muted);
 }
+.node-badge svg { width: 18px; height: 18px; display: block; color: var(--cyan); }
+/* Состояние читается цветом и рамкой, а не подменой знака: пунктир — ещё
+   закрыт, мятный — пройден, жёлтый — пройден целиком. */
+.node.locked .node-badge { border-style: dashed; }
+.node.locked .node-badge svg { color: #4a5f6d; }
+.node-flag {
+  position: absolute; right: -5px; bottom: -5px; font-style: normal; font-size: 10px;
+  width: 14px; height: 14px; display: grid; place-items: center;
+  border-radius: 50%; background: #0b1620; color: var(--mint);
+}
+.node.mastered .node-flag { color: var(--yellow); }
 .node-copy strong { display: block; font-size: 13px; }
 .node-copy small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
 .node-time {
@@ -246,8 +257,10 @@ button:disabled { cursor: not-allowed; }
 }
 
 .node-progress { font: 500 11px "Roboto Mono", monospace; color: var(--muted); }
-.node.done .node-badge { border-color: #2d9269; color: var(--mint); }
-.node.mastered .node-badge { border-color: var(--yellow); color: var(--yellow); }
+.node.done .node-badge { border-color: #2d9269; }
+.node.done .node-badge svg { color: var(--mint); }
+.node.mastered .node-badge { border-color: var(--yellow); }
+.node.mastered .node-badge svg { color: var(--yellow); }
 .node.next { border-color: var(--cyan); box-shadow: 0 0 0 1px #67e8f925; }
 .node.locked { opacity: .4; }
 
@@ -531,6 +544,17 @@ code, .task-card code, .brief code {
   transition: .15s ease; pointer-events: none;
 }
 .term-tip:hover::after, .term-tip:focus::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+
+.finale-dialog {
+  border: 1px solid #2c5768; border-radius: 16px; background: var(--panel); color: var(--text);
+  padding: 0; width: min(620px, 94vw); overflow: hidden; box-shadow: var(--shadow);
+}
+.finale-dialog::backdrop { background: rgba(4, 9, 13, .8); }
+.finale-dialog img { display: block; width: 100%; height: auto; }
+.finale-body { padding: 18px 22px 22px; display: grid; gap: 8px; }
+.finale-body strong { font-size: 26px; }
+.finale-body p { margin: 0; color: #c5d2d8; font-size: 14px; line-height: 1.55; }
+.finale-body .dialog-actions { margin-top: 8px; }
 
 .account-dialog {
   border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text);

@@ -2,8 +2,15 @@
 
 export const $ = (id) => document.getElementById(id);
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const SVG_TAGS = new Set(['svg', 'path', 'circle', 'rect', 'line', 'g', 'polyline', 'polygon']);
+
 export function el(tag, attrs = {}, children = []) {
-  const node = document.createElement(tag);
+  // Теги svg живут в своём пространстве имён: созданные через createElement
+  // они попадают в разметку, но не рисуются.
+  const node = SVG_TAGS.has(tag)
+    ? document.createElementNS(SVG_NS, tag)
+    : document.createElement(tag);
   Object.entries(attrs).forEach(([key, value]) => {
     if (value === null || value === undefined || value === false) return;
     if (key === 'class') node.className = value;
