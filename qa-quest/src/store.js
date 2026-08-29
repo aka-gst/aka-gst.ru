@@ -23,6 +23,10 @@ function blank() {
   return {
     version: 2,
     mode: 'sprint',
+    // Спрашивали ли уже, какой курс проходим. Переключатель наверху сам по
+    // себе ничего не объясняет: человек видит две кнопки и не понимает, что
+    // изменится. Прямой вопрос на первом уроке объясняет за него.
+    modePicked: false,
     tasks: {},
     code: {},
     checks: {},
@@ -181,6 +185,13 @@ export function nextLesson() {
 }
 
 /* ---------- изменение прогресса ---------- */
+
+export function pickMode(mode) {
+  store.state.mode = mode;
+  store.state.modePicked = true;
+  refreshUnlocks();
+  persist();
+}
 
 export function setMode(mode) {
   if (store.state.mode === mode) return;

@@ -283,3 +283,40 @@ def try_enter(check, user):
     ACCESS_LOG.append({'user': dict(user), 'passed': passed})
     return passed
 `;
+
+/**
+ * Смоделированный блок управления двигателем для версии «Ночь в боксе».
+ *
+ * Ни шины, ни сети здесь нет и быть не может: браузер к машине не подключишь.
+ * Поведение задано жёстко, поэтому у всех одинаково и проверки не зависят ни
+ * от железа, ни от связи. Заводской замок написан так, как такие замки и
+ * пишут: он пускает владельца — и завод, откуда угодно.
+ */
+export const ECU = String.raw`
+ECU_SERIAL = 'WBA-7731-K'
+OWNER_KEY = 'box-4f2a-11c'
+FACTORY_KEY = 'oem-remote-0000'
+
+# Что блок умеет включать и выключать. Всё это оплачено вместе с машиной.
+FUNCTIONS = {'heat': True, 'highbeam': True, 'torque': True}
+
+BUS_LOG = []
+
+
+def factory_allow(request):
+    """Заводской замок: владелец с ключом — или завод по воздуху."""
+    return request.get('key') == OWNER_KEY or request.get('key') == FACTORY_KEY
+
+
+def send(allow, request):
+    """Отправляет команду блоку через проверку allow и пишет её в журнал."""
+    passed = bool(allow(request))
+    if passed:
+        target = request.get('what')
+        if request.get('cmd') == 'disable' and target in FUNCTIONS:
+            FUNCTIONS[target] = False
+        elif request.get('cmd') == 'enable' and target in FUNCTIONS:
+            FUNCTIONS[target] = True
+    BUS_LOG.append({'request': dict(request), 'passed': passed})
+    return passed
+`;

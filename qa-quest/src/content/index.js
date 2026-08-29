@@ -8,18 +8,20 @@
  * настоящую работу.
  */
 
-import { pythonLessons } from './python.js';
+import { activeTheme } from './themes.js';
 import { testingLessons } from './testing.js';
 import { llmLessons } from './llm.js';
 import { loadAllPracticums } from './practicum.js';
+
+/* Первая ступень берёт название и описание у выбранной истории: навыки те же,
+   мир разный. Остальные ступени от истории не зависят. */
+const theme = activeTheme();
 
 export const TIERS = [
   {
     id: 'python',
     number: 1,
-    title: 'Ночь первая: питон с нуля',
-    tagline: 'От пустого экрана до собственной защиты',
-    about: 'Одна ночь в шестнадцать шагов: от первого отклика чужого терминала до финала, где ты строишь защиту своего сервера и сам её ломаешь. Код запускается прямо здесь, устанавливать ничего не надо.',
+    ...theme.tier,
     accent: 'cyan',
   },
   {
@@ -29,6 +31,8 @@ export const TIERS = [
     tagline: 'Проверять чужой код и доказывать результат',
     about: 'Сначала тренажёр в браузере: assert, границы, контракт API, негативные сценарии. Потом настоящий практикум на своей машине — шестнадцать экспериментов со шлюзом.',
     accent: 'mint',
+    cover: 'tier-testing.jpg',
+    coverAlt: 'Сеть, по которой идёт обход: часть узлов уже помечена',
   },
   {
     id: 'llm',
@@ -37,10 +41,12 @@ export const TIERS = [
     tagline: 'То, за что платят сейчас',
     about: 'Тренажёр: структурированный вывод, агент с инструментами, оценка ответа, prompt-инъекции. Дальше десять лабораторных на своей машине — от Ollama до готового сервиса.',
     accent: 'violet',
+    cover: 'tier-llm.jpg',
+    coverAlt: 'Огромный объект в глубине, к нему тянется один выверенный канал',
   },
 ];
 
-const drills = [...pythonLessons, ...testingLessons, ...llmLessons].map((lesson) => ({ ...lesson, kind: 'drill' }));
+const drills = [...theme.lessons, ...testingLessons, ...llmLessons].map((lesson) => ({ ...lesson, kind: 'drill' }));
 const labs = [];
 
 /** Порядок внутри ступени: сперва тренажёр, затем практикум. */

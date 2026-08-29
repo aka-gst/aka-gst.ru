@@ -35,12 +35,14 @@
     <header class="topbar">
       <a class="brand" href="#/" aria-label="QA Quest — к карте курса">
         <span class="brand-mark">Q<span>_</span></span>
-        <span><strong>QA QUEST</strong><small>ПИТОН · ТЕСТЫ · LLM</small></span>
+        <span><strong>QA QUEST</strong><small id="brandStory">ПИТОН · ТЕСТЫ · LLM</small></span>
       </a>
 
+      <div class="story-switch" id="storySwitch" role="group" aria-label="История"></div>
+
       <div class="mode-switch" role="group" aria-label="Режим подачи">
-        <button type="button" data-mode="sprint" aria-pressed="true">Пробежать</button>
-        <button type="button" data-mode="deep" aria-pressed="false">Разобрать</button>
+        <button type="button" data-mode="sprint" aria-pressed="true">Коротко</button>
+        <button type="button" data-mode="deep" aria-pressed="false">Подробно</button>
       </div>
 
       <div class="profile-strip">
@@ -58,11 +60,14 @@
       <!-- Возврат на сайт. Общесайтовая кнопка .game-home-menu прибита к
            правому верхнему углу и накрыла бы «Войти» и полосу опыта, поэтому
            здесь свой вариант — как у практикумов и photodata. -->
-      <a class="site-back" href="https://aka-gst.ru/">← aka-gst.ru</a>
-      <span id="pythonChip" class="python-chip" data-status="idle">Python: не загружен</span>
-      <span id="modeHint" class="mode-hint"></span>
-      <span id="progressHint" class="progress-hint">Прогресс сохраняется в этом браузере</span>
-      <button type="button" id="resetProgress" class="text-button">Сбросить прогресс</button>
+      <div class="strip-left">
+        <a class="site-back" href="https://aka-gst.ru/">← Все проекты aka-gst</a>
+        <span id="pythonChip" class="python-chip" data-status="idle">Python: не загружен</span>
+      </div>
+      <div class="strip-right">
+        <span id="progressHint" class="progress-hint">Прогресс сохраняется в этом браузере</span>
+        <button type="button" id="resetProgress" class="reset-button">Сбросить прогресс</button>
+      </div>
     </div>
 
     <main>
@@ -82,6 +87,42 @@
         <button type="button" id="finaleClose" class="ghost-button">Закрыть</button>
       </div>
     </div>
+  </dialog>
+
+  <!-- Пробная поездка. Награда за пройденные шаги в истории про машины:
+       тяга и сцепление берутся из числа собранных шагов прошивки. -->
+  <dialog id="rigDialog" class="rig-dialog">
+    <div class="rig-top">
+      <span id="rigTuning" class="rig-tuning"></span>
+      <span id="rigHud" class="rig-hud"></span>
+    </div>
+    <canvas id="rigCanvas" class="rig-canvas"></canvas>
+    <p id="rigVerdict" class="rig-verdict" hidden></p>
+    <div class="rig-actions">
+      <span class="rig-help">Держи палец на левой или правой половине экрана. На компьютере — стрелки.</span>
+      <button type="button" id="rigClose" class="ghost-button">Закрыть</button>
+    </div>
+  </dialog>
+
+  <!-- Вопрос при первом входе в урок. Заменяет догадки о переключателе наверху:
+       человек выбирает объём один раз и словами, а не двумя кнопками без
+       подписи. Передумать можно там же, переключателем. -->
+  <dialog id="modeDialog" class="mode-dialog">
+    <h2>Сколько проходим за раз?</h2>
+    <p class="mode-dialog-lead">Материал один и тот же. Разница в том, сколько задач закрывает шаг.</p>
+    <div class="mode-picks">
+      <button type="button" data-pick="sprint" class="mode-pick">
+        <strong>Коротко</strong>
+        <span>Одна задача на шаг</span>
+        <em>вся ночь — около получаса</em>
+      </button>
+      <button type="button" data-pick="deep" class="mode-pick">
+        <strong>Подробно</strong>
+        <span>Три задачи на шаг и разбор целиком</span>
+        <em>вся ночь — около полутора часов</em>
+      </button>
+    </div>
+    <p class="mode-dialog-note">Переключить можно в любой момент — кнопкой наверху.</p>
   </dialog>
 
   <dialog id="accountDialog" class="account-dialog">

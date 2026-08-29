@@ -609,6 +609,18 @@ a.gcard.is-lit {
 a.gcard:focus-visible .gshot,
 a.gcard.is-lit .gshot { opacity: .92; transform: scale(1.06); }
 
+/* Кусок игры, который включается при наведении. Лежит поверх кадра, и кадр
+   работает постером: пока ролик не начался, видно ровно ту же картинку,
+   поэтому подмена не мигает. Движение то же самое, что у кадра, иначе на
+   стыке был бы скачок. */
+.gclip {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0; pointer-events: none;
+  transition: opacity .3s ease, transform .35s ease;
+}
+a.gcard.is-lit .gclip { transform: scale(1.06); }
+.gclip.is-playing { opacity: 1; }
+
 .gart i {
   position: absolute; display: block;
   transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;

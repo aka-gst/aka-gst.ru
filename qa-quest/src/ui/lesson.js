@@ -14,6 +14,8 @@ import {
 } from '../store.js';
 import { runPython, runner, onRunnerChange } from '../runner.js';
 import { decorateGlossary } from '../glossary.js';
+import { activeTheme } from '../content/themes.js';
+import { standPanel, standPlay, standRestore } from './stand.js';
 import { track } from '../analytics.js';
 import { el, clear } from './dom.js';
 
@@ -56,7 +58,7 @@ function briefing() {
     if (lesson.tasks.length > 1) {
       body.append(el('p', {
         class: 'brief-more',
-        text: `В режиме «разобрать» здесь ещё ${lesson.tasks.length - 1} задачи и подробное объяснение.`,
+        text: `В режиме «Подробно» здесь ещё ${lesson.tasks.length - 1} задачи и подробное объяснение.`,
       }));
     }
   } else {
@@ -65,6 +67,15 @@ function briefing() {
       el('div', {}, [el('span', { text: isLab() ? 'ГДЕ ВЫПОЛНЯТЬ' : 'ГДЕ ПРИМЕНЯЕТСЯ' }), el('div', { html: lesson.deep.where })]),
       el('div', {}, [el('span', { text: 'ТИПИЧНАЯ ОШИБКА' }), el('div', { html: lesson.deep.pitfall })]),
     ]));
+    // Публично разобранный случай из новостей. Он не учит приёму — он
+    // объясняет, зачем приём нужен, и это единственное место в уроке, где
+    // говорится про настоящий мир, а не про придуманный.
+    if (lesson.deep.real) {
+      body.append(el('div', { class: 'brief-real' }, [
+        el('span', { text: 'БЫЛО НА САМОМ ДЕЛЕ' }),
+        el('div', { html: lesson.deep.real }),
+      ]));
+    }
     if (lesson.deep.examples.length) {
       body.append(el('details', { class: 'brief-examples' }, [
         el('summary', { text: isLab() ? 'Фрагменты из практикума' : 'Примеры' }),
@@ -314,6 +325,9 @@ function hintButton(task) {
 
 function consolePanel() {
   const task = currentTask();
+  // Место под кадры загрузки Python. Показывается только пока идёт закачка и
+  // ровно там, где иначе пустой терминал: см. paintBoot в main.js.
+  const bootVisual = el('div', { class: 'boot-visual', hidden: true }, [el('img', { alt: '' })]);
   const consoleOutput = el('pre', { class: 'console-output' });
   const checkList = el('div', { class: 'check-list' });
   view.nodes.console = consoleOutput;
@@ -322,7 +336,11 @@ function consolePanel() {
   const [button, box] = hintButton(task);
 
   const panel = el('aside', { class: 'lab-panel panel' }, [
-    el('div', { class: 'panel-heading' }, [el('span', { text: 'ТЕРМИНАЛ' }), view.nodes.runState]),
+    el('div', { class: 'panel-heading' }, [el('span', { text: activeTheme().termTitle || 'ТЕРМИНАЛ' }), view.nodes.runState]),
+    bootVisual,
+    // Стенд стоит над терминалом: сперва видно, что код сделал с машиной,
+    // и только потом — что он написал буквами.
+    standPanel(),
     consoleOutput,
     el('div', { class: 'checks' }, [el('h2', { text: 'ПРОВЕРКИ' }), checkList]),
     button,
@@ -381,6 +399,7 @@ function checklistPanel(rerender) {
 
 /** Показывает результат прогона: терминал, проверки и переход к следующему шагу. */
 function showResult(result) {
+  standPlay(result, view.nodes.editor ? view.nodes.editor.value : '');
   renderChecks(result.checks);
   if (result.error) {
     const parts = [result.error.text];
@@ -546,8 +565,17 @@ export function renderLesson(root, lesson, context) {
         ]),
         briefing(),
       ])),
-      // Задача живёт вне прокручиваемого разбора: в режиме «разобрать»
-      // теория длинная, и условие не должно уезжать за край экрана.
+      lab ? commandsPanel() : editorPanel(),
+    ]),
+
+    /*
+     * Правая колонка — рабочее место целиком: что сделать, что вышло, что
+     * сошлось. Задача раньше стояла в средней колонке между разбором и
+     * редактором и отъедала у текста две трети высоты, а сама при этом
+     * повторяла соседа по смыслу: условие и его проверки жили в разных
+     * столбцах. Теперь они рядом, а середина осталась тексту.
+     */
+    el('div', { class: 'lesson-side' }, [
       el('div', { class: 'task-block panel' }, [
         taskTabs(rerender),
         el('div', { class: 'task-card' }, [
@@ -555,10 +583,8 @@ export function renderLesson(root, lesson, context) {
           el('div', { html: currentTask().brief }),
         ]),
       ]),
-      lab ? commandsPanel() : editorPanel(),
+      lab ? checklistPanel(rerender) : consolePanel(),
     ]),
-
-    lab ? checklistPanel(rerender) : consolePanel(),
   );
 
   // Разбор прокручивается, но на macOS полоса прокрутки скрыта, и текст
@@ -577,6 +603,9 @@ export function renderLesson(root, lesson, context) {
   } else {
     view.detachRunner = null;
   }
+
+  // Возвращаем стенд в то состояние, в котором он был до перерисовки.
+  standRestore();
 }
 
 export function activeLesson() {

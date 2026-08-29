@@ -3,8 +3,9 @@
  */
 
 import { lessonById, loadPracticums } from './content/index.js';
+import { activeTheme, THEMES, setTheme } from './content/themes.js';
 import {
-  loadStore, subscribe, store, setMode, levelInfo, resetProgress, isLessonOpen,
+  loadStore, subscribe, store, setMode, pickMode, levelInfo, resetProgress, isLessonOpen,
 } from './store.js';
 import { bootRunner, onRunnerChange } from './runner.js';
 import { auth, onAuthChange, probeAuth, login, register, recover, logout, progressHint } from './auth.js';
@@ -71,12 +72,35 @@ function route() {
       onOpen: openLesson,
       onProgress: celebrate,
     });
+    // Отрисовка создаёт место под кадры пустым — возвращаем в него текущее
+    // состояние, иначе перерисовка посреди загрузки стирает картинку.
+    paintBoot(runnerStatus);
+    askMode();
   } else {
     screens.lesson.hidden = true;
     screens.map.hidden = false;
     document.body.classList.remove('lesson-open');
     renderMap(screens.map, { onOpen: openLesson });
   }
+}
+
+/*
+ * Вопрос про объём — один раз, при первом входе в урок. Переключатель наверху
+ * остаётся, но теперь он не единственное объяснение: две кнопки без подписи
+ * человек просто не трогал и проходил короткий курс, не зная об этом.
+ */
+function askMode() {
+  if (store.state.modePicked) return;
+  const dialog = $('modeDialog');
+  if (dialog.open) return;
+  dialog.querySelectorAll('.mode-pick').forEach((button) => {
+    button.onclick = () => {
+      pickMode(button.dataset.pick);
+      dialog.close();
+      route();
+    };
+  });
+  dialog.showModal();
 }
 
 /* ---------- шапка ---------- */
@@ -103,9 +127,7 @@ function renderHeader() {
   // Переключатель без объяснения выглядит бесполезным: человек видит две
   // кнопки и не понимает, что изменится. Говорим прямо, что он делает.
   // Без названия режима: оно и так написано на нажатой кнопке прямо над строкой.
-  $('modeHint').textContent = store.state.mode === 'sprint'
-    ? 'в уроке суть и одна задача'
-    : 'в уроке объяснение, примеры и три задачи';
+
 }
 
 /* ---------- события прогресса ---------- */
@@ -129,8 +151,7 @@ const QUEST_LINK = 'https://aka-gst.ru/qa-quest/';
 
 function showFinale() {
   const dialog = $('finaleDialog');
-  $('finaleText').textContent = 'Ты написал защиту, нашёл в чужой дыру и доказал, '
-    + 'что у себя её нет. Это и есть работа тестировщика — с той разницей, что за неё платят.';
+  $('finaleText').textContent = activeTheme().finaleText;
   const share = $('finaleShare');
   share.textContent = 'Позвать друга';
   share.onclick = async () => {
@@ -156,7 +177,10 @@ function celebrate(outcome, lesson, task) {
   toast(parts.join(' · '), 'ok');
   route();
 
-  if (lesson.id === 'py-ice') showFinale();
+  // Финальный урок у каждой истории свой. Пока здесь стоял 'py-ice', вторая
+  // история доходила до конца и не получала ничего — а это единственный
+  // момент курса, ради которого её проходят.
+  if (lesson.id === activeTheme().finalLesson) showFinale();
 }
 
 /* ---------- вход ---------- */
@@ -294,12 +318,57 @@ document.querySelectorAll('.mode-switch button').forEach((button) => {
   button.addEventListener('click', () => {
     setMode(button.dataset.mode);
     route();
+    // Раньше это висело строкой в служебном ряду постоянно. Объяснение нужно в
+    // момент выбора, а не всё время: что выбрано, и так написано на кнопке.
+    toast(store.state.mode === 'sprint'
+      ? 'в уроке суть и одна задача'
+      : 'в уроке объяснение, примеры и три задачи');
   });
 });
 
 $('accountButton').addEventListener('click', () => accountDialog());
 $('closeDialog').addEventListener('click', () => $('accountDialog').close());
 $('finaleClose').addEventListener('click', () => $('finaleDialog').close());
+$('rigClose').addEventListener('click', () => $('rigDialog').close());
+// Тело помечается историей: фон и мелочи оформления у них разные, а держать
+// это в CSS дешевле, чем подменять картинки из кода.
+document.body.classList.add(`theme-${activeTheme().id}`);
+
+// Экран победы принадлежит истории, а не сайту. Пока картинки для второй
+// истории нет, остаётся общая — это лучше, чем битая ссылка на месте награды.
+{
+  const art = activeTheme().art;
+  const image = $('finaleImage');
+  if (art && art.finale) {
+    image.addEventListener('error', () => { image.src = 'finale.jpg'; }, { once: true });
+    image.src = art.finale;
+    image.alt = art.finaleAlt || '';
+  }
+}
+
+/*
+ * Переключатель истории стоит рядом с переключателем режима и выглядит так же.
+ * Раньше это была строчка в служебном ряду, и она читалась как настройка —
+ * человек не понимал, что за ней стоит другой мир целиком. Выбор мира по весу
+ * не меньше выбора режима, значит и на вид должен быть таким же.
+ */
+{
+  const current = activeTheme();
+  const group = $('storySwitch');
+  THEMES.forEach((theme) => {
+    const active = theme.id === current.id;
+    const button = el('button', {
+      type: 'button',
+      class: active ? 'active' : '',
+      'aria-pressed': String(active),
+      title: active ? 'Сейчас ты здесь' : `${theme.hook}. Прогресс этой истории сохранится`,
+      onclick: () => { if (!active) setTheme(theme.id); },
+    }, theme.name);
+    group.append(button);
+  });
+  $('brandStory').textContent = current.brandLine;
+}
+
 $('resetProgress').addEventListener('click', () => {
   if (confirm('Сбросить весь прогресс, XP и сохранённый код?')) {
     resetProgress();
@@ -308,7 +377,61 @@ $('resetProgress').addEventListener('click', () => {
   }
 });
 
+/*
+ * Кадры загрузки. Тринадцать мегабайт Python качаются один раз, и это самое
+ * опасное место курса: человек ждёт на пустом экране, ещё не увидев ни строчки
+ * кода. Кадры превращают ожидание в начало истории — приборная панель
+ * просыпается, лампа за лампой. Место выбрано так, чтобы ничего не заслонять:
+ * терминал в это время всё равно пуст, а текст задачи читается рядом.
+ */
+let bootTimer = null;
+let bootStep = 0;
+/* Последнее состояние движка держим у себя. Экран урока перерисовывается не
+   только при открытии: практикумы и проверка входа приходят с опозданием в
+   секунду и вызывают route() заново. Кадры при этом создавались пустыми и
+   больше не появлялись — картинка моргала и исчезала посреди загрузки, хотя
+   Python ещё качался. Теперь после каждой отрисовки состояние применяется
+   заново, а номер кадра переживает перерисовку. */
+let runnerStatus = 'idle';
+
+function paintBoot(status) {
+  const frames = activeTheme().art?.boot || [];
+  const holder = document.querySelector('.boot-visual');
+  if (!holder) return;
+  const image = holder.querySelector('img');
+  // Показываем, пока Python не готов, а не только в состоянии «загружается».
+  // Прежнее условие было точнее, чем нужно: любое промежуточное состояние
+  // прятало кадры до конца закачки — картинка появлялась и пропадала, хотя
+  // качать оставалось ещё десяток мегабайт.
+  if (!frames.length || status === 'ready' || status === 'failed') {
+    holder.hidden = true;
+    clearInterval(bootTimer);
+    bootTimer = null;
+    return;
+  }
+  image.alt = activeTheme().art.bootAlt || '';
+  image.src = frames[Math.min(bootStep, frames.length - 1)];
+  holder.hidden = false;
+  if (bootTimer) return;
+  // Кадры сменяются по времени, а не по доле скачанного: доля приходит
+  // рывками и на быстрой сети проскочила бы всю последовательность разом.
+  // Тик не только меняет кадр, но и возвращает место на экран. Экран урока
+  // перерисовывают четыре разных события, и каждое создаёт место пустым и
+  // скрытым; вместо того чтобы ловить их поимённо, чиним состояние раз в
+  // полторы секунды. Дешевле и надёжнее, чем помнить все точки перерисовки.
+  bootTimer = setInterval(() => {
+    bootStep = Math.min(bootStep + 1, frames.length - 1);
+    const live = document.querySelector('.boot-visual');
+    if (!live) return;
+    live.hidden = false;
+    const img = live.querySelector('img');
+    if (img) img.src = frames[bootStep];
+  }, 1400);
+}
+
 onRunnerChange((state) => {
+  runnerStatus = state.status;
+  paintBoot(runnerStatus);
   const chip = $('pythonChip');
   chip.dataset.status = state.status;
   chip.textContent = {

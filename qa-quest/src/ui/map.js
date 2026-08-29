@@ -4,9 +4,12 @@
 
 import { TIERS } from '../content/index.js';
 import { stepIcon } from '../content/icons.js';
+import { activeTheme, THEMES, setTheme } from '../content/themes.js';
 import { store, tierState, lessonState, isLessonOpen, nextLesson, unlockTier } from '../store.js';
 import { decorateGlossary } from '../glossary.js';
 import { el, clear } from './dom.js';
+import { rigButton } from './rig.js';
+import { carConsole } from './pingcar.js';
 
 function lessonNode(lesson, index, onOpen) {
   const progress = lessonState(lesson);
@@ -120,25 +123,47 @@ function tierSection(tier, { onOpen }) {
  * ему нужно знать, что это, сколько займёт и что ставить ничего не надо.
  */
 function welcome(upNext, onOpen) {
+  const theme = activeTheme();
   return el('section', { class: 'welcome' }, [
     el('div', { class: 'welcome-text' }, [
-      el('span', { class: 'continue-label', text: '02:14 · доступ получен' }),
-      el('h2', { text: 'Шестнадцать шагов одной ночи' }),
-      el('p', { class: 'welcome-story', text: 'Ты внутри чужой сети, и экран пуст. К утру ты научишься разговаривать с системой, читать чужие записи, собрать свой инструмент — и на последнем шаге построишь защиту собственного сервера, а потом сам её сломаешь.' }),
-      el('p', { text: 'Это курс питона с нуля. Код запускается прямо на этой странице — настоящий Python, а не имитация. Ни на компьютер, ни на телефон ставить ничего не нужно.' }),
+      el('span', { class: 'continue-label', text: theme.welcome.label }),
+      el('h2', { text: theme.welcome.title }),
+      el('p', { class: 'welcome-story', text: theme.welcome.story }),
+      el('p', { class: 'welcome-about', text: 'Это курс питона с нуля. Код запускается прямо на этой странице — настоящий Python, а не имитация. Ни на компьютер, ни на телефон ставить ничего не нужно.' }),
+      // Итог стоит прямо над кнопкой: человек должен видеть, ради чего нажимает,
+      // а не узнавать это на шестнадцатом шаге.
+      theme.welcome.outcome ? el('p', { class: 'welcome-outcome' }, [
+        el('b', { text: 'К утру ' }),
+        theme.welcome.outcome,
+      ]) : null,
       upNext ? el('button', {
         class: 'welcome-start',
         onclick: () => onOpen(upNext),
       }, 'Начать с первого урока →') : null,
+      /*
+       * Факты стоят в левой колонке под кнопкой. Правая с живой машиной выше,
+       * и без них под кнопкой оставалась пустая треть карточки.
+       *
+       * Карточки второй истории здесь больше нет: тот же выбор стоит
+       * переключателем в шапке, и повторять его внизу — значит спрашивать
+       * дважды об одном. Заодно ушла разная ширина элементов в узкой колонке,
+       * из-за которой она выглядела недоделанной.
+       *
+       * Пункты — обрывки, а не предложения, и точка в конце им не нужна:
+       * то же правило у GOV.UK и у Microsoft.
+       */
+      el('ul', { class: 'welcome-facts' }, [
+        el('li', { text: 'Первый урок — три минуты, знать заранее ничего не надо' }),
+        el('li', { text: 'Прогресс сохранится сам, вход нужен только для переноса на другой телефон' }),
+        el('li', { text: 'Первый запуск скачает около 13 МБ — на мобильном лучше дождаться Wi-Fi' }),
+      ]),
     ]),
-    // Пункты списка — обрывки, а не предложения, и точка в конце им не нужна.
-    // Правило то же у GOV.UK («do not use a full stop at the end») и у
-    // Microsoft («unless they're complete sentences»). Раньше здесь стояло по
-    // два предложения на пункт — от этого список и выглядел тяжёлым.
-    el('ul', { class: 'welcome-facts' }, [
-      el('li', { text: 'Первый урок — три минуты, знать заранее ничего не надо' }),
-      el('li', { text: 'Прогресс сохранится сам, вход нужен только для переноса на другой телефон' }),
-      el('li', { text: 'Первый запуск скачает около 13 МБ — на мобильном лучше дождаться Wi-Fi' }),
+    el('div', { class: 'welcome-side' }, [
+      // Живая машина стоит первой в правой колонке: обещание «код работает
+      // прямо здесь» лучше показать, чем написать.
+      carConsole(),
+      theme.welcome.selling ? el('ul', { class: 'welcome-selling' },
+        theme.welcome.selling.map((line) => el('li', { text: line }))) : null,
     ]),
   ]);
 }
@@ -152,6 +177,12 @@ export function renderMap(root, { onOpen }) {
     root.append(welcome(upNext, onOpen));
   } else if (upNext) {
     const progress = lessonState(upNext);
+    if (activeTheme().art?.strip) {
+      root.append(el('img', {
+        class: 'continue-strip', src: activeTheme().art.strip, alt: '',
+        loading: 'lazy', decoding: 'async', width: 1200, height: 300,
+      }));
+    }
     root.append(el('button', {
       class: 'continue-card',
       onclick: () => onOpen(upNext),
@@ -165,7 +196,7 @@ export function renderMap(root, { onOpen }) {
     root.append(el('div', { class: 'continue-card done' }, [
       el('span', { class: 'continue-label', text: 'Курс пройден' }),
       el('strong', { text: 'Все открытые уроки закрыты' }),
-      el('small', { text: 'Переключись в режим «разобрать», чтобы добить оставшиеся задачи уроков.' }),
+      el('small', { text: 'Переключись в режим «Подробно», чтобы добить оставшиеся задачи уроков.' }),
     ]));
   }
 
@@ -173,6 +204,11 @@ export function renderMap(root, { onOpen }) {
   // Ступени 2 и 3 обращены к другому человеку: он уже пишет код и ищет
   // профессиональный материал. Раньше обе аудитории встречались на одном
   // экране, и ни одной он не говорил ничего внятного.
+  // Поездка стоит перед списком шагов, а не после: награда, до которой надо
+  // домотать страницу, наградой не работает.
+  const rig = rigButton();
+  if (rig) root.append(rig);
+
   root.append(tierSection(TIERS[0], { onOpen }));
 
   root.append(nextCourses(onOpen));
@@ -195,6 +231,12 @@ function nextCourses(onOpen) {
         if (first) onOpen(first);
       },
     }, [
+      // Обложка грузится лениво: она ниже первого экрана, и ради неё не стоит
+      // задерживать то, что человек видит сразу.
+      tier.cover ? el('img', {
+        class: 'next-course-cover', src: tier.cover, alt: tier.coverAlt || '',
+        loading: 'lazy', decoding: 'async', width: 1200, height: 600,
+      }) : null,
       el('strong', { text: tier.title }),
       el('small', { text: tier.about }),
       el('span', { class: 'next-course-go', text: open ? `${state.complete} / ${state.total} · открыть →` : 'открыть ступень →' }),

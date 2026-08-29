@@ -22,45 +22,14 @@
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
+import { PLAN } from './games-plan.mjs';
+
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const PORT = 9334;
 const OUT = new URL('../.shots/', import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
 const only = process.argv.slice(2);
-
-const PLAN = [
-  { id: 'acid',     url: 'https://aka-gst.ru/acid/',
-    // Сверху ряд кнопок — обрезаем его, оставляем стол и руку.
-    steps: [['ПОНЯТНО', 1500], ['ИГРАТЬ', 2500], ['ПОНЯТНО', 1500], ['НАЧАТЬ ПАРТИЮ', 4000]],
-    clip: { x: 0, y: 108, width: 1200, height: 552 } },
-  // clip — область кадра. Нужна там, где рядом с полем висит таблица
-  // рекордов: чужие ники не должны застывать картинкой на портфолио,
-  // хотя на живой странице они и так видны и меняются.
-  { id: 'tetcolor', url: 'https://aka-gst.ru/tetcolor/',
-    // У игры появилось обучение поверх поля — пропускаем его. Область
-    // берём по низу стакана: по пустой сетке не понять, что это за игра,
-    // а слева от неё висит таблица рекордов с чужими никами.
-    steps: [['СТАРТ', 3500], ['ПРОПУСТИТЬ', 1500]], play: { drops: 6, wait: 2500 },
-    clip: { x: 458, y: 392, width: 300, height: 228 } },
-  { id: 'lines',    url: 'https://aka-gst.ru/lines/',
-    // Обучение теперь всплывает поверх поля.
-    steps: [['НАЧАТЬ', 2000], ['ПРОПУСТИТЬ', 1500]],
-    clip: { x: 200, y: 24, width: 590, height: 470 } },
-  { id: 'stihii',   url: 'https://aka-gst.ru/stihii/',
-    // Берём арену с обоими магами: пропорции близки к полосе карточки,
-    // поэтому обрезка по краям не съест бойцов.
-    steps: [['СВОБОДНЫЙ БОЙ', 1200], ['ЛЁГКИЙ', 2500]],
-    clip: { x: 12, y: 82, width: 1176, height: 420 } },
-  { id: 'worm',     url: 'https://aka-gst.ru/worm/', steps: [['ЦЕП', 3000]] },
-  { id: 'technomagic', url: 'https://aka-gst.ru/technomagic/',
-    steps: [['ВЗЯТЬ КЛЮЧИ', 3500]] },
-  { id: 'coin',     url: 'https://aka-gst.ru/coin/',
-    // Вводное окно теперь обязательное: проходим его и снимаем саму монету,
-    // а не панели показателей по краям.
-    steps: [['ПОКАЖИ, КАК ИГРАТЬ', 2000], ['ПРОПУСТИТЬ', 1800]],
-    clip: { x: 382, y: 96, width: 436, height: 396 } },
-];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

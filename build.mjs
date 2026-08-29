@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Генерирует index.html из data/site.json и data/projects.json.
 // Запуск: node build.mjs
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -553,11 +553,26 @@ const gameCard = (project) => {
   // говорит то же самое второй раз и грубее. Остаётся там, где снимать пока
   // нечего.
   const pipsHtml = back ? '' : '<i></i>'.repeat(pips);
+  // Ролик подбирается по имени кадра: game-acid.jpg → clip-acid.mp4. Так
+  // связь не надо дублировать в базе, и она не может разойтись.
+  // src не проставлен: адрес лежит в data-src, и app.js подставляет его при
+  // первом наведении. Иначе восемь роликов тянулись бы при загрузке страницы
+  // ради того, что большинство посетителей не откроет.
+  const clipFile = project.shots?.length
+    ? project.shots[0].file.replace(/^game-(.+)\.jpe?g$/, 'clip-$1.mp4')
+    : '';
+  const clip =
+    clipFile.endsWith('.mp4') && existsSync(join(root, 'assets/clips', clipFile))
+      ? `<video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/${esc(clipFile)}?v=${assetVersion(
+          `assets/clips/${clipFile}`
+        )}"></video>`
+      : '';
   return `
         <${tag} class="gcard"${
     project.art ? ` data-art="${esc(project.art)}"` : ''
   }${href}${link ? analytics(project) : ''}>
-          <span class="gart" aria-hidden="true">${back}${pipsHtml}</span>
+          <span class="gart" aria-hidden="true">${back}${clip}${pipsHtml}</span>
           <div class="gcard-body">
             <div class="gcard-top">${statusBadge(project)}</div>
             <h3 class="gcard-title">${esc(project.title)}</h3>
@@ -703,7 +718,7 @@ ${socialLinks('header')}
     </main>
 
     <footer class="sitefoot">
-      <span>AKA-GST.RU</span>
+      <span>aka-gst.ru</span>
       <nav class="socials" aria-label="Профили в подвале">
 ${socialLinks('footer')}
       </nav>
@@ -770,7 +785,7 @@ const praktikumPage = `<!doctype html>
       </section>
     </main>
     <footer class="sitefoot">
-      <span><a href="/" style="text-decoration:none">← AKA-GST.RU</a></span>
+      <span><a href="/" style="text-decoration:none">← aka-gst.ru</a></span>
     </footer>
   </body>
 </html>
@@ -816,7 +831,7 @@ const notFound = `<!doctype html>
         </div>
       </section>
     </main>
-    <footer class="sitefoot"><span>AKA-GST.RU</span></footer>
+    <footer class="sitefoot"><span>aka-gst.ru</span></footer>
   </body>
 </html>
 `;
@@ -862,7 +877,7 @@ const unavailable = `<!doctype html>
         </div>
       </section>
     </main>
-    <footer class="sitefoot"><span>AKA-GST.RU</span></footer>
+    <footer class="sitefoot"><span>aka-gst.ru</span></footer>
   </body>
 </html>
 `;
