@@ -777,6 +777,36 @@ article.gcard .launch { color: var(--dim); }
 }
 .topbar-link:hover, .topbar-link:focus-visible { color: var(--text); border-color: var(--line); }
 
+/* Карточка рассказа на вкладке «Игры». Намеренно не похожа на игровую:
+   у неё нет кадра и анимации — рассказ обещает не зрелище, а текст, и
+   выглядеть должен соответственно. */
+.scard {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--line); border-radius: 16px;
+  background: linear-gradient(160deg, var(--panel), var(--bg-soft));
+  color: inherit; text-decoration: none;
+  transition: border-color .2s ease, transform .2s ease;
+}
+.scard:hover, .scard:focus-visible { border-color: var(--neon); transform: translateY(-3px); }
+.scard-book {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--dim);
+}
+.scard-title { font-size: 19px; }
+.scard-lead { font-size: 13px; line-height: 1.5; color: var(--muted); }
+.scard-time { margin-top: auto; font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+/* Переход между полками. Ссылка одна и в обе стороны — про игру по рассказу
+   тут ничего не сказано намеренно: ни одной такой игры пока нет. */
+.story-cross {
+  margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--rule, var(--line));
+  font-size: 14px;
+}
+.story-cross a { color: var(--accent-read, var(--accent)); text-decoration: none; }
+.story-cross a:hover { text-decoration: underline; }
+.story-cross b { font-weight: 400; }
+
 /* ── Рекорды строкой в шапке ─────────────────────────────────────── */
 /* Раньше это был блок в самом низу вкладки «Игры»: чтобы его увидеть, надо
    было пролистать все карточки, и он читался как ещё один экран. Здесь это

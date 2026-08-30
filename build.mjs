@@ -636,6 +636,59 @@ const playBar = `
           <span class="verdict">${esc(playState)}</span>
         </div>`;
 
+const book = JSON.parse(readFileSync(join(root, 'data', 'stories.json'), 'utf8'));
+
+// Скорость чтения прозы по-русски — около 180 слов в минуту. Число берётся
+// из самого текста, а не проставляется руками, как и всё остальное на сайте.
+const minutes = (words) => Math.max(1, Math.round(words / 180));
+
+const storyList = book.сборники.flatMap((c) =>
+  c.stories.map((st) => ({ ...st, book: c }))
+);
+
+// Полка рассказов на вкладке «Игры». Читатель художки — та же публика, что
+// и играющий в браузере, а не работодатель, поэтому место здесь. Берём по
+// одному рассказу из каждого сборника: полка представляет все три, а не
+// самый длинный текст.
+const storiesShelf = `
+        <section class="block" aria-labelledby="stories-title">
+          <div class="block-head">
+            <h2 id="stories-title">Рассказы</h2>
+            <p>${esc(book.автор)} · ${storyList.length} ${plural(storyList.length, [
+              'текст',
+              'текста',
+              'текстов',
+            ])} в трёх сборниках. Тот же автор, вторая полка.</p>
+          </div>
+          <div class="ggrid">${book.сборники
+            // Первый ЗАМЕТНЫЙ текст сборника, а не первый по порядку:
+            // «Вступление» — предисловие на сотню слов, лицом полки ему быть
+            // нечего.
+            .map((c) => c.stories.find((st) => st.words >= 300) || c.stories[0])
+            .map(
+              (st) => `
+            <a class="scard" href="/rasskazy/${esc(st.slug)}/"
+               data-umami-event="story-open" data-umami-event-from="games"
+               data-umami-event-story="${esc(st.slug)}">
+              <span class="scard-book">${esc(
+                book.сборники.find((c) => c.stories.includes(st)).title
+              )}</span>
+              <h3 class="scard-title">${esc(st.title)}</h3>
+              <p class="scard-lead">${esc(st.lead)}…</p>
+              <span class="scard-time">${minutes(st.words)} мин</span>
+            </a>`
+            )
+            .join('')}
+          </div>
+          <p class="card-links" style="margin-top:14px">
+            <a class="link" href="/rasskazy/"
+               data-umami-event="story-open" data-umami-event-from="games-all">Все ${storyList.length} ${plural(
+                storyList.length,
+                ['рассказ', 'рассказа', 'рассказов']
+              )} <b>→</b></a>
+          </p>
+        </section>`;
+
 const playPanel = `
         <section class="block block--lead" aria-label="Играбельное">
 ${playBar}
@@ -649,7 +702,8 @@ ${playBar}
           </div>
           <div class="ggrid">${otherGames.map(gameCard).join('')}
           </div>
-        </section>`;
+        </section>
+${storiesShelf}`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
 const html = `<!doctype html>
@@ -798,16 +852,6 @@ writeFileSync(join(root, 'praktikum', 'index.html'), praktikumPage);
 // Тексты лежат в stories/ обычными файлами: абзац — строка, «***» —
 // разделитель сцены. Разметки в них нет намеренно, прозе она не нужна, а
 // разбирать markdown ради курсива не стоит того.
-const book = JSON.parse(readFileSync(join(root, 'data', 'stories.json'), 'utf8'));
-
-// Скорость чтения прозы по-русски — около 180 слов в минуту. Число берётся
-// из самого текста, а не проставляется руками, как и всё остальное на сайте.
-const minutes = (words) => Math.max(1, Math.round(words / 180));
-
-const storyList = book.сборники.flatMap((c) =>
-  c.stories.map((st) => ({ ...st, book: c }))
-);
-
 const storyBody = (slug) =>
   readFileSync(join(root, 'stories', `${slug}.txt`), 'utf8')
     .split('\n')
@@ -883,6 +927,9 @@ ${c.stories
       </section>`
   )
   .join('\n')}
+      <p class="story-cross">
+        <a href="/#games" data-umami-event="games-open" data-umami-event-from="stories-index">Ещё у меня есть игры в браузере <b>→</b></a>
+      </p>
     </main>
     <footer class="sitefoot">
       <span><a href="/" style="text-decoration:none">← aka-gst.ru</a></span>
@@ -918,6 +965,10 @@ for (const [i, st] of storyList.entries()) {
         <p class="story-meta">${minutes(st.words)} мин · ${esc(book.автор)}</p>
         ${storyBody(`${st.book.id}--${st.slug}`)}
       </article>
+      <p class="story-cross">
+        <a href="/#games" data-umami-event="games-open" data-umami-event-from="story"
+           data-umami-event-story="${esc(st.slug)}">Ещё у меня есть игры в браузере <b>→</b></a>
+      </p>
       <nav class="story-nav">
         ${prev ? `<a href="/rasskazy/${esc(prev.slug)}/">← ${esc(prev.title)}</a>` : '<span></span>'}
         <a href="/rasskazy/">Оглавление</a>
