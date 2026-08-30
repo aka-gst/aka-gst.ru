@@ -19,7 +19,7 @@ import { parseHash, buildLink, compare, cleanNick, NICK_KEY } from './challenge.
 import { loadBook, noteSpell, bookPages, bookCount, elementMarks } from './book.js';
 import { iconTag } from './icons.js';
 import { pulse } from './pulse.js';
-import { createTrace, traceEvent, traceKey } from './trace.js';
+import { createTrace, traceEvent, traceKey, traceDelivery } from './trace.js';
 import { createShowcase, withSeed } from './showcase.js';
 import { loadArt } from './art.js';
 
@@ -459,6 +459,7 @@ function clearScreen() {
      */
     sled: traceKey(trace),
     pravil: trace.rules.size,
+    chem: traceDelivery(trace),
   });
   const record = writeBest(levelCode, result, world.time);
   const more = hasNextFloor();
@@ -676,6 +677,12 @@ const JABS = {
     'ОН ТАКОЕ НА ЗАВТРАК ЕСТ',
     'ИСКРА ЕМУ НЕ СОПЕРНИК — НУЖНО ВЕЩЕСТВО',
     'ЩЕКОТНО. ПОПРОБУЙ СЕРЬЁЗНЕЕ',
+  ],
+  gust: [
+    'ПОЛЕТЕЛ. КУДА — ТВОЁ ДЕЛО',
+    'ОДНА СТИХИЯ ТОЛЬКО ДВИГАЕТ',
+    'ВЕТЕР ГОТОВИТ, УБИВАЕТ ЧТО-ТО ДРУГОЕ',
+    'ТЕПЕРЬ ОН СНАРЯД',
   ],
   slam: [
     'ПРИЛОЖИЛО',
@@ -985,6 +992,11 @@ function drainEvents() {
     } else if (event.type === 'charge') {
       landed = event.size;
       updateHud(true);
+    } else if (event.type === 'gust') {
+      /* Ветер один никого не убивает — и сказать это надо ровно один раз,
+         иначе игрок решит, что промахнулся. */
+      setToast(jab('gust', 'ВЕТЕР НЕ УБИВАЕТ — ОН ОТПРАВЛЯЕТ'), 2);
+      vibrate(8);
     } else if (event.type === 'slam') {
       setToast(jab('slam', 'В СТЕНУ. СТЕНА НЕ МЯГЧЕ ЧЕЛОВЕКА'), 1.8);
       vibrate([14, 22]);

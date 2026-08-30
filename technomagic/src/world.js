@@ -68,6 +68,15 @@ const PLAYER_ACCEL = 3600 * PACE;
 const ENEMY_WALK = 70 * PACE;
 const ENEMY_RUN = 152 * PACE;
 const DOWN_TIME = 2;
+
+/*
+ * Сон от одиночной стихии длится дольше сбитого с ног: вырубленный
+ * должен успеть побыть решением, а не заминкой. Точное число ищется
+ * замером — оба исхода, «унёс ноги» и «не успел», обязаны остаться в
+ * ходу. Слишком долго — убивать станет незачем; слишком коротко —
+ * вырубать станет незачем.
+ */
+const SLEEP_TIME = 9;
 const BULLET_LIFE = 1.6;
 
 
@@ -754,8 +763,8 @@ export function resisted(world, enemy, angle, source = {}) {
   return true;
 }
 
-export function knockDown(world, enemy, angle) {
-  enemy.downed = DOWN_TIME;
+export function knockDown(world, enemy, angle, срок = DOWN_TIME) {
+  enemy.downed = срок;
   enemy.state = 'down';
   enemy.vx += Math.cos(angle) * 260;
   enemy.vy += Math.sin(angle) * 260;
@@ -763,6 +772,9 @@ export function knockDown(world, enemy, angle) {
   spark(world, enemy.x, enemy.y, angle, 1.2, 9, '#ffffff', 150);
   pop(world, enemy.x, enemy.y, 14, '255,255,255');
   world.events.push({ type: 'knock' });
+  /* Вырубленный считается обезвреженным — значит последний из них
+     открывает выход так же, как последний убитый. */
+  openExit(world);
 }
 
 /*
@@ -804,6 +816,35 @@ function outright(enemy, cause, source) {
 export function killEnemy(world, enemy, angle, cause, source = {}) {
   if (!enemy.alive) return;
 
+  const лежал = (enemy.downed || 0) > 0;
+
+  /*
+   * БАЗОВЫЙ ВЕТЕР НЕ УБИВАЕТ — ОН ТОЛКАЕТ
+   * -------------------------------------------------------
+   * Одиночная стихия делает слабое действие плюс свойство, а сила
+   * приходит от смешивания. Вода одна — не урон, а «мокрый». Ветер один —
+   * не урон, а толчок.
+   *
+   * И толчок здесь не подарок: летящее тело уже умеет сносить соседей и
+   * разбиваться о стену. То есть ветер сам никого не убивает, но
+   * убивает то, куда он тебя отправил, — а это ровно тот вопрос «а если
+   * смешать», ради которого одиночные стихии и делаются слабыми.
+   *
+   * Смешанные ветра — СМЕРЧ, БУРЯ — остаются смертельными: за состав
+   * заплачено очередью.
+   */
+  if (source.traits && source.traits.gust
+      && source.elements && source.elements.length === 1) {
+    enemy.vx = (enemy.vx || 0) + Math.cos(angle) * 460;
+    enemy.vy = (enemy.vy || 0) + Math.sin(angle) * 460;
+    enemy.stagger = Math.max(enemy.stagger || 0, 0.45);
+    enemy.shove = Math.max(enemy.shove || 0, 0.45);
+    enemy.hitFlash = 0.25;
+    world.fx.shake = Math.max(world.fx.shake, 3);
+    world.events.push({ type: 'gust', x: enemy.x, y: enemy.y });
+    return;
+  }
+
   /*
    * Крепкий держит удар — но только тот, который нечем было усилить.
    * Событие уходит наружу: игрок обязан понять, что промаха не было, а
@@ -822,6 +863,42 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
     world.events.push({ type: 'held', kind: enemy.kind });
     return;
   }
+
+  /*
+   * ОДИНОЧНАЯ СТИХИЯ ВЫРУБАЕТ, А НЕ УБИВАЕТ
+   * -------------------------------------------------------
+   * Тот же уговор, что и с ветром, только общий: голая стихия делает
+   * слабое действие, а смерть покупается составом, формой или
+   * состоянием тела. Условие здесь ровно то же `outright`, которым
+   * крепкий отличает подготовленный удар от случайного, — и это не
+   * совпадение: вопрос один и тот же, «выстроен ли ход».
+   *
+   * Условие требует РОВНО ОДНОЙ стихии, а не просто «удар не выстроен».
+   * Разница не педантичная: у чужой пули и у добивания стихий нет
+   * вовсе, и через `!outright` они молча становились несмертельными —
+   * враг переставал убивать врага, а игрок не мог добить лежачего.
+   * Отсутствие состава это не одиночный состав.
+   *
+   * Лежачий не бесплатен для игрока. Он просыпается, он виден
+   * остальным, и он поднимает тревогу тем же способом, что и труп.
+   * Значит выбор между «убить» и «вырубить» — это выбор между шумом
+   * сейчас и сроком потом, а не между сложным и лёгким.
+   */
+  if (source.elements && source.elements.length === 1
+      && !outright(enemy, cause, source)) {
+    enemy.subdued = true;
+    knockDown(world, enemy, angle, SLEEP_TIME);
+    enemy.wasTough = true;
+    world.events.push({
+      type: 'sleep',
+      kind: enemy.kind,
+      x: enemy.x,
+      y: enemy.y,
+      by: source.by || 'player',
+    });
+    return;
+  }
+
   enemy.alive = false;
   world.kills += 1;
 
@@ -890,13 +967,45 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
     cause,
     by: source.by || 'player',
     weapon: source.weapon || null,
-    execution: Boolean(source.execution),
+    /* Добивание — это состояние жертвы, а не свойство оружия. Раньше
+       им считался только удар в ближнем бою, и лежачий, добитый
+       магией, шёл как обычное убийство. */
+    execution: Boolean(source.execution) || лежал,
   });
 
-  if (world.kills >= world.total && !world.exitOpen) {
-    world.exitOpen = true;
-    world.events.push({ type: 'cleared' });
+  openExit(world);
+}
+
+/*
+ * Выход считает ОБЕЗВРЕЖЕННЫХ, а не убитых. Иначе несмертельный проход
+ * невозможен физически: вырубил всех — и заперт навсегда, потому что
+ * счётчик ждёт трупов. Снаружи это выглядит не как строгость, а как
+ * поломка, и человек уходит.
+ *
+ * Открывшийся выход больше не закрывается: проснувшийся гонится за
+ * тобой к выходу, и этого напряжения достаточно. Захлопывать дверь
+ * перед добежавшим — наказывать за то, что он выбрал милосердие.
+ *
+ * И считается ПОЛОЖЕННЫЙ ХОТЬ РАЗ, а не лежащий прямо сейчас. Разница
+ * оказалась решающей, и нашлась замером: чтобы выход открылся по
+ * одновременно лежащим, восьмерых надо уложить внутри одного сна, то
+ * есть примерно за девять секунд. Обход восьмерых стоит около двух
+ * секунд на каждого — шестнадцать. Несмертельный проход был не трудным,
+ * а невозможным, и снаружи это читается как поломка, а не как строгость.
+ *
+ * Теперь срок сна назначает не проходимость, а опасность: выход
+ * откроется, но проснувшиеся пойдут за тобой. Оба исхода остаются в
+ * ходу, и цена милосердия — не запертая дверь, а погоня.
+ */
+export function openExit(world) {
+  if (world.exitOpen) return;
+  let обезврежено = 0;
+  for (const enemy of world.enemies) {
+    if (!enemy.alive || enemy.subdued) обезврежено += 1;
   }
+  if (обезврежено < world.total) return;
+  world.exitOpen = true;
+  world.events.push({ type: 'cleared' });
 }
 
 export function killPlayer(world, angle) {
@@ -1335,6 +1444,20 @@ function shatter(world, at, substance) {
    * Удар и разряд мокрому дереву по-прежнему не помеха: вода тушит, а не
    * укрепляет.
    */
+  /*
+   * Задержка на повторное срабатывание — и проверять её надо здесь, до
+   * того как клетка обнулится. Второй раз я наступил на те же грабли, что
+   * с мокрым деревом: поставил проверку внутрь ветки щитка, а клетка к
+   * тому моменту уже стёрта в пол. Снаружи это выглядело так, будто взлом
+   * сжигает щиток.
+   *
+   * Нужна она тому, что переживает удар: целый щиток снаряд задевает на
+   * каждом шаге полёта, и питание щёлкало восемь раз туда-обратно за один
+   * выстрел. Чётное число щелчков возвращало всё на место, и взлом
+   * выглядел неработающим.
+   */
+  if (world.tileHold && world.tileHold[at] > 0) return false;
+
   if (world.tileWet && world.tileWet[at] > 0
       && substance.traits.burn && !substance.traits.crush && !substance.traits.shock) {
     addCloud(world, x, y, TILE_SIZE * 0.8, 'steam');
@@ -1497,6 +1620,7 @@ function shatter(world, at, substance) {
      */
     const точно = substance.traits.shock && substance.elements.length >= 2;
 
+    if (world.tileHold) world.tileHold[at] = 0.5;
     setPower(world, !world.powered);
     world.events.push({ type: 'panel', x, y, точно });
 
@@ -1789,7 +1913,53 @@ export function update(world, dt, intent) {
     }
   }
 
+  noticeBodies(world);
+
   if (world.decals.length > 420) world.decals.splice(0, world.decals.length - 420);
+}
+
+/*
+ * ТЕЛО НА ПОЛУ ВИДНО ОСТАЛЬНЫМ
+ * =========================================================
+ * До сих пор мир не замечал тел вовсе: можно было положить пятерых на
+ * глазах у шестого, и он ходил дозором мимо. Тревогу поднимала только
+ * увиденная смерть — сам миг, — а всё, что осталось лежать после,
+ * становилось частью обстановки.
+ *
+ * Правило одно и на труп, и на лежачего: разбирать их было бы враньём
+ * в очевидную сторону — вырубленного замечают, а убитого нет.
+ *
+ * Оно же назначает цену вырубанию. Оглушённый лежит на виду девять
+ * секунд, и всё это время он — улика. Убитый лежит вечно, но убийство
+ * слышно сразу. Один способ платит шумом сейчас, другой — сроком
+ * потом, и оба остаются в ходу.
+ */
+function noticeBodies(world) {
+  if (world.engaged) return;
+
+  for (const enemy of world.enemies) {
+    if (!enemy.alive || enemy.downed > 0) continue;
+    if (enemy.state === 'chase') continue;
+
+    for (const тело of world.corpses) {
+      const gap = Math.hypot(enemy.x - тело.x, enemy.y - тело.y);
+      if (gap > WITNESS_SIGHT) continue;
+      if (!hasSight(world, enemy.x, enemy.y, тело.x, тело.y)) continue;
+      world.engaged = true;
+      world.events.push({ type: 'engaged', cause: 'body' });
+      return;
+    }
+
+    for (const другой of world.enemies) {
+      if (другой === enemy || !другой.alive || !(другой.downed > 0)) continue;
+      const gap = Math.hypot(enemy.x - другой.x, enemy.y - другой.y);
+      if (gap > WITNESS_SIGHT) continue;
+      if (!hasSight(world, enemy.x, enemy.y, другой.x, другой.y)) continue;
+      world.engaged = true;
+      world.events.push({ type: 'engaged', cause: 'body' });
+      return;
+    }
+  }
 }
 
 
@@ -1942,6 +2112,16 @@ function updateEnemy(world, enemy, dt) {
   }
 
   if (enemy.downed > 0) {
+    /*
+     * Лежачий горит. Без этой строки обморок работал бронёй: в огне
+     * лежать было безопаснее, чем стоять, потому что ветка сна
+     * возвращалась раньше, чем тело успевало обуглиться. Поймано
+     * тестом про копну — он единственный ставил вырубленного в
+     * пожар, и мы чуть не списали его как устаревший.
+     */
+    scorch(world, enemy, dt);
+    if (!enemy.alive) return;
+
     enemy.downed -= dt;
     enemy.vx *= 0.86;
     enemy.vy *= 0.86;
@@ -1949,6 +2129,10 @@ function updateEnemy(world, enemy, dt) {
     if (enemy.downed <= 0) {
       enemy.state = 'alert';
       enemy.heard = { x: world.player.x, y: world.player.y };
+      /* Пробуждение — событие, а не тихая смена поля. Без него судьбу
+         вырубленных приходится угадывать по состоянию мира в конце
+         прогона, а это уже не замер, а гадание. */
+      world.events.push({ type: 'wake', kind: enemy.kind });
     }
     return;
   }

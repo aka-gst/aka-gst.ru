@@ -497,9 +497,19 @@ const workPanel = `
         </div>
       </section>
 
-      <section class="block" aria-labelledby="profile-title">
+      <section class="block" aria-labelledby="own-products-title">
         <div class="block-head">
           <p class="kicker">04</p>
+          <h2 id="own-products-title">Свои продукты</h2>
+          <p>Сделано без заказчика: задача, сроки и мера готовности собственные.</p>
+        </div>
+        <div class="grid">${byGroup('own-products').map(card).join('')}
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="profile-title">
+        <div class="block-head">
+          <p class="kicker">05</p>
           <h2 id="profile-title">Опыт и навыки</h2>
           <p>${esc(profile.summary)}</p>
         </div>
@@ -516,7 +526,7 @@ const workPanel = `
 
       <section class="block" aria-labelledby="all-work-title">
         <div class="block-head">
-          <p class="kicker">05</p>
+          <p class="kicker">06</p>
           <h2 id="all-work-title">Все проекты</h2>
         </div>
         <ul class="list">${allWork.map(listRow).join('')}
@@ -525,7 +535,7 @@ const workPanel = `
 
       <section class="block contact" aria-labelledby="contact-title" id="contact">
         <div class="block-head">
-          <p class="kicker">06</p>
+          <p class="kicker">07</p>
           <h2 id="contact-title">${esc(site.contact.heading)}</h2>
           <p>${esc(site.contact.intro)}</p>
         </div>

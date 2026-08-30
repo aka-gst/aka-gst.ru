@@ -13,6 +13,7 @@
         "gateway",
         "practicums",
         "client-products",
+        "own-products",
         "misc"
       ]
     },
@@ -45,6 +46,10 @@
     "misc": {
       "title": "Остальное",
       "track": "both"
+    },
+    "own-products": {
+      "title": "Свои продукты",
+      "track": "work"
     }
   },
   "projects": [
@@ -933,9 +938,11 @@
         "play"
       ],
       "groups": [
-        "misc"
+        "own-products"
       ],
-      "feature": {},
+      "feature": {
+        "work": 9
+      },
       "status": {
         "state": "live",
         "label": "работает"
