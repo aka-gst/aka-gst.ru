@@ -9,35 +9,82 @@
 //         рекордов: чужие ники не должны застывать картинкой на портфолио.
 
 export const PLAN = [
-  { id: 'acid',     url: 'https://aka-gst.ru/acid/',
+  { id: 'acid', repo: 'acid-uno',     url: 'https://aka-gst.ru/acid/',
     // Сверху ряд кнопок — обрезаем его, оставляем стол и руку.
     steps: [['ПОНЯТНО', 1500], ['ИГРАТЬ', 2500], ['ПОНЯТНО', 1500], ['НАЧАТЬ ПАРТИЮ', 4000]],
     clip: { x: 0, y: 108, width: 1200, height: 552 } },
   // clip — область кадра. Нужна там, где рядом с полем висит таблица
   // рекордов: чужие ники не должны застывать картинкой на портфолио,
   // хотя на живой странице они и так видны и меняются.
-  { id: 'tetcolor', url: 'https://aka-gst.ru/tetcolor/',
+  { id: 'tetcolor', repo: 'Zakriva/tetcolor-columns', url: 'https://aka-gst.ru/tetcolor/',
     // У игры появилось обучение поверх поля — пропускаем его. Область
     // берём по низу стакана: по пустой сетке не понять, что это за игра,
     // а слева от неё висит таблица рекордов с чужими никами.
-    steps: [['СТАРТ', 3500], ['ПРОПУСТИТЬ', 1500]], play: { drops: 6, wait: 2500 },
+    steps: [['СТАРТ', 3500], ['ПРОПУСТИТЬ', 1500]],
+    // Шесть нажатий пробела роняли все колонки в один столбец: получалась
+    // башня посреди пустого стакана — ровно то «пустое поле», на которое
+    // жаловался владелец. Разводим фишки вбок, тогда на дне видна кладка.
+    play: { keys: [
+      { key: 'ArrowLeft', code: 'ArrowLeft', vk: 37, times: 3, after: 120 }, { key: ' ', code: 'Space', after: 520 },
+      { key: 'ArrowRight', code: 'ArrowRight', vk: 39, after: 120 }, { key: ' ', code: 'Space', after: 520 },
+      { key: 'ArrowRight', code: 'ArrowRight', vk: 39, after: 120 }, { key: ' ', code: 'Space', after: 520 },
+      { key: 'ArrowRight', code: 'ArrowRight', vk: 39, after: 120 }, { key: ' ', code: 'Space', after: 520 },
+      { key: 'ArrowRight', code: 'ArrowRight', vk: 39, after: 120 }, { key: ' ', code: 'Space', after: 520 },
+      { key: 'ArrowLeft', code: 'ArrowLeft', vk: 37, times: 2, after: 120 }, { key: ' ', code: 'Space', after: 520 },
+      { key: 'ArrowLeft', code: 'ArrowLeft', vk: 37, times: 2, after: 120 }, { key: ' ', code: 'Space', after: 520 },
+    ], wait: 1200 },
+    // Область та же, что у принятого кадра: дно стакана. Правее нельзя —
+    // туда попадают кнопки паузы и звука, левее нельзя — там таблица
+    // рекордов с чужими никами, им незачем застывать на портфолио.
     clip: { x: 458, y: 392, width: 300, height: 228 } },
-  { id: 'lines',    url: 'https://aka-gst.ru/lines/',
+  { id: 'lines', repo: 'Zakriva/neon-lines',    url: 'https://aka-gst.ru/lines/',
     // Обучение теперь всплывает поверх поля.
     steps: [['НАЧАТЬ', 2000], ['ПРОПУСТИТЬ', 1500]],
     clip: { x: 200, y: 24, width: 590, height: 470 } },
-  { id: 'stihii',   url: 'https://aka-gst.ru/stihii/',
+  { id: 'stihii', repo: 'bitva-stihiy',   url: 'https://aka-gst.ru/stihii/',
     // Берём арену с обоими магами: пропорции близки к полосе карточки,
     // поэтому обрезка по краям не съест бойцов.
     steps: [['СВОБОДНЫЙ БОЙ', 1200], ['ЛЁГКИЙ', 2500]],
     clip: { x: 12, y: 82, width: 1176, height: 420 } },
-  { id: 'worm',     url: 'https://aka-gst.ru/worm/', steps: [['ЦЕП', 3000]] },
+  // Игра переведена на поток: толпа набегает волнами, награда падает под
+  // ноги. Через три секунды после старта на поле трое — это не толпа.
+  // Ждём, пока волна соберётся, иначе карточка показывает пустой луг.
+  { id: 'worm', repo: 'naotmash',     url: 'https://aka-gst.ru/worm/', steps: [['ЦЕП', 3000]],
+    // Девять секунд — это уже экран «Новый рекорд»: герой стоит и его
+    // забивают. Пять — толпа успела набежать, герой ещё жив.
+    play: { wait: 5000 } },
   // Игра выложена по /udar/, а не /odin-udar/ — карточка об этом не знала.
-  { id: 'udar',     url: 'https://aka-gst.ru/udar/',
+  { id: 'udar', repo: 'Zakriva/odin-udar-v2',     url: 'https://aka-gst.ru/udar/',
     steps: [['ВЗЯТЬ КЛЮЧИ', 3500]] },
-  { id: 'technomagic', url: 'https://aka-gst.ru/technomagic/',
-    steps: [['ВЗЯТЬ КЛЮЧИ', 3500]] },
-  { id: 'coin',     url: 'https://aka-gst.ru/coin/',
+  // Изометрию убрали — игра сверху вниз. Стихию набирают стрелкой и пускают
+  // пробелом; без этого кадр ловит подсказку обучения над пустым полом.
+  { id: 'technomagic', repo: 'technomagic', url: 'https://aka-gst.ru/technomagic/',
+    steps: [['ВЗЯТЬ КЛЮЧИ', 3500]],
+    play: { keys: [
+      { key: 'ArrowLeft', code: 'ArrowLeft', vk: 37, after: 200 },
+      { key: ' ', code: 'Space', after: 1400 },
+      { key: 'ArrowUp', code: 'ArrowUp', vk: 38, after: 200 },
+      { key: ' ', code: 'Space', after: 1200 },
+      { key: 'ArrowLeft', code: 'ArrowLeft', vk: 37, after: 200 },
+      { key: ' ', code: 'Space', after: 500 },
+    ] },
+    // Поле шире и выше полосы карточки. Обрезаем показатели сверху и ряд
+    // стихий снизу, оставляем сам пол с магами и следами попаданий.
+    clip: { x: 55, y: 40, width: 1045, height: 558 } },
+  // ПЕРИМЕТР начинается сразу, без заставки: жать нечего, только дать
+  // охране разойтись по маршрутам, иначе в кадре пустой коридор.
+  { id: 'stealth',  repo: 'stealth', url: 'https://aka-gst.ru/stealth/',
+    // На старте герой стоит в тёмном углу, и кадр выходит чёрным
+    // прямоугольником. Ведём его вглубь уровня — туда, где свет, конусы
+    // обзора охраны и есть на что смотреть.
+    steps: [],
+    play: { keys: [
+      { key: 'd', code: 'KeyD', vk: 68, hold: 2400, after: 200 },
+      { key: 'w', code: 'KeyW', vk: 87, hold: 3200, after: 200 },
+      { key: 'd', code: 'KeyD', vk: 68, hold: 2600, after: 200 },
+      { key: 'w', code: 'KeyW', vk: 87, hold: 1800 },
+    ], wait: 1800 } },
+  { id: 'coin', repo: 'orel-reshka',     url: 'https://aka-gst.ru/coin/',
     // Вводное окно теперь обязательное: проходим его и снимаем саму монету,
     // а не панели показателей по краям.
     steps: [['ПОКАЖИ, КАК ИГРАТЬ', 2000], ['ПРОПУСТИТЬ', 1800]],

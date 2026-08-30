@@ -88,12 +88,15 @@ const run = async () => {
   const send = session(ws);
   await send('Page.enable');
 
-  const press = async (key, code, times) => {
+  // Код клавиши передаём настоящий, а не угаданный: раньше здесь стояло
+  // «пробел — 32, всё остальное — 40», то есть любая стрелка приезжала в игру
+  // как «вниз». Пока жали только пробел, это не было видно.
+  const press = async (key, code, times = 1, vk = 32, pause = 140) => {
     for (let i = 0; i < times; i += 1) {
       for (const type of ['keyDown', 'keyUp']) {
-        await send('Input.dispatchKeyEvent', { type, key, code, windowsVirtualKeyCode: key === ' ' ? 32 : 40 });
+        await send('Input.dispatchKeyEvent', { type, key, code, windowsVirtualKeyCode: vk });
       }
-      await sleep(140);
+      await sleep(pause);
     }
   };
 
@@ -113,6 +116,23 @@ const run = async () => {
           }
           if (game.play) {
             // Даём игре пожить: пустое поле на карточке ничего не говорит.
+            // Половина игр в покое неподвижна, и кадр «через секунду после
+            // старта» показывает пустую комнату вместо игры.
+            for (const шаг of game.play.keys || []) {
+              if (шаг.hold) {
+                // Ходьба — это зажатая клавиша, а не серия нажатий. Пока
+                // умели только нажимать-отпускать, герой ПЕРИМЕТРА за
+                // тридцать «шагов» сдвигался на пиксель и кадр выходил
+                // чёрным углом вместо уровня.
+                const общее = { key: шаг.key, code: шаг.code, windowsVirtualKeyCode: шаг.vk ?? 32 };
+                await send('Input.dispatchKeyEvent', { type: 'keyDown', autoRepeat: false, ...общее });
+                await sleep(шаг.hold);
+                await send('Input.dispatchKeyEvent', { type: 'keyUp', ...общее });
+              } else {
+                await press(шаг.key, шаг.code, шаг.times || 1, шаг.vk ?? 32, шаг.pause ?? 140);
+              }
+              if (шаг.after) await sleep(шаг.after);
+            }
             await press(' ', 'Space', game.play.drops || 0);
             await sleep(game.play.wait || 0);
           }
