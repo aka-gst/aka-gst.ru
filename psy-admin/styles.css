@@ -7,13 +7,16 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 85% 0, #e9e0ff 0, transparent 32rem), #f6f3ec; }
+/* Колонка на всю высоту экрана: нижний отступ подвала берётся из свободного
+   места, а не добавляется к высоте страницы. Иначе прокрутка появлялась,
+   когда контент уже помещался, и прокручивала пустоту. */
+body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: radial-gradient(circle at 85% 0, #e9e0ff 0, transparent 32rem), #f6f3ec; }
 button, input, select { font: inherit; }
 a { color: inherit; }
 
 .topbar { min-height: 58px; padding: 0 max(24px, calc((100vw - 1120px) / 2)); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d9d1c5; color: #716a7a; font-size: 13px; }
 .brand { color: #30235e; font-size: 18px; font-weight: 850; letter-spacing: -.04em; text-decoration: none; }
-main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 64px 0 40px; }
+main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 64px 0 0; }
 .intro { max-width: 850px; }
 .eyebrow { margin: 0 0 14px; color: #6a48c7; font-size: 12px; font-weight: 800; letter-spacing: .14em; }
 h1 { margin: 0; max-width: 760px; font-size: clamp(38px, 6.4vw, 72px); line-height: .98; letter-spacing: -.055em; }
@@ -48,11 +51,12 @@ select:focus, input:focus { border-color: #7452bd; box-shadow: 0 0 0 3px #7452bd
 .input-row { display: grid; grid-template-columns: 1fr auto; gap: 9px; }
 .input-row button { min-height: 52px; padding: 0 22px; border: 0; border-radius: 11px; background: #6948b2; color: #fff; font-weight: 780; cursor: pointer; }
 .input-row button:hover { background: #56369d; }
-footer { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 0 0 32px; color: #77717c; font-size: 12px; }
+footer { width: min(1120px, calc(100% - 32px)); margin: auto auto 0; padding: 32px 0 16px; color: #77717c; font-size: 12px; }
 
 @media (max-width: 650px) {
   .topbar { padding: 0 16px; }
   main { width: min(100% - 24px, 1120px); padding-top: 40px; }
+  footer { padding: 24px 0 14px; }
   .intro > p:not(.eyebrow) { font-size: 17px; }
   .assistant { margin-top: 30px; }
   .examples { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
@@ -66,7 +70,7 @@ footer { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 0 0 32p
 }
 
 @media (min-width: 651px) {
-  main { padding: 30px 0 26px; }
+  main { padding: 30px 0 0; }
   h1 { max-width: 900px; font-size: clamp(40px, 4.5vw, 58px); line-height: 1.02; }
   .intro > p:not(.eyebrow) { max-width: 900px; margin: 14px 0; font-size: 18px; line-height: 1.42; }
   .eyebrow { margin-bottom: 9px; }

@@ -23,10 +23,13 @@ const OUT = new URL('../.shots/', import.meta.url).pathname;
 const TMP = new URL('../.shots/frames/', import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
-// Чем игра занята во время записи.
+// Чем игра занята во время записи и, если нужно, своя область кадра.
+// У Тетколора она выше, чем у снимка: снимок нацелен на дно стакана, где к
+// тому времени уже лежит стопка, а в свежей партии кубики появляются сверху
+// и до низа доезжают не сразу — первые секунды ролика были пустой сеткой.
 const DURING = {
   acid: { seconds: 5 },                                   // соперники ходят сами, идёт таймер
-  tetcolor: { seconds: 6 },                                // колонки падают сами
+  tetcolor: { seconds: 6, clip: { x: 458, y: 150, width: 300, height: 300 } },
   lines: { seconds: 5, click: 'НОВАЯ ИГРА', everyMs: 1700 }, // шары появляются заново
   stihii: { seconds: 5, click: 'В БОЙ', everyMs: 1800 },   // размен ударами
   technomagic: { seconds: 5, key: 'd', everyMs: 260 },      // маг идёт по парку
@@ -90,11 +93,21 @@ const run = async () => {
     if (only.length && !only.includes(game.id)) continue;
     const plan = DURING[game.id] || { seconds: 5 };
 
-    await send('Page.navigate', { url: game.url });
-    await sleep(4500);
-    for (const [label, pause] of game.steps) {
-      const hit = await send('Runtime.evaluate', { expression: clickScript(label), returnByValue: true });
-      if (hit.result.value) await sleep(pause);
+    try {
+      await Promise.race([
+        (async () => {
+          await send('Page.navigate', { url: game.url });
+          await sleep(4500);
+          for (const [label, pause] of game.steps) {
+            const hit = await send('Runtime.evaluate', { expression: clickScript(label), returnByValue: true });
+            if (hit.result.value) await sleep(pause);
+          }
+        })(),
+        sleep(40000).then(() => { throw new Error('страница не дошла за 40 с'); }),
+      ]);
+    } catch (e) {
+      console.log(`${game.id.padEnd(12)} пропущена: ${e.message}`);
+      continue;
     }
     // game.play из общего плана здесь намеренно не выполняется: те нажатия
     // существуют, чтобы на неподвижном кадре поле было не пустым. В записи
@@ -134,7 +147,7 @@ const run = async () => {
     // растягивало время: у Деревни 361 кадр за 5 секунд превращались в 15
     // секунд ролика. Выходную частоту задаём отдельно (-r), тогда ffmpeg
     // выбрасывает или повторяет кадры, а длительность остаётся живой.
-    const c = game.clip;
+    const c = plan.clip || game.clip;
     // Обрезаем ту же область, что и у неподвижного кадра, и приводим ширину
     // к 600px: на карточке полоса 287px, с учётом плотных экранов этого
     // хватает с запасом. Чётные стороны обязательны для yuv420p.
