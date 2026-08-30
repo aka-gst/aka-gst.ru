@@ -444,7 +444,9 @@ const experienceBlock = profile.experience
                 : esc(e.org)
             }</h3>
             <p class="job-role">${esc(e.role)}</p>
-            <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
+            <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>${
+              e.shot ? figure(e.shot) : ''
+            }
           </article>`
   )
   .join('');

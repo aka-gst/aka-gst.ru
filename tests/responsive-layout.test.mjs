@@ -125,12 +125,21 @@ const imageSize = bytes => {
 test('снимки экрана лежат на месте, подписаны и не двигают вёрстку', () => {
   const db = json('data/projects.json');
   const html = site('index.html');
-  const shots = db.projects.flatMap(p => (p.shots || []).map(s => ({ ...s, project: p })));
+  // Снимки живут в двух базах: у проектов и в строках опыта (там лежит
+  // скан журнальной полосы). Проверять надо оба набора — иначе картинка,
+  // добавленная во второй, проходит мимо всех правил про alt, подпись,
+  // ?v= и зарезервированное место.
+  const shots = [
+    ...db.projects.flatMap(p => (p.shots || []).map(s => ({ ...s, project: p }))),
+    ...json('data/site.json').profile.experience
+      .filter(e => e.shot)
+      .map(e => ({ ...e.shot, project: { kind: 'скан' } })),
+  ];
   assert.ok(shots.length >= 13, 'снимки пропали из базы проектов');
 
   const sizes = new Map();
   for (const shot of shots) {
-    const bytes = readFileSync(new URL(`../../aka-gst.ru/assets/shots/${shot.file}`, import.meta.url));
+    const bytes = readFileSync(тут(`assets/shots/${shot.file}`));
     // Расширение должно совпадать с содержимым: Content-Type сервер берёт
     // из имени файла, и .png с JPEG внутри — это заявка, которой файл не
     // соответствует. Три из первых пяти снимков приехали именно такими.
@@ -141,7 +150,9 @@ test('снимки экрана лежат на месте, подписаны �
     sizes.set(shot.file, size);
     // Снимки-иллюстрации показываются целиком и сняты одним размером.
     // Игровые кадры обрезаны по полю, у каждого свои пропорции.
-    if (shot.project.kind !== 'game') {
+    // Скан журнальной полосы под общий размер не подгоняется: это чужая
+    // бумага 2008 года, а не снимок нашей страницы.
+    if (shot.project.kind !== 'game' && shot.project.kind !== 'скан') {
       assert.equal(size.w, 1200, `${shot.file}: ширина не 1200`);
       assert.equal(size.h, 750, `${shot.file}: высота не 750`);
     }
