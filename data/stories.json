@@ -13,7 +13,8 @@
           "words": 2162,
           "paragraphs": 49,
           "lead": "– Я могу сделать тебя богом. Хочешь?",
-          "cover": "myasnaya-konserva.jpg"
+          "cover": "myasnaya-konserva.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "letuny",
@@ -21,7 +22,8 @@
           "words": 1685,
           "paragraphs": 57,
           "lead": "– Папа, я не хочу больше жрать людей!",
-          "cover": "letuny.jpg"
+          "cover": "letuny.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "bag-v-sudbe",
@@ -29,7 +31,8 @@
           "words": 1247,
           "paragraphs": 72,
           "lead": "В программировании баг (англ. bug : клоп, любое насекомое, вирус) — жаргонное слово, обычно обозначающее ошибку в программе или системе, из-за которой",
-          "cover": "bag-v-sudbe.jpg"
+          "cover": "bag-v-sudbe.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "materinskaya-plata",
@@ -37,7 +40,8 @@
           "words": 1192,
           "paragraphs": 28,
           "lead": "Она любила рисовать. Привычное гудение на фоне лишь добавляло красок всему процессу. «Бессмысленные действия. Прокрастинация вместо достижения реально",
-          "cover": "materinskaya-plata.jpg"
+          "cover": "materinskaya-plata.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "blizorukiy-toropyga",
@@ -45,7 +49,8 @@
           "words": 2136,
           "paragraphs": 29,
           "lead": "Это скрипучее печенье нахально изодра̀ло всё моё нежное нёбо. И стоило ли это предсказание ворсистого ковра во рту? Теперь эти лоскутики кожи так вызы",
-          "cover": "blizorukiy-toropyga.jpg"
+          "cover": "blizorukiy-toropyga.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "teplovaya-lovushka",
@@ -53,7 +58,8 @@
           "words": 1375,
           "paragraphs": 36,
           "lead": "Поздравляю!",
-          "cover": "teplovaya-lovushka.jpg"
+          "cover": "teplovaya-lovushka.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "prosto-ya-zabyla-kakovo-eto",
@@ -61,7 +67,8 @@
           "words": 1991,
           "paragraphs": 35,
           "lead": "Бывало, я так на них злилась, что просто без раздумий топила. Ой… Уже идёт запись? Как это исправить? Команда “Удалить”. Удалить! Не работает. Блин. Ч",
-          "cover": "prosto-ya-zabyla-kakovo-eto.jpg"
+          "cover": "prosto-ya-zabyla-kakovo-eto.jpg",
+          "coverBy": "Bizi"
         }
       ]
     },
@@ -111,7 +118,8 @@
           "words": 1782,
           "paragraphs": 48,
           "lead": "Ты же тоже этого хочешь, иначе зачем ты здесь. Чтобы выпить и вспомнить прошлое? Смешно. Будто там осталось хоть что-то хорошее, что мы ещё не убили. ",
-          "cover": "poddatsya.jpg"
+          "cover": "poddatsya.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "free-exe",
@@ -119,7 +127,8 @@
           "words": 402,
           "paragraphs": 13,
           "lead": "[12.03.19 || 13:02] конец документа",
-          "cover": "free-exe.jpg"
+          "cover": "free-exe.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "nachinka",
@@ -127,7 +136,8 @@
           "words": 5898,
           "paragraphs": 137,
           "lead": "//",
-          "cover": "nachinka.jpg"
+          "cover": "nachinka.jpg",
+          "coverBy": "Bizi"
         },
         {
           "slug": "zaraza",
@@ -135,7 +145,8 @@
           "words": 97,
           "paragraphs": 10,
           "lead": "Молния!",
-          "cover": "zaraza.jpg"
+          "cover": "zaraza.jpg",
+          "coverBy": "Bizi"
         }
       ]
     },

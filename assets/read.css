@@ -143,7 +143,14 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .book-list .has-cover .story-name,
 .book-list .has-cover .story-time { padding-top: 1px; }
 
+/* Подпись стоит у каждой обложки отдельно, а не одной строкой на раздел:
+   часть обложек не её, и общая подпись приписала бы художнице чужие
+   фотографии. Псевдоним без ссылки — решение владельца. */
 .story-cover { margin: 0 0 26px; }
+.story-cover-by {
+  margin-top: 8px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: .06em; color: var(--ink-soft);
+}
 .story-cover img {
   display: block; width: 100%; max-width: 34em; height: auto;
   border-radius: 10px; background: var(--ground-soft);

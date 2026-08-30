@@ -997,6 +997,11 @@ ${readerTopbar}
                 `assets/covers/${st.cover}`
               )}" alt="Обложка рассказа «${esc(st.title)}»"
                width="900" height="900" loading="eager" decoding="async">
+          ${
+            st.coverBy
+              ? `<figcaption class="story-cover-by">Обложка — ${esc(st.coverBy)}</figcaption>`
+              : ''
+          }
         </figure>`
             : ''
         }
