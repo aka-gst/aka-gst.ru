@@ -877,6 +877,23 @@ const readerHead = (title, description, canonical) => `
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>`;
 
+// Шапка сайта на страницах рассказов. Владелец: «почему рассказы не в стиле
+// сайта сделаны, хотя бы хэдер» — и он прав: без неё раздел читался как
+// чужой сайт. Переключатель здесь — ссылки, а не кнопки: панелей на этой
+// странице нет, переключать нечего, а увести на главную нужно.
+const readerTopbar = `
+      <header class="topbar">
+        <a class="brand" href="/">aka<span>-</span>gst</a>
+        <div class="track-switch" role="group" aria-label="Разделы сайта">
+          <a href="/#work">${trackIcon('work')}<span>${esc(site.tracks.work.label)}</span></a>
+          <a href="/#games">${trackIcon('games')}<span>${esc(site.tracks.play.label)}</span></a>
+        </div>
+        <a class="topbar-link topbar-link--here" href="/rasskazy/" aria-current="page">Рассказы</a>
+        <nav class="socials" aria-label="Профили">
+${socialLinks('reader')}
+        </nav>
+      </header>`;
+
 // Панель читателя: грунт и размер. Ставится на обе страницы раздела.
 const readerBar = `
       <div class="reader-bar" role="group" aria-label="Как читать">
@@ -896,8 +913,9 @@ const storiesIndex = `<!doctype html>
   )}
   </head>
   <body class="reader">
+${readerTopbar}
     <header class="reader-top">
-      <a class="site-home" href="/">← На главную</a>${readerBar}
+      <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
     </header>
     <main id="main" class="reader-main">
       <div class="reader-lede">
@@ -914,8 +932,16 @@ ${book.сборники
         <ol class="book-list">
 ${c.stories
   .map(
-    (st) => `          <li>
+    (st) => `          <li${st.cover ? ' class="has-cover"' : ''}>
             <a href="/rasskazy/${esc(st.slug)}/">
+              ${
+                st.cover
+                  ? `<img class="story-thumb" src="/assets/covers/${esc(
+                      st.cover
+                    )}?v=${assetVersion(`assets/covers/${st.cover}`)}" alt=""
+                       width="900" height="900" loading="lazy" decoding="async">`
+                  : ''
+              }
               <span class="story-name">${esc(st.title)}</span>
               <span class="story-time">${minutes(st.words)} мин</span>
               <span class="story-lead">${esc(st.lead)}…</span>
@@ -955,6 +981,7 @@ for (const [i, st] of storyList.entries()) {
   </head>
   <body class="reader">
     <div class="reader-progress" aria-hidden="true"><i></i></div>
+${readerTopbar}
     <header class="reader-top">
       <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
     </header>
@@ -963,6 +990,16 @@ for (const [i, st] of storyList.entries()) {
         <p class="story-book">${esc(st.book.title)} · ${esc(st.book.year)}</p>
         <h1>${esc(st.title)}</h1>
         <p class="story-meta">${minutes(st.words)} мин · ${esc(book.автор)}</p>
+        ${
+          st.cover
+            ? `<figure class="story-cover">
+          <img src="/assets/covers/${esc(st.cover)}?v=${assetVersion(
+                `assets/covers/${st.cover}`
+              )}" alt="Обложка рассказа «${esc(st.title)}»"
+               width="900" height="900" loading="eager" decoding="async">
+        </figure>`
+            : ''
+        }
         ${storyBody(`${st.book.id}--${st.slug}`)}
       </article>
       <p class="story-cross">

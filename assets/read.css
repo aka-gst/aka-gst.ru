@@ -26,6 +26,39 @@ html[data-size="s"] .reader { --read-size: 17px; }
 html[data-size="l"] .reader { --read-size: 21px; }
 html[data-size="xl"] .reader { --read-size: 24px; }
 
+/* Шапка сайта внутри читалки. Оформление то же, что на главной, но цвета
+   берутся из грунта раздела: чёрная полоса над бумажным фоном выглядела бы
+   заплаткой с другого сайта — а смысл шапки ровно обратный. */
+.reader .topbar {
+  max-width: 720px; padding: 16px 20px 0;
+  background: transparent; backdrop-filter: none; border: 0;
+  position: static;
+}
+.reader .brand { color: var(--ink); }
+.reader .brand span { color: var(--accent-read); }
+.reader .track-switch { border-color: var(--rule); background: var(--ground-soft); }
+.reader .track-switch a {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 15px; border-radius: 999px;
+  color: var(--ink-soft); text-decoration: none; font-size: 13px; font-weight: 600;
+}
+.reader .track-switch a:hover { color: var(--ink); }
+.reader .track-switch a svg { width: 17px; height: 17px; }
+.reader .topbar-link { color: var(--ink-soft); }
+.reader .topbar-link:hover { color: var(--ink); border-color: var(--rule); }
+/* Текущий раздел помечен, чтобы ссылка не выглядела предложением уйти. */
+.reader .topbar-link--here { color: var(--ink); border-color: var(--rule); background: var(--ground-soft); }
+.reader .socials { margin-left: 0; }
+.reader .social { color: var(--ink-soft); }
+.reader .social:hover { color: var(--ink); background: var(--ground-soft); }
+
+@media (max-width: 640px) {
+  .reader .topbar { padding: 12px 16px 0; gap: 10px; flex-wrap: wrap; }
+  .reader .track-switch { order: 3; width: 100%; }
+  .reader .track-switch a { flex: 1 1 0; justify-content: center; }
+  .reader .socials { margin-left: auto; }
+}
+
 /* Тонкая полоса прочитанного. Не индикатор загрузки, а ответ на вопрос
    «сколько ещё» — единственное, что читатель спрашивает у длинного текста. */
 .reader-progress {
@@ -86,6 +119,34 @@ html[data-size="xl"] .reader { --read-size: 24px; }
    за автора нечестно — пусть представляет себя сам. */
 .story-lead {
   grid-column: 2 / -1; font-size: 13px; line-height: 1.5; color: var(--ink-soft);
+}
+
+/* Обложки. Их рисовали под каждый рассказ, и без них раздел терял половину
+   впечатления — так и было сказано. В оглавлении маленькие, чтобы список
+   оставался списком; на странице рассказа во всю меру текста. */
+/* Обложка занимает обе строки, остальное выравнивается по верху: при общем
+   выравнивании по базовой линии номер уезжал под миниатюру, а название
+   прилипало к её низу. */
+/* Со обложкой номер не нужен: якорем строки становится она сама, а лишний
+   столбец только растаскивал текст. */
+.book-list .has-cover a {
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: start; gap: 3px 14px;
+}
+.book-list .has-cover a::before { display: none; }
+.story-thumb {
+  grid-row: 1 / -1; align-self: start;
+  width: 56px; height: 56px; border-radius: 8px;
+  object-fit: cover; background: var(--ground-soft);
+}
+.book-list .has-cover .story-lead { grid-column: 2 / -1; }
+.book-list .has-cover .story-name,
+.book-list .has-cover .story-time { padding-top: 1px; }
+
+.story-cover { margin: 0 0 26px; }
+.story-cover img {
+  display: block; width: 100%; max-width: 34em; height: auto;
+  border-radius: 10px; background: var(--ground-soft);
 }
 
 /* ── Сам рассказ ────────────────────────────────────────────────────── */
