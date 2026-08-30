@@ -160,10 +160,11 @@ echo "== содержимое сайта =="
 # из своих репозиториев и в этом дереве отсутствуют.
 if $go; then
   # shellcheck disable=SC2086
-  rsync -avz $PAYLOAD "$HOST:$ROOT/"
+  # shellcheck disable=SC2086
+  rsync -avz --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' $PAYLOAD "$HOST:$ROOT/"
 else
   # shellcheck disable=SC2086
-  rsync -avzn --itemize-changes $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
+  rsync -avzn --itemize-changes --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
   echo
   echo "  (черновой прогон; повторите с --go)"
 fi

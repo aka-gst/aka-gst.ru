@@ -59,8 +59,12 @@ done
 
 echo
 echo "== служебное наружу не отдаётся =="
+# Папки проектов выкладываются целиком, и с ними однажды уехало служебное:
+# README и тесты psy-admin отдавались наружу с 28 августа, пока их не
+# исключили из выкладки. Проверяем, что не вернулись.
 for p in /.githooks/private-words.txt /.githooks/pre-commit /.gitignore /README.md \
-         /build.mjs /deploy.sh /verify.sh /Caddyfile /sync-portfolio.sh; do
+         /build.mjs /deploy.sh /verify.sh /Caddyfile /sync-portfolio.sh \
+         /psy-admin/README.md /psy-admin/test.mjs /stories/solyanochka--letuny.txt; do
   expect "$p" 404
 done
 

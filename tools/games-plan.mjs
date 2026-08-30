@@ -32,6 +32,9 @@ export const PLAN = [
     steps: [['СВОБОДНЫЙ БОЙ', 1200], ['ЛЁГКИЙ', 2500]],
     clip: { x: 12, y: 82, width: 1176, height: 420 } },
   { id: 'worm',     url: 'https://aka-gst.ru/worm/', steps: [['ЦЕП', 3000]] },
+  // Игра выложена по /udar/, а не /odin-udar/ — карточка об этом не знала.
+  { id: 'udar',     url: 'https://aka-gst.ru/udar/',
+    steps: [['ВЗЯТЬ КЛЮЧИ', 3500]] },
   { id: 'technomagic', url: 'https://aka-gst.ru/technomagic/',
     steps: [['ВЗЯТЬ КЛЮЧИ', 3500]] },
   { id: 'coin',     url: 'https://aka-gst.ru/coin/',
