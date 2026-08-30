@@ -894,6 +894,27 @@ ${socialLinks('reader')}
         </nav>
       </header>`;
 
+// Боковой список на больших экранах: сборники и рассказы внутри. Нужен,
+// чтобы переключаться между текстами не возвращаясь в оглавление. На узких
+// экранах не выводится — там он занял бы весь первый экран.
+const readerSide = (current) => `
+      <nav class="reader-side" aria-label="Все рассказы">
+${book.сборники
+  .map(
+    (c) => `        <p class="reader-side-book">${esc(c.title)}</p>
+        <ul>
+${c.stories
+  .map(
+    (st) => `          <li><a href="/rasskazy/${esc(st.slug)}/"${
+      st.slug === current ? ' aria-current="page"' : ''
+    }>${esc(st.title)}</a></li>`
+  )
+  .join('\n')}
+        </ul>`
+  )
+  .join('\n')}
+      </nav>`;
+
 // Панель читателя: грунт и размер. Ставится на обе страницы раздела.
 const readerBar = `
       <div class="reader-bar" role="group" aria-label="Как читать">
@@ -924,11 +945,22 @@ ${readerTopbar}
       </div>
 ${book.сборники
   .map(
-    (c) => `      <section class="book">
-        <div class="book-head">
+    (c) => `      <section class="book" id="book-${esc(c.id)}">
+        <div class="block-head">
+          <p class="kicker">Сборник · ${esc(c.year)}</p>
           <h2>${esc(c.title)}</h2>
-          <span>${esc(c.year)}</span>
         </div>
+        ${
+          c.cover
+            ? `<figure class="book-cover">
+          <img src="/assets/covers/${esc(c.cover)}?v=${assetVersion(
+                `assets/covers/${c.cover}`
+              )}" alt="Обложка сборника «${esc(c.title)}»"
+               width="1200" height="1200" loading="lazy" decoding="async">
+          ${c.coverBy ? `<figcaption>Обложка — ${esc(c.coverBy)}</figcaption>` : ''}
+        </figure>`
+            : ''
+        }
         <ol class="book-list">
 ${c.stories
   .map(
@@ -985,7 +1017,9 @@ ${readerTopbar}
     <header class="reader-top">
       <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
     </header>
-    <main id="main" class="reader-main">
+    <main id="main" class="reader-main reader-main--wide">
+${readerSide(st.slug)}
+      <div class="reader-col">
       <article class="story" data-story="${esc(st.slug)}">
         <p class="story-book">${esc(st.book.title)} · ${esc(st.book.year)}</p>
         <h1>${esc(st.title)}</h1>
@@ -1016,6 +1050,7 @@ ${readerTopbar}
         <a href="/rasskazy/">Оглавление</a>
         ${next ? `<a href="/rasskazy/${esc(next.slug)}/">${esc(next.title)} →</a>` : '<span></span>'}
       </nav>
+      </div>
     </main>
     <footer class="sitefoot">
       <span><a href="/" style="text-decoration:none">← aka-gst.ru</a></span>

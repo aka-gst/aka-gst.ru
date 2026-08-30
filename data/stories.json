@@ -70,7 +70,9 @@
           "cover": "prosto-ya-zabyla-kakovo-eto.jpg",
           "coverBy": "Bizi"
         }
-      ]
+      ],
+      "cover": "book-solyanochka.jpg",
+      "coverBy": "Bizi"
     },
     {
       "id": "tri-iznutri",
@@ -146,7 +148,9 @@
           "paragraphs": 10,
           "lead": "Молния!"
         }
-      ]
+      ],
+      "cover": "book-tri-iznutri.jpg",
+      "coverBy": "Bizi"
     },
     {
       "id": "a-potom",
@@ -202,7 +206,9 @@
           "paragraphs": 6,
           "lead": "Две секунды ступора и я снова давлюсь от смеха."
         }
-      ]
+      ],
+      "cover": "book-a-potom.jpg",
+      "coverBy": "Кассиопея А · NASA/CXC, общественное достояние"
     }
   ]
 }
