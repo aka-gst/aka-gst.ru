@@ -89,6 +89,16 @@ const run = async () => {
   const send = session(ws);
   await send('Page.enable');
 
+  let n = 0;
+  let пишем = false;
+  send.on(async (m) => {
+    if (m.method !== 'Page.screencastFrame') return;
+    if (пишем) {
+      writeFileSync(`${TMP}f${String((n += 1)).padStart(4, '0')}.jpg`, Buffer.from(m.params.data, 'base64'));
+    }
+    await send('Page.screencastFrameAck', { sessionId: m.params.sessionId }).catch(() => {});
+  });
+
   for (const game of PLAN) {
     if (only.length && !only.includes(game.id)) continue;
     const plan = DURING[game.id] || { seconds: 5 };
@@ -117,14 +127,10 @@ const run = async () => {
     // ── запись ──────────────────────────────────────────────────────
     rmSync(TMP, { recursive: true, force: true });
     mkdirSync(TMP, { recursive: true });
-    let n = 0;
-    send.on(async (m) => {
-      if (m.method !== 'Page.screencastFrame') return;
-      writeFileSync(`${TMP}f${String(n += 1).padStart(4, '0')}.jpg`, Buffer.from(m.params.data, 'base64'));
-      await send('Page.screencastFrameAck', { sessionId: m.params.sessionId }).catch(() => {});
-    });
+    n = 0;
 
     const started = Date.now();
+    пишем = true;
     await send('Page.startScreencast', { format: 'jpeg', quality: 80, everyNthFrame: 1 });
     const until = started + plan.seconds * 1000;
     while (Date.now() < until) {
@@ -140,6 +146,7 @@ const run = async () => {
       await sleep(plan.everyMs || 500);
     }
     await send('Page.stopScreencast');
+    пишем = false;
     await sleep(400);
 
     const seconds = (Date.now() - started) / 1000;
