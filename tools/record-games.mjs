@@ -52,7 +52,7 @@ const собрать = ({ game, кадров, секунд, лог, режим }
     '-y', '-hide_banner', '-loglevel', 'error',
     '-framerate', Math.max(0.5, кадров / Math.max(0.1, секунд)).toFixed(3), '-i', `${TMP}f%04d.jpg`,
     '-vf', `${crop}scale=600:-2:flags=lanczos`,
-    '-an', '-r', '20', '-t', String(game.scene ? Math.ceil(секунд) : 6),
+    '-an', '-r', '20', '-t', String(Math.ceil(Math.min(секунд, game.during?.seconds ?? секунд))),
     '-c:v', 'libx264', '-profile:v', 'main', '-pix_fmt', 'yuv420p',
     '-crf', '32', '-preset', 'slow', '-movflags', '+faststart',
     цель,
@@ -122,12 +122,37 @@ const run = async () => {
       const сц = game.scene;
       const dt = сц.dt || 1 / 60;
       const наКадр = Math.max(1, Math.round(1 / dt / (сц.fps || 30)));
-      await send('Runtime.evaluate', { expression: сц.setup, returnByValue: true, awaitPromise: true });
+      const поставить = () => send('Runtime.evaluate', { expression: сц.setup, returnByValue: true, awaitPromise: true });
+      const шагнуть = async () => { await send('Runtime.evaluate', { expression: сц.step }); };
+      await поставить();
+
       let t = 0;
-      const шагнуть = async () => { await send('Runtime.evaluate', { expression: сц.step }); t += dt; };
-      while (t < (сц.from || 0)) await шагнуть();
-      while (t < сц.to) {
-        for (let k = 0; k < наКадр; k += 1) await шагнуть();
+      if (сц.until) {
+        // Момент ловится не временем, а признаком: у «Наотмашь» удар
+        // случается, когда ошмётков становится больше сорока, и на каком
+        // это подшаге — дело сцены, а не наше. Ищем шаг, потом ставим
+        // сцену заново и доходим до него, отступив назад на `back`, чтобы
+        // в петлю попал и замах, а не только брызги. Это возможно только
+        // потому, что сцена детерминирована: второй проход повторяет первый.
+        let k = 0;
+        const предел = Math.round((сц.предел || 6) / dt);
+        while (k < предел) {
+          const есть = await send('Runtime.evaluate', { expression: сц.until, returnByValue: true }).catch(() => null);
+          if (есть?.result?.value) break;
+          await шагнуть();
+          k += 1;
+        }
+        лог.push(k >= предел ? 'момент не найден' : `момент на ${k}-м подшаге`);
+        await поставить();
+        const назад = Math.round((сц.back || 0.5) / dt);
+        for (let i = 0; i < Math.max(0, k - назад); i += 1) await шагнуть();
+        t = 0;
+      } else {
+        while (t < (сц.from || 0)) await шагнуть();
+      }
+      const конец = сц.until ? (сц.window || 2) : сц.to;
+      while (t < конец) {
+        for (let k = 0; k < наКадр; k += 1) { await шагнуть(); t += dt; }
         await send('Runtime.evaluate', { expression: сц.render }).catch(() => {});
         // Снимаем весь кадр целиком, а обрезаем потом, в ffmpeg — как и в
         // живом режиме. Снимок С ОБРЕЗКОЙ заставляет Chrome пересобирать
@@ -143,10 +168,15 @@ const run = async () => {
       continue;
     }
 
+    const план = game.during || { seconds: 5 };
+    // Что нужно сделать ДО начала записи. У «Одного удара» это включение
+    // его собственной петли: между вызовом и первым её кадром игра ещё
+    // показывает обычный вид, и он попадал в ролик первым кадром — рывком.
+    for (const s of план.перед || []) await шаг(send)(s);
+
     const начали = Date.now();
     пишем = true;
     await send('Page.startScreencast', { format: 'jpeg', quality: 80, everyNthFrame: 1 });
-    const план = game.during || { seconds: 5 };
     const до = начали + (план.seconds || 5) * 1000;
     while (Date.now() < до) {
       if (!план.шаги?.length) { await sleep(300); continue; }
