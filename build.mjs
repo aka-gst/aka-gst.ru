@@ -224,8 +224,8 @@ const shotSrc = (file) => `/assets/shots/${file}?v=${assetVersion(`assets/shots/
 // Размер картинки без внешних зависимостей: у PNG он в IHDR, у JPEG — в
 // маркере SOFn. Нужен в разметке, чтобы браузер занял место под снимок до
 // загрузки: иначе текст под ним прыгает, а прокрутка по блокам промахивается.
-const imageSize = (file) => {
-  const bytes = readFileSync(join(root, 'assets/shots', file));
+const imageSize = (relative) => {
+  const bytes = readFileSync(join(root, relative));
   if (bytes.readUInt32BE(0) === 0x89504e47) {
     return { w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20) };
   }
@@ -239,11 +239,11 @@ const imageSize = (file) => {
     }
     i += 2 + bytes.readUInt16BE(i + 2);
   }
-  throw new Error(`не прочитан размер: ${file}`);
+  throw new Error(`не прочитан размер: ${relative}`);
 };
 
 const shotImg = (shot) => {
-  const { w, h } = imageSize(shot.file);
+  const { w, h } = imageSize(`assets/shots/${shot.file}`);
   return `<img src="${esc(shotSrc(shot.file))}" alt="${esc(shot.alt)}"
                 width="${w}" height="${h}" decoding="async" loading="lazy">`;
 };
@@ -544,7 +544,7 @@ const gameCard = (project) => {
   // карточке настоящую палитру игры вместо абстрактного градиента.
   // alt пустой: родитель и так aria-hidden, картинка здесь декоративная.
   const back = project.shots?.length
-    ? (({ file }, { w, h } = imageSize(file)) =>
+    ? (({ file }, { w, h } = imageSize(`assets/shots/${file}`)) =>
         `<img class="gshot" src="${esc(shotSrc(file))}" alt=""
                 width="${w}" height="${h}" decoding="async" loading="lazy">`)(project.shots[0])
     : '';
@@ -925,6 +925,46 @@ const readerBar = `
         </span>
       </div>`;
 
+// Уменьшенные копии обложек делает tools/oblozhki.mjs, а не сборка: пережимать
+// тринадцать картинок при каждой сборке дорого и незачем. Но забыть их
+// пересобрать легко — поэтому сборка сверяет хеш оригинала и падает, а не
+// молча ставит вчерашнюю миниатюру.
+const производные = JSON.parse(
+  readFileSync(join(root, 'assets/covers/proizvodnye.json'), 'utf8')
+);
+const копияОбложки = (вид, file) => {
+  const ключ = `${вид}/${file}`;
+  const relative = `assets/covers/${ключ}`;
+  const свежесть = createHash('sha256')
+    .update(readFileSync(join(root, `assets/covers/${file}`)))
+    .digest('hex')
+    .slice(0, 12);
+  if (производные[ключ] !== свежесть || !existsSync(join(root, relative))) {
+    throw new Error(`копия обложки ${ключ} отстала от оригинала — node tools/oblozhki.mjs`);
+  }
+  const { w, h } = imageSize(relative);
+  return { src: `/${relative}?v=${assetVersion(relative)}`, w, h };
+};
+
+// Миниатюра в оглавлении: 44 пикселя на экране, 132 в файле — под тройную
+// плотность. Раньше сюда шёл оригинал в 900 пикселей, и оглавление весило
+// 2.3 МБ при разметке в 19 КБ.
+const миниатюра = (file) => {
+  const o = копияОбложки('mini', file);
+  return `<img class="story-thumb" src="${o.src}" alt=""
+                       width="${o.w}" height="${o.h}" loading="lazy" decoding="async">`;
+};
+
+// Обложка сборника. Первая на странице грузится сразу и с высоким
+// приоритетом: она же самый крупный элемент первого экрана, и ленивая
+// загрузка откладывала ровно то, по чему меряется скорость показа.
+const обложкаСборника = (c, первая) => {
+  const o = копияОбложки('polka', c.cover);
+  return `<img src="${o.src}" alt="Обложка сборника «${esc(c.title)}»"
+               width="${o.w}" height="${o.h}" decoding="async"
+               ${первая ? 'fetchpriority="high"' : 'loading="lazy"'}>`;
+};
+
 const storiesIndex = `<!doctype html>
 <html lang="ru" data-ground="dark">
   <head>${readerHead(
@@ -945,7 +985,7 @@ ${readerTopbar}
       </div>
 ${book.сборники
   .map(
-    (c) => `      <section class="book" id="book-${esc(c.id)}">
+    (c, ci) => `      <section class="book" id="book-${esc(c.id)}">
         <div class="block-head">
           <p class="kicker">Сборник · ${esc(c.year)}</p>
           <h2>${esc(c.title)}</h2>
@@ -953,10 +993,7 @@ ${book.сборники
         ${
           c.cover
             ? `<figure class="book-cover">
-          <img src="/assets/covers/${esc(c.cover)}?v=${assetVersion(
-                `assets/covers/${c.cover}`
-              )}" alt="Обложка сборника «${esc(c.title)}»"
-               width="1200" height="1200" loading="lazy" decoding="async">
+          ${обложкаСборника(c, ci === 0)}
           ${c.coverBy ? `<figcaption>Обложка — ${esc(c.coverBy)}</figcaption>` : ''}
         </figure>`
             : ''
@@ -968,10 +1005,7 @@ ${c.stories
             <a href="/rasskazy/${esc(st.slug)}/">
               ${
                 st.cover
-                  ? `<img class="story-thumb" src="/assets/covers/${esc(
-                      st.cover
-                    )}?v=${assetVersion(`assets/covers/${st.cover}`)}" alt=""
-                       width="900" height="900" loading="lazy" decoding="async">`
+                  ? миниатюра(st.cover)
                   : ''
               }
               <span class="story-name">${esc(st.title)}</span>
