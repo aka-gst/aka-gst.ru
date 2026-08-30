@@ -31,49 +31,108 @@ function seeded(seed) {
 }
 
 /*
- * Сцена размечается сама, а не по вбитым числам: ищется бочка, под
- * которой стоят трое, и всё остальное считается от неё. Вбитые
- * координаты пережили бы ровно одну правку этажа.
+ * Сцена ставится своими руками на свободном месте, а не подстраивается под
+ * то, как расставлен этаж. Первая попытка брала бочку прямо с уровня — и
+ * та стояла у самой стены: половина кадра уходила в пустой газон, а игрок
+ * не помещался вовсе. Композиция — часть сцены, а не то, что достанется.
+ *
+ * Место ищется, а не вбивается: прямоугольник чистого пола ближе к
+ * середине карты. Вбитые координаты пережили бы ровно одну правку этажа.
  */
-function findBarrel(world) {
-  for (let i = 0; i < world.tiles.length; i += 1) {
-    if (world.tiles[i] !== TILE.BARREL) continue;
-    const bx = ((i % world.w) + 0.5) * TILE_SIZE;
-    const by = (((i / world.w) | 0) + 0.5) * TILE_SIZE;
-    const under = world.enemies.filter((enemy) => Math.abs(enemy.x - bx) <= TILE_SIZE * 1.4
-      && enemy.y - by > 0 && enemy.y - by <= TILE_SIZE * 1.8).length;
-    if (under >= 3) return { at: i, x: bx, y: by };
+function openSpot(world, wide, tall) {
+  const midX = world.w / 2;
+  const midY = world.h / 2;
+  let best = null;
+  let bestGap = Infinity;
+
+  for (let ty = 1; ty + tall < world.h - 1; ty += 1) {
+    for (let tx = 1; tx + wide < world.w - 1; tx += 1) {
+      let clear = true;
+      for (let y = ty; y < ty + tall && clear; y += 1) {
+        for (let x = tx; x < tx + wide && clear; x += 1) {
+          if (world.tiles[y * world.w + x] !== TILE.FLOOR) clear = false;
+        }
+      }
+      if (!clear) continue;
+
+      const gap = Math.hypot(tx + wide / 2 - midX, ty + tall / 2 - midY);
+      if (gap >= bestGap) continue;
+      bestGap = gap;
+      best = { tx, ty };
+    }
   }
-  return null;
+
+  return best;
 }
 
 export function createShowcase(level, renderer, hooks = {}) {
   const world = createWorld(level);
 
-  const barrel = findBarrel(world);
-  if (!barrel) throw new Error('на этаже нет бочки, под которой стоят трое');
+  const spot = openSpot(world, 7, 5);
+  if (!spot) throw new Error('на этаже нет чистого места под сцену');
 
-  /* Лишние участники убираются: в кадре должно быть то, ради чего он снят. */
-  for (const enemy of world.enemies) {
-    const near = Math.hypot(enemy.x - barrel.x, enemy.y - barrel.y) < TILE_SIZE * 2.4;
-    if (!near) enemy.alive = false;
-  }
+  /* Бочка в середине найденного места, трое под ней, игрок слева. */
+  const bx = (spot.tx + 3.5) * TILE_SIZE;
+  const by = (spot.ty + 1.5) * TILE_SIZE;
+  world.tiles[(spot.ty + 1) * world.w + spot.tx + 3] = TILE.BARREL;
+  world.rebake = true;
+
+  const cast = world.enemies.filter((enemy) => enemy.alive).slice(0, 3);
+  if (cast.length < 3) throw new Error('на этаже некого поставить в сцену');
+  for (const enemy of world.enemies) enemy.alive = cast.includes(enemy);
+
+  cast.forEach((enemy, i) => {
+    /*
+     * Плотнее, чем кажется нужным. При шаге в клетку и полутора клетках
+     * от бочки крайний оказывался за краем лужи и оставался сухим: цепь
+     * забирала двоих из трёх, и правило в кадре читалось как «иногда
+     * работает». Лужа расходится на одну и три четверти клетки — все
+     * трое обязаны стоять внутри.
+     */
+    enemy.x = bx + (i - 1) * TILE_SIZE * 0.9;
+    enemy.y = by + TILE_SIZE * 0.9;
+    enemy.vx = 0;
+    enemy.vy = 0;
+    enemy.state = 'idle';
+    enemy.resist = null;
+    enemy.hp = 1;
+    enemy.angle = Math.PI / 2;
+  });
 
   world.elements = ['fire', 'water', 'wind', 'earth', 'bolt'];
-  world.engaged = true;
 
-  /* Игрок встаёт слева и в стороне: он в кадре, но не заслоняет цепь. */
-  world.player.x = barrel.x - TILE_SIZE * 3.2;
-  world.player.y = barrel.y + TILE_SIZE * 0.6;
-  world.player.angle = Math.atan2(barrel.y - world.player.y, barrel.x - world.player.x);
+  /*
+   * Этаж спит, и это не поблажка сцене, а её правда: никто ещё не умер,
+   * а тревогу поднимает замеченная смерть. Поднятая тревога рассыпала
+   * постановку за секунду — трое бросались на игрока и уходили с того
+   * места, куда сейчас разольётся вода, и цепь забирала двоих вместо
+   * троих. «Сцена детерминирована» оказывалось неправдой ровно там, где
+   * это важнее всего.
+   */
+  world.engaged = false;
+  world.total = 3;
+  world.kills = 0;
 
-  /* Крупный план. Двенадцать пикселей на витрине не читаются ничем. */
-  world.zoomOverride = 4.2;
+  /*
+   * Игрок стоит слева и близко: видно, чьих рук дело, и он не заслоняет
+   * цепь. Дальше двух клеток расстояние в кадре начинает занимать место,
+   * а показывать ему нечего.
+   */
+  world.player.x = bx - TILE_SIZE * 2.2;
+  /*
+   * Ровно на линии бочки. Первая постановка ставила игрока в один ряд с
+   * тройкой — и выстрел уходил в них, минуя бочку: цепь не случалась
+   * вовсе, а по кадру это выглядело как обычное попадание. Сцена должна
+   * показывать правило, а не его отсутствие.
+   */
+  world.player.y = by;
+  world.player.angle = 0;
 
-  const view = {
-    x: (world.player.x + barrel.x) / 2 + TILE_SIZE * 0.4,
-    y: barrel.y + TILE_SIZE * 0.7,
-  };
+  /* Крупный план: фигура около полусотни пикселей на месте показа.
+     Двенадцать не читаются ничем, сколько ни правь свет. */
+  world.zoomOverride = 3.6;
+
+  const view = { x: bx - TILE_SIZE * 0.3, y: by + TILE_SIZE * 0.8 };
 
   const idle = { moveX: 0, moveY: 0, aimAngle: null, attack: false, charge: null };
   let elapsed = 0;
@@ -90,7 +149,7 @@ export function createShowcase(level, renderer, hooks = {}) {
     if (!fired && elapsed >= 0.5) {
       fired = true;
       world.player.stack = ['bolt'];
-      update(world, dt, { ...idle, aimAngle: world.player.angle, attack: true });
+      update(world, dt, { ...idle, aimAngle: 0, attack: true });
       return;
     }
 

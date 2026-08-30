@@ -174,6 +174,8 @@ function fling(world, mover, from) {
 
 function moveBody(world, body, dx, dy) {
   const r = BODY;
+  const было = Math.hypot(body.vx || 0, body.vy || 0);
+  let вСтену = false;
 
   if (dx) {
     const nx = body.x + dx;
@@ -181,6 +183,7 @@ function moveBody(world, body, dx, dy) {
     if (!solidAt(world, edge, body.y - r + 1) && !solidAt(world, edge, body.y + r - 1)) {
       body.x = nx;
     } else {
+      if (Math.abs(body.vx || 0) > 1) вСтену = true;
       body.vx = 0;
     }
   }
@@ -191,9 +194,75 @@ function moveBody(world, body, dx, dy) {
     if (!solidAt(world, body.x - r + 1, edge) && !solidAt(world, body.x + r - 1, edge)) {
       body.y = ny;
     } else {
+      if (Math.abs(body.vy || 0) > 1) вСтену = true;
       body.vy = 0;
     }
   }
+
+  /*
+   * Стена — то же тело, только неподвижное. Летящий в неё получает то же,
+   * что получил бы, влетев в живого: правило одно, иначе стена оказалась
+   * бы мягче человека.
+   *
+   * Отсюда и берётся смысл льда. До сих пор скольжение отнимало
+   * управление и больше ничего: съехал — и съехал. Теперь замороженный
+   * пол плюс толчок дают связку, которой никто не задумывал: разогнать
+   * врага в стену, ни разу его не коснувшись.
+   *
+   * А вот порог не тот же, и первая попытка на этом и легла. Я взял
+   * общий порог с тела в тело и убил игрока о первую же стену: своим
+   * ходом он идёт двести пятьдесят два, вдвое выше порога. Бот погибал
+   * на каждом этаже, не сделав ни выстрела.
+   *
+   * Считается не скорость, а то, **своим ли ходом** тело её набрало.
+   * Брошенному хватает общего порога; идущему сам — нужна скорость,
+   * какой он не развивает никогда.
+   */
+  const брошено = (body.shove || 0) > 0;
+  if (вСтену && было >= (брошено ? FLING_SPEED : 300)) {
+    slam(world, body, было);
+  }
+}
+
+/*
+ * Переключить питание этажа. Силовые двери меняются самой плиткой, а не
+ * флагом: клетка, которая меняется, говорит правду всем сразу — и поиску
+ * пути, и конусу зрения, и полёту снаряда, — без единой новой проверки.
+ */
+export function setPower(world, on) {
+  if (world.powered === on) return;
+  world.powered = on;
+
+  const from = on ? TILE.FORCE_OFF : TILE.FORCE;
+  const to = on ? TILE.FORCE : TILE.FORCE_OFF;
+  let changed = 0;
+
+  for (let i = 0; i < world.tiles.length; i += 1) {
+    if (world.tiles[i] !== from) continue;
+    world.tiles[i] = to;
+    changed += 1;
+  }
+
+  if (changed) {
+    world.rebake = true;
+    world.events.push({ type: 'power', on, doors: changed });
+  }
+}
+
+function slam(world, body, speed) {
+  if (!body.alive) return;
+
+  const angle = Math.atan2(body.vy || 0, body.vx || 0);
+  world.fx.shake = Math.max(world.fx.shake, 5);
+  world.events.push({ type: 'slam', speed: Math.round(speed) });
+
+  if (body === world.player) {
+    killPlayer(world, angle);
+    return;
+  }
+
+  killEnemy(world, body, angle, 'slam',
+    { by: 'player', weapon: 'wall', elements: [] });
 }
 
 /*
@@ -422,6 +491,17 @@ export function createWorld(level) {
     fx: { shake: 0, hitstop: 0, flash: 0, punch: 0 },
     beats: [],
     charged: null,
+
+    /* Питание этажа. Пока есть — силовые двери держат. */
+    powered: true,
+
+    /*
+     * Всплывающие подписи прямо в мире: «+300 ПО ВОДЕ» там, где это
+     * случилось. Ответ на вопрос «а это вообще засчиталось?» должен
+     * приходить в момент действия и на месте действия — в углу экрана
+     * его читают уже после того, как перестали смотреть.
+     */
+    marks: [],
     events: [],
   };
 
@@ -803,6 +883,10 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
    */
   world.events.push({
     type: 'kill',
+    /* Место смерти нужно снаружи: плату за способ показывают там, где
+       способ сработал, а не в углу экрана. */
+    x: enemy.x,
+    y: enemy.y,
     cause,
     by: source.by || 'player',
     weapon: source.weapon || null,
@@ -1241,6 +1325,24 @@ function shatter(world, at, substance) {
   const x = ((at % world.w) + 0.5) * TILE_SIZE;
   const y = (((at / world.w) | 0) + 0.5) * TILE_SIZE;
 
+  /*
+   * Мокрое дерево не занимается — и проверить это надо до того, как
+   * клетка обнулится: первая моя попытка стояла ниже и возвращала на
+   * место уже стёртое, то есть чинила следствие.
+   *
+   * Это единственное, что вода умеет делать с предметами, и ради него её
+   * и льют заранее: намочил копну — и чужой огонь по ней не пойдёт.
+   * Удар и разряд мокрому дереву по-прежнему не помеха: вода тушит, а не
+   * укрепляет.
+   */
+  if (world.tileWet && world.tileWet[at] > 0
+      && substance.traits.burn && !substance.traits.crush && !substance.traits.shock) {
+    addCloud(world, x, y, TILE_SIZE * 0.8, 'steam');
+    world.tileWet[at] = Math.max(0, world.tileWet[at] - 1);
+    world.events.push({ type: 'doused', x, y });
+    return false;
+  }
+
   world.tiles[at] = TILE.FLOOR;
   world.rebake = true;
   world.fx.shake = Math.max(world.fx.shake, 5);
@@ -1335,6 +1437,89 @@ function shatter(world, at, substance) {
     emitNoise(world, x, y, 320, 'crystal');
     world.events.push({ type: 'crystal', x, y });
     discharge(world, x, y, JOLT);
+    return true;
+  }
+
+  /*
+   * Дерево горит так же, как солома, и по той же причине идёт дальше:
+   * огонь не спрашивает, копна перед ним или скамья. Круг меньше —
+   * скамья и меньше копны, — но правило одно.
+   */
+  if ((tile === TILE.TABLE || tile === TILE.DOOR) && substance.traits.burn) {
+    paint(world, tilesInCircle(world, x, y, TILE_SIZE * 0.8), FLARE, { x, y }, true);
+    spark(world, x, y, 0, 3.2, 12, '#ffb347', 170);
+    emitNoise(world, x, y, 240, 'hay');
+    world.events.push({ type: 'hay', x, y });
+
+    const wx = at % world.w;
+    const wy = (at / world.w) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = wx + dx;
+      const ny = wy + dy;
+      if (nx < 0 || ny < 0 || nx >= world.w || ny >= world.h) continue;
+      const next = ny * world.w + nx;
+      if (!brokenBy(world.tiles[next], { burn: 1 })) continue;
+      schedule(world, 0.12, () => shatter(world, next, FLARE));
+    }
+    return true;
+  }
+
+  /*
+   * Щиток замкнули. Он не убивает и не открывает дорогу — он **шумит не
+   * там, где игрок**, и в этом всё его назначение.
+   *
+   * До него всякий шум в игре исходил из-под ног того, кто его устроил:
+   * выстрел, взрыв, падающее тело. Таким шумом можно убить, но нельзя
+   * отвлечь — стража идёт ровно туда, где ты стоишь. Щиток разрывает эту
+   * связь, и с ним появляется первый способ пройти этаж, никого не убив.
+   *
+   * Слышно его дальше всего в игре: триста шестьдесят против трёхсот у
+   * бьющегося стекла. Заметить обязаны все, кто в комнате.
+   */
+  if (tile === TILE.PANEL) {
+    /*
+     * ВЗЛОМ ИЛИ ЗАМЫКАНИЕ — РЕШАЕТ СОСТАВ
+     * -------------------------------------------------------
+     * Взлом здесь не мини-игра и не новый предмет: это разница в том,
+     * ЧЕМ ты бьёшь по тому же щитку. Отдельный экран с таймером был бы
+     * другой игрой, приклеенной к этой, — он ни на что не умножается и
+     * живёт по своим законам, а весь смысл здесь в том, что правила
+     * перемножаются.
+     *
+     * Одиночная искра замыкает: щиток гаснет, гремит на весь этаж и
+     * больше не работает. Состав, в котором есть разряд, делает то же
+     * тихо и не ломая: за состав заплачено очередью, и он даёт точность,
+     * а не силу — ровно так же, как везде в этой игре.
+     *
+     * Отсюда развилка с ценой, которую не пришлось придумывать: шумно и
+     * сразу или тихо и дольше. И у неё есть третья сторона: целый щиток
+     * можно переключить обратно, а сожжённый — нет.
+     */
+    const точно = substance.traits.shock && substance.elements.length >= 2;
+
+    setPower(world, !world.powered);
+    world.events.push({ type: 'panel', x, y, точно });
+
+    if (точно) {
+      /* Взломанный щиток остаётся на месте: тихо и обратимо. */
+      world.tiles[at] = TILE.PANEL;
+      world.rebake = true;
+      spark(world, x, y, 0, 1.2, 8, '#9fe8ff', 90);
+      return true;
+    }
+
+    spark(world, x, y, 0, 3.2, 22, '#ffe14d', 260);
+    spark(world, x, y, 0, 3.2, 14, '#9fe8ff', 200);
+    emitNoise(world, x, y, 360, 'panel');
+    world.fx.flash = Math.max(world.fx.flash, 0.3);
+    return true;
+  }
+
+  if (tile === TILE.GLASS) {
+    /* Стекло слышно дальше, чем видно: звон собирает этаж. */
+    spark(world, x, y, 0, 3.2, 18, '#cfe9ff', 240);
+    emitNoise(world, x, y, 300, 'glass');
+    world.events.push({ type: 'glass', x, y });
     return true;
   }
 
@@ -1584,6 +1769,12 @@ export function update(world, dt, intent) {
 
   for (const noise of world.noises) noise.life -= dt;
   world.noises = world.noises.filter((n) => n.life > 0);
+
+  world.marks = world.marks.filter((mark) => {
+    mark.life -= dt;
+    mark.y -= dt * 26;
+    return mark.life > 0;
+  });
 
   for (const corpse of world.corpses) {
     corpse.twitch = Math.max(0, corpse.twitch - dt);
