@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Генерирует index.html из data/site.json и data/projects.json.
 // Запуск: node build.mjs
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -705,6 +705,7 @@ ${recTicker}
           'games'
         )}<span>${esc(site.tracks.play.label)}</span></button>
       </div>
+      <a class="topbar-link" href="/rasskazy/">Рассказы</a>
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}
       </nav>
@@ -792,6 +793,149 @@ const praktikumPage = `<!doctype html>
 `;
 
 writeFileSync(join(root, 'praktikum', 'index.html'), praktikumPage);
+
+// ── Рассказы ─────────────────────────────────────────────────────────
+// Тексты лежат в stories/ обычными файлами: абзац — строка, «***» —
+// разделитель сцены. Разметки в них нет намеренно, прозе она не нужна, а
+// разбирать markdown ради курсива не стоит того.
+const book = JSON.parse(readFileSync(join(root, 'data', 'stories.json'), 'utf8'));
+
+// Скорость чтения прозы по-русски — около 180 слов в минуту. Число берётся
+// из самого текста, а не проставляется руками, как и всё остальное на сайте.
+const minutes = (words) => Math.max(1, Math.round(words / 180));
+
+const storyList = book.сборники.flatMap((c) =>
+  c.stories.map((st) => ({ ...st, book: c }))
+);
+
+const storyBody = (slug) =>
+  readFileSync(join(root, 'stories', `${slug}.txt`), 'utf8')
+    .split('\n')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) =>
+      /^\*\*\*$|^\*\s*\*\s*\*$/.test(p)
+        ? '<hr class="story-break">'
+        : `<p>${esc(p)}</p>`
+    )
+    .join('\n        ');
+
+const readerHead = (title, description, canonical) => `
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="${esc(description)}">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="${esc(site.themeColor)}">
+    <title>${esc(title)}</title>
+    <link rel="canonical" href="${esc(canonical)}">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
+    <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
+    <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>`;
+
+// Панель читателя: грунт и размер. Ставится на обе страницы раздела.
+const readerBar = `
+      <div class="reader-bar" role="group" aria-label="Как читать">
+        <button type="button" data-ground-toggle title="Фон: тёмный или бумажный">◐</button>
+        <span class="reader-size">
+          <button type="button" data-size="-1" aria-label="Мельче">А−</button>
+          <button type="button" data-size="1" aria-label="Крупнее">А+</button>
+        </span>
+      </div>`;
+
+const storiesIndex = `<!doctype html>
+<html lang="ru" data-ground="dark">
+  <head>${readerHead(
+    `Рассказы — ${book.автор}`,
+    `Три сборника: ${book.сборники.map((c) => c.title).join(', ')}. ${storyList.length} рассказов.`,
+    `${site.url}/rasskazy/`
+  )}
+  </head>
+  <body class="reader">
+    <header class="reader-top">
+      <a class="site-home" href="/">← На главную</a>${readerBar}
+    </header>
+    <main id="main" class="reader-main">
+      <div class="reader-lede">
+        <h1>Рассказы</h1>
+        <p>${esc(book.автор)} · ${storyList.length} текстов · ${book.сборники.length} сборника</p>
+      </div>
+${book.сборники
+  .map(
+    (c) => `      <section class="book">
+        <div class="book-head">
+          <h2>${esc(c.title)}</h2>
+          <span>${esc(c.year)}</span>
+        </div>
+        <ol class="book-list">
+${c.stories
+  .map(
+    (st) => `          <li>
+            <a href="/rasskazy/${esc(st.slug)}/">
+              <span class="story-name">${esc(st.title)}</span>
+              <span class="story-time">${minutes(st.words)} мин</span>
+              <span class="story-lead">${esc(st.lead)}…</span>
+            </a>
+          </li>`
+  )
+  .join('\n')}
+        </ol>
+      </section>`
+  )
+  .join('\n')}
+    </main>
+    <footer class="sitefoot">
+      <span><a href="/" style="text-decoration:none">← aka-gst.ru</a></span>
+    </footer>
+    <script src="/assets/read.js?v=${assetVersion('assets/read.js')}"></script>
+  </body>
+</html>
+`;
+
+mkdirSync(join(root, 'rasskazy'), { recursive: true });
+writeFileSync(join(root, 'rasskazy', 'index.html'), storiesIndex);
+
+for (const [i, st] of storyList.entries()) {
+  const prev = storyList[i - 1];
+  const next = storyList[i + 1];
+  const page = `<!doctype html>
+<html lang="ru" data-ground="dark">
+  <head>${readerHead(
+    `${st.title} — ${book.автор}`,
+    st.lead,
+    `${site.url}/rasskazy/${st.slug}/`
+  )}
+  </head>
+  <body class="reader">
+    <div class="reader-progress" aria-hidden="true"><i></i></div>
+    <header class="reader-top">
+      <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
+    </header>
+    <main id="main" class="reader-main">
+      <article class="story" data-story="${esc(st.slug)}">
+        <p class="story-book">${esc(st.book.title)} · ${esc(st.book.year)}</p>
+        <h1>${esc(st.title)}</h1>
+        <p class="story-meta">${minutes(st.words)} мин · ${esc(book.автор)}</p>
+        ${storyBody(`${st.book.id}--${st.slug}`)}
+      </article>
+      <nav class="story-nav">
+        ${prev ? `<a href="/rasskazy/${esc(prev.slug)}/">← ${esc(prev.title)}</a>` : '<span></span>'}
+        <a href="/rasskazy/">Оглавление</a>
+        ${next ? `<a href="/rasskazy/${esc(next.slug)}/">${esc(next.title)} →</a>` : '<span></span>'}
+      </nav>
+    </main>
+    <footer class="sitefoot">
+      <span><a href="/" style="text-decoration:none">← aka-gst.ru</a></span>
+    </footer>
+    <script src="/assets/read.js?v=${assetVersion('assets/read.js')}"></script>
+  </body>
+</html>
+`;
+  mkdirSync(join(root, 'rasskazy', st.slug), { recursive: true });
+  writeFileSync(join(root, 'rasskazy', st.slug, 'index.html'), page);
+}
+
+console.log(`  рассказы: ${storyList.length} страниц + оглавление`);
 
 // ── Страница 404 ─────────────────────────────────────────────────────
 const notFound = `<!doctype html>

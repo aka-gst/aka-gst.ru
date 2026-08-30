@@ -765,6 +765,18 @@ article.gcard .launch { color: var(--dim); }
   background: var(--accent-dim); color: var(--accent); font-weight: 600;
 }
 
+/* Ссылка на рассказы. Не кнопка переключателя: та меняет панель на месте,
+   а эта уводит в раздел со своими страницами — путать эти два действия
+   одним видом нельзя. */
+.topbar-link {
+  flex: none; padding: 7px 12px; border-radius: 999px;
+  border: 1px solid transparent;
+  color: var(--muted); text-decoration: none;
+  font-size: 13px; white-space: nowrap;
+  transition: color .15s ease, border-color .15s ease;
+}
+.topbar-link:hover, .topbar-link:focus-visible { color: var(--text); border-color: var(--line); }
+
 /* ── Рекорды строкой в шапке ─────────────────────────────────────── */
 /* Раньше это был блок в самом низу вкладки «Игры»: чтобы его увидеть, надо
    было пролистать все карточки, и он читался как ещё один экран. Здесь это

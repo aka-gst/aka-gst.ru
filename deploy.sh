@@ -45,6 +45,7 @@ tour.js
 assets
 data
 praktikum
+rasskazy
 technomagic
 qa-quest
 psy-admin
