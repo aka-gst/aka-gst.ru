@@ -43,8 +43,18 @@ export function createAudio() {
     снова и снова. Поэтому на localhost умолчание — тишина,
     а явно сохранённый выбор всё равно сильнее умолчания.
   */
+  /*
+   * Съёмка и обходы витрины идут при выключенном звуке, и выключать его
+   * снаружи ненадёжно: звуковой контекст оживает сам при изменении
+   * размера окна. Поэтому запрет ставится до старта и живёт в адресе:
+   * ?тихо. Латинское написание принимается тоже — адрес нередко
+   * набирают руками.
+   */
+  const quiet = /[?&](тихо|tiho|quiet)\b/.test(
+    decodeURIComponent(window.location.search || ''));
+
   try {
-    const saved = localStorage.getItem('avto-muted');
+    const saved = quiet ? '1' : localStorage.getItem('avto-muted');
 
     const local =
       /^(localhost|127\.0\.0\.1|\[::1\])$/.test(
@@ -190,6 +200,21 @@ export function createAudio() {
     charge(detail) {
       const base = PITCH[detail && detail.element] || 320;
       tone('triangle', base, base * 2, 0.13, 0.2);
+    },
+    /*
+     * Стихия легла в очередь. Отдельный звук от начала набора, и это не
+     * прихоть: набор из трёх — это три события, а не одно действие, и
+     * ровно в промежутке между ними живёт предвкушение связки. Пока
+     * звучало только начало, три нажатия слышались как одно.
+     *
+     * Высота растёт с местом в очереди: на слух понятно, сколько уже
+     * набрано, не отрывая глаз от поля.
+     */
+    land(detail) {
+      const base = PITCH[detail && detail.element] || 320;
+      const step = 1 + ((detail && detail.size) || 1) * 0.22;
+      tone('square', base * step, base * step * 1.5, 0.07, 0.2);
+      tone('sine', base * step * 2, base * step * 2, 0.05, 0.1);
     },
     zap(detail) {
       const base = PITCH[detail && detail.elements && detail.elements[0]] || 320;

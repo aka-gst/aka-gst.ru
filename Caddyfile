@@ -17,7 +17,15 @@
 aka-gst.ru, www.aka-gst.ru {
   encode zstd gzip
 
-  header Cache-Control "no-cache, must-revalidate"
+  # Кэширование. Общий заголовок на весь сайт стоял с самого начала и делал
+  # правило для ассетов ниже бесполезным: по RFC 9111 повторяющийся
+  # Cache-Control склеивается, и no-cache в наборе главнее остального.
+  # Проверено на боевом — /assets/site.css отдавался с no-cache, то есть
+  # версионирование по ?v= не давало ничего, и обложки рассказов
+  # перепроверялись при каждом открытии читалки.
+  # Поэтому заголовок не дополняем, а сужаем: всё, кроме ассетов.
+  @nocache not path /assets/* /favicon.svg
+  header @nocache Cache-Control "no-cache, must-revalidate"
 
   # Заголовки безопасности. Ставятся один раз на весь сайт.
   header {
@@ -52,9 +60,15 @@ aka-gst.ru, www.aka-gst.ru {
   redir /praktikum /praktikum/ 308
   redir /meet /meet/ 308
 
-  # Статика сайта версионируется строкой запроса, поэтому её можно кэшировать.
-  @assets path /assets/* /favicon.svg
-  header @assets Cache-Control "public, max-age=604800"
+  # Всё под /assets/ подписано хешем в строке запроса (?v=), поэтому старый
+  # файл по новому адресу не приедет и год хранения безопасен.
+  @assets path /assets/*
+  header @assets Cache-Control "public, max-age=31536000, immutable"
+
+  # Значок версии не несёт: год держать нельзя, иначе смена значка дойдёт
+  # до вернувшегося посетителя через год.
+  @icon path /favicon.svg
+  header @icon Cache-Control "public, max-age=604800"
 
   handle_path /api/leaderboard/* {
     reverse_proxy leaderboard:8080

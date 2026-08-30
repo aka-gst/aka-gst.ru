@@ -3,182 +3,197 @@
 //   node tools/record-games.mjs            все игры
 //   node tools/record-games.mjs acid coin  только эти
 //
-// Путь до игрового экрана берётся из общего плана (games-plan.mjs) — того
-// же, по которому снимаются неподвижные кадры. Отличие одно: во время
-// записи игре надо чем-то заниматься. Половина из них в покое неподвижна —
-// монета ждёт броска, шары ждут хода, — и ролик вышел бы фотографией.
-// Поэтому у каждой записи свой набор действий: жать пробел, кликать кнопку,
-// идти клавишами.
+// Путь до игрового экрана берётся из общего плана (games-plan.mjs), а само
+// вождение — из tools/igrat.mjs, общего со съёмкой кадров. Пока у записи была
+// своя копия вождения, она отставала: не умела ни настоящих кодов клавиш, ни
+// удержания, и половина роликов выходила фотографиями неподвижного экрана.
 //
-// Кадры собирает Page.startScreencast, склеивает ffmpeg. Обрезка — та же
-// область, что и у неподвижного кадра, чтобы превью и постер совпадали.
+// Два режима записи.
+//
+// СЦЕНАРНЫЙ — если игра дала вызов вида «поставь сцену и шагни на dt». Тогда
+// мы шагаем сами и снимаем по кадру между шагами. Так лучше по двум причинам:
+// сцена детерминирована (два прогона дают одинаковые кадры, ролик можно
+// переснять точно таким же), и запись не зависит от того, успевает ли
+// экранная трансляция за игрой. Первым такой вызов дал ПЕРИМЕТР.
+//
+// ЖИВОЙ — если вызова нет: включаем Page.startScreencast и параллельно делаем
+// то, что описано в `during` у игры. Половина игр в покое неподвижна — монета
+// ждёт броска, шары ждут хода, — и без этого вышел бы кадр, а не ролик.
+//
+// Обрезка — та же область, что и у неподвижного кадра, чтобы превью и постер
+// совпадали и переход между ними не дёргался.
 
-import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, writeFileSync, rmSync, existsSync, statSync } from 'node:fs';
 import { PLAN } from './games-plan.mjs';
+import { запуститьChrome, подключиться, дойти, шаг, sleep } from './igrat.mjs';
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const PORT = 9370;
 const OUT = new URL('../.shots/', import.meta.url).pathname;
 const TMP = new URL('../.shots/frames/', import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
-
-// Чем игра занята во время записи и, если нужно, своя область кадра.
-// У Тетколора она выше, чем у снимка: снимок нацелен на дно стакана, где к
-// тому времени уже лежит стопка, а в свежей партии кубики появляются сверху
-// и до низа доезжают не сразу — первые секунды ролика были пустой сеткой.
-const DURING = {
-  acid: { seconds: 5 },                                   // соперники ходят сами, идёт таймер
-  tetcolor: { seconds: 6, clip: { x: 458, y: 150, width: 300, height: 300 } },
-  lines: { seconds: 5, click: 'НОВАЯ ИГРА', everyMs: 1700 }, // шары появляются заново
-  stihii: { seconds: 5, click: 'В БОЙ', everyMs: 1800 },   // размен ударами
-  technomagic: { seconds: 5, key: 'd', everyMs: 260 },      // маг идёт по парку
-  worm: { seconds: 5 },                                    // противники подходят сами
-  coin: { seconds: 5, click: 'БРОСИТЬ МОНЕТУ', everyMs: 1500 },
-};
-
 const only = process.argv.slice(2);
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const chrome = spawn(CHROME, [
-  '--headless=new', '--disable-gpu', '--hide-scrollbars', '--mute-audio',
-  `--remote-debugging-port=${PORT}`, '--window-size=1200,750', 'about:blank',
-], { stdio: 'ignore' });
+// Потолок веса. Считается не от веса страницы, а от ожидания человека: петля
+// грузится только на наведении, и при 1.6 Мбит/с 300 КБ — это полторы секунды
+// черноты, которые читаются как поломка. 150 КБ дают около 0.7 с.
+const ПОТОЛОК_КБ = 150;
 
-const session = (ws) => {
-  let seq = 0;
-  const waiting = new Map();
-  const listeners = [];
-  ws.addEventListener('message', (e) => {
-    const m = JSON.parse(e.data);
-    if (m.id && waiting.has(m.id)) { waiting.get(m.id)(m); waiting.delete(m.id); return; }
-    if (m.method) listeners.forEach((fn) => fn(m));
-  });
-  const send = (method, params = {}) =>
-    new Promise((resolve, reject) => {
-      const id = (seq += 1);
-      waiting.set(id, (m) => (m.error ? reject(new Error(m.error.message)) : resolve(m.result)));
-      ws.send(JSON.stringify({ id, method, params }));
-    });
-  send.on = (fn) => listeners.push(fn);
-  return send;
+const собрать = ({ game, кадров, секунд, лог, режим }) => {
+  const c = game.during?.clip || game.clip;
+  // Чётные стороны обязательны для yuv420p.
+  const crop = c ? `crop=${c.width - (c.width % 2)}:${c.height - (c.height % 2)}:${c.x}:${c.y},` : '';
+  const цель = `${OUT}clip-${game.id}.mp4`;
+  // Частоту на входе берём настоящую, без ограничения сверху: ограничение
+  // растягивало время — у Деревни 361 кадр за 5 секунд превращались в 15
+  // секунд ролика. Выходную задаём отдельно, тогда ffmpeg выбрасывает или
+  // повторяет кадры, а длительность остаётся живой.
+  const ff = spawnSync('ffmpeg', [
+    '-y', '-hide_banner', '-loglevel', 'error',
+    '-framerate', Math.max(0.5, кадров / Math.max(0.1, секунд)).toFixed(3), '-i', `${TMP}f%04d.jpg`,
+    '-vf', `${crop}scale=600:-2:flags=lanczos`,
+    '-an', '-r', '20', '-t', String(Math.ceil(Math.min(секунд, game.during?.seconds ?? секунд))),
+    '-c:v', 'libx264', '-profile:v', 'main', '-pix_fmt', 'yuv420p',
+    '-crf', '32', '-preset', 'slow', '-movflags', '+faststart',
+    цель,
+  ]);
+  if (ff.status !== 0 || !existsSync(цель)) {
+    console.log(`${game.id.padEnd(12)} ${лог.join(' ')} · ffmpeg: ${ff.stderr.toString().trim().slice(0, 140)}`);
+    return { плохо: true };
+  }
+  const кб = Math.round(statSync(цель).size / 1024);
+  const длит = Number(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration',
+    '-of', 'default=nk=1:nw=1', цель]).stdout.toString().trim());
+  // У видео не бывает прозрачных пикселей — в yuv420p альфы нет по устройству
+  // формата. Поэтому пустую петлю ловим не прозрачностью, а неподвижностью:
+  // десяток кадров за шесть секунд означает, что игра во время записи стояла,
+  // и на карточку поедет фотография под видом ролика.
+  // Пустая петля жмётся почти в ноль: ровная заливка фона на две секунды
+  // весила 3 КБ. Живая петля того же размера — десятки килобайт. Так что
+  // слишком лёгкий файл — такой же признак беды, как слишком тяжёлый.
+  const пустая = кб < 12;
+  const стояла = кадров < 20;
+  const тяжёлый = кб > ПОТОЛОК_КБ;
+  const беды = [
+    стояла && 'ИГРА СТОЯЛА',
+    пустая && `ПУСТАЯ ПЕТЛЯ: ${кб} КБ`,
+    тяжёлый && `ТЯЖЕЛО: ${кб} КБ > ${ПОТОЛОК_КБ}`,
+  ].filter(Boolean);
+  console.log(`${game.id.padEnd(12)} ${режим} ${лог.join(' ')} · кадров ${String(кадров).padStart(3)} за ${секунд.toFixed(1)}с · ролик ${длит.toFixed(1)}с · ${кб} КБ${беды.length ? '  ← ' + беды.join(', ') : ''}`);
+  return { плохо: беды.length > 0 };
 };
 
-const clickScript = (label) => `(() => {
-  const hit = [...document.querySelectorAll('button, a, [role=button], .btn, li, div, span')]
-    .filter(el => {
-      const r = el.getBoundingClientRect();
-      const t = (el.textContent || '').trim();
-      return r.width > 40 && r.height > 20 && t && t.length < 200 &&
-             t.toUpperCase().includes(${JSON.stringify(label)});
-    })
-    .sort((a, b) => a.textContent.length - b.textContent.length)[0];
-  if (!hit) return false;
-  hit.click();
-  return true;
-})()`;
+const chrome = запуститьChrome(PORT);
 
 const run = async () => {
-  for (let i = 0; i < 60; i += 1) {
-    try { if ((await fetch(`http://127.0.0.1:${PORT}/json/version`)).ok) break; } catch {}
-    await sleep(250);
-  }
-  const list = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
-  const ws = new WebSocket(list.find((t) => t.type === 'page').webSocketDebuggerUrl);
-  await new Promise((r) => ws.addEventListener('open', r, { once: true }));
-  const send = session(ws);
+  const send = await подключиться(PORT);
   await send('Page.enable');
 
+  // Один слушатель на весь проход, а не по одному на игру: раньше они
+  // накапливались, и к третьей игре каждый кадр писался трижды.
   let n = 0;
   let пишем = false;
   send.on(async (m) => {
     if (m.method !== 'Page.screencastFrame') return;
-    if (пишем) {
-      writeFileSync(`${TMP}f${String((n += 1)).padStart(4, '0')}.jpg`, Buffer.from(m.params.data, 'base64'));
-    }
+    if (пишем) writeFileSync(`${TMP}f${String((n += 1)).padStart(4, '0')}.jpg`, Buffer.from(m.params.data, 'base64'));
     await send('Page.screencastFrameAck', { sessionId: m.params.sessionId }).catch(() => {});
   });
 
+  const плохие = [];
   for (const game of PLAN) {
     if (only.length && !only.includes(game.id)) continue;
-    const plan = DURING[game.id] || { seconds: 5 };
-
+    const лог = [];
     try {
       await Promise.race([
-        (async () => {
-          await send('Page.navigate', { url: game.url });
-          await sleep(4500);
-          for (const [label, pause] of game.steps) {
-            const hit = await send('Runtime.evaluate', { expression: clickScript(label), returnByValue: true });
-            if (hit.result.value) await sleep(pause);
-          }
-        })(),
-        sleep(40000).then(() => { throw new Error('страница не дошла за 40 с'); }),
+        дойти(send, game, лог),
+        sleep(70000).then(() => { throw new Error('страница не дошла за 70 с'); }),
       ]);
     } catch (e) {
       console.log(`${game.id.padEnd(12)} пропущена: ${e.message}`);
+      плохие.push(game.id);
       continue;
     }
-    // game.play из общего плана здесь намеренно не выполняется: те нажатия
-    // существуют, чтобы на неподвижном кадре поле было не пустым. В записи
-    // они доводили партию до конца, экран замирал, и вместо ролика
-    // получалась фотография — первый прогон дал ровно один кадр.
 
-    // ── запись ──────────────────────────────────────────────────────
     rmSync(TMP, { recursive: true, force: true });
     mkdirSync(TMP, { recursive: true });
     n = 0;
 
-    const started = Date.now();
+    if (game.scene) {
+      const сц = game.scene;
+      const dt = сц.dt || 1 / 60;
+      const наКадр = Math.max(1, Math.round(1 / dt / (сц.fps || 30)));
+      const поставить = () => send('Runtime.evaluate', { expression: сц.setup, returnByValue: true, awaitPromise: true });
+      const шагнуть = async () => { await send('Runtime.evaluate', { expression: сц.step }); };
+      await поставить();
+
+      let t = 0;
+      if (сц.until) {
+        // Момент ловится не временем, а признаком: у «Наотмашь» удар
+        // случается, когда ошмётков становится больше сорока, и на каком
+        // это подшаге — дело сцены, а не наше. Ищем шаг, потом ставим
+        // сцену заново и доходим до него, отступив назад на `back`, чтобы
+        // в петлю попал и замах, а не только брызги. Это возможно только
+        // потому, что сцена детерминирована: второй проход повторяет первый.
+        let k = 0;
+        const предел = Math.round((сц.предел || 6) / dt);
+        while (k < предел) {
+          const есть = await send('Runtime.evaluate', { expression: сц.until, returnByValue: true }).catch(() => null);
+          if (есть?.result?.value) break;
+          await шагнуть();
+          k += 1;
+        }
+        лог.push(k >= предел ? 'момент не найден' : `момент на ${k}-м подшаге`);
+        await поставить();
+        const назад = Math.round((сц.back || 0.5) / dt);
+        for (let i = 0; i < Math.max(0, k - назад); i += 1) await шагнуть();
+        t = 0;
+      } else {
+        while (t < (сц.from || 0)) await шагнуть();
+      }
+      const конец = сц.until ? (сц.window || 2) : сц.to;
+      while (t < конец) {
+        for (let k = 0; k < наКадр; k += 1) { await шагнуть(); t += dt; }
+        await send('Runtime.evaluate', { expression: сц.render }).catch(() => {});
+        // Снимаем весь кадр целиком, а обрезаем потом, в ffmpeg — как и в
+        // живом режиме. Снимок С ОБРЕЗКОЙ заставляет Chrome пересобирать
+        // поверхность на каждый вызов: первый кадр занимал семь минут,
+        // второго не было. А fromSurface: false, которым я это сначала
+        // «починил», просто не берёт холст: страница выходит пустой, и
+        // ролик получился ровной заливкой фона. Проверено обоими снимками.
+        const к = await send('Page.captureScreenshot', { format: 'jpeg', quality: 88 });
+        writeFileSync(`${TMP}f${String((n += 1)).padStart(4, '0')}.jpg`, Buffer.from(к.data, 'base64'));
+      }
+      лог.push('сцена+');
+      if (собрать({ game, кадров: n, секунд: n / (сц.fps || 30), лог, режим: 'сцена' }).плохо) плохие.push(game.id);
+      continue;
+    }
+
+    const план = game.during || { seconds: 5 };
+    // Что нужно сделать ДО начала записи. У «Одного удара» это включение
+    // его собственной петли: между вызовом и первым её кадром игра ещё
+    // показывает обычный вид, и он попадал в ролик первым кадром — рывком.
+    for (const s of план.перед || []) await шаг(send)(s);
+
+    const начали = Date.now();
     пишем = true;
     await send('Page.startScreencast', { format: 'jpeg', quality: 80, everyNthFrame: 1 });
-    const until = started + plan.seconds * 1000;
-    while (Date.now() < until) {
-      if (plan.key) {
-        for (const type of ['keyDown', 'keyUp']) {
-          await send('Input.dispatchKeyEvent', {
-            type, key: plan.key, code: plan.key === ' ' ? 'Space' : `Key${plan.key.toUpperCase()}`,
-            windowsVirtualKeyCode: plan.key === ' ' ? 32 : plan.key.toUpperCase().charCodeAt(0),
-          }).catch(() => {});
-        }
+    const до = начали + (план.seconds || 5) * 1000;
+    while (Date.now() < до) {
+      if (!план.шаги?.length) { await sleep(300); continue; }
+      for (const s of план.шаги) {
+        if (Date.now() >= до) break;
+        await шаг(send)(s);
       }
-      if (plan.click) await send('Runtime.evaluate', { expression: clickScript(plan.click) }).catch(() => {});
-      await sleep(plan.everyMs || 500);
     }
     await send('Page.stopScreencast');
     пишем = false;
     await sleep(400);
-
-    const seconds = (Date.now() - started) / 1000;
-    // Частоту на входе берём настоящую, без ограничения сверху. Ограничение
-    // растягивало время: у Деревни 361 кадр за 5 секунд превращались в 15
-    // секунд ролика. Выходную частоту задаём отдельно (-r), тогда ffmpeg
-    // выбрасывает или повторяет кадры, а длительность остаётся живой.
-    const c = plan.clip || game.clip;
-    // Обрезаем ту же область, что и у неподвижного кадра, и приводим ширину
-    // к 600px: на карточке полоса 287px, с учётом плотных экранов этого
-    // хватает с запасом. Чётные стороны обязательны для yuv420p.
-    const crop = c ? `crop=${c.width - (c.width % 2)}:${c.height - (c.height % 2)}:${c.x}:${c.y},` : '';
-    const ff = spawnSync('ffmpeg', [
-      '-y', '-hide_banner', '-loglevel', 'error',
-      '-framerate', (Math.max(0.5, n / seconds)).toFixed(3), '-i', `${TMP}f%04d.jpg`,
-      '-vf', `${crop}scale=600:-2:flags=lanczos`,
-      '-an', '-r', '20', '-t', '6',
-      '-c:v', 'libx264', '-profile:v', 'main', '-pix_fmt', 'yuv420p',
-      '-crf', '32', '-preset', 'slow', '-movflags', '+faststart',
-      `${OUT}clip-${game.id}.mp4`,
-    ]);
-    const size = ff.status === 0
-      ? readdirSync(OUT).includes(`clip-${game.id}.mp4`)
-        ? `${Math.round(spawnSync('stat', ['-f%z', `${OUT}clip-${game.id}.mp4`]).stdout.toString().trim() / 1024)} КБ`
-        : 'файла нет'
-      : `ffmpeg: ${ff.stderr.toString().trim().slice(0, 120)}`;
-    const длит = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration',
-      '-of', 'default=nk=1:nw=1', `${OUT}clip-${game.id}.mp4`]).stdout.toString().trim();
-    console.log(`${game.id.padEnd(12)} кадров ${String(n).padStart(3)} за ${seconds.toFixed(1)}с · ролик ${Number(длит).toFixed(1)}с · ${size}`);
+    if (собрать({ game, кадров: n, секунд: (Date.now() - начали) / 1000, лог, режим: 'живьём' }).плохо) плохие.push(game.id);
   }
+
   rmSync(TMP, { recursive: true, force: true });
-  ws.close();
+  if (плохие.length) console.log(`\nне ставить на карточки: ${плохие.join(', ')}`);
+  send.закрыть();
   chrome.kill();
 };
 

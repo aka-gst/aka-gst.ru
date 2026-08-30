@@ -19,6 +19,8 @@ import { parseHash, buildLink, compare, cleanNick, NICK_KEY } from './challenge.
 import { loadBook, noteSpell, bookPages, bookCount, elementMarks } from './book.js';
 import { iconTag } from './icons.js';
 import { pulse } from './pulse.js';
+import { createTrace, traceEvent, traceKey } from './trace.js';
+import { createShowcase, withSeed } from './showcase.js';
 import { loadArt } from './art.js';
 
 const $ = (id) => document.getElementById(id);
@@ -106,6 +108,7 @@ const SFX_BY_EVENT = {
   swing: 'swing',
   impact: 'impact',
   'charge-start': 'charge',
+  charge: 'land',
   'daemon-windup': 'beamup',
   resist: 'resist',
   knock: 'knock',
@@ -370,6 +373,8 @@ function startLevel(next, { silent } = {}) {
   score = createScore(level, attempts);
   if (!silent) audio.playTrack(level.track || 0);
 
+  trace = createTrace();
+
   /* Начало попытки. Номер попытки здесь важнее всего остального: он и
      отвечает на вопрос, сколько раз человек готов вернуться. */
   pulse('etazh-nachat', { etazh: level.title, popytka: attempts });
@@ -444,6 +449,14 @@ function clearScreen() {
     popytka: attempts,
     sekund: Math.round(world.time),
     rang: result.rank,
+
+    /*
+     * След решения. Отвечает не на «прошёл ли», а на «чем прошёл», и
+     * только он позволяет посчитать, сколькими разными способами комнату
+     * проходят. Про человека в нём нет ничего.
+     */
+    sled: traceKey(trace),
+    pravil: trace.rules.size,
   });
   const record = writeBest(levelCode, result, world.time);
   const more = hasNextFloor();
@@ -618,40 +631,17 @@ let tutorStep = 0;
 /*
  * ОБУЧАЛКА
  * =========================================================
- * Первый этаж — пять задачек подряд, и подсказка идёт по одной на
- * комнату. Список, а не цепочка условий: комнат стало пять, и каждая
- * новая «если» в цепочке спорила бы с предыдущей.
+ * Две фразы, и обе в первых двух комнатах. Дальше молчим.
  *
- * Каждый шаг ждёт своего события и говорит про следующую комнату, а не
- * про текущую. Хвалить за сделанное незачем — игрок и сам видит, что
- * получилось; сказать надо то, чего он ещё не знает.
+ * Так просил автор дословно: «выстрели в эту точку, чтобы понять, как
+ * работает магия; тут собери линию — а потом тебя отпускают в уровень, и
+ * там ты уже сам барахтайся». Ключевое слово — отпускают. Подсказка,
+ * которая идёт весь этаж, отменяет игру: придумывать нечего, за игрока
+ * уже придумали, а предвкушение связки и есть то, ради чего в это играют.
  *
- * Двух одинаковых «сгорело» в списке не путается: шаги идут по порядку,
- * и второй ждёт своей очереди, а не перехватывает первую.
+ * Последняя фраза — «ДАЛЬШЕ САМ» — не украшение. Игрок должен знать, что
+ * подсказок больше не будет, иначе он будет их ждать и не начнёт пробовать.
  */
-const TUTOR_STEPS = [
-  {
-    on: (event) => event.type === 'kill',
-    say: 'ВЫХОД ЗАКРЫТ СОЛОМОЙ. СОЛОМА ГОРИТ — БЕЙ ОГНЁМ',
-  },
-  {
-    on: (event) => event.type === 'hay',
-    say: 'КРИСТАЛЛ ОГНЯ НЕ БОИТСЯ. ЕГО БЕРЁТ ТОЛЬКО МОЛНИЯ',
-  },
-  {
-    on: (event) => event.type === 'crystal',
-    say: 'БОЧКА НАД ТРОИМИ. ВСКРОЙ ЕЁ, ПОТОМ МОЛНИЮ В ЛУЖУ',
-  },
-  {
-    on: (event) => event.type === 'chain' && event.size > 1,
-    say: 'КОПНА ГОРИТ ЦЕЛИКОМ — ВМЕСТЕ С ТЕМИ, КТО ЗА НЕЙ ПРЯЧЕТСЯ',
-  },
-  {
-    on: (event) => event.type === 'hay',
-    say: 'ПОСЛЕДНЯЯ. ПОКА СМЕРТЬ НЕ УВИДЕЛИ И НЕ УСЛЫШАЛИ — ТРЕВОГИ НЕТ',
-  },
-];
-
 /*
  * ПОДКОЛЫ
  * =========================================================
@@ -685,6 +675,12 @@ const JABS = {
     'ИСКРА ЕМУ НЕ СОПЕРНИК — НУЖНО ВЕЩЕСТВО',
     'ЩЕКОТНО. ПОПРОБУЙ СЕРЬЁЗНЕЕ',
   ],
+  fling: [
+    'КЕГЛЯ',
+    'ОДНИМ ТЕЛОМ ДВОИХ',
+    'ОН ПРИЛЕТЕЛ НЕ ОДИН',
+    'БИЛЬЯРД',
+  ],
   backfire: [
     'ВСПЫШКА В ТЕСНОТЕ — ПРИВЕТ ОТ СЕБЯ',
     'РАДИУС БОЛЬШЕ КОМНАТЫ. КАК И ЗАДУМАНО?',
@@ -699,6 +695,16 @@ const jabSeen = {};
    себя сам: это разные события и разного тона. */
 let selfHarm = null;
 
+/* Чем прошли эту попытку. Живёт от начала этажа до его конца. */
+let trace = createTrace();
+
+/* Сколько стихий было в очереди на прошлом кадре: по разнице видно, что
+   одна только что легла, и её ячейку надо зажечь. */
+let landed = 0;
+
+/* Идёт съёмка витрины. Пока не null — игра стоит, а кадр рисует сцена. */
+let shooting = null;
+
 function jab(kind, first) {
   const seen = jabSeen[kind] || 0;
   jabSeen[kind] = seen + 1;
@@ -709,6 +715,17 @@ function jab(kind, first) {
   const lines = JABS[kind];
   return lines[Math.floor(Math.random() * lines.length)];
 }
+
+const TUTOR_STEPS = [
+  {
+    on: (event) => event.type === 'kill',
+    say: 'СОБЕРИ ЛИНИЮ: ТРИ ОДИНАКОВЫХ — ЛУЧ. ОН ИДЁТ НАСКВОЗЬ',
+  },
+  {
+    on: (event) => event.type === 'crystal',
+    say: 'ДАЛЬШЕ САМ',
+  },
+];
 
 function tutorStart() {
   tutorStep = level.tutorial ? 1 : 0;
@@ -835,7 +852,16 @@ function updateHud(force) {
     for (let i = 0; i < STACK_LIMIT; i += 1) {
       const element = player2.stack[i];
       if (element) {
-        slots += `<i style="background:${colourOf(element)};box-shadow:0 0 8px ${colourOf(element)}"></i>`;
+        /*
+         * Только что легшая стихия помечается отдельно и вспыхивает.
+         * Набор из трёх — это три события, а не одно действие: между
+         * ними и живёт предвкушение связки, ради которого в игру играют.
+         * Пока ячейка просто оказывалась заполненной, три нажатия
+         * читались как одно движение руки.
+         */
+        const fresh = i === player2.stack.length - 1 && landed === player2.stack.length;
+        slots += `<i class="${fresh ? 'is-landed' : ''}" style="background:${colourOf(element)};`
+          + `box-shadow:0 0 8px ${colourOf(element)}"></i>`;
       } else if (i === player2.stack.length && player2.chargeLeft > 0) {
         const fill = 1 - player2.chargeLeft / CHARGE_STEP;
         slots += `<i class="is-charging" style="border-color:${colourOf(player2.charging)};`
@@ -904,10 +930,18 @@ function updateHud(force) {
 
 function drainEvents() {
   for (const event of world.events) {
+    /* След решения собирается здесь же: все правила, какие срабатывают,
+       проходят через события, и второго места для этого не нужно. */
+    traceEvent(trace, event);
+
     const name = SFX_BY_EVENT[event.type];
     if (name) audio.sfx(name, event);
 
     if (event.type === 'daemon') {
+      /* Очередь ушла в выстрел — метка «только что легла» больше ни к
+         чему не относится и должна погаснуть вместе с ней. */
+      landed = 0;
+
       audio.sfx(event.form === 'beam' ? 'beam' : event.form === 'nova' ? 'nova' : 'zap', event);
       if (event.form === 'nova') vibrate(30);
 
@@ -928,6 +962,13 @@ function drainEvents() {
       }
     } else if (event.type === 'backfire') {
       setToast(jab('backfire', 'ВСПЫШКА В ТЕСНОТЕ — СВОИМ ЖЕ'), 2.4);
+    } else if (event.type === 'charge') {
+      landed = event.size;
+      updateHud(true);
+    } else if (event.type === 'fling') {
+      /* Новый глагол, и о нём надо сказать: врагами можно бросаться. */
+      setToast(jab('fling', 'ТЕЛО ТОЖЕ СНАРЯД'), 1.8);
+      vibrate([10, 20]);
     } else if (event.type === 'held') {
       /* Промаха не было — был неподходящий удар, и сказать это надо
          сразу, иначе игрок решит, что игра его обманула. */
@@ -1028,6 +1069,16 @@ function step(now) {
   previous = now;
 
   resize();
+
+  /*
+   * На съёмке свой цикл игры молчит, но отрисовка работает. Останавливать
+   * надо ход, а не рисование: холст очищается при любом изменении размера,
+   * и остановленная отрисовка даёт пустой кадр вместо сцены.
+   */
+  if (shooting) {
+    shooting.render();
+    return;
+  }
 
   const raw = input.read();
 
@@ -1286,6 +1337,60 @@ window.avto = {
   get renderer() { return renderer; },
   get view() { return lastView; },
   get picked() { return picked; },
+
+  /*
+   * СНАРЯД ДЛЯ ВИТРИНЫ
+   * ---------------------------------------------------------
+   * Ставит сцену и отдаёт рычаги: шаг, отрисовку, состояние. Снимает
+   * другой — это разделение труда, а не лень: сцену умеет поставить
+   * только тот, кто знает игру.
+   *
+   *   const s = window.avto.showcase();     // сцена стоит, игра молчит
+   *   while (s.state().упавших < 2) s.step(1/60);
+   *   s.render();                           // кадр в холсте
+   *   s.stop();                             // вернуть игру
+   *
+   * Без аргументов сцена ещё и играет сама, с постоянным шагом: этого
+   * хватает, чтобы снять петлю простым захватом холста.
+   */
+  showcase(options = {}) {
+    const seed = options.seed || 20260830;
+    const made = withSeed(seed, () => createShowcase(CAMPAIGN[0], renderer));
+
+    document.body.classList.add('is-shooting');
+
+    /* Каждый шаг и каждая отрисовка идут под тем же сидом: иначе искры
+       и дым разойдутся на втором прогоне, и «детерминировано» окажется
+       неправдой ровно там, где это важнее всего. */
+    const wrapped = {
+      world: made.world,
+      step: (dt) => withSeed((seed + Math.round(made.state().секунд * 1000)) >>> 0,
+        () => made.step(dt)),
+      render: () => withSeed(seed, () => made.render()),
+      state: () => made.state(),
+      stop() {
+        shooting = null;
+        document.body.classList.remove('is-shooting');
+        renderer.invalidate();
+      },
+    };
+
+    /* Кадр рисует обёртка, а не сама сцена: подменять её собственный
+       метод — верный способ получить бесконечную рекурсию, что и вышло
+       с первой попытки. */
+    shooting = wrapped;
+
+    if (options.play !== false) {
+      const tick = () => {
+        if (shooting !== wrapped) return;
+        wrapped.step(1 / 60);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    return wrapped;
+  },
 };
 
 const fromHash = levelFromHash();

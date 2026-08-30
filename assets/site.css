@@ -512,6 +512,16 @@ html { scroll-behavior: smooth; }
 
 .jobs { display: grid; gap: 1px; margin-top: 14px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .job { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 24px; padding: 20px 22px; background: var(--panel); }
+/* Снимок в строке опыта идёт во второй столбец, к тексту, а не в узкую
+   колонку с датой: полоса журнала шириной 170 пикселей — марка, а не
+   документ. Ширину ограничиваем: во всю колонку она задавила бы список. */
+.job .shot { grid-column: 2; max-width: 420px; margin-top: 10px; }
+.job .shot img { border-radius: 8px; }
+/* На телефоне колонка и так узкая — ограничивать её ещё и здесь значит
+   показывать журнальную полосу размером с почтовую марку. */
+@media (max-width: 900px) {
+  .job .shot { max-width: none; grid-column: 1 / -1; }
+}
 .job-period { grid-row: span 3; font-family: var(--mono); font-size: 12px; color: var(--dim); }
 .job h3 { font-size: 16px; }
 .job-role { font-size: 13px; color: var(--accent); }
@@ -725,6 +735,21 @@ a.gcard.is-lit .gclip { transform: scale(1.06); }
 [data-art="rune"] .gart i:nth-child(3) { transform: rotate(45deg) translateY(14px); }
 [data-art="rune"].is-lit .gart i:nth-child(1) { transform: rotate(135deg) translateY(-20px); }
 [data-art="rune"].is-lit .gart i:nth-child(3) { transform: rotate(-45deg) translateY(20px); }
+
+/* ПЕРИМЕТР — чужой взгляд: зрачок и две створки. На наведении глаз
+   закрывается, потому что вся игра про то, чтобы в него не попасть. */
+[data-art="watch"] .gart i {
+  width: 34px; height: 7px; border-radius: 4px; background: var(--neon-2);
+}
+[data-art="watch"] .gart i:nth-child(1) { transform: translateY(-21px); }
+[data-art="watch"] .gart i:nth-child(2) {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: none; border: 2px solid var(--neon);
+}
+[data-art="watch"] .gart i:nth-child(3) { transform: translateY(21px); }
+[data-art="watch"].is-lit .gart i:nth-child(1) { transform: translateY(-5px); }
+[data-art="watch"].is-lit .gart i:nth-child(3) { transform: translateY(5px); }
+[data-art="watch"].is-lit .gart i:nth-child(2) { opacity: .2; transform: scaleY(.15); }
 
 /* Лила — пять клеток поля. */
 [data-art="dice"] .gart i { width: 16px; height: 16px; border-radius: 3px; background: var(--line); border: 1px solid var(--dim); }

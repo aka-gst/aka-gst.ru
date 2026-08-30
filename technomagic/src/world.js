@@ -119,6 +119,59 @@ function solidAt(world, x, y) {
  * залипает в углу. Раздельность важнее точности — в дверном проёме
  * шириной в клетку игрок иначе застревает и умирает не по своей вине.
  */
+/*
+ * ИМПУЛЬС ЛЕТЯЩЕГО ТЕЛА
+ * =========================================================
+ * Тело, которое летит, — снаряд. Не «трупы от бочки сбивают соседей», а
+ * общее правило: во что попало, тому и передалось. Разница
+ * принципиальная. Частный случай — украшение, красивое один раз; общее
+ * правило даёт игроку новый глагол — швырять врагов друг в друга, — и
+ * порождает решения, которых никто не задумывал.
+ *
+ * Порог низкий намеренно, и это безопасно: сюда попадают только тела,
+ * которые уже летят — отброшенные и мёртвые. Бегущий своим ходом враг в
+ * эту ветку не заходит вовсе, поэтому случайных столкновений на бегу не
+ * будет даже при скорости вдвое выше порога.
+ *
+ * Высокий порог пробовался первым и не работал: тело тормозит быстрее,
+ * чем долетает, и к моменту касания скорость успевала упасть ниже
+ * порога — снаряд честно долетал и вежливо останавливался.
+ */
+const FLING_SPEED = 105;
+
+function fling(world, mover, from) {
+  const speed = Math.hypot(mover.vx || 0, mover.vy || 0);
+  if (speed < FLING_SPEED) return;
+
+  const angle = Math.atan2(mover.vy, mover.vx);
+
+  for (const body of [world.player, ...world.enemies]) {
+    if (body === mover || body === from || !body.alive) continue;
+    if (Math.hypot(body.x - mover.x, body.y - mover.y) > BODY * 2) continue;
+
+    /* Половина скорости уходит дальше, в того, кого сбили. */
+    body.vx = (body.vx || 0) + Math.cos(angle) * speed * 0.5;
+    body.vy = (body.vy || 0) + Math.sin(angle) * speed * 0.5;
+    body.stagger = Math.max(body.stagger || 0, 0.4);
+    body.shove = Math.max(body.shove || 0, 0.4);
+
+    world.fx.shake = Math.max(world.fx.shake, 5);
+    world.events.push({ type: 'fling' });
+
+    if (body === world.player) {
+      killPlayer(world, angle);
+    } else {
+      killEnemy(world, body, angle, 'fling',
+        { by: 'player', weapon: 'body', elements: [] });
+    }
+
+    /* Летящее тело тормозит о того, кого снесло. */
+    mover.vx *= 0.4;
+    mover.vy *= 0.4;
+    return;
+  }
+}
+
 function moveBody(world, body, dx, dy) {
   const r = BODY;
 
@@ -714,6 +767,30 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
     angle: enemy.angle,
     kind: enemy.kind,
     twitch: 0.5,
+
+    /*
+     * Падение — отдельное состояние, а не мгновенная подмена фигуры
+     * лежащим телом. Без него смерть выглядит как «было / стало»: маг
+     * стоял, маг лежит, а что между — игрок не увидел. Из «было / стало»
+     * модель правил в голове не собирается, а вся игра на ней и держится.
+     *
+     * Треть секунды — минимум, при котором видно, что тело валится, и
+     * при котором это ещё не мешает темпу.
+     */
+    fall: 0.34,
+    sheet: enemy.kind,
+    lean: (Math.random() - 0.5) * 0.6,
+
+    /*
+     * Труп уносит с собой скорость. Именно этого просил автор: тело,
+     * отлетевшее от взрыва, сносит второго — «у нас же маджика, физика и
+     * веселье». Правило одно на всех, поэтому живой, отброшенный
+     * ОТБОЕМ, сносит так же.
+     */
+    vx: enemy.vx || 0,
+    vy: enemy.vy || 0,
+    shove: 0.6,
+    alive: false,
   });
 
   world.fx.hitstop = Math.max(world.fx.hitstop, 0.045);
@@ -1224,13 +1301,29 @@ function shatter(world, at, substance) {
     emitNoise(world, x, y, 300, 'hay');
     world.events.push({ type: 'hay', x, y });
 
+    /*
+     * Солома поджигает солому — но не в тот же кадр. Раньше копна из
+     * девяти клеток исчезала целиком за одно мгновение, и правило,
+     * которое стоило показать, не было видно вовсе: игрок наблюдал не
+     * пожар, а подмену картинки.
+     *
+     * Теперь огонь идёт по копне клетка за клеткой. Восьмая доля секунды
+     * на шаг — этого хватает, чтобы увидеть направление, и мало, чтобы
+     * успеть уйти из уже занявшегося: копна остаётся ловушкой, но
+     * ловушкой понятной.
+     *
+     * Рекурсия по-прежнему конечна: клетка гасится в пол сразу, и
+     * отложенный вызов на уже сгоревшую просто ничего не находит.
+     */
     const tx = at % world.w;
     const ty = (at / world.w) | 0;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const nx = tx + dx;
       const ny = ty + dy;
       if (nx < 0 || ny < 0 || nx >= world.w || ny >= world.h) continue;
-      shatter(world, ny * world.w + nx, FLARE);
+      const next = ny * world.w + nx;
+      if (world.tiles[next] !== TILE.HAY) continue;
+      schedule(world, 0.12, () => shatter(world, next, FLARE));
     }
     return true;
   }
@@ -1340,6 +1433,8 @@ function discharge(world, x, y, substance) {
    */
   world.charged = { tiles: live, x, y, life: 0.5, max: 0.5 };
 
+  let order = 0;
+
   for (const body of hit) {
     const angle = Math.atan2(body.y - y, body.x - x);
 
@@ -1348,7 +1443,15 @@ function discharge(world, x, y, substance) {
      * дёргается позже ближнего, и по этой задержке видно, что убило их
      * одно и то же, а не пять отдельных случайностей.
      */
-    const travel = Math.min(0.3, Math.hypot(body.x - x, body.y - y) / ARC_SPEED);
+    /*
+     * К расстоянию добавляется шаг по счёту. Трое, стоящие бок о бок,
+     * одинаково далеки от бочки — и падали в один кадр, отчего цепь
+     * читалась как «все умерли разом», а не как разряд, идущий дальше.
+     * Разница в восьмую долю секунды делает из этого домино.
+     */
+    const travel = Math.min(0.3, Math.hypot(body.x - x, body.y - y) / ARC_SPEED)
+      + order * 0.13;
+    order += 1;
 
     schedule(world, travel, () => {
       if (!body.alive) return;
@@ -1482,7 +1585,18 @@ export function update(world, dt, intent) {
   for (const noise of world.noises) noise.life -= dt;
   world.noises = world.noises.filter((n) => n.life > 0);
 
-  for (const corpse of world.corpses) corpse.twitch = Math.max(0, corpse.twitch - dt);
+  for (const corpse of world.corpses) {
+    corpse.twitch = Math.max(0, corpse.twitch - dt);
+    if (corpse.fall > 0) corpse.fall = Math.max(0, corpse.fall - dt);
+
+    /* Летящее тело едет и сбивает, пока не остановится. */
+    if (Math.hypot(corpse.vx || 0, corpse.vy || 0) > 4) {
+      moveBody(world, corpse, corpse.vx * dt, corpse.vy * dt);
+      fling(world, corpse, null);
+      corpse.vx *= 0.9;
+      corpse.vy *= 0.9;
+    }
+  }
 
   if (world.decals.length > 420) world.decals.splice(0, world.decals.length - 420);
 }
@@ -1569,7 +1683,7 @@ function updatePlayer(world, dt, intent) {
     if (player.chargeLeft <= 0) {
       player.stack.push(player.charging);
       player.charging = null;
-      world.events.push({ type: 'charge', size: player.stack.length });
+      world.events.push({ type: 'charge', size: player.stack.length, element: player.stack[player.stack.length - 1] });
     }
   }
 
@@ -1630,6 +1744,9 @@ function updateEnemy(world, enemy, dt) {
     enemy.vx *= drag;
     enemy.vy *= drag;
     moveBody(world, enemy, enemy.vx * dt, enemy.vy * dt);
+
+    /* Отброшенный живой — такой же снаряд, как и мёртвый. Правило одно. */
+    fling(world, enemy, null);
     return;
   }
 
