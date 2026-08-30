@@ -100,6 +100,7 @@ const run = async () => {
     }
   };
 
+  const пустые = [];
   for (const game of PLAN) {
     if (only.length && !only.includes(game.id)) continue;
     const log = [];
@@ -156,7 +157,39 @@ const run = async () => {
     const shot = await send('Page.captureScreenshot',
       game.clip ? { format: 'png', clip: { ...game.clip, scale: 1 } } : { format: 'png' });
     writeFileSync(`${OUT}play-${game.id}.png`, Buffer.from(shot.data, 'base64'));
-    console.log(`${game.id.padEnd(9)} ${log.join(' ')}\n          осталось: ${probe.result.value}`);
+
+    // Проверяем сам кадр, а не факт, что он получился. Пустой холст даёт
+    // файл нормального веса и код успеха — и уезжает на витрину чёрным
+    // прямоугольником, о чём никто не узнает до владельца. Меряем два
+    // числа: доля полностью прозрачных пикселей (у живого кадра ноль, у
+    // неотрисованного почти сто) и средняя яркость.
+    const оценка = await send('Runtime.evaluate', { awaitPromise: true, returnByValue: true, expression: `
+      (async () => {
+        const i = new Image();
+        i.src = 'data:image/png;base64,' + ${JSON.stringify(shot.data)};
+        await i.decode();
+        const c = new OffscreenCanvas(i.width, i.height);
+        const g = c.getContext('2d');
+        g.drawImage(i, 0, 0);
+        const d = g.getImageData(0, 0, c.width, c.height).data;
+        let сумма = 0, n = 0, прозрачных = 0, тёмных = 0;
+        for (let k = 0; k < d.length; k += 16) {
+          if (d[k + 3] < 8) прозрачных += 1;
+          const y = 0.2126 * d[k] + 0.7152 * d[k + 1] + 0.0722 * d[k + 2];
+          if (y < 16) тёмных += 1;
+          сумма += y; n += 1;
+        }
+        return { яркость: +(сумма / n).toFixed(1), прозрачных: +(100 * прозрачных / n).toFixed(1), тёмных: +(100 * тёмных / n).toFixed(1) };
+      })()
+    ` }).catch(() => null);
+    const о = оценка?.result?.value;
+    const беда = о && (о.прозрачных > 20 || о.тёмных > 92);
+    const строка = о ? `яркость ${о.яркость}, прозрачных ${о.прозрачных}%, тёмных ${о.тёмных}%` : 'не измерен';
+    console.log(`${game.id.padEnd(9)} ${log.join(' ')}\n          ${беда ? 'ПУСТОЙ КАДР: ' : ''}${строка}\n          осталось: ${probe.result.value}`);
+    if (беда) пустые.push(game.id);
+  }
+  if (пустые.length) {
+    console.log(`\nне ставить на витрину: ${пустые.join(', ')} — кадр пустой или почти чёрный`);
   }
   ws.close();
   chrome.kill();
