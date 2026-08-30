@@ -39,8 +39,8 @@ const only = process.argv.slice(2);
 // черноты, которые читаются как поломка. 150 КБ дают около 0.7 с.
 const ПОТОЛОК_КБ = 150;
 
-const собрать = ({ game, кадров, секунд, лог, режим }) => {
-  const c = game.during?.clip || game.clip;
+const собрать = ({ game, кадров, секунд, лог, режим, сценарно }) => {
+  const c = (сценарно && game.сценаClip) || game.during?.clip || game.clip;
   // Чётные стороны обязательны для yuv420p.
   const crop = c ? `crop=${c.width - (c.width % 2)}:${c.height - (c.height % 2)}:${c.x}:${c.y},` : '';
   const цель = `${OUT}clip-${game.id}.mp4`;
@@ -103,9 +103,14 @@ const run = async () => {
   for (const game of PLAN) {
     if (only.length && !only.includes(game.id)) continue;
     const лог = [];
+    // У игры может быть свой адрес для петли: она открывается сразу в нужном
+    // моменте и крутит его сама. Тогда ни заставку проходить, ни сцену
+    // ставить не надо — просто пишем. Кадр для карточки при этом снимается
+    // с обычного адреса, поэтому подменяем только здесь.
+    const цельЗаписи = game.петля ? { ...game, url: game.петля, steps: [], js: null, play: null, scene: null } : game;
     try {
       await Promise.race([
-        дойти(send, game, лог),
+        дойти(send, цельЗаписи, лог),
         sleep(70000).then(() => { throw new Error('страница не дошла за 70 с'); }),
       ]);
     } catch (e) {
@@ -118,15 +123,27 @@ const run = async () => {
     mkdirSync(TMP, { recursive: true });
     n = 0;
 
-    if (game.scene) {
+    if (цельЗаписи.scene) {
       const сц = game.scene;
       const dt = сц.dt || 1 / 60;
       const наКадр = Math.max(1, Math.round(1 / dt / (сц.fps || 30)));
-      const поставить = () => send('Runtime.evaluate', { expression: сц.setup, returnByValue: true, awaitPromise: true });
-      const шагнуть = async () => { await send('Runtime.evaluate', { expression: сц.step }); };
-      await поставить();
-
       let t = 0;
+      const поставить = () => send('Runtime.evaluate', { expression: сц.setup, returnByValue: true, awaitPromise: true });
+      // Время двигает шаг, а не цикл кадров: когда я вынес счётчик наружу
+      // ради поиска по признаку, цикл «домотать до начала окна» остался
+      // без прибавки и стал вечным. Проход висел, не сказав ни слова.
+      const шагнуть = async () => { await send('Runtime.evaluate', { expression: сц.step }); t += dt; };
+      const постановка = await поставить();
+      // Если сцена не встала — обычно потому, что пульт игры не поднялся, —
+      // дальше идти нельзя. Каждый кадр после этого снимается через
+      // композитор, которому нечего показывать, и один такой занимает минуты:
+      // проход молча висит вместо того, чтобы честно сказать «не вышло».
+      if (постановка?.exceptionDetails) {
+        console.log(`${game.id.padEnd(12)} сцена не встала: ${String(постановка.exceptionDetails.text || '').slice(0, 90)}`);
+        плохие.push(game.id);
+        continue;
+      }
+
       if (сц.until) {
         // Момент ловится не временем, а признаком: у «Наотмашь» удар
         // случается, когда ошмётков становится больше сорока, и на каком
@@ -152,7 +169,7 @@ const run = async () => {
       }
       const конец = сц.until ? (сц.window || 2) : сц.to;
       while (t < конец) {
-        for (let k = 0; k < наКадр; k += 1) { await шагнуть(); t += dt; }
+        for (let k = 0; k < наКадр; k += 1) await шагнуть();
         await send('Runtime.evaluate', { expression: сц.render }).catch(() => {});
         // Снимаем весь кадр целиком, а обрезаем потом, в ffmpeg — как и в
         // живом режиме. Снимок С ОБРЕЗКОЙ заставляет Chrome пересобирать
@@ -164,7 +181,7 @@ const run = async () => {
         writeFileSync(`${TMP}f${String((n += 1)).padStart(4, '0')}.jpg`, Buffer.from(к.data, 'base64'));
       }
       лог.push('сцена+');
-      if (собрать({ game, кадров: n, секунд: n / (сц.fps || 30), лог, режим: 'сцена' }).плохо) плохие.push(game.id);
+      if (собрать({ game, кадров: n, секунд: n / (сц.fps || 30), лог, режим: 'сцена', сценарно: true }).плохо) плохие.push(game.id);
       continue;
     }
 
