@@ -114,6 +114,15 @@ const run = async () => {
             log.push(`${label}${hit.result.value ? '+' : '-'}`);
             if (hit.result.value) await sleep(pause);
           }
+          // Игра может дать свой путь к нужному экрану — отладочный пульт,
+          // переход на уровень, включённый свет. Это честнее, чем водить
+          // героя вслепую: показываем настоящую комнату игры, просто ту, на
+          // которую стоит смотреть. ПЕРИМЕТР так и открыл восьмую.
+          if (game.js) {
+            const r = await send('Runtime.evaluate', { expression: game.js, returnByValue: true, awaitPromise: true });
+            log.push(r.exceptionDetails ? 'пульт-' : 'пульт+');
+            await sleep(game.jsWait || 900);
+          }
           if (game.play) {
             // Даём игре пожить: пустое поле на карточке ничего не говорит.
             // Половина игр в покое неподвижна, и кадр «через секунду после
