@@ -102,15 +102,19 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 
 .book-list { list-style: none; margin: 0; padding: 0; counter-reset: story; }
 .book-list li { counter-increment: story; }
+/* Первый столбец одной ширины у всех строк — и там, где обложка, и там, где
+   только номер. Иначе внутри одного сборника названия разъезжались по
+   левому краю: у «Трёх изнутри» обложки есть у четырёх рассказов из девяти. */
 .book-list a {
-  display: grid; grid-template-columns: 26px minmax(0, 1fr) auto;
-  gap: 4px 12px; align-items: baseline;
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 3px 14px; align-items: start;
   padding: 13px 0; border-bottom: 1px solid var(--rule);
   color: inherit; text-decoration: none;
 }
 .book-list a::before {
   content: counter(story, decimal-leading-zero);
   font-family: var(--mono); font-size: 11px; color: var(--ink-soft);
+  padding-top: 3px;
 }
 .book-list a:hover { background: var(--ground-soft); }
 .story-name { font-size: 17px; }
@@ -120,6 +124,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .story-lead {
   grid-column: 2 / -1; font-size: 13px; line-height: 1.5; color: var(--ink-soft);
 }
+.book-list .story-name, .book-list .story-time { padding-top: 1px; }
 
 /* Обложки. Их рисовали под каждый рассказ, и без них раздел терял половину
    впечатления — так и было сказано. В оглавлении маленькие, чтобы список
@@ -129,19 +134,13 @@ html[data-size="xl"] .reader { --read-size: 24px; }
    прилипало к её низу. */
 /* Со обложкой номер не нужен: якорем строки становится она сама, а лишний
    столбец только растаскивал текст. */
-.book-list .has-cover a {
-  grid-template-columns: 56px minmax(0, 1fr) auto;
-  align-items: start; gap: 3px 14px;
-}
 .book-list .has-cover a::before { display: none; }
 .story-thumb {
   grid-row: 1 / -1; align-self: start;
-  width: 56px; height: 56px; border-radius: 8px;
+  width: 44px; height: 44px; border-radius: 7px;
   object-fit: cover; background: var(--ground-soft);
 }
-.book-list .has-cover .story-lead { grid-column: 2 / -1; }
-.book-list .has-cover .story-name,
-.book-list .has-cover .story-time { padding-top: 1px; }
+
 
 /* Подпись стоит у каждой обложки отдельно, а не одной строкой на раздел:
    часть обложек не её, и общая подпись приписала бы художнице чужие
