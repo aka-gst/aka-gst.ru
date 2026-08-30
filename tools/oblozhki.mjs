@@ -134,7 +134,10 @@ let весДо = 0;
 let весПосле = 0;
 for (const { файл, вид, делать } of работа) {
   const исток = join(covers, файл);
-  const цель = join(covers, `${вид}.jpg`.replace(/\.jpg\.jpg$/, '.jpg'));
+  // У обычной копии вид — это папка (mini/, polka/), а у куска обложки вид
+  // уже несёт имя рассказа (kusok/vstuplenie). Пока путь считался одинаково,
+  // все миниатюры писались в один файл assets/covers/mini.jpg.
+  const цель = вид.includes('/') ? join(covers, `${вид}.jpg`) : join(covers, вид, файл);
   const ключ = вид.includes('/') ? `${вид}.jpg` : `${вид}/${файл}`;
   const h = хеш(исток);
   весДо += statSync(исток).size;
