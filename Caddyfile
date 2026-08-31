@@ -50,6 +50,13 @@ aka-gst.ru, www.aka-gst.ru {
   redir /knb /stihii/ 308
   redir /knb/* /stihii/ 308
 
+  # «Наотмашь» выложена по /worm/ — имя осталось от первого замысла про
+  # червя. Человек со ссылкой по имени игры попадал в 404, и на этом
+  # спотыкались уже двое. Старый адрес не трогаем: на него могли дать
+  # ссылки, и 404 на нём хуже, чем два рабочих.
+  redir /naotmash /worm/ 308
+  redir /naotmash/* /worm/ 308
+
   redir /tetris /tetcolor/ 308
   redir /tetris/* /tetcolor/ 308
   redir /tetcolor /tetcolor/ 308
