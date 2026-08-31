@@ -779,6 +779,7 @@ const html = `<!doctype html>
     <title>${esc(site.title)}</title>
     <link rel="canonical" href="${esc(site.url)}/">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
 
     <!-- Ссылку на портфолио чаще всего открывают из мессенджера или письма:
          без этих тегов превью разворачивается пустым. -->
@@ -811,7 +812,7 @@ const html = `<!doctype html>
   <body>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
-      <a class="brand" href="/">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
 ${recTicker}
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
@@ -883,12 +884,13 @@ const praktikumPage = `<!doctype html>
     <title>Практикумы — ${esc(site.handle)}</title>
     <link rel="canonical" href="${esc(site.url)}/praktikum/">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
     </header>
     <main id="main">
       <section class="block" style="margin-top:34px">
@@ -935,6 +937,7 @@ const readerHead = (title, description, canonical) => `
     <title>${esc(title)}</title>
     <link rel="canonical" href="${esc(canonical)}">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>`;
@@ -945,7 +948,7 @@ const readerHead = (title, description, canonical) => `
 // странице нет, переключать нечего, а увести на главную нужно.
 const readerTopbar = `
       <header class="topbar">
-        <a class="brand" href="/">aka<span>-</span>gst</a>
+        <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
         <div class="track-switch" role="group" aria-label="Разделы сайта">
           <a href="/#work">${trackIcon('work')}<span>${esc(site.tracks.work.label)}</span></a>
           <a href="/#games">${trackIcon('games')}<span>${esc(site.tracks.play.label)}</span></a>
@@ -1210,11 +1213,12 @@ const notFound = `<!doctype html>
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>Страница не найдена — ${esc(site.handle)}</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
     </header>
     <main id="main">
       <section class="report" style="margin-top:34px">
@@ -1257,11 +1261,12 @@ const unavailable = `<!doctype html>
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>Сервис недоступен — ${esc(site.handle)}</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
     </header>
     <main id="main">
       <section class="report" style="margin-top:34px">

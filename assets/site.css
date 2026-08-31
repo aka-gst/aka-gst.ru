@@ -102,6 +102,21 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
   border-bottom: 1px solid var(--line-soft);
 }
 
+/* Знак стоит РЯДОМ с надписью, а не вместо неё. Надпись «aka-gst» —
+   то, по чему сайт узнают и что произносят; знак к ней добавляется, а
+   не заменяет её.
+
+   Размер выбран сравнением, а не на глаз: на 26 пикселях голова
+   рассыпается в фиолетово-зелёное пятно, на 44 начинает спорить с
+   названием, на 34 читаются кольцо и лицо. Знак нарисован подробным, и
+   меньше 34 он перестаёт быть знаком — это то же ограничение, из-за
+   которого для значка вкладки понадобился отдельный файл. */
+.brand-znak {
+  height: 34px; width: auto; margin-right: 10px;
+  vertical-align: -10px; display: inline-block;
+}
+@media (max-width: 640px) { .brand-znak { height: 28px; margin-right: 8px; vertical-align: -8px; } }
+
 .brand {
   font-family: var(--mono); font-size: 15px; font-weight: 700;
   letter-spacing: -.02em; text-decoration: none;
