@@ -263,8 +263,21 @@ const figure = (shot) => `
 // и заводить слой под шесть карточек, когда снят один клип, незачем.
 // Имя выводится из id проекта: qa-quest → clip-qa-quest.mp4.
 const cardClip = (project) => {
-  const файл = `clip-${project.id}.mp4`;
-  if (!existsSync(join(root, 'assets/clips', файл))) return '';
+  // Имя ролика выводим из снимка, а не из id проекта: снимок и петля —
+  // одна и та же сцена, и называются они одинаково. У Psy AI Admin id
+  // `psy-ai-admin`, а снимок и клип — `psy-admin`, и по id петля не нашлась
+  // бы вовсе. Игровые карточки считают имя так же.
+  // Имя ролика ищем двумя способами, потому что ни один не покрывает оба
+  // случая: у Psy AI Admin id `psy-ai-admin`, а снимок и клип `psy-admin`;
+  // у QA Quest наоборот — id `qa-quest`, снимок `qa-quest-lesson`. Правило
+  // «выводить из снимка» чинило одно и ломало другое, проверено на обоих.
+  const снимок = project.shots?.[0]?.file;
+  if (!снимок) return '';
+  const файл = [
+    `clip-${снимок.replace(/\.(jpe?g|png|webp)$/i, '')}.mp4`,
+    `clip-${project.id}.mp4`,
+  ].find((n) => existsSync(join(root, 'assets/clips', n)));
+  if (!файл) return '';
   return `<video class="gclip" muted loop playsinline preload="none" tabindex="-1"
                   data-src="/assets/clips/${esc(файл)}?v=${assetVersion(`assets/clips/${файл}`)}"></video>`;
 };
