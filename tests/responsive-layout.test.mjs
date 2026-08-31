@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, existsSync } from 'node:fs';
 import test from 'node:test';
 
 // Проверки живут в репозитории сайта, потому что репозиторий у них должен
@@ -165,7 +165,16 @@ test('снимки экрана лежат на месте, подписаны �
     // Игровые кадры обрезаны по полю, у каждого свои пропорции.
     // Скан журнальной полосы под общий размер не подгоняется: это чужая
     // бумага 2008 года, а не снимок нашей страницы.
-    if (shot.project.kind !== 'game' && shot.project.kind !== 'скан') {
+    //
+    // И снимок, у которого есть петля, тоже: он обязан совпадать с ПЕРВЫМ
+    // КАДРОМ своей петли, иначе при наведении карточка перескакивает — у
+    // QA Quest на снимке горели фары и стояли четыре строки в терминале, а
+    // ролик начинался раньше, и карточка на глазах отматывалась назад.
+    // Совпадение проверяется попиксельно отдельным инструментом: здесь
+    // размеров файла для этого недостаточно.
+    const сПетлёй = existsSync(тут(`assets/clips/clip-${shot.file.replace(/\.(jpe?g|png)$/i, '')}.mp4`))
+      || existsSync(тут(`assets/clips/clip-${shot.project.id}.mp4`));
+    if (shot.project.kind !== 'game' && shot.project.kind !== 'скан' && !сПетлёй) {
       assert.equal(size.w, 1200, `${shot.file}: ширина не 1200`);
       assert.equal(size.h, 750, `${shot.file}: высота не 750`);
     }
