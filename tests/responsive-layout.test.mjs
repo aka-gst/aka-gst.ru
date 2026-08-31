@@ -17,7 +17,20 @@ const рядом = (path) => new URL(`../../${path}`, import.meta.url);
 const ОБЩАЯ = 'Zakriva';
 const site = (path) => readFileSync(тут(path), 'utf8');
 const read = (path) => readFileSync(рядом(path), 'utf8');
-const внутри = (path) => readFileSync(рядом(`${ОБЩАЯ}/${path}`), 'utf8');
+// Игры переезжают из общей папки в dev/ по одной: neon-lines уехал
+// 31 августа, и пять проверок разом покраснели на несуществующем пути.
+// Поэтому ищем в обоих местах, а не в одном: тест должен падать, когда
+// сломана игра, а не когда её перенесли.
+const внутри = (path) => {
+  for (const где of [рядом(path), рядом(`${ОБЩАЯ}/${path}`)]) {
+    try {
+      return readFileSync(где, 'utf8');
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+  }
+  throw new Error(`не найдено ни в dev/, ни в ${ОБЩАЯ}/: ${path}`);
+};
 const json = (path) => JSON.parse(site(path));
 
 // ── Сайт-портфолио ───────────────────────────────────────────────────

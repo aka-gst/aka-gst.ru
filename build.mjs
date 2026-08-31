@@ -1043,7 +1043,9 @@ ${c.stories
               }
               <span class="story-name">${esc(st.title)}</span>
               <span class="story-time">${minutes(st.words)} мин</span>
-              <span class="story-lead">${esc(st.lead)}…</span>
+              ${st.подпись
+                ? `<span class="story-lead story-lead--avtor">${esc(st.подпись)}</span>`
+                : `<span class="story-lead">${esc(st.lead)}…</span>`}
             </a>
           </li>`
   )

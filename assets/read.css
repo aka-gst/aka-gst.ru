@@ -177,6 +177,12 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .story-lead {
   grid-column: 2 / -1; font-size: 13px; line-height: 1.5; color: var(--ink-soft);
 }
+/* Авторская подпись к рассказу — не аннотация, а его собственная строка,
+   написанная для сборника. Она короче вытащенной первой фразы и весит
+   иначе: набираем её светлее и без многоточия, потому что это законченная
+   мысль, а не обрывок текста. */
+.story-lead--avtor { color: var(--ink); font-style: italic; }
+
 .book-list .story-name, .book-list .story-time { padding-top: 1px; }
 
 /* Обложки. Их рисовали под каждый рассказ, и без них раздел терял половину
