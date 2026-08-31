@@ -136,13 +136,14 @@
         "show": true,
         "org": "Local Agent Gateway / Agent Lab",
         "period": "2026",
-        "role": "Автор портфельного AI/LLM QA-проекта и практикума",
+        "role": "Собственный проект · AI/LLM QA-контур и практикум",
         "points": [
           "Построил тестовый контур FastAPI-шлюза: 66 автотестов уровней unit / API / integration / browser E2E / LLM-eval и 98.71% покрытия при пороге CI 90%.",
           "Настроил pytest, Playwright, Allure, GitHub Actions и Docker/Compose; проверил авторизацию, SSE-стриминг, таймауты, повторы и отсутствие утечек секретов.",
           "Реализовал детерминированный и live-evaluator для Ollama/OpenRouter с метриками pass rate, stability, latency, tokens и estimated cost.",
           "Провёл benchmark qwen3:8b: 9/9 сценариев, mean score 0.755, stability 1.000; оформил Allure-отчёт и машиночитаемый фид метрик, публикуемый CI вместе с ним (v0.3.0)."
-        ]
+        ],
+        "свой": true
       },
       {
         "show": true,

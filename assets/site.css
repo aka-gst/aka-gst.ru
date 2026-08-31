@@ -578,6 +578,15 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--shapka, 71px) + 1
   .job .shot { max-width: none; grid-column: 1 / -1; }
 }
 .job-period { grid-row: span 3; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+/* Пометка «свой проект» стоит под датой, а не рядом с названием: там
+   она спорила бы с ним за внимание, а сказать надо тихо — это уточнение
+   о происхождении строки, а не её заголовок. */
+.job-own {
+  display: block; margin-top: 6px; color: var(--accent);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
 .job h3 { font-size: 16px; }
 .job-role { font-size: 13px; color: var(--accent); }
 /* Название организации ведёт на её сайт. Подчёркивание рисуем фоном, как

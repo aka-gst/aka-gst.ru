@@ -462,7 +462,12 @@ const skillsBlock = profile.skills
 // живёт до первой сборки — так уже потерялась одна.
 const строкаОпыта = (e) => `
           <article class="job">
-            <p class="job-period">${esc(e.period)}</p>
+            <p class="job-period">${esc(e.period)}${
+              // Собственный проект помечается прямо в ленте: без пометки он
+              // читается как место работы, а это единственная строчка в
+              // разделе с проверяемыми числами — всё остальное слова.
+              e.свой ? '<span class="job-own">свой проект</span>' : ''
+            }</p>
             <h3>${
               e.site
                 ? `<a class="job-site" href="${esc(e.site)}" target="_blank" rel="noopener">${esc(
