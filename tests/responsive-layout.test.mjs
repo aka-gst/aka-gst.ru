@@ -438,18 +438,22 @@ test('оглавление рассказов показывает уменьш�
   const файлы = [...new Set([...html.matchAll(/\/assets\/covers\/([^"?]+)/g)].map((m) => m[1]))];
   assert.ok(файлы.length >= 13, `обложек в оглавлении всего ${файлы.length}`);
 
-  const оригиналы = файлы.filter((f) => !f.startsWith('mini/') && !f.startsWith('polka/'));
+  // kusok/ — куски обложки сборника для рассказов без своей картинки.
+  // Они такие же уменьшенные копии, как mini/, просто источник у них общий.
+  const оригиналы = файлы.filter(
+    (f) => !f.startsWith('mini/') && !f.startsWith('polka/') && !f.startsWith('kusok/')
+  );
   assert.deepEqual(оригиналы, [], `в оглавлении полноразмерные: ${оригиналы.join(', ')}`);
 
   let всего = 0;
   for (const f of файлы) {
     const байт = обложкаБайт(f);
     всего += байт;
-    if (f.startsWith('mini/')) {
+    if (f.startsWith('mini/') || f.startsWith('kusok/')) {
       assert.ok(байт < 20 * 1024, `${f} весит ${Math.round(байт / 1024)} КБ, а это миниатюра 44px`);
     }
   }
-  assert.ok(всего < 500 * 1024, `обложки оглавления весят ${Math.round(всего / 1024)} КБ`);
+  assert.ok(всего < 600 * 1024, `обложки оглавления весят ${Math.round(всего / 1024)} КБ`);
 });
 
 test('обложки объявляют в разметке свой настоящий размер', () => {

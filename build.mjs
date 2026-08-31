@@ -944,11 +944,11 @@ const readerBar = `
 const производные = JSON.parse(
   readFileSync(join(root, 'assets/covers/proizvodnye.json'), 'utf8')
 );
-const копияОбложки = (вид, file) => {
+const копияОбложки = (вид, file, исток = file) => {
   const ключ = `${вид}/${file}`;
   const relative = `assets/covers/${ключ}`;
   const свежесть = createHash('sha256')
-    .update(readFileSync(join(root, `assets/covers/${file}`)))
+    .update(readFileSync(join(root, `assets/covers/${исток}`)))
     .digest('hex')
     .slice(0, 12);
   if (производные[ключ] !== свежесть || !existsSync(join(root, relative))) {
@@ -961,9 +961,32 @@ const копияОбложки = (вид, file) => {
 // Миниатюра в оглавлении: 44 пикселя на экране, 132 в файле — под тройную
 // плотность. Раньше сюда шёл оригинал в 900 пикселей, и оглавление весило
 // 2.3 МБ при разметке в 19 КБ.
-const миниатюра = (file) => {
-  const o = копияОбложки('mini', file);
-  return `<img class="story-thumb" src="${o.src}" alt=""
+// Рассказ без своей обложки берёт обложку сборника — решение владельца
+// 31 августа: «там где нет обложек — ставить обложку сборника». В список
+// идёт КУСОК её, а не целая: у «А потом наступит счастье» своей обложки нет
+// ни у одного из семи рассказов, и семь одинаковых квадратиков подряд
+// перестают быть списком — различать в нём труднее, чем когда картинок нет
+// вовсе (правило 17). На самой странице рассказа кусок незачем: там места
+// хватает, и показывается обложка сборника целиком.
+//
+// Подпись автора едет вместе с картинкой в любом случае. Обложки рисовал
+// человек, и права на чужую работу — не то место, где экономят.
+const чемИллюстрирован = (st, c) => {
+  if (st.cover) {
+    return { файл: st.cover, свой: true, автор: st.coverBy, alt: `Обложка рассказа «${st.title}»` };
+  }
+  if (!c?.cover) return null;
+  return {
+    файл: c.cover, свой: false, автор: c.coverBy, сборник: c.title, кусок: st.slug,
+    alt: `Фрагмент обложки сборника «${c.title}»${c.coverBy ? ` — ${c.coverBy}` : ''}`,
+  };
+};
+
+const миниатюра = (и) => {
+  const o = и.свой
+    ? копияОбложки('mini', и.файл)
+    : копияОбложки('kusok', `${и.кусок}.jpg`, и.файл);
+  return `<img class="story-thumb" src="${o.src}" alt="${esc(и.свой ? '' : и.alt)}"
                        width="${o.w}" height="${o.h}" loading="lazy" decoding="async">`;
 };
 
@@ -1013,12 +1036,10 @@ ${book.сборники
         <ol class="book-list">
 ${c.stories
   .map(
-    (st) => `          <li${st.cover ? ' class="has-cover"' : ''}>
+    (st, si, _, и = чемИллюстрирован(st, c)) => `          <li${и ? ' class="has-cover"' : ''}>
             <a href="/rasskazy/${esc(st.slug)}/">
               ${
-                st.cover
-                  ? миниатюра(st.cover)
-                  : ''
+                и ? миниатюра(и) : ''
               }
               <span class="story-name">${esc(st.title)}</span>
               <span class="story-time">${minutes(st.words)} мин</span>
@@ -1071,18 +1092,23 @@ ${readerSide(st.slug)}
         <h1>${esc(st.title)}</h1>
         <p class="story-meta">${minutes(st.words)} мин · ${esc(book.автор)}</p>
         ${
-          st.cover
-            ? `<figure class="story-cover">
-          <img src="/assets/covers/${esc(st.cover)}?v=${assetVersion(
-                `assets/covers/${st.cover}`
-              )}" alt="Обложка рассказа «${esc(st.title)}»"
-               width="900" height="900" loading="eager" decoding="async">
+          чемИллюстрирован(st, st.book)
+            ? (() => {
+                const и = чемИллюстрирован(st, st.book);
+                const { w, h } = imageSize(`assets/covers/${и.файл}`);
+                return `<figure class="story-cover${и.свой ? '' : ' story-cover--book'}">
+          <img src="/assets/covers/${esc(и.файл)}?v=${assetVersion(`assets/covers/${и.файл}`)}"
+               alt="${esc(и.свой ? `Обложка рассказа «${st.title}»` : `Обложка сборника «${и.сборник}»`)}"
+               width="${w}" height="${h}" loading="eager" decoding="async">
           ${
-            st.coverBy
-              ? `<figcaption class="story-cover-by">Обложка — ${esc(st.coverBy)}</figcaption>`
+            и.автор
+              ? `<figcaption class="story-cover-by">${
+                  и.свой ? 'Обложка' : `Обложка сборника «${esc(и.сборник)}»`
+                } — ${esc(и.автор)}</figcaption>`
               : ''
           }
-        </figure>`
+        </figure>`;
+              })()
             : ''
         }
         ${storyBody(`${st.book.id}--${st.slug}`)}

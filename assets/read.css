@@ -203,6 +203,14 @@ html[data-size="xl"] .reader { --read-size: 24px; }
   margin-top: 8px; font-family: var(--mono); font-size: 11px;
   letter-spacing: .06em; color: var(--ink-soft);
 }
+/* Обложка сборника вместо своей — полосой, а не во всю высоту. Своя
+   обложка у рассказа горизонтальная и занимает разумное место, а обложки
+   сборников вертикальные: 887×1200 у «Трёх изнутри» дало бы 744 пикселя
+   картинки перед каждым текстом. Полоса заодно честнее по смыслу: это
+   обложка сборника, а не иллюстрация к этому рассказу. */
+.story-cover--book img { height: 220px; object-fit: cover; object-position: center; }
+@media (max-width: 640px) { .story-cover--book img { height: 160px; } }
+
 .story-cover img {
   display: block; width: 100%; max-width: 34em; height: auto;
   border-radius: 10px; background: var(--ground-soft);
