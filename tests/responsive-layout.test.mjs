@@ -502,12 +502,20 @@ test('обложки объявляют в разметке свой насто�
 
 test('первая обложка сборника грузится сразу, остальные лениво', () => {
   const html = site('rasskazy/index.html');
-  const полка = [...html.matchAll(/<img[^>]*\/assets\/covers\/polka\/[^>]*>/g)].map((m) => m[0]);
+  const все = [...html.matchAll(/<img[^>]*\/assets\/covers\/polka\/[^>]*>/g)].map((m) => m[0]);
+  // Обложка на карточке рисуется дважды: сама картинка и её размытая копия
+  // фоном полосы. Файл один, второй загрузки нет, но в разметке тегов два —
+  // значит считать надо тот, который человек видит.
+  const полка = все.filter((т) => т.includes('bart-list'));
+  const фоны = все.filter((т) => т.includes('bart-fon'));
   assert.equal(полка.length, 3, `обложек сборников ${полка.length}`);
+  assert.equal(фоны.length, 3, `фонов ${фоны.length}`);
   // Первая — самый крупный элемент первого экрана, по ней меряется LCP.
   assert.match(полка[0], /fetchpriority="high"/);
   assert.doesNotMatch(полка[0], /loading="lazy"/);
   for (const тег of полка.slice(1)) assert.match(тег, /loading="lazy"/);
+  // Размытый фон — украшение, приоритет ему не отдаём ни на одной карточке.
+  for (const тег of фоны) assert.doesNotMatch(тег, /fetchpriority="high"/);
   // Миниатюры ленивы все: до них надо доскроллить.
   for (const тег of [...html.matchAll(/<img[^>]*story-thumb[^>]*>/g)].map((m) => m[0])) {
     assert.match(тег, /loading="lazy"/);

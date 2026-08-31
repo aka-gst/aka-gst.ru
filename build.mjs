@@ -1057,11 +1057,17 @@ const миниатюра = (и) => {
 // Обложка сборника. Первая на странице грузится сразу и с высоким
 // приоритетом: она же самый крупный элемент первого экрана, и ленивая
 // загрузка откладывала ровно то, по чему меряется скорость показа.
-const обложкаСборника = (c, первая) => {
+// Обложки трёх сборников — трёх разных пропорций: квадрат, альбом и
+// портрет. Обрезать их под общую полосу нельзя, у двух из трёх название
+// стоит на самой картинке и уедет за край. Поэтому обложка вписывается
+// целиком, а полосу заполняет её же размытая копия — тот же файл, второй
+// загрузки нет.
+const обложкаСборника = (c, первая, фоном = false) => {
   const o = копияОбложки('polka', c.cover);
-  return `<img src="${o.src}" alt="Обложка сборника «${esc(c.title)}»"
-               width="${o.w}" height="${o.h}" decoding="async"
-               ${первая ? 'fetchpriority="high"' : 'loading="lazy"'}>`;
+  return `<img class="${фоном ? 'bart-fon' : 'bart-list'}" src="${o.src}" alt="${
+    фоном ? '' : `Обложка сборника «${esc(c.title)}»`
+  }" width="${o.w}" height="${o.h}" decoding="async"
+               ${первая && !фоном ? 'fetchpriority="high"' : 'loading="lazy"'}>`;
 };
 
 const storiesIndex = `<!doctype html>
@@ -1082,22 +1088,35 @@ ${readerTopbar}
         <h1>Рассказы</h1>
         <p>${esc(book.автор)} · ${storyList.length} текстов · ${book.сборники.length} сборника</p>
       </div>
+      <div class="bgrid">
 ${сборникиПоказ
   .map(
-    (c, ci) => `      <section class="book" id="book-${esc(c.id)}">
-        <div class="block-head">
-          <p class="kicker">Сборник · ${esc(c.year)}</p>
-          <h2>${esc(c.title)}</h2>
-        </div>
+    (c, ci) => `      <div class="book" id="book-${esc(c.id)}">
+        <article class="bcard">
+          ${
+            c.cover
+              ? `<span class="bart" aria-hidden="true">${обложкаСборника(c, ci === 0, true)}${обложкаСборника(
+                  c,
+                  ci === 0
+                )}</span>`
+              : ''
+          }
+          <div class="bcard-body">
+            <div class="bcard-top"><span class="kicker">Сборник · ${esc(c.year)}</span></div>
+            <h2>${esc(c.title)}</h2>
+            <p class="bcard-text">${c.stories.length} ${plural(c.stories.length, [
+      'рассказ',
+      'рассказа',
+      'рассказов',
+    ])} · ${c.stories.reduce((s, st) => s + minutes(st.words), 0)} мин</p>
+          </div>
+        </article>
+        <div class="book-body" id="book-body-${esc(c.id)}">
         ${
-          c.cover
-            ? `<figure class="book-cover">
-          ${обложкаСборника(c, ci === 0)}
-          ${c.coverBy ? `<figcaption>Обложка — ${esc(c.coverBy)}</figcaption>` : ''}
-        </figure>`
+          c.coverBy
+            ? `<p class="book-by">Обложка — ${esc(c.coverBy)}</p>`
             : ''
         }
-        <div class="book-body" id="book-body-${esc(c.id)}">
         <ol class="book-list">
 ${c.stories
   .map(
@@ -1117,9 +1136,10 @@ ${c.stories
   .join('\n')}
         </ol>
         </div>
-      </section>`
+      </div>`
   )
   .join('\n')}
+      </div>
       <p class="story-cross">
         <a href="/#games" data-umami-event="games-open" data-umami-event-from="stories-index">Ещё у меня есть игры в браузере <b>→</b></a>
       </p>

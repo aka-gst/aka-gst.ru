@@ -129,26 +129,25 @@
   const тела = new Map();
   for (const с of сборники) {
     const тело = с.querySelector('.book-body');
-    const шапка = с.querySelector('.block-head');
-    const обложка = с.querySelector('.book-cover');
-    if (!тело || !шапка) continue;
+    const карточка = с.querySelector('.bcard');
+    if (!тело || !карточка) continue;
     тела.set(с, тело);
 
     const кнопка = document.createElement('button');
     кнопка.type = 'button';
     кнопка.className = 'book-toggle';
     кнопка.setAttribute('aria-controls', тело.id);
-    шапка.append(кнопка);
+    карточка.querySelector('.bcard-body').append(кнопка);
 
     // Повторное нажатие сворачивает — просьба владельца. Раньше обложка
     // умела только раскрывать, и свернуть можно было лишь кнопкой: нажатие
     // на уже открытый сборник не делало ничего, а это читается как
     // «не работает», а не как «уже открыто».
     const переключить = () => раскрыть(тела.has(с) && !тела.get(с).hidden ? null : с);
-    кнопка.addEventListener('click', переключить);
-    // Кликается и сама обложка — владелец просил именно по ней.
-    обложка?.addEventListener('click', переключить);
-    обложка?.classList.add('is-clickable');
+    // Нажатие ловит вся карточка — владелец просил именно по обложке, а
+    // карточка это обложка и есть. Кнопка внутри неё оставлена видимой,
+    // чтобы было понятно, что карточка нажимается.
+    карточка.addEventListener('click', переключить);
   }
 
   const раскрыть = (какой) => {
@@ -161,8 +160,11 @@
       if (к) к.textContent = надо ? 'свернуть' : 'показать рассказы';
     }
     // Прокрутку не трогаем, если раскрыли то, что и так открыто.
-    if (какой && какой.getBoundingClientRect().top < 0) {
-      какой.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Мерить и прокручивать надо карточку: у .book нет своей коробки
+    // (display: contents), её getBoundingClientRect всегда нули.
+    const карточка = какой?.querySelector('.bcard');
+    if (карточка && карточка.getBoundingClientRect().top < 0) {
+      карточка.scrollIntoView({ block: 'start', behavior: 'smooth' });
     }
   };
 
