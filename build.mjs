@@ -242,10 +242,16 @@ const imageSize = (relative) => {
   throw new Error(`не прочитан размер: ${relative}`);
 };
 
+// fetchpriority="low" у снимков карточек. Они и так ленивые, но браузер
+// тянет их заранее своей эвристикой: на медленной сети запас доходит до
+// трёх тысяч пикселей, и два снимка флагмана — 117 КБ из 188 — уезжали на
+// критический путь, хотя лежат на 1700 пикселей ниже сгиба. Самое крупное
+// на первом экране при этом абзац текста, и он их ждал. Низкий приоритет
+// загрузку не отменяет, а пропускает вперёд то, что рисуется.
 const shotImg = (shot) => {
   const { w, h } = imageSize(`assets/shots/${shot.file}`);
   return `<img src="${esc(shotSrc(shot.file))}" alt="${esc(shot.alt)}"
-                width="${w}" height="${h}" decoding="async" loading="lazy">`;
+                width="${w}" height="${h}" decoding="async" loading="lazy" fetchpriority="low">`;
 };
 
 // На первом экране снимок подписан: там он читается как часть отчёта.
