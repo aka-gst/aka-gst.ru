@@ -719,49 +719,11 @@ const storyList = book.сборники.flatMap((c) =>
   c.stories.map((st) => ({ ...st, book: c }))
 );
 
-// Полка рассказов на вкладке «Игры». Читатель художки — та же публика, что
-// и играющий в браузере, а не работодатель, поэтому место здесь. Берём по
-// одному рассказу из каждого сборника: полка представляет все три, а не
-// самый длинный текст.
-const storiesShelf = `
-        <section class="block" aria-labelledby="stories-title">
-          <div class="block-head">
-            <h2 id="stories-title">Рассказы</h2>
-            <p>${esc(book.автор)} · ${storyList.length} ${plural(storyList.length, [
-              'текст',
-              'текста',
-              'текстов',
-            ])} в трёх сборниках. Тот же автор, вторая полка.</p>
-          </div>
-          <div class="ggrid">${book.сборники
-            // Первый ЗАМЕТНЫЙ текст сборника, а не первый по порядку:
-            // «Вступление» — предисловие на сотню слов, лицом полки ему быть
-            // нечего.
-            .map((c) => c.stories.find((st) => st.words >= 300) || c.stories[0])
-            .map(
-              (st) => `
-            <a class="scard" href="/rasskazy/${esc(st.slug)}/"
-               data-umami-event="story-open" data-umami-event-from="games"
-               data-umami-event-story="${esc(st.slug)}">
-              <span class="scard-book">${esc(
-                book.сборники.find((c) => c.stories.includes(st)).title
-              )}</span>
-              <h3 class="scard-title">${esc(st.title)}</h3>
-              <p class="scard-lead">${esc(st.lead)}…</p>
-              <span class="scard-time">${minutes(st.words)} мин</span>
-            </a>`
-            )
-            .join('')}
-          </div>
-          <p class="card-links" style="margin-top:14px">
-            <a class="link" href="/rasskazy/"
-               data-umami-event="story-open" data-umami-event-from="games-all">Все ${storyList.length} ${plural(
-                storyList.length,
-                ['рассказ', 'рассказа', 'рассказов']
-              )} <b>→</b></a>
-          </p>
-        </section>`;
-
+// Полки рассказов на вкладке «Игры» больше нет. Стояла с 30 августа как
+// перелинковка разделов: пришедший за играми не узнавал, что есть проза.
+// Владелец спросил «почему в играх рассказы?», довод выслушал и сказал
+// **убрать** (31 августа 2026, через Мозг). Обратная ссылка на игры в
+// подвале рассказов остаётся — он говорил только про вкладку игр.
 const playPanel = `
         <section class="block block--lead" aria-label="Играбельное">
 ${playBar}
@@ -775,8 +737,7 @@ ${playBar}
           </div>
           <div class="ggrid">${otherGames.map(gameCard).join('')}
           </div>
-        </section>
-${storiesShelf}`;
+        </section>`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
 const html = `<!doctype html>
