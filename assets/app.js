@@ -312,3 +312,60 @@
 
 
 })();
+
+// ── Снимок во весь экран ──────────────────────────────────────────────
+// Просьба владельца: «картинка может быть маленькой, а при клике уже
+// раскрываться на весь экран». Разметка приходит рабочей ссылкой на полный
+// файл — без скриптов человек всё равно откроет его отдельной вкладкой, —
+// а этот код перехватывает клик и показывает поверх страницы.
+(() => {
+  const ссылки = [...document.querySelectorAll('a.shot-link')];
+  if (!ссылки.length) return;
+
+  let слой = null;
+  let откуда = null;
+
+  const закрыть = () => {
+    if (!слой) return;
+    слой.remove();
+    слой = null;
+    document.documentElement.style.overflow = '';
+    // Возвращаем внимание туда, откуда его увели: иначе после закрытия
+    // клавиатура оказывается в начале страницы.
+    откуда?.focus();
+  };
+
+  const открыть = (адрес, подпись) => {
+    закрыть();
+    слой = document.createElement('div');
+    слой.className = 'shot-full';
+    слой.setAttribute('role', 'dialog');
+    слой.setAttribute('aria-modal', 'true');
+    слой.setAttribute('aria-label', подпись || 'Снимок целиком');
+    слой.innerHTML = `
+      <button type="button" class="shot-full-close" aria-label="Закрыть">✕</button>
+      <img src="${адрес}" alt="${подпись || ''}">
+      ${подпись ? `<p class="shot-full-cap">${подпись}</p>` : ''}`;
+    document.body.append(слой);
+    // Пока картинка едет, страница под ней не должна прокручиваться:
+    // иначе колесо уводит фон, а человек думает, что промахнулся.
+    document.documentElement.style.overflow = 'hidden';
+    слой.querySelector('.shot-full-close').focus();
+    слой.addEventListener('click', (e) => {
+      // Клик по самой картинке не закрывает: её как раз пришли смотреть.
+      if (e.target.tagName !== 'IMG') закрыть();
+    });
+  };
+
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') закрыть(); });
+
+  for (const a of ссылки) {
+    a.addEventListener('click', (e) => {
+      // Средняя кнопка, Ctrl и Cmd открывают в новой вкладке — не мешаем.
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      откуда = a;
+      открыть(a.getAttribute('href'), a.querySelector('figcaption')?.textContent?.trim() || '');
+    });
+  }
+})();

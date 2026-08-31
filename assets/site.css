@@ -1032,3 +1032,34 @@ html[data-track] .rec[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ── Снимок во весь экран ──────────────────────────────────────────── */
+/* Слой поверх страницы. Появляется по клику, закрывается по Escape, по
+   клику мимо картинки и крестиком. Клик по самой картинке не закрывает:
+   её как раз пришли смотреть, и промах по ней читался бы как поломка. */
+.shot-full {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 24px;
+  background: #060708f2;
+}
+.shot-full img {
+  max-width: min(94vw, 1100px); max-height: 84vh;
+  width: auto; height: auto; border-radius: 10px;
+  background: var(--panel);
+}
+.shot-full-cap {
+  margin: 0; max-width: 60ch; text-align: center;
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.5; color: var(--muted);
+}
+.shot-full-close {
+  position: absolute; top: 14px; right: 16px;
+  width: 40px; height: 40px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel);
+  color: var(--muted); font-size: 15px; cursor: pointer;
+}
+.shot-full-close:hover, .shot-full-close:focus-visible { color: var(--fg); border-color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .shot-full { animation: shot-full-in .18s ease-out; }
+  @keyframes shot-full-in { from { opacity: 0; } to { opacity: 1; } }
+}
