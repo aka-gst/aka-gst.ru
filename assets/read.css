@@ -152,14 +152,6 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .bcard-top { min-height: 14px; }
 .bcard-body h2 { margin: 0; font-size: 18px; line-height: 1.2; letter-spacing: -.01em; }
 .bcard-text { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
-/* Подпись обложки стоит над списком, а не на карточке: в карточке шириной
-   в треть колонки «Кассиопея А · NASA/CXC, общественное достояние»
-   занимала три строки и перевешивала всё остальное. Художника называть
-   надо, но там, где человек смотрит именно этот сборник. */
-.book-by {
-  margin: 14px 0 2px; font-family: var(--mono); font-size: 11px;
-  letter-spacing: .04em; color: var(--ink-soft);
-}
 
 /* Заголовок сборника тем же строем, что блоки на «Работе» и «Играх»:
    надстрочная строка и заголовок. Раньше здесь была своя вёрстка, и раздел
@@ -273,10 +265,6 @@ html[data-size="xl"] .reader { --read-size: 24px; }
    часть обложек не её, и общая подпись приписала бы художнице чужие
    фотографии. Псевдоним без ссылки — решение владельца. */
 .story-cover { margin: 0 0 26px; }
-.story-cover-by {
-  margin-top: 8px; font-family: var(--mono); font-size: 11px;
-  letter-spacing: .06em; color: var(--ink-soft);
-}
 /* Обложка сборника вместо своей — полосой, а не во всю высоту. Своя
    обложка у рассказа горизонтальная и занимает разумное место, а обложки
    сборников вертикальные: 887×1200 у «Трёх изнутри» дало бы 744 пикселя

@@ -30,7 +30,7 @@
   document.querySelectorAll('[data-track-to]').forEach((button) => {
     button.addEventListener('click', () => {
       setTrack(button.dataset.trackTo);
-      scrollTo({ top: 0, behavior: 'smooth' });
+      scrollTo({ top: 0 });
     });
   });
 

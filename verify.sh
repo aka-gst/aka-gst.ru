@@ -179,5 +179,32 @@ for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="socia
 done
 
 echo
+echo "== ничего не притягивает экран =="
+# Владелец 31 августа 2026: «тут снова есть притягивание — уберите его
+# вообще отовсюду и чтоб он больше не появлялся!!». Это уже третий заход:
+# сначала убрали scroll-snap, потом он вернулся ощущением от плавной
+# самовольной прокрутки. Проверка стоит здесь, чтобы четвёртого не было.
+#
+# Берём файлы С БОЯ, а не из дерева: правка, которая не доехала, ничего не
+# чинит, а собранное дерево лжёт убедительнее всего (правило 48а).
+# scroll-padding-top намеренно НЕ в списке — это отступ якоря, а не
+# движение: без него заголовок встаёт под липкую шапку.
+#
+# Ищем объявления и вызовы, а не слова. Первый прогон покраснел на
+# комментарии «proximity без scroll-snap-stop: always», который как раз
+# объясняет, как притягивание убрали: проверка, краснеющая на объяснении,
+# будет отключена первой же рукой.
+for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js; do
+  # shellcheck disable=SC2086
+  body=$(curl -s $RETRY "$BASE$f?svezho=$(date +%s)" || echo '')
+  for bad_word in 'scroll-snap-type' 'scroll-behavior:' '.scrollIntoView(' "behavior: 'smooth'" 'behavior:"smooth"'; do
+    n=$(printf '%s' "$body" | grep -c -- "$bad_word" 2>/dev/null || true)
+    n=${n:-0}
+    if [ "$n" -eq 0 ]; then say_ok "$f без $bad_word"
+    else say_bad "$f: $bad_word вернулся ($n)"; fi
+  done
+done
+
+echo
 printf '%s пройдено, %s провалено\n' "$ok" "$bad"
 [ "$bad" -eq 0 ]

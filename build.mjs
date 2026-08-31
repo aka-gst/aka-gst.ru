@@ -1033,16 +1033,19 @@ const копияОбложки = (вид, file, исток = file) => {
 // вовсе (правило 17). На самой странице рассказа кусок незачем: там места
 // хватает, и показывается обложка сборника целиком.
 //
-// Подпись автора едет вместе с картинкой в любом случае. Обложки рисовал
+// Кто рисовал обложку, на сайте больше не пишется: «убери отсюда чьи
+// обложки, я заплатил за все которые не из инета» — владелец, 31 августа
+// 2026. Поле coverBy в data/stories.json остаётся, это его собственная
+// запись; просто ничто её не выводит. Обложки рисовал
 // человек, и права на чужую работу — не то место, где экономят.
 const чемИллюстрирован = (st, c) => {
   if (st.cover) {
-    return { файл: st.cover, свой: true, автор: st.coverBy, alt: `Обложка рассказа «${st.title}»` };
+    return { файл: st.cover, свой: true, alt: `Обложка рассказа «${st.title}»` };
   }
   if (!c?.cover) return null;
   return {
-    файл: c.cover, свой: false, автор: c.coverBy, сборник: c.title, кусок: st.slug,
-    alt: `Фрагмент обложки сборника «${c.title}»${c.coverBy ? ` — ${c.coverBy}` : ''}`,
+    файл: c.cover, свой: false, сборник: c.title, кусок: st.slug,
+    alt: `Фрагмент обложки сборника «${c.title}»`,
   };
 };
 
@@ -1112,11 +1115,6 @@ ${сборникиПоказ
           </div>
         </article>
         <div class="book-body" id="book-body-${esc(c.id)}">
-        ${
-          c.coverBy
-            ? `<p class="book-by">Обложка — ${esc(c.coverBy)}</p>`
-            : ''
-        }
         <ol class="book-list">
 ${c.stories
   .map(
@@ -1188,13 +1186,6 @@ ${readerSide(st.slug)}
           <img src="/assets/covers/${esc(и.файл)}?v=${assetVersion(`assets/covers/${и.файл}`)}"
                alt="${esc(и.свой ? `Обложка рассказа «${st.title}»` : `Обложка сборника «${и.сборник}»`)}"
                width="${w}" height="${h}" loading="eager" decoding="async">
-          ${
-            и.автор
-              ? `<figcaption class="story-cover-by">${
-                  и.свой ? 'Обложка' : `Обложка сборника «${esc(и.сборник)}»`
-                } — ${esc(и.автор)}</figcaption>`
-              : ''
-          }
         </figure>`;
               })()
             : ''

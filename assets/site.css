@@ -312,7 +312,11 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
    ломалась на телефоне, где шапка переносится и становится 128 — заголовок
    уезжал под неё целиком, 24 пикселя из 24. Запасное значение на случай,
    если скрипт не выполнится, взято по десктопной шапке. */
-html { scroll-behavior: smooth; scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
+/* scroll-behavior здесь БЫЛО и убрано намеренно: любой переход по якорю
+   ехал плавно, и это читается как притягивание. scroll-padding-top не
+   движение, а отступ: без него якорь встаёт под липкую шапку и заголовок
+   не видно. Его оставляем. */
+html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 
 /* Привязка прокрутки («магнит») убрана 31 августа 2026 по слову Сергея:
    «мы уже несколько раз это проговаривали». Её чинили трижды — mandatory на
@@ -562,7 +566,12 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--shapka, 71px) + 1
 .shot { position: relative; }
 .shot .gclip {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; opacity: 0; pointer-events: none;
+  /* object-position ОБЯЗАН совпадать со снимком под ним (.shot img —
+     top center). Он был по умолчанию 50% 50%, и cover резал два слоя
+     по-разному: даже при побайтно одинаковых кадрах картинка в момент
+     подмены сдвигалась. */
+  object-fit: cover; object-position: top center;
+  opacity: 0; pointer-events: none;
   transition: opacity .25s ease;
 }
 .shot .gclip.is-playing { opacity: 1; }
