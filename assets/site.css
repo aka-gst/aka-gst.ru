@@ -896,6 +896,10 @@ article.gcard .launch { color: var(--dim); }
   flex: 1 1 200px; min-width: 0;
 }
 html[data-track="work"] .rec { visibility: hidden; }
+/* Период подписан у каждого числа: в ленте рядом могут стоять сегодняшний
+   и недельный рекорд, и один общий заголовок соврал бы про оба. */
+.rec-per { font-style: normal; opacity: .55; margin-left: 6px; }
+
 .rec-label {
   flex: none; font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--dim); white-space: nowrap;
@@ -977,7 +981,10 @@ html[data-track="work"] .rec { visibility: hidden; }
   .play-bar .verdict { margin-left: 0; }
   html[data-track="play"] .rec { flex: 1 1 70px; }
   html[data-track="work"] .rec { display: none; }
-  .rec-label { display: none; }
+  /* Подпись на телефоне была спрятана — и на самом узком экране оставались
+     числа без объяснения, что это вообще такое. Лучше показать меньше игр,
+     но с подписью, чем больше без неё. */
+  .rec-label { display: inline; font-size: 9px; }
   .sitefoot { padding: 20px 16px 36px; }
   .report-metrics { grid-template-columns: 1fr; }
   .block { margin-top: 48px; }

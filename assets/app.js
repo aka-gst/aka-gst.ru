@@ -150,28 +150,49 @@
     setTimeout(() => секции.forEach((s) => s.classList.add('is-visible')), 2000);
   }
 
-  // ── Рекорды дня ───────────────────────────────────────────────────
-  const scoreUrl = (game, limit) =>
-    `/api/leaderboard/scores?game=${encodeURIComponent(game)}&period=today&limit=${limit}`;
+  // ── Рекорды: показываем только то, что есть ───────────────────────
+  // Решение владельца: «прячь когда пусто, показывай ток те рекорды которые
+  // есть сегодня или за неделю». До этого лента рисовала восемь прочерков на
+  // первом экране — по прочерку на игру, — потому что за сегодня записей нет
+  // ни у одной. Элемент, задуманный показывать жизнь, показывал её отсутствие.
+  //
+  // Раз периоды теперь смешанные, каждый подписан рядом с числом: общий
+  // заголовок «СЕГОДНЯ» стал бы враньём в ту же минуту, когда в ленте
+  // окажется недельный результат.
+  const рекордИгры = async (game) => {
+    for (const период of ['today', 'week']) {
+      try {
+        const r = await fetch(`/api/leaderboard/scores?game=${encodeURIComponent(game)}&period=${период}&limit=1`);
+        if (!r.ok) continue;
+        const { scores = [] } = await r.json();
+        if (scores[0]) return { ...scores[0], период: период === 'today' ? 'сегодня' : 'за неделю' };
+      } catch (e) {
+        /* сеть рвётся — молча идём к следующему периоду */
+      }
+    }
+    return null;
+  };
 
-  // Рекорды заполняют строку в шапке. Список в ней выведен дважды — так
-  // лента едет по кругу без стыка, — поэтому один ответ кладём в обе копии,
-  // а не запрашиваем игру два раза.
   const rec = document.querySelector('.rec');
   if (rec) {
     const games = [...new Set([...rec.querySelectorAll('[data-game]')].map((el) => el.dataset.game))];
-    for (const game of games) {
-      fetch(scoreUrl(game, 1))
-        .then((r) => r.json())
-        .then(({ scores = [] }) => {
-          const top = scores[0];
-          if (!top) return;
-          for (const item of rec.querySelectorAll(`[data-game="${CSS.escape(game)}"] b`)) {
-            item.textContent = `${top.nickname} · ${top.score}`;
-          }
-        })
-        .catch(() => {});
-    }
+    Promise.all(games.map(async (game) => {
+      const лучший = await рекордИгры(game);
+      if (!лучший) return false;
+      // Список выведен дважды, чтобы лента ехала по кругу без стыка, —
+      // поэтому заполняем обе копии одним ответом.
+      for (const item of rec.querySelectorAll(`[data-game="${CSS.escape(game)}"]`)) {
+        item.querySelector('b').textContent = `${лучший.nickname} · ${лучший.score}`;
+        item.querySelector('.rec-per').textContent = лучший.период;
+        item.hidden = false;
+      }
+      return true;
+    })).then((итоги) => {
+      // Пусто по всем — ленты нет вовсе. Не пустая полоса и не заголовок
+      // без содержимого: пустое должно выглядеть как ничего, а не как
+      // сломанное.
+      if (итоги.some(Boolean)) rec.hidden = false;
+    });
   }
 
   // ── Подсветка карточки, на которой остановились ──────────────────

@@ -620,15 +620,19 @@ const gameCard = (project) => {
 const recItems = [...leaderboards]
   .sort((a, b) => (a.leaderboard === 'coin-flip' ? -1 : b.leaderboard === 'coin-flip' ? 1 : 0))
   .map(
-    (p) => `<span class="rec-item" data-game="${esc(p.leaderboard)}"><i>${esc(
+    // Прочерка больше нет: игра без рекорда просто не выводится. Прочерк
+    // на первом экране — это элемент, задуманный показывать жизнь, который
+    // показывает её отсутствие, и это хуже, чем если бы его не было.
+    // Скрытым приходит всё: показывает скрипт, когда рекорд нашёлся.
+    (p) => `<span class="rec-item" data-game="${esc(p.leaderboard)}" hidden><i>${esc(
       p.title
-    )}</i><b>—</b></span>`
+    )}</i><b></b><em class="rec-per"></em></span>`
   )
   .join('');
 
 const recTicker = `
-      <div class="rec" aria-label="Рекорды сегодня, время московское">
-        <span class="rec-label">REC · СЕГОДНЯ</span>
+      <div class="rec" aria-label="Рекорды: сегодня и за неделю" hidden>
+        <span class="rec-label">REC</span>
         <span class="rec-view">
           <span class="rec-run">${recItems}${recItems}</span>
         </span>
