@@ -127,6 +127,42 @@ if [ -f "$HERE/index.html" ]; then
 fi
 
 echo
+echo "== на бою лежит то, что мы положили =="
+# Раньше сверялся только index.html сайта, и этого не хватало: у ТехноМагии
+# выкладка отработала «успешно», verify дал 62 из 62, а на бою лежал файл
+# игры на восемь килобайт короче исходного. Проверка смотрела на главную,
+# а вопрос был про файлы. «200 ≠ выложено» ровно в том виде, как записано.
+#
+# Сверяем ХЕШ, а не размер и не код: файл может отдаваться, быть нужной
+# длины и всё равно быть вчерашним.
+same() {
+  path="$1"
+  if [ ! -f "$HERE$path" ]; then say_bad "$path — локального файла нет, сверять не с чем"; return; fi
+  tmp=$(mktemp)
+  # shellcheck disable=SC2086
+  curl -s $RETRY "$BASE$path" -o "$tmp"
+  if [ ! -s "$tmp" ]; then rm -f "$tmp"; say_bad "$path — с боя ничего не пришло"; return; fi
+  a=$(shasum -a 256 "$tmp" | cut -d' ' -f1)
+  b=$(shasum -a 256 "$HERE$path" | cut -d' ' -f1)
+  rm -f "$tmp"
+  if [ "$a" = "$b" ]; then say_ok "$path совпадает с деревом"
+  else say_bad "$path НА БОЮ ДРУГОЙ — выкладка не доведена"; fi
+}
+
+for f in /technomagic/index.html /technomagic/src/main.js /technomagic/src/world.js \
+         /qa-quest/index.html /psy-admin/index.html /photodata/index.html \
+         /praktikum/index.html /praktikum/llm/index.html /praktikum/testirovanie/index.html \
+         /rasskazy/index.html /game-menu.css /player-name.js; do
+  same "$f"
+done
+
+# Игры, которые выкладывают свои сессии из своих репозиториев, сверить
+# нечем: исходника у нас нет. Молчать об этом нельзя — «не проверено» и
+# «проверено и хорошо» разные вещи.
+echo "  прим.  /acid/ /stealth/ /worm/ /udar/ /lines/ /tetcolor/ /coin/ /stihii/ —"
+echo "         выкладываются своими сессиями, содержимое здесь не сверяется"
+
+echo
 echo "== содержимое, а не только код ответа =="
 for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="social"' \
               'class="shot"' 'assets/shots/allure-gateway.png'; do
