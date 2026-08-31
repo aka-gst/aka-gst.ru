@@ -430,10 +430,13 @@ const skillsBlock = profile.skills
   )
   .join('');
 
-const experienceBlock = profile.experience
-  .filter((e) => e.show)
-  .map(
-    (e) => `
+// Лента идёт от свежего к старому, и образование стоит в её конце — но не
+// в самом: публикация 2008 года старше университета 2010–2017 и должна
+// стоять под ним. Владелец сказал прямо: «она вообще выше универских
+// данных! это хронологически тупо». Помечаем такие записи в данных, а не
+// правим собранный index.html: он собирается заново, и ручная правка в нём
+// живёт до первой сборки — так уже потерялась одна.
+const строкаОпыта = (e) => `
           <article class="job">
             <p class="job-period">${esc(e.period)}</p>
             <h3>${
@@ -447,8 +450,13 @@ const experienceBlock = profile.experience
             <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>${
               e.shot ? figure(e.shot) : ''
             }
-          </article>`
-  )
+          </article>`;
+
+const послеУчёбы = profile.experience.filter((e) => e.show && e.после_учёбы).map(строкаОпыта).join('');
+
+const experienceBlock = profile.experience
+  .filter((e) => e.show && !e.после_учёбы)
+  .map(строкаОпыта)
   .join('');
 
 // ── Списки ───────────────────────────────────────────────────────────
@@ -520,7 +528,7 @@ const workPanel = `
             <p class="job-period">${esc(profile.education.period)}</p>
             <h3>${esc(profile.education.org)}</h3>
             <p class="job-role">${esc(profile.education.detail)}</p>
-          </article>
+          </article>${послеУчёбы}
         </div>
       </section>
 
