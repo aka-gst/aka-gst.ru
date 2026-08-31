@@ -111,3 +111,105 @@
     рассказ.querySelector('.story-meta')?.after(подсказка);
   }
 })();
+
+// ── Оглавление: сборник раскрывается, рассказ разворачивается ─────────
+// Просьба владельца: «три обложки сборника — кликаешь по ним появляются
+// рассказы из него — а кликаешь по рассказу он уже ниже появляется».
+//
+// Разметка приходит РАСКРЫТОЙ, и сворачивает её этот код. Без него
+// страница остаётся тем же полным оглавлением, что и была: человек без
+// скриптов ничего не теряет, а поисковик видит все двадцать три записи.
+//
+// Прямые адреса рассказов живут по-прежнему — разворот их дополняет, а не
+// заменяет. У развёрнутого есть ссылка «открыть отдельно».
+(() => {
+  const сборники = [...document.querySelectorAll('.reader-main .book')];
+  if (сборники.length < 2) return;
+
+  const тела = new Map();
+  for (const с of сборники) {
+    const тело = с.querySelector('.book-body');
+    const шапка = с.querySelector('.block-head');
+    const обложка = с.querySelector('.book-cover');
+    if (!тело || !шапка) continue;
+    тела.set(с, тело);
+
+    const кнопка = document.createElement('button');
+    кнопка.type = 'button';
+    кнопка.className = 'book-toggle';
+    кнопка.setAttribute('aria-controls', тело.id);
+    шапка.append(кнопка);
+
+    const открыть = () => раскрыть(с);
+    кнопка.addEventListener('click', открыть);
+    // Кликается и сама обложка — владелец просил именно по ней.
+    обложка?.addEventListener('click', открыть);
+    обложка?.classList.add('is-clickable');
+  }
+
+  const раскрыть = (какой) => {
+    for (const [с, тело] of тела) {
+      const надо = с === какой;
+      тело.hidden = !надо;
+      с.classList.toggle('is-open', надо);
+      с.querySelector('.book-toggle')?.setAttribute('aria-expanded', String(надо));
+      const к = с.querySelector('.book-toggle');
+      if (к) к.textContent = надо ? 'свернуть' : 'показать рассказы';
+    }
+    // Прокрутку не трогаем, если раскрыли то, что и так открыто.
+    if (какой && какой.getBoundingClientRect().top < 0) {
+      какой.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+  };
+
+  // По умолчанию раскрыт последний сборник: иначе первый экран — три
+  // картинки и ни одного текста, а человек пришёл читать.
+  раскрыть(сборники[сборники.length - 1]);
+
+  // ── Разворот рассказа на месте ─────────────────────────────────────
+  const развернуть = async (ссылка) => {
+    const строка = ссылка.closest('li');
+    const уже = строка.querySelector('.story-inline');
+    if (уже) {
+      уже.remove();
+      строка.classList.remove('is-open');
+      history.replaceState(null, '', location.pathname);
+      return;
+    }
+    for (const о of document.querySelectorAll('.story-inline')) {
+      о.closest('li')?.classList.remove('is-open');
+      о.remove();
+    }
+    const место = document.createElement('div');
+    место.className = 'story-inline';
+    место.innerHTML = '<p class="story-inline-wait">загружается…</p>';
+    строка.append(место);
+    строка.classList.add('is-open');
+
+    const адрес = ссылка.dataset.tekst;
+    try {
+      const ответ = await fetch(адрес);
+      if (!ответ.ok) throw new Error(String(ответ.status));
+      const текст = await ответ.text();
+      место.innerHTML = `<div class="story-inline-body">${текст}</div>` +
+        `<p class="story-inline-more"><a href="${ссылка.getAttribute('href')}">Открыть отдельной страницей →</a></p>`;
+      // В адрес кладём слаг, а не заголовок: заголовок кириллицей
+      // превращается в частокол процентов и делиться таким адресом стыдно.
+      const слаг = (ссылка.getAttribute('href') || '').split('/').filter(Boolean).pop();
+      if (слаг) history.replaceState(null, '', `#${слаг}`);
+    } catch (e) {
+      // Сеть рвётся: молчать нельзя, пустое место читается как поломка.
+      место.innerHTML = `<p class="story-inline-wait">Текст не доехал (${e.message}). ` +
+        `<a href="${ссылка.getAttribute('href')}">Открыть отдельной страницей →</a></p>`;
+    }
+  };
+
+  for (const a of document.querySelectorAll('.book-list a[data-tekst]')) {
+    a.addEventListener('click', (e) => {
+      // Средняя кнопка, Ctrl и Cmd открывают в новой вкладке — не мешаем.
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      развернуть(a);
+    });
+  }
+})();

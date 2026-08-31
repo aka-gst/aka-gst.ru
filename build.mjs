@@ -1033,11 +1033,12 @@ ${book.сборники
         </figure>`
             : ''
         }
+        <div class="book-body" id="book-body-${esc(c.id)}">
         <ol class="book-list">
 ${c.stories
   .map(
     (st, si, _, и = чемИллюстрирован(st, c)) => `          <li${и ? ' class="has-cover"' : ''}>
-            <a href="/rasskazy/${esc(st.slug)}/">
+            <a href="/rasskazy/${esc(st.slug)}/" data-tekst="/rasskazy/${esc(st.slug)}/tekst.html">
               ${
                 и ? миниатюра(и) : ''
               }
@@ -1051,6 +1052,7 @@ ${c.stories
   )
   .join('\n')}
         </ol>
+        </div>
       </section>`
   )
   .join('\n')}
@@ -1135,6 +1137,14 @@ ${readerSide(st.slug)}
 `;
   mkdirSync(join(root, 'rasskazy', st.slug), { recursive: true });
   writeFileSync(join(root, 'rasskazy', st.slug, 'index.html'), page);
+  // Тот же текст отдельным куском: оглавление подгружает его по клику,
+  // а не держит все двадцать три в разметке. Решение владельца —
+  // «подгружать». Иначе страница вернулась бы к тем 2340 КБ, с которых
+  // её спускали до четырёхсот.
+  writeFileSync(
+    join(root, 'rasskazy', st.slug, 'tekst.html'),
+    `${storyBody(`${st.book.id}--${st.slug}`)}\n`
+  );
 }
 
 console.log(`  рассказы: ${storyList.length} страниц + оглавление`);

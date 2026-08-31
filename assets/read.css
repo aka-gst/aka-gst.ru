@@ -289,3 +289,30 @@ html[data-size="xl"] .reader { --read-size: 24px; }
   cursor: pointer;
 }
 .reader-resume:hover { color: var(--accent-read); border-color: currentColor; }
+
+/* ── Оглавление: раскрытие сборника и разворот рассказа ─────────────── */
+
+/* Кнопку и обложку-кнопку рисуем только когда скрипт их включил: без
+   скриптов страница остаётся обычным полным оглавлением, и намекать на
+   несуществующее нажатие нельзя. */
+.book-toggle {
+  margin-top: 10px; padding: 7px 12px;
+  border: 1px solid var(--rule); border-radius: 999px;
+  background: none; color: var(--ink-soft);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em;
+  text-transform: uppercase; cursor: pointer;
+}
+.book-toggle:hover, .book-toggle:focus-visible { color: var(--ink); border-color: var(--ink-soft); }
+.book-cover.is-clickable { cursor: pointer; }
+.book-cover.is-clickable img { transition: opacity .2s ease; }
+.book:not(.is-open) .book-cover.is-clickable img { opacity: .72; }
+
+/* Текст, развёрнутый прямо в списке. Ширина та же, что у страницы
+   рассказа, — читать одинаково удобно, где бы ни открыл. */
+.story-inline { grid-column: 1 / -1; margin: 14px 0 4px; }
+.story-inline-body p { margin: 0 0 1em; max-width: 34em; line-height: 1.62; }
+.story-inline-body .story-break { border: 0; margin: 1.6em auto; width: 60px; border-top: 1px solid var(--rule); }
+.story-inline-wait { color: var(--ink-soft); font-family: var(--mono); font-size: 12px; }
+.story-inline-more { margin-top: 10px; font-family: var(--mono); font-size: 11px; }
+.story-inline-more a { color: var(--accent-read); }
+.book-list li.is-open { background: var(--ground-soft); }
