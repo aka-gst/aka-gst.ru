@@ -459,7 +459,16 @@ const строкаОпыта = (e) => `
             }</h3>
             <p class="job-role">${esc(e.role)}</p>
             <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>${
-              e.shot ? figure(e.shot) : ''
+              // Скан кликается: показан он маркой в 160 пикселей, и журнальный
+              // кегль там не читается — но не читается он и в натуральную
+              // величину, проверено. Полная версия открывается отдельной
+              // вкладкой, обычной ссылкой: работает и без скриптов.
+              e.shot
+                ? (e.shot.full
+                    ? `<a class="shot-link" href="/assets/shots/${esc(e.shot.full)}" target="_blank" rel="noopener"
+                         aria-label="Открыть полосу журнала целиком">${figure(e.shot)}</a>`
+                    : figure(e.shot))
+                : ''
             }
           </article>`;
 
