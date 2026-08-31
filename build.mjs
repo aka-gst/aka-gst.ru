@@ -258,10 +258,21 @@ const figure = (shot) => `
 // На карточке — только первый снимок и без подписи. Подпись встала бы между
 // картинкой и названием: читатель увидел бы снимок раньше, чем узнал, чей он.
 // Смысл подписи там несёт alt, а рядом уже стоит строка описания.
+// Петля на карточке работы — тем же механизмом, что у игр. Ставится
+// только если ролик правда снят: пустой <video> хуже статичного снимка,
+// и заводить слой под шесть карточек, когда снят один клип, незачем.
+// Имя выводится из id проекта: qa-quest → clip-qa-quest.mp4.
+const cardClip = (project) => {
+  const файл = `clip-${project.id}.mp4`;
+  if (!existsSync(join(root, 'assets/clips', файл))) return '';
+  return `<video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                  data-src="/assets/clips/${esc(файл)}?v=${assetVersion(`assets/clips/${файл}`)}"></video>`;
+};
+
 const cardShot = (project) =>
   project.shots?.length
     ? `
-          <figure class="shot">${shotImg(project.shots[0])}</figure>`
+          <figure class="shot">${shotImg(project.shots[0])}${cardClip(project)}</figure>`
     : '';
 
 const card = (project, index) => `

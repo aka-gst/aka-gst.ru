@@ -533,6 +533,17 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--shapka, 71px) + 1
    при клике уже раскрываться на весь экран». */
 /* Скан кликается — но ссылкой он выглядеть не должен: это картинка,
    а не текст. Убираем всё, что браузер добавляет ссылке по умолчанию. */
+/* Петля поверх снимка на карточке работы. Снимок остаётся постером: он
+   уже стоит и уже той же формы, поэтому переход между ними не дёргается.
+   Слой появляется только когда ролик пошёл — до этого его не видно вовсе. */
+.shot { position: relative; }
+.shot .gclip {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0; pointer-events: none;
+  transition: opacity .25s ease;
+}
+.shot .gclip.is-playing { opacity: 1; }
+
 .shot-link { display: block; color: inherit; text-decoration: none; }
 .shot-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
