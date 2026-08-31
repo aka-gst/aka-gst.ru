@@ -49,12 +49,22 @@ for (let i = 0; i < сколько; i++) {
     v.load();
     try { await v.play(); } catch (e) { /* без звука пускать должно */ }
     v.pause();
-    v.currentTime = 0;
     for (let n = 0; n < 60; n++) {
       await new Promise(r => setTimeout(r, 150));
-      if (v.readyState >= 2 && v.videoWidth) return v.videoWidth + 'x' + v.videoHeight;
+      if (v.readyState >= 2 && v.videoWidth) break;
     }
-    return 'НЕ ЗАГРУЗИЛСЯ readyState=' + v.readyState;
+    if (!v.videoWidth) return 'НЕ ЗАГРУЗИЛСЯ readyState=' + v.readyState;
+    // Перемотку надо ДОЖДАТЬСЯ. Просто присвоить currentTime мало: пока
+    // seek не закончился, на экране остаётся тот кадр, где ролик успел
+    // оказаться после play(), и мы сравниваем заглушку не с тем, с чем
+    // думаем. Молчаливая версия этой ямы и даёт «почти совпало».
+    await new Promise((r) => {
+      if (v.currentTime === 0) return r();
+      v.addEventListener('seeked', r, { once: true });
+      v.currentTime = 0;
+      setTimeout(r, 3000);
+    });
+    return v.videoWidth + 'x' + v.videoHeight + ', t=' + v.currentTime.toFixed(3);
   })()`);
   const коробка = JSON.parse(await из(`(() => {
     const r = document.querySelectorAll('.shot .gclip')[${i}].getBoundingClientRect();
@@ -96,5 +106,13 @@ for (let i = 0; i < сколько; i++) {
     '-f', 'null', '-'], { encoding: 'utf8' }).match(/YAVG=([\d.]+)/)?.[1];
   console.log(`    расхождение заглушка↔кадр: средняя ${яркость}, максимум ${макс} (из 255)`);
   console.log(`    контроль (кадр сам с собой): ${свой}${свой === '0.000000' || Number(свой) === 0 ? '' : '  ← МЕРА ВРЁТ'}`);
+  if (process.env.RAZBOR) {
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', `${ВРЕМЕННО}/a.png`, '-vf', режем, `${process.env.RAZBOR}/${имя}-zaglushka.png`]);
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', `${ВРЕМЕННО}/b.png`, '-vf', режем, `${process.env.RAZBOR}/${имя}-rolik.png`]);
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', `${ВРЕМЕННО}/a.png`, '-i', `${ВРЕМЕННО}/b.png`,
+      '-filter_complex', `[0:v]${режем}[a];[1:v]${режем}[b];[a][b]blend=all_mode=difference,eq=brightness=0.3:contrast=3`,
+      `${process.env.RAZBOR}/${имя}-raznica.png`]);
+    console.log(`    разложено в ${process.env.RAZBOR}`);
+  }
 }
 send.закрыть(); chrome.kill();
