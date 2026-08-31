@@ -292,7 +292,12 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
 /* ── Прокрутка по блокам ─────────────────────────────────────────── */
 
-html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+/* Отступ под прилипшую шапку. Считается от её настоящей высоты, которую
+   меряет app.js: константа 88 работала на десктопе (шапка 71) и полностью
+   ломалась на телефоне, где шапка переносится и становится 128 — заголовок
+   уезжал под неё целиком, 24 пикселя из 24. Запасное значение на случай,
+   если скрипт не выполнится, взято по десктопной шапке. */
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 
 /* Привязка прокрутки («магнит») убрана 31 августа 2026 по слову Сергея:
    «мы уже несколько раз это проговаривали». Её чинили трижды — mandatory на
@@ -338,9 +343,20 @@ html { scroll-behavior: smooth; scroll-padding-top: 88px; }
   background: var(--panel);
   /* Без overflow: hidden — иначе карточка обрезает всплывающую панель
      «чем покрыто». Скругление верха берёт на себя сама полоса чисел. */
-  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.card:hover { border-color: var(--dim); background: var(--card-hover); transform: translateY(-2px); }
+/* Отклик на наведение. Было −2 точки без тени: Тестер померил наведением
+   настоящей мыши, и на карточке высотой под 900 точек две точки глаз считает
+   за «ничего не произошло». Тень тут важнее сдвига — именно она читается как
+   «карточка поднялась». Масштаб не берём: карточки со снимками от него мылят. */
+.card:hover, .card:focus-visible {
+  border-color: var(--dim); background: var(--card-hover);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 24px -8px #0009;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card:hover, .card:focus-visible { transform: none; }
+}
 /* Полоса чисел и снимок идут во всю ширину карточки, остальное — с полями. */
 .card > *:not(.band):not(.shot) { margin-left: 20px; margin-right: 20px; }
 .card h3 { font-size: 19px; }
@@ -499,10 +515,38 @@ html { scroll-behavior: smooth; scroll-padding-top: 88px; }
 
 .jobs { display: grid; gap: 1px; margin-top: 14px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .job { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 24px; padding: 20px 22px; background: var(--panel); }
+/* У мест работы отклика не было вовсе: `transition: all` стоял, а правила
+   :hover не существовало. Подъём тут ставить нельзя по двум причинам —
+   карточка не ссылка (проверено: 7 из 7 карточек проектов это <a>, а из
+   шести мест работы ни одно), и лежат они плитками через зазор в 1 точку,
+   который подъём бы разорвал. Поэтому подсветка: она говорит «вот эта
+   строка», а не «сюда можно нажать» (правило 10). */
+.job { transition: background .15s ease; }
+.job:hover { background: var(--card-hover); }
 /* Снимок в строке опыта идёт во второй столбец, к тексту, а не в узкую
    колонку с датой: полоса журнала шириной 170 пикселей — марка, а не
    документ. Ширину ограничиваем: во всю колонку она задавила бы список. */
-.job .shot { grid-column: 2; max-width: 420px; margin-top: 10px; }
+/* Скан показываем маркой, а не обоями: журнальный кегль на экране всё равно
+   не прочитать, а 420×591 занимали 0.66 высоты экрана при четырёх строках
+   текста — карточка на девять десятых состояла из картинки, единственной во
+   всей ленте. Решение Сергея 31 августа: «картинка может быть маленькой, а
+   при клике уже раскрываться на весь экран». */
+.job .shot { grid-column: 2; margin-top: 10px; }
+/* Потолок по ВЫСОТЕ, а не по ширине: Глаза мерили высоты всех шести пунктов
+   ленты на 375×812. Пункт с публикацией весил 709 px — выше текущей работы
+   в 1.4 раза и выше диплома в 5 раз, а картинка занимала 51% экрана. Без
+   картинки пункт весит 291, соседи — от 370 до 497. При 160 px пункт встаёт
+   ~451: ниже текущей работы, выше короткого диплома, в общем строю.
+   Выше 206 начинается «кричит» — это их граница, не наша догадка. */
+.job .shot img { max-height: 160px; width: auto; }
+.job .shot a { display: block; border-radius: 8px; }
+.job .shot img { transition: transform .15s ease, box-shadow .15s ease; }
+.job .shot a:hover img, .job .shot a:focus-visible img {
+  transform: scale(1.03); box-shadow: 0 8px 20px -6px #000a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .job .shot a:hover img, .job .shot a:focus-visible img { transform: none; }
+}
 .job .shot img { border-radius: 8px; }
 /* На телефоне колонка и так узкая — ограничивать её ещё и здесь значит
    показывать журнальную полосу размером с почтовую марку. */
