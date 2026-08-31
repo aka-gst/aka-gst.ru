@@ -710,6 +710,11 @@ const book = JSON.parse(readFileSync(join(root, 'data', 'stories.json'), 'utf8')
 // из самого текста, а не проставляется руками, как и всё остальное на сайте.
 const minutes = (words) => Math.max(1, Math.round(words / 180));
 
+// Сборники показываются от свежего к раннему — просьба владельца. В данных
+// они лежат хронологически: это порядок, в котором книги написаны, и его
+// трогать нельзя. Переворачиваем только на выводе.
+const сборникиПоказ = [...book.сборники].reverse();
+
 const storyList = book.сборники.flatMap((c) =>
   c.stories.map((st) => ({ ...st, book: c }))
 );
@@ -970,7 +975,7 @@ ${socialLinks('reader')}
 // экранах не выводится — там он занял бы весь первый экран.
 const readerSide = (current) => `
       <nav class="reader-side" aria-label="Все рассказы">
-${book.сборники
+${сборникиПоказ
   .map(
     (c) => `        <p class="reader-side-book">${esc(c.title)}</p>
         <ul>
@@ -1077,7 +1082,7 @@ ${readerTopbar}
         <h1>Рассказы</h1>
         <p>${esc(book.автор)} · ${storyList.length} текстов · ${book.сборники.length} сборника</p>
       </div>
-${book.сборники
+${сборникиПоказ
   .map(
     (c, ci) => `      <section class="book" id="book-${esc(c.id)}">
         <div class="block-head">
