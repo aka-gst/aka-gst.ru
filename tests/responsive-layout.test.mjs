@@ -277,10 +277,19 @@ test('рассказы разбиты на абзацы и подписаны', 
 test('выкладка идёт по белому списку и не тащит служебное', () => {
   const deploy = site('deploy.sh');
   const payload = deploy.match(/PAYLOAD="([\s\S]*?)"/)[1].trim().split('\n');
-  for (const needed of ['index.html', 'assets', 'data', 'praktikum', 'qa-quest']) {
+  for (const needed of ['index.html', 'assets', 'praktikum', 'qa-quest']) {
     assert.ok(payload.includes(needed), `${needed} должен выкладываться`);
   }
-  for (const secret of ['.githooks', '.gitignore', 'README.md', 'build.mjs', 'Caddyfile', 'deploy.sh']) {
+  // data/ здесь БЫЛО и убрано 31 августа 2026. Сборка читает его из
+  // репозитория, странице он не нужен ни при загрузке, ни во время работы,
+  // а на сервере `stories.json` публично отдавал подписи обложек, которые
+  // владелец просил убрать: со страниц мы их сняли, отчитались «сделано»,
+  // и это было неполной правдой. Тест стерёг ровно ту ошибку, которую мы
+  // потом чинили руками, — поэтому он перевёрнут.
+  for (const secret of [
+    '.githooks', '.gitignore', 'README.md', 'build.mjs', 'Caddyfile', 'deploy.sh',
+    'data', 'docs', 'tools', 'tests', 'trash', 'package.json',
+  ]) {
     assert.ok(!payload.includes(secret), `${secret} не должен уезжать на публичный сервер`);
   }
   // --delete снёс бы coin/, lines/ и knb/: они выкладываются из своих репозиториев.
