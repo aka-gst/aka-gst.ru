@@ -613,7 +613,7 @@
       },
       "status": {
         "state": "live",
-        "label": "играть"
+        "label": "готова"
       },
       "year": 2026,
       "stack": [
@@ -665,7 +665,7 @@
       },
       "status": {
         "state": "live",
-        "label": "играть"
+        "label": "готова"
       },
       "year": 2026,
       "stack": [
@@ -710,7 +710,7 @@
       "feature": {},
       "status": {
         "state": "live",
-        "label": "играть"
+        "label": "готова"
       },
       "year": 2026,
       "stack": [
@@ -755,7 +755,7 @@
       "feature": {},
       "status": {
         "state": "alpha",
-        "label": "играбельный срез"
+        "label": "альфа"
       },
       "year": 2026,
       "stack": [
@@ -852,7 +852,7 @@
       "feature": {},
       "status": {
         "state": "live",
-        "label": "играть"
+        "label": "готова"
       },
       "year": 2026,
       "stack": [
@@ -897,7 +897,7 @@
       "feature": {},
       "status": {
         "state": "live",
-        "label": "играть"
+        "label": "готова"
       },
       "year": 2026,
       "stack": [
@@ -979,7 +979,7 @@
       },
       "status": {
         "state": "alpha",
-        "label": "альфа-версия"
+        "label": "альфа"
       },
       "year": 2026,
       "stack": [
@@ -1031,7 +1031,7 @@
       "feature": {},
       "status": {
         "state": "live",
-        "label": "играть"
+        "label": "готова"
       },
       "year": 2026,
       "stack": [

@@ -459,6 +459,14 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--shapka, 71px) + 1
   letter-spacing: .06em; text-transform: uppercase;
   border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
 }
+/* На игровой карточке метка состояния снимает рамку и фон. С ними она
+   выглядела кнопкой — круглой, обведённой, в правом верхнем углу, — и
+   человек жал её вместо настоящей ссылки «ЗАПУСТИТЬ», которая стоит
+   ниже. Кнопка, которая ничего не делает, это баг, а не мелочь. На
+   карточках работы метка остаётся как была: там она несёт версию и
+   рядом нет ничего, с чем её спутать. */
+.gcard .status { border: 0; background: none; padding: 0; }
+
 .status-released, .status-live, .status-published {
   border-color: var(--accent-dim); background: var(--accent-dim); color: var(--accent);
 }
