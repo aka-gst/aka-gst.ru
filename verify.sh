@@ -107,9 +107,18 @@ printf '%s' "$page" \
       else printf '  FAIL  %s -> %s\n' "$asset" "$got"; fi
     done > /tmp/verify-assets.$$
 cat /tmp/verify-assets.$$
-ok=$((ok + $(grep -c '^  ok' /tmp/verify-assets.$$ || true)))
-bad=$((bad + $(grep -c '^  FAIL' /tmp/verify-assets.$$ || true)))
+schitat() { grep "$1" /tmp/verify-assets.$$ 2>/dev/null | wc -l | tr -d ' '; }
+nashli=$(schitat '^  ')
+ok=$((ok + $(schitat '^  ok')))
+bad=$((bad + $(schitat '^  FAIL')))
 rm -f /tmp/verify-assets.$$
+# Ноль найденных ассетов — это не «все хороши», а «страница не приехала».
+# Без этого порога раздел молча прибавляет ноль к обоим счётчикам, и его
+# отсутствие читается как отсутствие поломок. На главной их всегда больше
+# пяти; меньше — значит меряем не то.
+if [ "$nashli" -lt 5 ]; then
+  say_bad "ассетов на странице найдено $nashli — страница не приехала, проверять было нечего"
+fi
 
 echo
 echo "== выложено то же, что собрано =="
@@ -194,9 +203,30 @@ echo "== ничего не притягивает экран =="
 # комментарии «proximity без scroll-snap-stop: always», который как раз
 # объясняет, как притягивание убрали: проверка, краснеющая на объяснении,
 # будет отключена первой же рукой.
+#
+# И ГЛАВНОЕ — положительный контроль перед поиском. Без него проверка
+# зелёная на пустоте: не приехал файл, `grep -c` вернул ноль, и «ничего
+# не найдено» прочиталось как «ничего нет». Пять зелёных строк на файл,
+# которого не было. Поймано подсказкой сессии «Боты» 31 августа 2026: у
+# них счётчик чужих записей звал отсутствующий на сервере sqlite3 и
+# глушил ошибку, и единственная защита от порчи была слепой и выглядела
+# зелёной. Поэтому у каждого файла есть примета, которая обязана в нём
+# быть; нет приметы — меряем не то, и это FAIL, а не ok.
 for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js; do
+  case "$f" in
+    # У site.css приметой взят scroll-padding-top — он тут не случайно:
+    # мы его намеренно оставили, и заодно он стережёт сам себя.
+    */site.css) primeta='scroll-padding-top' ;;
+    */read.css) primeta='.bgrid' ;;
+    */app.js)   primeta='data-track-to' ;;
+    */read.js)  primeta='book-toggle' ;;
+  esac
   # shellcheck disable=SC2086
   body=$(curl -s $RETRY "$BASE$f?svezho=$(date +%s)" || echo '')
+  if ! printf '%s' "$body" | grep -q -- "$primeta"; then
+    say_bad "$f не доехал или не тот файл — приметы «$primeta» в нём нет, искать в нём нечего"
+    continue
+  fi
   for bad_word in 'scroll-snap-type' 'scroll-behavior:' '.scrollIntoView(' "behavior: 'smooth'" 'behavior:"smooth"'; do
     n=$(printf '%s' "$body" | grep -c -- "$bad_word" 2>/dev/null || true)
     n=${n:-0}
