@@ -812,7 +812,7 @@ const html = `<!doctype html>
   <body>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
 ${recTicker}
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
@@ -890,7 +890,7 @@ const praktikumPage = `<!doctype html>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
     </header>
     <main id="main">
       <section class="block" style="margin-top:34px">
@@ -948,7 +948,7 @@ const readerHead = (title, description, canonical) => `
 // странице нет, переключать нечего, а увести на главную нужно.
 const readerTopbar = `
       <header class="topbar">
-        <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
+        <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
         <div class="track-switch" role="group" aria-label="Разделы сайта">
           <a href="/#work">${trackIcon('work')}<span>${esc(site.tracks.work.label)}</span></a>
           <a href="/#games">${trackIcon('games')}<span>${esc(site.tracks.play.label)}</span></a>
@@ -1218,7 +1218,7 @@ const notFound = `<!doctype html>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
     </header>
     <main id="main">
       <section class="report" style="margin-top:34px">
@@ -1266,7 +1266,7 @@ const unavailable = `<!doctype html>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="128" height="128" decoding="async">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
     </header>
     <main id="main">
       <section class="report" style="margin-top:34px">
