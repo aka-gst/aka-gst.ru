@@ -618,14 +618,14 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .shot-link { display: block; color: inherit; text-decoration: none; }
 .shot-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
-.job .shot { grid-column: 2; margin-top: 10px; }
+.job .shot { grid-column: 2; margin-top: 10px; text-align: center; }
 /* Потолок по ВЫСОТЕ, а не по ширине: Глаза мерили высоты всех шести пунктов
    ленты на 375×812. Пункт с публикацией весил 709 px — выше текущей работы
    в 1.4 раза и выше диплома в 5 раз, а картинка занимала 51% экрана. Без
    картинки пункт весит 291, соседи — от 370 до 497. При 160 px пункт встаёт
    ~451: ниже текущей работы, выше короткого диплома, в общем строю.
    Выше 206 начинается «кричит» — это их граница, не наша догадка. */
-.job .shot img { max-height: 160px; width: auto; }
+.job .shot img { max-height: 132px; width: auto; margin: 0 auto; }
 .job .shot a { display: block; border-radius: 8px; }
 .job .shot img { transition: transform .15s ease, box-shadow .15s ease; }
 .job .shot a:hover img, .job .shot a:focus-visible img {
