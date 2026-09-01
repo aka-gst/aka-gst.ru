@@ -812,6 +812,7 @@ ${recTicker}
         )}<span>${esc(site.tracks.play.label)}</span></button>
       </div>
       <a class="topbar-link" href="/rasskazy/">Рассказы</a>
+      <a class="topbar-link" href="/en/" hreflang="en" lang="en" data-umami-event="en-open">EN</a>
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}
       </nav>
@@ -900,6 +901,137 @@ const praktikumPage = `<!doctype html>
 `;
 
 writeFileSync(join(root, 'praktikum', 'index.html'), praktikumPage);
+
+// ── Страница для иностранного работодателя ───────────────────────────
+// Просьба Сергея: «я ориентируюсь на то, чтобы потом работать на
+// иностранцев». Это не перевод сайта: рассказы, «Юрта» и хакасский текст
+// работают на другую аудиторию, и переводить их незачем. Одна короткая
+// страница — кто он, что умеет, чем это доказано.
+//
+// Все числа берутся ИЗ ТЕХ ЖЕ данных, что и русская страница. Если писать
+// их руками, через месяц английская версия начнёт врать, и заметит это
+// работодатель, а не мы.
+//
+// Место работы названо прямо. Для удалённой работы первое, что смотрят, —
+// право на работу и часовой пояс; умолчание читается хуже прямого ответа.
+const en = (id) => db.projects.find((p) => p.id === id);
+const enProof = (items) =>
+  `<ul class="chips">${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`;
+
+const enCard = (title, url, lead, proof, repo) => `
+        <article class="card">
+          <h3><a class="card-title" href="${esc(url)}"${
+  url.startsWith('http') ? ' target="_blank" rel="noopener"' : ''
+}>${esc(title)}</a></h3>
+          <p class="tagline">${esc(lead)}</p>
+          ${enProof(proof)}
+          <p class="card-links"><a class="link" href="${esc(url)}"${
+  url.startsWith('http') ? ' target="_blank" rel="noopener"' : ''
+}>Open <b>→</b></a>${
+  repo
+    ? ` <a class="link" href="${esc(repo)}" target="_blank" rel="noopener">Source <b>↗</b></a>`
+    : ''
+}</p>
+        </article>`;
+
+const enPage = `<!doctype html>
+<html lang="en" data-track="work">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="QA engineer for AI and LLM products. Test suites, safety boundaries and evidence you can open and check.">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="${esc(site.themeColor)}">
+    <title>${esc(site.handle)} — QA for AI and LLM products</title>
+    <link rel="canonical" href="${esc(site.url)}/en/">
+    <link rel="alternate" hreflang="ru" href="${esc(site.url)}/">
+    <link rel="alternate" hreflang="en" href="${esc(site.url)}/en/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
+    <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
+      <a class="link" href="/">По-русски <b>→</b></a>
+    </header>
+    <main id="main">
+      <section class="block" style="margin-top:34px">
+        <div class="block-head">
+          <p class="kicker">QA · AI and LLM products</p>
+          <h1>I test what language models actually do</h1>
+          <p>Not whether the code runs — whether the answer is true, whether the
+             model refuses what it must refuse, and whether anything private
+             leaves the machine. Every claim below opens in one click.</p>
+          <p class="muted">Saint Petersburg, Russia · UTC+3 · remote · Russian native, English working</p>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="en-work">
+        <div class="block-head">
+          <h2 id="en-work">Selected work</h2>
+          <p>Four projects, each with the number that backs it. The numbers come
+             from the same data the Russian pages use, so they cannot drift apart.</p>
+        </div>
+        <div class="grid">${[
+          enCard(
+            'Local Agent Gateway',
+            '/#p-local-agent-gateway',
+            'A loopback gateway between an OpenAI-compatible client and a local Ollama model, with the whole test rig around it.',
+            [
+              `${qa.headline[0].display} ${qa.headline[0].label.en.toLowerCase()}`,
+              `${qa.coverage.percent}% coverage, CI threshold ${qa.coverage.threshold}%`,
+              ...qa.tests.suites.map((x) => `${x.name} ${x.passed}/${x.total}`),
+            ],
+            'https://github.com/aka-gst/local-agent-gateway'
+          ),
+          enCard(
+            'Psy AI Admin',
+            '/psy-admin/',
+            'A site assistant for a psychology centre that answers only from an approved knowledge base — and says so when a live person is needed.',
+            ['8 safety tests', '38 scenarios', 'boundaries fixed before the build, not after'],
+            'https://github.com/aka-gst/psy-ai-admin'
+          ),
+          enCard(
+            'Photo Meta Editor',
+            '/photodata/',
+            'Batch-edits the capture date of photos and video in the browser. Files never leave the device.',
+            ['19 automated tests', '0 network requests', "enforced by the page's own CSP, not by a promise"],
+            'https://github.com/aka-gst/photo_meta_editer'
+          ),
+          enCard(
+            'Agent-driven storefront',
+            '/#p-dharma-ai',
+            'An assistant takes a shopper from question to a finished cart; three service agents sit behind it. Built with a co-founder, in progress.',
+            ['12 mechanical scenarios', '8/8 and 4/4 on the current run', 'checkable assertions, not model-judges-model'],
+            null
+          ),
+        ].join('')}
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="en-games">
+        <div class="block-head">
+          <h2 id="en-games">And eleven browser games</h2>
+          <p>Not the main thing, but the proof that things reach real people:
+             they are playable right now, on a phone, with no install. Source is
+             open for all of them.</p>
+        </div>
+        <p class="card-links">
+          <a class="link" href="/#games">Play <b>→</b></a>
+          <a class="link" href="https://github.com/aka-gst?tab=repositories" target="_blank" rel="noopener">All repositories <b>↗</b></a>
+        </p>
+      </section>
+    </main>
+    <footer class="sitefoot">
+      <span><a href="/" style="text-decoration:none">← aka-gst.ru</a></span>
+    </footer>
+  </body>
+</html>
+`;
+
+writeFileSync(join(root, 'en', 'index.html'), enPage);
 
 // ── Рассказы ─────────────────────────────────────────────────────────
 // Тексты лежат в stories/ обычными файлами: абзац — строка, «***» —
