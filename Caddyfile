@@ -47,6 +47,11 @@ aka-gst.ru, www.aka-gst.ru {
 
   # Игра переехала с /knb/ на /stihii/. Старый адрес расходился ссылками,
   # поэтому он не удаляется, а перенаправляется.
+  @knb_q {
+    path /knb /knb/*
+    expression {query} != ""
+  }
+  redir @knb_q /stihii/?{query} 308
   redir /knb /stihii/ 308
   redir /knb/* /stihii/ 308
 
@@ -60,6 +65,16 @@ aka-gst.ru, www.aka-gst.ru {
   # Поэтому /naotmash/ отдаёт те же файлы (см. handle_path ниже), а /worm/
   # перенаправляется. Проверено до правки: внутри игры нет ни одной
   # абсолютной ссылки на /worm/ — только href="/" и /pulse/script.js.
+  @worm_zapros {
+    path /worm /worm/*
+    expression {query} != ""
+  }
+  redir @worm_zapros /naotmash/?{query} 308
+  @worm_q {
+    path /worm /worm/*
+    expression {query} != ""
+  }
+  redir @worm_q /naotmash/?{query} 308
   redir /worm /naotmash/ 308
   redir /worm/* /naotmash/ 308
   # Без косой черты handle_path не срабатывает, и адрес, набранный руками,
@@ -75,45 +90,120 @@ aka-gst.ru, www.aka-gst.ru {
   # Сюда идут два вида имён: как называется репозиторий (человек нашёл код и
   # ищет игру) и как игра подписана на витрине. Выдуманных сокращений здесь
   # нет — только те, которые кто-то реально может набрать.
+  @acid_uno_q {
+    path /acid-uno /acid-uno/*
+    expression {query} != ""
+  }
+  redir @acid_uno_q /acid/?{query} 308
   redir /acid-uno /acid/ 308
   redir /acid-uno/* /acid/ 308
+  @uno_q {
+    path /uno /uno/*
+    expression {query} != ""
+  }
+  redir @uno_q /acid/?{query} 308
   redir /uno /acid/ 308
   redir /uno/* /acid/ 308
 
+  @neon_lines_q {
+    path /neon-lines /neon-lines/*
+    expression {query} != ""
+  }
+  redir @neon_lines_q /lines/?{query} 308
   redir /neon-lines /lines/ 308
   redir /neon-lines/* /lines/ 308
 
+  @tetkolor_q {
+    path /tetkolor /tetkolor/*
+    expression {query} != ""
+  }
+  redir @tetkolor_q /tetcolor/?{query} 308
   redir /tetkolor /tetcolor/ 308
   redir /tetkolor/* /tetcolor/ 308
+  @tetcolor_columns_q {
+    path /tetcolor-columns /tetcolor-columns/*
+    expression {query} != ""
+  }
+  redir @tetcolor_columns_q /tetcolor/?{query} 308
   redir /tetcolor-columns /tetcolor/ 308
   redir /tetcolor-columns/* /tetcolor/ 308
 
+  @odin_udar_q {
+    path /odin-udar /odin-udar/*
+    expression {query} != ""
+  }
+  redir @odin_udar_q /udar/?{query} 308
   redir /odin-udar /udar/ 308
   redir /odin-udar/* /udar/ 308
 
   # ПЕРИМЕТР лежит в папке stealth, а называют его и так, и MGS.
+  @perimetr_q {
+    path /perimetr /perimetr/*
+    expression {query} != ""
+  }
+  redir @perimetr_q /stealth/?{query} 308
   redir /perimetr /stealth/ 308
   redir /perimetr/* /stealth/ 308
+  @mgs_q {
+    path /mgs /mgs/*
+    expression {query} != ""
+  }
+  redir @mgs_q /stealth/?{query} 308
   redir /mgs /stealth/ 308
   redir /mgs/* /stealth/ 308
 
   # «Деревня» живёт по /coin/ — адрес остался от «Орла и решки».
+  @derevnya_q {
+    path /derevnya /derevnya/*
+    expression {query} != ""
+  }
+  redir @derevnya_q /coin/?{query} 308
   redir /derevnya /coin/ 308
   redir /derevnya/* /coin/ 308
+  @orel_reshka_q {
+    path /orel-reshka /orel-reshka/*
+    expression {query} != ""
+  }
+  redir @orel_reshka_q /coin/?{query} 308
   redir /orel-reshka /coin/ 308
   redir /orel-reshka/* /coin/ 308
 
+  @bitva_stihiy_q {
+    path /bitva-stihiy /bitva-stihiy/*
+    expression {query} != ""
+  }
+  redir @bitva_stihiy_q /stihii/?{query} 308
   redir /bitva-stihiy /stihii/ 308
   redir /bitva-stihiy/* /stihii/ 308
 
+  @neon_claw_q {
+    path /neon-claw /neon-claw/*
+    expression {query} != ""
+  }
+  redir @neon_claw_q /claw/?{query} 308
   redir /neon-claw /claw/ 308
   redir /neon-claw/* /claw/ 308
 
+  @technomagia_q {
+    path /technomagia /technomagia/*
+    expression {query} != ""
+  }
+  redir @technomagia_q /technomagic/?{query} 308
   redir /technomagia /technomagic/ 308
   redir /technomagia/* /technomagic/ 308
+  @tehnomagia_q {
+    path /tehnomagia /tehnomagia/*
+    expression {query} != ""
+  }
+  redir @tehnomagia_q /technomagic/?{query} 308
   redir /tehnomagia /technomagic/ 308
   redir /tehnomagia/* /technomagic/ 308
 
+  @tetris_q {
+    path /tetris /tetris/*
+    expression {query} != ""
+  }
+  redir @tetris_q /tetcolor/?{query} 308
   redir /tetris /tetcolor/ 308
   redir /tetris/* /tetcolor/ 308
   redir /tetcolor /tetcolor/ 308
