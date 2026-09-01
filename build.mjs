@@ -1117,6 +1117,38 @@ ${c.stories
   )
   .join('\n')}
       </div>
+      ${
+        // «Напечатано» — страницы журнала. Владелец разрешил их выложить и
+        // сказал про чужих на снимках: «замажь их о оставь меня». Поэтому на
+        // обложках лица закрыты, а разворот «Наши авторы» обрезан до его
+        // портрета: полутора десяткам чужих людей на его витрине делать нечего.
+        // В сетке лежат превью по 440 пикселей, полный кадр открывается по
+        // ссылке — иначе страница потянула бы полтора мегабайта картинок,
+        // которых почти никто не откроет.
+        book.напечатано?.кадры?.length
+          ? `<section class="block pechat" aria-labelledby="pechat-title">
+        <div class="block-head">
+          <p class="kicker">Напечатано</p>
+          <h2 id="pechat-title">Журнал «ЮРТА», Абакан</h2>
+        </div>
+        <div class="pgrid">
+${book.напечатано.кадры
+  .map((к) => {
+    const м = imageSize(`assets/pechat/mini/${к.файл}`);
+    return `          <figure class="pcard">
+            <a href="/assets/pechat/${esc(к.файл)}?v=${assetVersion(`assets/pechat/${к.файл}`)}" target="_blank" rel="noopener">
+              <img src="/assets/pechat/mini/${esc(к.файл)}?v=${assetVersion(
+      `assets/pechat/mini/${к.файл}`
+    )}" alt="${esc(к.подпись)}" width="${м.w}" height="${м.h}" loading="lazy" decoding="async">
+            </a>
+            <figcaption>${esc(к.подпись)}</figcaption>
+          </figure>`;
+  })
+  .join('\n')}
+        </div>
+      </section>`
+          : ''
+      }
       <p class="story-cross">
         <a href="/#games" data-umami-event="games-open" data-umami-event-from="stories-index">Ещё у меня есть игры в браузере <b>→</b></a>
       </p>

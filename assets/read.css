@@ -112,6 +112,23 @@ html[data-size="xl"] .reader { --read-size: 24px; }
   font-size: 14px; line-height: 1.45; color: var(--ink);
 }
 
+/* «Напечатано» — страницы журнала. Кадры разной высоты и разного нрава:
+   две обложки, разворот, три страницы текста. Общей обрезки нет намеренно —
+   у страницы текста обрезать нечего, там всё содержание. Поэтому колонки
+   ровные, а высота у каждого своя. */
+.pechat { margin-top: 46px; }
+.pgrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px; align-items: start; margin-top: 18px;
+}
+.pcard { margin: 0; }
+.pcard a { display: block; border-radius: 8px; overflow: hidden; border: 1px solid var(--rule); }
+.pcard a:hover, .pcard a:focus-visible { border-color: var(--accent-read); }
+.pcard img { display: block; width: 100%; height: auto; }
+.pcard figcaption {
+  margin-top: 7px; font-size: 12px; line-height: 1.4; color: var(--ink-soft);
+}
+
 .bgrid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 30px; }
 .book { display: contents; }
 
