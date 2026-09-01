@@ -330,6 +330,11 @@
           "type": "demo",
           "label": "Открыть",
           "url": "/qa-quest/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/qa-quest"
         }
       ],
       "shots": [
@@ -445,6 +450,11 @@
           "type": "demo",
           "label": "Открыть демо",
           "url": "/psy-admin/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/psy-ai-admin"
         }
       ],
       "shots": [
@@ -626,6 +636,11 @@
           "type": "play",
           "label": "Запустить",
           "url": "/acid/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/acid-uno"
         }
       ],
       "shots": [
@@ -677,6 +692,11 @@
           "type": "play",
           "label": "Запустить",
           "url": "/tetcolor/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/tetcolor-columns"
         }
       ],
       "shots": [
@@ -723,6 +743,11 @@
           "type": "play",
           "label": "Запустить",
           "url": "/worm/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/naotmash"
         }
       ],
       "shots": [
@@ -768,6 +793,11 @@
           "type": "play",
           "label": "Запустить",
           "url": "/stealth/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/stealth"
         }
       ],
       "analytics": {
@@ -815,6 +845,11 @@
           "type": "play",
           "label": "Запустить",
           "url": "/technomagic/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/technomagic"
         }
       ],
       "shots": [
@@ -864,6 +899,11 @@
           "type": "play",
           "label": "Запустить",
           "url": "/lines/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/neon-lines"
         }
       ],
       "shots": [
@@ -909,6 +949,11 @@
           "type": "play",
           "label": "Запустить",
           "url": "/coin/"
+        },
+        {
+          "type": "repo",
+          "label": "Исходный код",
+          "url": "https://github.com/aka-gst/orel-reshka"
         }
       ],
       "shots": [

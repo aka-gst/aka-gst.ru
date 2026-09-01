@@ -737,7 +737,12 @@ ${playBar}
           </div>
           <div class="ggrid">${otherGames.map(gameCard).join('')}
           </div>
-        </section>`;
+        </section>
+
+        <p class="story-cross story-cross--code">
+          <a href="https://github.com/aka-gst?tab=repositories" target="_blank" rel="noopener"
+             data-umami-event="code-open" data-umami-event-from="games">Код всех девяти игр открыт — заходите и берите <b>↗</b></a>
+        </p>`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
 const html = `<!doctype html>
