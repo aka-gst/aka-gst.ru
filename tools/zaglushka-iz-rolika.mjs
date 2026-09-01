@@ -50,8 +50,11 @@ const projects = JSON.parse(readFileSync(join(root, 'data', 'projects.json'), 'u
 const ролик = (p) => {
   const снимок = p.shots?.[0]?.file;
   if (!снимок) return null;
-  return [`clip-${снимок.replace(/\.(jpe?g|png|webp)$/i, '')}.mp4`, `clip-${p.id}.mp4`]
-    .find((n) => existsSync(join(root, 'assets/clips', n)));
+  return [
+    `clip-${снимок.replace(/\.(jpe?g|png|webp)$/i, '')}.mp4`,
+    снимок.replace(/^game-(.+)\.(jpe?g|png|webp)$/i, 'clip-$1.mp4'),
+    `clip-${p.id}.mp4`,
+  ].find((n) => n.endsWith('.mp4') && existsSync(join(root, 'assets/clips', n)));
 };
 const размер = (f) =>
   JSON.parse(
