@@ -118,6 +118,10 @@ html[data-size="xl"] .reader { --read-size: 24px; }
    две обложки, разворот, три страницы текста. Общей обрезки нет намеренно —
    у страницы текста обрезать нечего, там всё содержание. Поэтому колонки
    ровные, а высота у каждого своя. */
+.ploshchadki { margin: 6px 0 0; font-size: 14px; color: var(--ink-soft); }
+.ploshchadki a { color: var(--accent-read); text-decoration: none; }
+.ploshchadki a:hover { text-decoration: underline; }
+
 .pechat { margin-top: 46px; }
 .pgrid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
