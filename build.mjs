@@ -651,7 +651,14 @@ const gameCard = (project) => {
           <span class="gart" aria-hidden="true">${back}${clip}${pipsHtml}</span>
           <div class="gcard-body">
             <div class="gcard-top">${statusBadge(project)}</div>
-            <h3 class="gcard-title">${esc(project.title)}</h3>
+            <h3 class="gcard-title">${esc(project.title)}${
+    // Прежнее имя выводится, только если задано. Игровая карточка кикер не
+    // показывает, поэтому переименование иначе стирает игру для тех, кто
+    // знал её под старым названием: человек ищет «Один удар» и не находит.
+    project.formerly
+      ? `<span class="gcard-formerly">бывший «${esc(project.formerly)}»</span>`
+      : ''
+  }</h3>
             <p class="gcard-text">${esc(project.tagline)}</p>
             <span class="launch">${link ? 'ЗАПУСТИТЬ <b>↗</b>' : 'СКОРО'}</span>
           </div>
