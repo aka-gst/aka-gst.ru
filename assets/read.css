@@ -4,23 +4,23 @@
 .reader {
   /* Грунты. Тёмный тут теплее общесайтового: чистый #0b0c0d под три тысячи
      слов режет глаза, а бумажный нужен потому, что читают и при свете. */
-  --ink: #e6e0d4;
-  --ink-soft: #a49c8c;
-  --ground: #14120f;
-  --ground-soft: #1b1815;
-  --rule: #2b2721;
-  --accent-read: #c9a86a;
+  --ink: #e6e3dd;
+  --ink-soft: #97968f;
+  --ground: #0d0d0e;
+  --ground-soft: #17171a;
+  --rule: #282a2e;
+  --accent-read: #7ad9a4;
   --read-size: 19px;
   background: var(--ground);
   color: var(--ink);
 }
 html[data-ground="paper"] .reader {
-  --ink: #201d18;
-  --ink-soft: #6b6459;
-  --ground: #f3efe6;
-  --ground-soft: #e9e3d6;
-  --rule: #d8d1c1;
-  --accent-read: #8a6a24;
+  --ink: #1b1e1c;
+  --ink-soft: #5e6461;
+  --ground: #f2f1ee;
+  --ground-soft: #e6e7e4;
+  --rule: #d3d6d3;
+  --accent-read: #1f7a4d;
 }
 html[data-size="s"] .reader { --read-size: 17px; }
 html[data-size="l"] .reader { --read-size: 21px; }
