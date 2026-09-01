@@ -294,17 +294,31 @@ const cardShot = (project) =>
           <figure class="shot">${shotImg(project.shots[0])}${cardClip(project)}</figure>`
     : '';
 
+// Карточка в два слоя. Сверху — что сделано, словами, понятными человеку,
+// который не знает слов «шлюз» и «покрытие». Ниже, под «подробнее», — вся
+// техника: длинное описание, стек и числа.
+//
+// Просьба владельца, 1 сентября 2026: «тут просто должна быть короткая
+// карточка, продающая меня обычному человеку… потом уже профессионал
+// заинтересуется, подробнее узнает сам». И про числа отдельно: «как будто
+// карточка здоровая штука, бессмысленно здоровая».
+//
+// Разметка приходит РАСКРЫТОЙ и сворачивается скриптом — тот же уговор,
+// что у навыков и у сборников: без скриптов и для поисковика видно всё.
 const card = (project, index) => `
-        <article class="card" id="p-${esc(project.id)}">${metricBand(project)}${cardShot(project)}
+        <article class="card" id="p-${esc(project.id)}">${cardShot(project)}
           <div class="card-head">
             <p class="kicker">${esc(project.kicker)}</p>
             <span class="card-marks">${evidenceMark(project)}${statusBadge(project)}</span>
           </div>
           <h3>${cardTitle(project)}</h3>
           <p class="tagline">${esc(project.tagline)}</p>
-          <p class="summary">${esc(project.summary)}</p>
-          ${stackRow(project)}
           ${linkRow(project)}
+          <div class="card-more">
+            ${metricBand(project)}
+            <p class="summary">${esc(project.summary)}</p>
+            ${stackRow(project)}
+          </div>
         </article>`;
 
 const byGroup = (group) =>
@@ -419,7 +433,7 @@ const reportScreen = `
             <p class="detail-head">LLM-evaluation</p>
             <p class="detail-body">Детерминированный набор «${esc(det.suite)}»: ${esc(
   det.passed
-)}/${esc(det.cases)}, mean score ${esc(det.mean_score)}. Live-прогон ${esc(
+)}/${esc(det.cases)}, mean score ${esc(det.mean_score)}. Живой прогон ${esc(
   live.model
 )} через ${esc(live.provider)}: ${esc(live.passed)}/${esc(live.runs)}, mean ${esc(
   live.mean_score
@@ -430,9 +444,7 @@ const reportScreen = `
         </div>
 ${reportProof}
         <p class="report-context">
-          <span>Live-прогон — <b>${esc(
-            live.source
-          )}</b>: записан один раз ${esc(live.recorded_at)} на машине ${esc(
+          <span><b>Живой прогон</b>: записан один раз ${esc(live.recorded_at)} на машине ${esc(
   live.environment.machine
 )} (${esc(live.environment.os)}, ${esc(live.environment.runtime)}, ${esc(
   live.environment.quantization
@@ -533,7 +545,7 @@ const workPanel = `
         <div class="block-head">
           <p class="kicker">02</p>
           <h2 id="practicums-title">Практикумы и обучение</h2>
-          <p>Материалы, которые собраны из реальных прогонов: инструкция, автотесты и сохранённые артефакты.</p>
+          <p>Собрано из настоящей работы: инструкция, автотесты и то, что осталось после проверки.</p>
         </div>
         <div class="grid">${byGroup('practicums').map(card).join('')}
         </div>
@@ -873,7 +885,7 @@ const praktikumPage = `<!doctype html>
       <section class="block" style="margin-top:34px">
         <div class="block-head">
           <p class="kicker">Практикумы</p>
-          <h2>Материалы, собранные из реальных прогонов</h2>
+          <h2>Собрано из настоящей работы</h2>
           <p>Каждый шаг доведён до проверяемого результата: команда, ожидаемый вывод и что делать, когда вывод другой.</p>
         </div>
         <div class="grid">${courseRows}

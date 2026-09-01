@@ -530,6 +530,15 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
    чтобы понять, чем человек занимается; кому нужны сами теги, тот раскроет.
    Разметка приходит РАЗВЁРНУТОЙ и сворачивается скриптом: без скриптов и
    для поисковика видны все 43 тега. */
+.card-more-btn {
+  margin-top: 14px; padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--neon); align-self: flex-start;
+}
+.card-more-btn:hover, .card-more-btn:focus-visible { color: var(--ink); }
+.card-more[hidden] { display: none; }
+.card-more { margin-top: 14px; }
+
 .skills dt i {
   display: none; margin-left: 6px; font-style: normal;
   font-family: var(--mono); font-size: 11px; color: var(--dim);

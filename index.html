@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=8dbb6435">
+    <link rel="stylesheet" href="/assets/site.css?v=609a0c32">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -90,7 +90,7 @@
           <div class="report-lede">
             <p class="kicker">AI/LLM QA · Python · <span data-metric-version>v0.3.0</span></p>
             <h1 id="flagship-title">Local Agent Gateway</h1>
-            <p class="tagline">Loopback-шлюз между OpenAI-совместимым клиентом и локальной Ollama — и полный тестовый контур вокруг него.</p>
+            <p class="tagline">Программа-посредник: подключает обычное приложение к нейросети, которая работает прямо на компьютере — без интернета и без отправки данных наружу.</p>
             <p class="summary">FastAPI-прокси с bearer-авторизацией, allowlist моделей и бэкендов, SSE-стримингом, таймаутами и защитой от утечки секретов в логи. Вокруг него собран слоёный QA-контур: контрактные и негативные API-тесты, реальный Chromium E2E по QA-консоли, детерминированные и live LLM-evaluation прогоны с метриками качества, стабильности, latency, токенов и стоимости, и prompt-injection canary.</p>
             <ul class="stack"><li>Python 3.11+</li><li>FastAPI</li><li>pytest</li><li>httpx</li><li>Playwright</li><li>Allure</li><li>GitHub Actions</li><li>Docker Compose</li><li>Ollama</li><li>OpenRouter</li></ul>
             <p class="card-links">
@@ -135,7 +135,7 @@
           </div>
           <div class="detail">
             <p class="detail-head">LLM-evaluation</p>
-            <p class="detail-body">Детерминированный набор «gateway-support-responses»: 3/3, mean score 0.855. Live-прогон qwen3:8b через ollama: 9/9, mean 0.755, median 3 483 мс, p95 14 912 мс, stability 1.000.</p>
+            <p class="detail-body">Детерминированный набор «gateway-support-responses»: 3/3, mean score 0.855. Живой прогон qwen3:8b через ollama: 9/9, mean 0.755, median 3 483 мс, p95 14 912 мс, stability 1.000.</p>
           </div>
         </div>
 
@@ -152,7 +152,7 @@
             </figure>
         </div>
         <p class="report-context">
-          <span>Live-прогон — <b>recorded-local-run</b>: записан один раз 2026-08-15 на машине Apple Silicon M5, 24 GB unified memory (macOS, Ollama 0.32.12, Q4_K_M, 8.2B), профиль 3×3, temperature 0, seed 42. Это не проверяется каждым push — в отличие от тестов и покрытия.</span>
+          <span><b>Живой прогон</b>: записан один раз 2026-08-15 на машине Apple Silicon M5, 24 GB unified memory (macOS, Ollama 0.32.12, Q4_K_M, 8.2B), профиль 3×3, temperature 0, seed 42. Это не проверяется каждым push — в отличие от тестов и покрытия.</span>
           <span>Прогон от <time data-metric-updated datetime="2026-08-28T03:45:44Z">2026-08-28T03:45:44Z</time></span>
         </p>
       </section>
@@ -161,10 +161,22 @@
         <div class="block-head">
           <p class="kicker">02</p>
           <h2 id="practicums-title">Практикумы и обучение</h2>
-          <p>Материалы, которые собраны из реальных прогонов: инструкция, автотесты и сохранённые артефакты.</p>
+          <p>Собрано из настоящей работы: инструкция, автотесты и то, что осталось после проверки.</p>
         </div>
         <div class="grid">
         <article class="card" id="p-qa-quest">
+          <figure class="shot"><img src="/assets/shots/qa-quest-lesson.jpg?v=2be616e2" alt="Стенд QA Quest: машина с включёнными фарами и открытыми дверями, рядом консоль с командами ping, enable lights и unlock doors"
+                width="1056" height="596" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                  data-src="/assets/clips/clip-qa-quest.mp4?v=bc658d0d"></video></figure>
+          <div class="card-head">
+            <p class="kicker">Обучение · браузер</p>
+            <span class="card-marks"><span class="status status-live">открыт</span></span>
+          </div>
+          <h3><a class="card-title" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></h3>
+          <p class="tagline">Учу программировать на Питоне через игру: пишешь настоящий код и этим открываешь историю дальше.</p>
+          <p class="card-links"><a class="link link-demo" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/qa-quest" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
+          <div class="card-more">
+            
           <dl class="band" data-count="3">
             <div title="16 шагов в ночи · два сюжета первой ступени · 11 тестирование · 9 LLM. За один проход открывается 36.">
               <dt>52</dt>
@@ -179,20 +191,22 @@
               <dd>сюжета</dd>
             </div>
           </dl>
-          <figure class="shot"><img src="/assets/shots/qa-quest-lesson.jpg?v=2be616e2" alt="Стенд QA Quest: машина с включёнными фарами и открытыми дверями, рядом консоль с командами ping, enable lights и unlock doors"
-                width="1056" height="596" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                  data-src="/assets/clips/clip-qa-quest.mp4?v=bc658d0d"></video></figure>
-          <div class="card-head">
-            <p class="kicker">Обучение · браузер</p>
-            <span class="card-marks"><span class="status status-live">открыт</span></span>
+            <p class="summary">Первая ступень — шестнадцать шагов за ночь от первой строки до собственного замка для блока управления машиной: на каждом свой рабочий код, а не пересказ учебника. Ночей две на выбор, «Ночь в боксе» и «Взлом сети», дальше ступени тестирования и работы с LLM: всего 52 урока и 154 задачи с эталонными решениями, за один проход открывается 36. Python настоящий и работает прямо на странице, ставить нечего. Рядом живой стенд: команды уходят в шину, и машина отвечает — включает фары, открывает двери. Разбираются настоящие случаи: реле-атака на брелок, команды в шину через фару. Прогресс сохраняется в учётной записи сайта и переезжает между устройствами.</p>
+            <ul class="stack"><li>Python</li><li>Pyodide</li><li>JavaScript</li><li>HTML</li><li>CSS</li><li>общий вход aka-gst</li></ul>
           </div>
-          <h3><a class="card-title" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></h3>
-          <p class="tagline">Питон с нуля через историю: ночь в боксе, чужой ключ в чужих руках и замок, который ты пишешь сам.</p>
-          <p class="summary">Первая ступень — шестнадцать шагов за ночь от первой строки до собственного замка для блока управления машиной: на каждом свой рабочий код, а не пересказ учебника. Ночей две на выбор, «Ночь в боксе» и «Взлом сети», дальше ступени тестирования и работы с LLM: всего 52 урока и 154 задачи с эталонными решениями, за один проход открывается 36. Python настоящий и работает прямо на странице, ставить нечего. Рядом живой стенд: команды уходят в шину, и машина отвечает — включает фары, открывает двери. Разбираются настоящие случаи: реле-атака на брелок, команды в шину через фару. Прогресс сохраняется в учётной записи сайта и переезжает между устройствами.</p>
-          <ul class="stack"><li>Python</li><li>Pyodide</li><li>JavaScript</li><li>HTML</li><li>CSS</li><li>общий вход aka-gst</li></ul>
-          <p class="card-links"><a class="link link-demo" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/qa-quest" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
         </article>
         <article class="card" id="p-praktikum-testing">
+          <figure class="shot"><img src="/assets/shots/praktikum-testing.jpg?v=b4612688" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов, 16 экспериментов, кнопки чтения, PDF и DOCX, список частей"
+                width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low"></figure>
+          <div class="card-head">
+            <p class="kicker">Практикум · веб + PDF</p>
+            <span class="card-marks"><span class="status status-published">v3</span></span>
+          </div>
+          <h3><a class="card-title" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></h3>
+          <p class="tagline">Пошаговое руководство: как поднять нейросеть у себя на машине, подключить к ней программу и убедиться, что всё работает.</p>
+          <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
+          <div class="card-more">
+            
           <dl class="band" data-count="3">
             <div>
               <dt>19</dt>
@@ -207,33 +221,11 @@
               <dd>мин чтения</dd>
             </div>
           </dl>
-          <figure class="shot"><img src="/assets/shots/praktikum-testing.jpg?v=b4612688" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов, 16 экспериментов, кнопки чтения, PDF и DOCX, список частей"
-                width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low"></figure>
-          <div class="card-head">
-            <p class="kicker">Практикум · веб + PDF</p>
-            <span class="card-marks"><span class="status status-published">v3</span></span>
+            <p class="summary">Русскоязычное руководство по сборке контура Open-LLM-VTuber → шлюз → Ollama: аудит окружения, безопасность, автотесты, benchmark провайдеров и операционный runbook. Материал вырос из реального прогона, а не из абстрактного примера — все выводы подкреплены сохранёнными артефактами.</p>
+            <ul class="stack"><li>Python</li><li>FastAPI</li><li>Ollama</li><li>OpenRouter</li><li>PowerShell</li><li>pytest</li></ul>
           </div>
-          <h3><a class="card-title" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></h3>
-          <p class="tagline">Пошаговый разбор того, как построить и проверить loopback-шлюз к локальной модели.</p>
-          <p class="summary">Русскоязычное руководство по сборке контура Open-LLM-VTuber → шлюз → Ollama: аудит окружения, безопасность, автотесты, benchmark провайдеров и операционный runbook. Материал вырос из реального прогона, а не из абстрактного примера — все выводы подкреплены сохранёнными артефактами.</p>
-          <ul class="stack"><li>Python</li><li>FastAPI</li><li>Ollama</li><li>OpenRouter</li><li>PowerShell</li><li>pytest</li></ul>
-          <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
         </article>
         <article class="card" id="p-ai-agent-service-lab">
-          <dl class="band" data-count="3">
-            <div>
-              <dt>16</dt>
-              <dd>разделов</dd>
-            </div>
-            <div>
-              <dt>10</dt>
-              <dd>лабораторных</dd>
-            </div>
-            <div>
-              <dt>~51</dt>
-              <dd>мин чтения</dd>
-            </div>
-          </dl>
           <figure class="shot"><img src="/assets/shots/praktikum-llm.jpg?v=29ddccb6" alt="Страница практикума «Настройка LLM и AI-агентов под задачу»: 16 разделов, 10 экспериментов, маршрут обучения и лабораторные работы"
                 width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low"></figure>
           <div class="card-head">
@@ -250,10 +242,27 @@
             </span><span class="status status-live">открыт</span></span>
           </div>
           <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
-          <p class="tagline">Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.</p>
-          <p class="summary">Рабочий сервис-лаборатория: локальная генерация через Ollama и qwen3:8b, structured output с JSON Schema, agent loop с allowlist инструментов, память сессий и audit log в SQLite, RAG по документам с проверяемыми источниками, API-key guard, Docker Compose и backup/restore с SHA-256.</p>
-          <ul class="stack"><li>Python 3.12</li><li>FastAPI</li><li>Pydantic</li><li>SQLite</li><li>Ollama</li><li>qwen3:8b</li><li>qwen3-embedding:0.6b</li><li>Docker Compose</li><li>pytest</li></ul>
+          <p class="tagline">Разбираю на живом примере, как устроен ИИ-агент: чем он пользуется, что помнит и как проверить, что он не выдумывает.</p>
           <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
+          <div class="card-more">
+            
+          <dl class="band" data-count="3">
+            <div>
+              <dt>16</dt>
+              <dd>разделов</dd>
+            </div>
+            <div>
+              <dt>10</dt>
+              <dd>лабораторных</dd>
+            </div>
+            <div>
+              <dt>~51</dt>
+              <dd>мин чтения</dd>
+            </div>
+          </dl>
+            <p class="summary">Рабочий сервис-лаборатория: локальная генерация через Ollama и qwen3:8b, structured output с JSON Schema, agent loop с allowlist инструментов, память сессий и audit log в SQLite, RAG по документам с проверяемыми источниками, API-key guard, Docker Compose и backup/restore с SHA-256.</p>
+            <ul class="stack"><li>Python 3.12</li><li>FastAPI</li><li>Pydantic</li><li>SQLite</li><li>Ollama</li><li>qwen3:8b</li><li>qwen3-embedding:0.6b</li><li>Docker Compose</li><li>pytest</li></ul>
+          </div>
         </article>
         </div>
       </section>
@@ -266,12 +275,6 @@
         </div>
         <div class="grid">
         <article class="card" id="p-dharma-ai">
-          <dl class="band" data-count="1">
-            <div title="доказательства, рассуждение, полномочия">
-              <dt>3</dt>
-              <dd>проверки</dd>
-            </div>
-          </dl>
           <figure class="shot"><img src="/assets/shots/dharma-ai.jpg?v=c5c7d8b5" alt="Главная страница Dharma AI: валидатор проверяет доказательства, рассуждение и полномочия агента перед решением"
                 width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low"></figure>
           <div class="card-head">
@@ -279,22 +282,21 @@
             <span class="card-marks"><span class="status status-live">валидатор запущен</span></span>
           </div>
           <h3><a class="card-title" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">Dharma AI</a></h3>
-          <p class="tagline">Персональный AI-наставник в предрелизном iOS-приложении — и валидатор агентов, уже запущенный на сайте команды.</p>
-          <p class="summary">Основное направление — приложение с персональным AI-наставником, который отвечает на основе внешней базы знаний: связность диалога, голосовой и текстовый интерфейсы, фактическая точность ответов. Второй продукт, публично запущенный, — валидационный шлюз для агентных систем: перед действием или передачей управления проверяются доказательная база ответа, цепочка рассуждения и полномочия на этот шаг.</p>
-          
+          <p class="tagline">Собрал магазин, которым управляют ИИ-агенты: помощник доводит покупателя от вопроса до оплаченного заказа.</p>
           <p class="card-links"><a class="link link-site" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">dharma-ai.io <b>↗</b></a></p>
-        </article>
-        <article class="card" id="p-psy-ai-admin">
-          <dl class="band" data-count="2">
-            <div>
-              <dt>8</dt>
-              <dd>тестов защиты</dd>
-            </div>
-            <div>
-              <dt>38</dt>
-              <dd>сценариев</dd>
+          <div class="card-more">
+            
+          <dl class="band" data-count="1">
+            <div title="доказательства, рассуждение, полномочия">
+              <dt>3</dt>
+              <dd>проверки</dd>
             </div>
           </dl>
+            <p class="summary">Основное направление — приложение с персональным AI-наставником, который отвечает на основе внешней базы знаний: связность диалога, голосовой и текстовый интерфейсы, фактическая точность ответов. Второй продукт, публично запущенный, — валидационный шлюз для агентных систем: перед действием или передачей управления проверяются доказательная база ответа, цепочка рассуждения и полномочия на этот шаг.</p>
+            
+          </div>
+        </article>
+        <article class="card" id="p-psy-ai-admin">
           <figure class="shot"><img src="/assets/shots/psy-admin.jpg?v=87cf500e" alt="Форма помощника: выбор из 60 готовых вопросов, поле для своего, и ответ со ссылкой на страницу центра"
                 width="1200" height="676" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
                   data-src="/assets/clips/clip-psy-admin.mp4?v=cc3cdb8a"></video></figure>
@@ -312,26 +314,25 @@
             </span><span class="status status-demo">MVP-демо</span></span>
           </div>
           <h3><a class="card-title" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Psy AI Admin</a></h3>
-          <p class="tagline">Безопасный AI-администратор для сайта психологического центра.</p>
-          <p class="summary">Помощник отвечает только из утверждённой базы знаний: услуги, специалисты, расписание, формат и стоимость, переход на нужную страницу и заявка администратору. Явно не даёт медицинских рекомендаций и не заменяет экстренную помощь — границы зашиты в сценарии и проверяются тестами.</p>
-          <ul class="stack"><li>JavaScript</li><li>RAG</li><li>Node test</li></ul>
+          <p class="tagline">Помощник на сайте психологического центра: отвечает на вопросы посетителей и ведёт на нужную страницу, а где нужен живой человек — так и говорит.</p>
           <p class="card-links"><a class="link link-demo" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Открыть демо <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/psy-ai-admin" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
-        </article>
-        <article class="card" id="p-photo-meta-editor">
-          <dl class="band" data-count="3">
+          <div class="card-more">
+            
+          <dl class="band" data-count="2">
             <div>
-              <dt>19</dt>
-              <dd>автотестов</dd>
-            </div>
-            <div title="закреплено CSP и отдельным тестом">
-              <dt>0</dt>
-              <dd>сетевых запросов</dd>
+              <dt>8</dt>
+              <dd>тестов защиты</dd>
             </div>
             <div>
-              <dt>v1.2.0</dt>
-              <dd>релиз</dd>
+              <dt>38</dt>
+              <dd>сценариев</dd>
             </div>
           </dl>
+            <p class="summary">Помощник отвечает только из утверждённой базы знаний: услуги, специалисты, расписание, формат и стоимость, переход на нужную страницу и заявка администратору. Явно не даёт медицинских рекомендаций и не заменяет экстренную помощь — границы зашиты в сценарии и проверяются тестами.</p>
+            <ul class="stack"><li>JavaScript</li><li>RAG</li><li>Node test</li></ul>
+          </div>
+        </article>
+        <article class="card" id="p-photo-meta-editor">
           <figure class="shot"><img src="/assets/shots/photodata.jpg?v=23d2c3a0" alt="Интерфейс ФотоДаты: шаги обработки, список папок и панель установки даты съёмки"
                 width="602" height="332" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
                   data-src="/assets/clips/clip-photodata.mp4?v=54b0a6c3"></video></figure>
@@ -349,10 +350,27 @@
             </span><span class="status status-released">v1.2.0</span></span>
           </div>
           <h3><a class="card-title" href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata">ФотоДата · Photo Meta Editor</a></h3>
-          <p class="tagline">Пакетное изменение даты съёмки фото и видео прямо в браузере, без загрузки на сервер.</p>
-          <p class="summary">Меняет EXIF DateTime / DateTimeOriginal / DateTimeDigitized и временные поля MP4/MOV/M4V для одного файла, выбранной группы или целой папки. Приватность закреплена не обещанием, а политикой безопасности страницы: после загрузки интерфейсу запрещены сетевые соединения, и отсутствие API отправки данных проверяется отдельным автотестом.</p>
-          <ul class="stack"><li>JavaScript</li><li>Node.js test</li><li>Next.js</li><li>GitHub Actions</li></ul>
+          <p class="tagline">Меняет дату съёмки сразу у пачки фотографий и видео. Работает в браузере: файлы никуда не уходят с вашего устройства.</p>
           <p class="card-links"><a class="link link-demo" href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata">Открыть <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/photo_meta_editer" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
+          <div class="card-more">
+            
+          <dl class="band" data-count="3">
+            <div>
+              <dt>19</dt>
+              <dd>автотестов</dd>
+            </div>
+            <div title="закреплено CSP и отдельным тестом">
+              <dt>0</dt>
+              <dd>сетевых запросов</dd>
+            </div>
+            <div>
+              <dt>v1.2.0</dt>
+              <dd>релиз</dd>
+            </div>
+          </dl>
+            <p class="summary">Меняет EXIF DateTime / DateTimeOriginal / DateTimeDigitized и временные поля MP4/MOV/M4V для одного файла, выбранной группы или целой папки. Приватность закреплена не обещанием, а политикой безопасности страницы: после загрузки интерфейсу запрещены сетевые соединения, и отсутствие API отправки данных проверяется отдельным автотестом.</p>
+            <ul class="stack"><li>JavaScript</li><li>Node.js test</li><li>Next.js</li><li>GitHub Actions</li></ul>
+          </div>
         </article>
         </div>
       </section>
@@ -371,9 +389,12 @@
           </div>
           <h3><a class="card-title" href="https://t.me/Buddhist_Diary_bot" target="_blank" rel="noopener">Буддийский дневник</a></h3>
           <p class="tagline">Шесть ежедневных осознанных отметок, личные записи и циклические списки практик.</p>
-          <p class="summary">Отдельные дневники медитации и йоги с планом на день и на каждый день недели, недублирующиеся напоминания и приватные записи. У каждого пользователя свой seed: шесть обетов стабильны в течение дня и обновляются на следующий.</p>
-          <ul class="stack"><li>Python</li><li>Telegram Bot API</li></ul>
           <p class="card-links"><a class="link link-telegram" href="https://t.me/Buddhist_Diary_bot" target="_blank" rel="noopener">Открыть в Telegram <b>↗</b></a></p>
+          <div class="card-more">
+            
+            <p class="summary">Отдельные дневники медитации и йоги с планом на день и на каждый день недели, недублирующиеся напоминания и приватные записи. У каждого пользователя свой seed: шесть обетов стабильны в течение дня и обновляются на следующий.</p>
+            <ul class="stack"><li>Python</li><li>Telegram Bot API</li></ul>
+          </div>
         </article>
         </div>
       </section>
@@ -459,42 +480,42 @@
         <ul class="list">
             <li>
               <span class="list-title"><a href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Local Agent Gateway</a></span>
-              <span class="list-note">Loopback-шлюз между OpenAI-совместимым клиентом и локальной Ollama — и полный тестовый контур вокруг него.</span>
+              <span class="list-note">Программа-посредник: подключает обычное приложение к нейросети, которая работает прямо на компьютере — без интернета и без отправки данных наружу.</span>
               <span class="status status-released">v0.3.0</span>
             </li>
             <li>
               <span class="list-title"><a href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></span>
-              <span class="list-note">Пошаговый разбор того, как построить и проверить loopback-шлюз к локальной модели.</span>
+              <span class="list-note">Пошаговое руководство: как поднять нейросеть у себя на машине, подключить к ней программу и убедиться, что всё работает.</span>
               <span class="status status-published">v3</span>
             </li>
             <li>
               <span class="list-title"><a href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></span>
-              <span class="list-note">Как устроен AI-агент под реальную задачу: инструменты, память, RAG и проверки.</span>
+              <span class="list-note">Разбираю на живом примере, как устроен ИИ-агент: чем он пользуется, что помнит и как проверить, что он не выдумывает.</span>
               <span class="status status-live">открыт</span>
             </li>
             <li>
               <span class="list-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></span>
-              <span class="list-note">Питон с нуля через историю: ночь в боксе, чужой ключ в чужих руках и замок, который ты пишешь сам.</span>
+              <span class="list-note">Учу программировать на Питоне через игру: пишешь настоящий код и этим открываешь историю дальше.</span>
               <span class="status status-live">открыт</span>
             </li>
             <li>
               <span class="list-title"><a href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">Dharma AI</a></span>
-              <span class="list-note">Персональный AI-наставник в предрелизном iOS-приложении — и валидатор агентов, уже запущенный на сайте команды.</span>
+              <span class="list-note">Собрал магазин, которым управляют ИИ-агенты: помощник доводит покупателя от вопроса до оплаченного заказа.</span>
               <span class="status status-live">валидатор запущен</span>
             </li>
             <li>
               <span class="list-title"><a href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Psy AI Admin</a></span>
-              <span class="list-note">Безопасный AI-администратор для сайта психологического центра.</span>
+              <span class="list-note">Помощник на сайте психологического центра: отвечает на вопросы посетителей и ведёт на нужную страницу, а где нужен живой человек — так и говорит.</span>
               <span class="status status-demo">MVP-демо</span>
             </li>
             <li>
               <span class="list-title"><a href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata">ФотоДата · Photo Meta Editor</a></span>
-              <span class="list-note">Пакетное изменение даты съёмки фото и видео прямо в браузере, без загрузки на сервер.</span>
+              <span class="list-note">Меняет дату съёмки сразу у пачки фотографий и видео. Работает в браузере: файлы никуда не уходят с вашего устройства.</span>
               <span class="status status-released">v1.2.0</span>
             </li>
             <li>
               <span class="list-title"><a href="https://github.com/aka-gst/voki-toki" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="voki-toki">Воки-Токи</a></span>
-              <span class="list-note">Видеозвонки на собственном сервере, которые работают в России без VPN.</span>
+              <span class="list-note">Видеозвонки на своём сервере: работают внутри домашней сети, даже когда интернета нет.</span>
               <span class="status status-live">работает</span>
             </li>
             <li>
@@ -669,6 +690,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=80a68711" defer></script>
+    <script src="/assets/app.js?v=98a8ef05" defer></script>
   </body>
 </html>
