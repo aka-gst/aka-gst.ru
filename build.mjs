@@ -753,7 +753,7 @@ ${playBar}
 
         <p class="story-cross story-cross--code">
           <a href="https://github.com/aka-gst?tab=repositories" target="_blank" rel="noopener"
-             data-umami-event="code-open" data-umami-event-from="games">Код всех десяти игр открыт — заходите и берите <b>↗</b></a>
+             data-umami-event="code-open" data-umami-event-from="games">Код всех одиннадцати игр открыт — заходите и берите <b>↗</b></a>
         </p>`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────

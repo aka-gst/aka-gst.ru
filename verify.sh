@@ -188,6 +188,43 @@ for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="socia
 done
 
 echo
+echo "== на всё, что лежит на сервере, можно попасть с витрины =="
+# Требование Сергея от 1 сентября 2026: «надо чтоб можно было попасть на
+# всё, что есть на сайте!! это важно». Выложено и достижимо — разные вещи:
+# NEON CLAW отвечала 200 неделю, а ссылки на неё не было нигде, и узнали мы
+# это от её же сессии, а не от проверки.
+#
+# Сверяются два списка: что отдаёт сервер и куда ведут ссылки со страниц.
+# Служебное в счёт не идёт — assets, api, счётчик и страницы ошибок.
+SERVER_DIRS=$(ssh -o ConnectTimeout=20 bonita 'ls -1 /opt/zakriva/caddy/site' 2>/dev/null \
+  | grep -vE '^(assets|404\.html|503\.html|index\.html|favicon|og\.png|robots|sitemap|game-menu|player-name|tour\.js|data)' || true)
+if [ -z "$SERVER_DIRS" ]; then
+  say_bad "список папок сервера пуст — сверить достижимость не с чем"
+else
+  # shellcheck disable=SC2086
+  # Берём и точные ссылки, и вложенные: на практикум ведут /praktikum/llm/
+  # и /praktikum/testirovanie/, а самой /praktikum/ в разметке нет.
+  # shellcheck disable=SC2086
+  LINKED=$(curl -s $RETRY "$BASE/" | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
+  ORPHANS=""
+  for d in $SERVER_DIRS; do
+    printf '%s\n' "$LINKED" | grep -qx "$d" && continue
+    # Старый адрес, ведущий на новый, — не сирота, а дверь, оставленная для
+    # тех, у кого он в закладках. Сиротой считается только то, что отвечает
+    # само и никуда не ведёт: /knb/ и /worm/ отдают 308, и это правильно.
+    case "$(code "$BASE/$d/")" in
+      30*) continue ;;
+    esac
+    ORPHANS="$ORPHANS $d"
+  done
+  if [ -n "$ORPHANS" ]; then
+    say_bad "лежит на сервере, но ссылки с витрины нет:$ORPHANS"
+  else
+    say_ok "на каждую папку сервера есть ссылка с витрины"
+  fi
+fi
+
+echo
 echo "== внутреннее наружу не отдаётся =="
 # Правило 30а: рабочие файлы не лежат в выкладываемом корне, и проверять
 # это надо КУРЛОМ ПОСЛЕ выкладки, а не глазами по белому списку. Так уже
