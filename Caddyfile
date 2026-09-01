@@ -66,6 +66,54 @@ aka-gst.ru, www.aka-gst.ru {
   # отдавал 404. Человек пишет «aka-gst.ru/naotmash», а не «…/naotmash/».
   redir /naotmash /naotmash/ 308
 
+  # Имя, которым игру называют люди, и имя папки — разные вещи, и
+  # расходятся они молча. Человек набирает «acid-uno» или «одинудар», видит
+  # имя репозитория на гитхабе или помнит, как игра называется на витрине, —
+  # и попадает в 404. Просьба Сергея от 1 сентября 2026: «это тоже давай
+  # поправим и сделаем редиректы».
+  #
+  # Сюда идут два вида имён: как называется репозиторий (человек нашёл код и
+  # ищет игру) и как игра подписана на витрине. Выдуманных сокращений здесь
+  # нет — только те, которые кто-то реально может набрать.
+  redir /acid-uno /acid/ 308
+  redir /acid-uno/* /acid/ 308
+  redir /uno /acid/ 308
+  redir /uno/* /acid/ 308
+
+  redir /neon-lines /lines/ 308
+  redir /neon-lines/* /lines/ 308
+
+  redir /tetkolor /tetcolor/ 308
+  redir /tetkolor/* /tetcolor/ 308
+  redir /tetcolor-columns /tetcolor/ 308
+  redir /tetcolor-columns/* /tetcolor/ 308
+
+  redir /odin-udar /udar/ 308
+  redir /odin-udar/* /udar/ 308
+
+  # ПЕРИМЕТР лежит в папке stealth, а называют его и так, и MGS.
+  redir /perimetr /stealth/ 308
+  redir /perimetr/* /stealth/ 308
+  redir /mgs /stealth/ 308
+  redir /mgs/* /stealth/ 308
+
+  # «Деревня» живёт по /coin/ — адрес остался от «Орла и решки».
+  redir /derevnya /coin/ 308
+  redir /derevnya/* /coin/ 308
+  redir /orel-reshka /coin/ 308
+  redir /orel-reshka/* /coin/ 308
+
+  redir /bitva-stihiy /stihii/ 308
+  redir /bitva-stihiy/* /stihii/ 308
+
+  redir /neon-claw /claw/ 308
+  redir /neon-claw/* /claw/ 308
+
+  redir /technomagia /technomagic/ 308
+  redir /technomagia/* /technomagic/ 308
+  redir /tehnomagia /technomagic/ 308
+  redir /tehnomagia/* /technomagic/ 308
+
   redir /tetris /tetcolor/ 308
   redir /tetris/* /tetcolor/ 308
   redir /tetcolor /tetcolor/ 308
