@@ -84,7 +84,9 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .reader-bar button:hover { color: var(--ink); border-color: var(--ink-soft); }
 .reader-size { display: inline-flex; gap: 4px; }
 
-.reader-main { max-width: 720px; margin: 0 auto; padding: 0 20px 80px; }
+/* Та же безопасная зона, что и в подвале: без неё плашка с адресом сайта
+   на iPhone закрывает последние строки текста. */
+.reader-main { max-width: 720px; margin: 0 auto; padding: 0 20px calc(80px + env(safe-area-inset-bottom, 0px)); }
 
 /* ── Оглавление ─────────────────────────────────────────────────────── */
 
@@ -353,7 +355,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 
 @media (max-width: 640px) {
   .reader-top { padding: 14px 16px 6px; gap: 10px; }
-  .reader-main { padding: 0 16px 60px; }
+  .reader-main { padding: 0 16px calc(60px + env(safe-area-inset-bottom, 0px)); }
   .story-nav { grid-template-columns: 1fr; text-align: left; }
   .story-nav a:last-child { text-align: left; }
 }

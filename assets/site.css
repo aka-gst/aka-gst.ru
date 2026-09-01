@@ -521,6 +521,36 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 /* Раньше разделители рисовались фоном контейнера в зазорах сетки, и
    неполный последний ряд превращался в светлый пустой блок. Теперь у каждой
    группы своя рамка, а flex растягивает остаток ряда — дыре взяться неоткуда. */
+/* Навыки на телефоне занимали 719 пикселей из 844 — почти экран целиком
+   на одни теги, и это при том, что весь блок «Опыт и навыки» тянется на
+   3.5 экрана. Владелец: «с телефона целую страницу занимает, бессмысленно
+   много… надо сильно короче либо как-то раскрываемее».
+
+   Свёрнутый вид — пять названий групп с числами, две строки. Этого хватает,
+   чтобы понять, чем человек занимается; кому нужны сами теги, тот раскроет.
+   Разметка приходит РАЗВЁРНУТОЙ и сворачивается скриптом: без скриптов и
+   для поисковика видны все 43 тега. */
+.skills dt i {
+  display: none; margin-left: 6px; font-style: normal;
+  font-family: var(--mono); font-size: 11px; color: var(--dim);
+}
+.skills.is-folded { display: flex; flex-wrap: wrap; gap: 8px; }
+.skills.is-folded .skill {
+  flex: 0 0 auto; margin: 0; padding: 0; background: none; border: 0; border-radius: 0;
+}
+.skills.is-folded dd { display: none; }
+.skills.is-folded dt {
+  margin: 0; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px;
+  font-size: 13px; white-space: nowrap;
+}
+.skills.is-folded dt i { display: inline; }
+.skills-more {
+  margin-top: 12px; padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--neon);
+}
+.skills-more:hover, .skills-more:focus-visible { color: var(--ink); }
+
 .skills { display: flex; flex-wrap: wrap; gap: 12px; }
 .skill {
   flex: 1 1 200px; min-width: 0;
@@ -968,9 +998,14 @@ html[data-track] .rec[hidden] { display: none; }
 
 /* ── Подвал ───────────────────────────────────────────────────────── */
 
+/* Нижний отступ считает безопасную зону: на iPhone под страницей висит
+   плашка с адресом сайта, и без этого она съедала последнюю строку — не
+   «почти», а буквально закрывала слова. На машинах без выреза env() даёт
+   ноль, и отступ остаётся прежним. */
 .sitefoot {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  max-width: var(--maxw); margin: 0 auto; padding: 22px 24px 40px;
+  max-width: var(--maxw); margin: 0 auto;
+  padding: 22px 24px calc(40px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line-soft);
   font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim);
 }
@@ -1014,7 +1049,7 @@ html[data-track] .rec[hidden] { display: none; }
      числа без объяснения, что это вообще такое. Лучше показать меньше игр,
      но с подписью, чем больше без неё. */
   .rec-label { display: inline; font-size: 9px; }
-  .sitefoot { padding: 20px 16px 36px; }
+  .sitefoot { padding: 20px 16px calc(36px + env(safe-area-inset-bottom, 0px)); }
   .report-metrics { grid-template-columns: 1fr; }
   .block { margin-top: 48px; }
 }

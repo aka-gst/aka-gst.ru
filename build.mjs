@@ -454,7 +454,7 @@ const skillsBlock = profile.skills
   .map(
     (s) => `
           <div class="skill">
-            <dt>${esc(s.group)}</dt>
+            <dt>${esc(s.group)}<i>${s.items.length}</i></dt>
             <dd>${s.items.map((i) => `<span>${esc(i)}</span>`).join('')}</dd>
           </div>`
   )
