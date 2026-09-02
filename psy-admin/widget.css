@@ -17,8 +17,12 @@
 .psy-widget-close,
 .psy-widget-fullscreen { min-width: var(--psy-widget-touch-target); min-height: var(--psy-widget-touch-target); border: 1px solid #d7cfea; border-radius: 50%; background: #fff; color: #4f3b80; font-size: 1.5rem; line-height: 1; cursor: pointer; }
 .psy-widget-fullscreen { font-size: 1.1rem; }
-.psy-widget[data-fullscreen="true"] .psy-widget-panel { inset: 24px; width: auto; max-width: 960px; max-height: none; margin: auto; border-radius: 22px; }
-.psy-widget[data-fullscreen="true"] .psy-widget-messages { min-height: 360px; }
+.psy-widget[data-fullscreen="true"] .psy-widget-panel { inset: 0; width: auto; max-width: none; max-height: none; margin: 0; border-radius: 0; }
+.psy-widget[data-fullscreen="true"] .psy-widget-messages,
+.psy-widget[data-fullscreen="true"] .psy-widget-suggestions,
+.psy-widget[data-fullscreen="true"] .psy-widget-form,
+.psy-widget[data-fullscreen="true"] .psy-widget-handoff,
+.psy-widget[data-fullscreen="true"] .psy-widget-voice-status { width: min(960px, 100%); margin-left: auto; margin-right: auto; }
 .psy-widget-boundary,
 .psy-widget-source-boundary { margin: 0; padding: 12px 18px; color: #563a30; font-size: .82rem; line-height: 1.42; }
 .psy-widget-boundary { background: #fff3e9; }
