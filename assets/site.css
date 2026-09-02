@@ -1160,16 +1160,18 @@ html[data-track] .rec[hidden] { display: none; }
 
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
-  .site-hero { min-height: 0; margin-top: 18px; padding: 24px 20px 20px; }
+  .site-hero { min-height: 0; margin-top: 18px; padding: 18px; }
   .site-hero::before {
     background:
       linear-gradient(90deg, rgba(11, 12, 13, .96) 0%, rgba(11, 12, 13, .87) 70%, rgba(11, 12, 13, .5)),
       linear-gradient(180deg, transparent 52%, rgba(6, 7, 9, .65));
   }
-  .site-hero h1 { font-size: clamp(29px, 9vw, 39px); }
-  .site-hero-copy > p:last-of-type { font-size: 14px; line-height: 1.45; }
-  .site-hero-routes { gap: 6px; margin-top: 20px; }
-  .site-hero-routes a { flex: 1 1 calc(50% - 6px); min-width: 0; padding: 8px 9px; }
+  .site-hero h1 { font-size: 30px; line-height: 1.06; }
+  .site-hero-copy > p:last-of-type { font-size: 13px; line-height: 1.4; }
+  .site-hero-routes { flex-wrap: nowrap; gap: 5px; margin-top: 16px; }
+  .site-hero-routes a { flex: 1 1 0; min-width: 0; padding: 7px; }
+  .site-hero-routes span { font-size: 8.5px; letter-spacing: .06em; }
+  .site-hero-routes b { font-size: 10.5px; line-height: 1.18; }
   .qa-spotlight .card > .shot img { aspect-ratio: 16 / 8; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   /* На телефоне переключатель — главный элемент шапки: две крупные цели
