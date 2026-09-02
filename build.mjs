@@ -774,7 +774,7 @@ const html = `<!doctype html>
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>${esc(site.title)}</title>
     <link rel="canonical" href="${esc(site.url)}/">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
 
     <!-- Ссылку на портфолио чаще всего открывают из мессенджера или письма:
@@ -880,7 +880,7 @@ const praktikumPage = `<!doctype html>
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>Практикумы — ${esc(site.handle)}</title>
     <link rel="canonical" href="${esc(site.url)}/praktikum/">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
@@ -953,7 +953,7 @@ const enPage = `<!doctype html>
     <link rel="canonical" href="${esc(site.url)}/en/">
     <link rel="alternate" hreflang="ru" href="${esc(site.url)}/">
     <link rel="alternate" hreflang="en" href="${esc(site.url)}/en/">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
@@ -1064,7 +1064,7 @@ const readerHead = (title, description, canonical) => `
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>${esc(title)}</title>
     <link rel="canonical" href="${esc(canonical)}">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
@@ -1428,7 +1428,7 @@ const notFound = `<!doctype html>
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>Страница не найдена — ${esc(site.handle)}</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
@@ -1476,7 +1476,7 @@ const unavailable = `<!doctype html>
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="${esc(site.themeColor)}">
     <title>Сервис недоступен — ${esc(site.handle)}</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
