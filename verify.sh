@@ -181,7 +181,7 @@ echo "         выкладываются своими сессиями, сод�
 
 echo
 echo "== содержимое, а не только код ответа =="
-for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="social"' \
+for needle in 'og:image' '66 проверок прошли' 'data-panel="play"' 'class="social"' \
               'class="shot"' 'assets/shots/allure-gateway.png'; do
   if printf '%s' "$page" | grep -q "$needle"; then say_ok "на странице есть $needle"
   else say_bad "на странице НЕТ $needle"; fi
@@ -194,7 +194,10 @@ echo "== на всё, что лежит на сервере, можно попа
 # NEON CLAW отвечала 200 неделю, а ссылки на неё не было нигде, и узнали мы
 # это от её же сессии, а не от проверки.
 #
-# Сверяются два списка: что отдаёт сервер и куда ведут ссылки со страниц.
+# Сверяются два списка: что отдаёт сервер и куда ведут ссылки с главной ИЛИ
+# из /test/. Тестовый пульт — настоящий путь человека к test-only сборкам,
+# а не исключение из правила достижимости. Поэтому нельзя белым списком
+# назвать leela/zoo/puzzle-quest: исчезнут из /test/ — проверка обязана упасть.
 #
 # У проверки ЕСТЬ ОБА ИСХОДА, и это записано здесь, чтобы следующий не
 # переоткрывал: красный получен переименованием ссылки на claw (проверка
@@ -210,7 +213,10 @@ else
   # Берём и точные ссылки, и вложенные: на практикум ведут /praktikum/llm/
   # и /praktikum/testirovanie/, а самой /praktikum/ в разметке нет.
   # shellcheck disable=SC2086
-  LINKED=$(curl -s $RETRY "$BASE/" | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
+  LINKED=$( {
+    curl -s $RETRY "$BASE/"
+    curl -s $RETRY "$BASE/test/"
+  } | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
   ORPHANS=""
   for d in $SERVER_DIRS; do
     printf '%s\n' "$LINKED" | grep -qx "$d" && continue
