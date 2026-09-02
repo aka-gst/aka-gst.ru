@@ -3,60 +3,32 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Демонстрационная страница безопасного помощника по открытым материалам психологического центра «Орион».">
-    <title>Psy AI Admin — демонстрация</title>
+    <meta name="description" content="Демонстрация виджета безопасного помощника для сайта психологического центра «Орион-С».">
+    <title>Орион-С — психологический центр</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="./styles.css">
-    <script type="module" src="./app.js"></script>
-      <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
+    <script type="module" src="./psy-widget.js"></script>
+    <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
     <link rel="stylesheet" href="/game-menu.css">
 </head>
-  <body>
-    <header class="topbar">
-      <a class="site-home" href="/">← На главную</a>
-      <span>Экспериментальный проект</span>
-    </header>
-
-    <main>
-      <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">PSY AI ADMIN · DEMO</p>
-        <h1 id="page-title">Помощник по открытой информации центра</h1>
-        <p>Спросите о программе, практикуме, мероприятии или консультации. Помощник кратко объяснит главное и покажет нужную страницу центра.</p>
-        <div class="notice"><strong>Это не психолог и не врач.</strong> Помощник не ставит диагнозы, не проводит терапию и не назначает лечение.</div>
+  <body class="orion-demo">
+    <main class="demo-host">
+      <header class="demo-host-hero">
+        <p class="eyebrow">ПСИХОЛОГИЧЕСКИЙ ЦЕНТР · ОРИОН-С</p>
+        <h1>Пространство<br><span>для изменений</span></h1>
+        <p>Консультации, программы, психологический клуб и встречи. Помощник в правом нижнем углу подскажет открытые страницы центра и не заменяет специалиста.</p>
+      </header>
+      <section class="demo-host-card">
+        <p class="eyebrow">НАПРАВЛЕНИЯ</p>
+        <h2>Найти подходящий формат</h2>
+        <p>Посмотрите программы, актуальное расписание или выберите консультацию. Для личных и срочных ситуаций обращайтесь к человеку и официальным контактам центра.</p>
+        <a href="https://orion-center.ru/" target="_blank" rel="noopener noreferrer">Открыть официальный сайт «Орион-С» →</a>
       </section>
-
-      <section class="assistant" aria-label="Диалог с помощником">
-        <div class="examples" id="examples" aria-label="Примеры вопросов">
-          <button type="button" data-question="Что входит в практикум по психосоматике?">Практикум по психосоматике</button>
-          <button type="button" data-question="Расскажите про программу Пилот-волна">Программа «Пилот-волна»</button>
-          <button type="button" data-question="Какие ближайшие мероприятия?">Ближайшие мероприятия</button>
-        </div>
-
-        <div class="controls">
-          <label for="quick-list"><strong>60</strong> готовых вопросов для проверки</label>
-          <select id="quick-list">
-            <option value="">Выберите вопрос…</option>
-          </select>
-          <form id="question-form">
-            <label for="question">Ваш вопрос</label>
-            <div class="input-row">
-              <input id="question" name="question" autocomplete="off" maxlength="500" placeholder="Например, расскажите про конкретный практикум">
-              <button type="submit">Получить ответ</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="messages" id="messages" aria-live="polite">
-          <article class="message answer welcome">
-            <h2>Здравствуйте!</h2>
-            <p>Напишите, что именно вас интересует. Например: «Что входит в практикум по психосоматике?»</p>
-          </article>
-        </div>
+      <section class="demo-host-columns" aria-label="Разделы центра">
+        <article><b>Консультации</b><span>Форматы индивидуальной работы и специалисты центра.</span></article>
+        <article><b>Программы</b><span>Обучение, семинары и практические направления.</span></article>
+        <article><b>Клуб</b><span>Открытые встречи, лекции и регистрация на события.</span></article>
       </section>
     </main>
-
-    <footer>
-      <p>Независимая демонстрация на основе открытых страниц. Не является официальным сервисом центра «Орион».</p>
-    </footer>
   </body>
 </html>
