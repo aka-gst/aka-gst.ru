@@ -12,6 +12,7 @@ const read = (name) => JSON.parse(readFileSync(join(root, 'data', name), 'utf8')
 const site = read('site.json');
 const db = read('projects.json');
 const qa = read('qa-metrics.json');
+const put = read('put.json');
 
 // Версия ассета — от его содержимого. Раньше в ссылке стояло ?v=1 вручную:
 // Caddy отдаёт /assets/* с кэшем на неделю, поэтому вернувшийся посетитель
@@ -1476,6 +1477,83 @@ ${readerSide(st.slug)}
 
 console.log(`  рассказы: ${storyList.length} страниц + оглавление`);
 
+// ── «Путь» ──────────────────────────────────────────────────────────
+// Обе формы страницы используют один put.json. Поэтому комикс не получает
+// свою версию биографии и не начинает незаметно спорить с документальной.
+const putAsset = (relative) => `/assets/${relative}?v=${assetVersion(`assets/${relative}`)}`;
+const putHead = (title, description, comic) => `
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0a0b0d">
+    <meta name="description" content="${esc(description)}">
+    <link rel="canonical" href="${esc(site.url)}${comic ? '/put/comic/' : '/put/'}">
+    <title>${esc(title)} — ${esc(site.handle)}</title>
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="/assets/put.css?v=${assetVersion('assets/put.css')}">
+    ${comic ? `<link rel="stylesheet" href="/assets/put-comic.css?v=${assetVersion('assets/put-comic.css')}">` : ''}
+    <script defer src="/assets/put.js?v=${assetVersion('assets/put.js')}"></script>
+  </head>`;
+
+const putChapter = (chapter, { comic = false } = {}) => `
+      <article class="put-chapter" id="${esc(chapter.id)}" data-put-chapter="${esc(chapter.id)}" tabindex="-1">
+        <div class="put-chapter-head">
+          <p class="put-number">${esc(chapter.number)}</p>
+          <h2>${esc(chapter.title)}</h2>
+          <p class="put-lead">${esc(chapter.lead)}</p>
+          <blockquote class="put-quote">«${esc(chapter.quote)}»<cite>${esc(chapter.quoteSource)}</cite></blockquote>
+        </div>
+        <div>
+          <dl class="put-facts">
+            <div class="put-fact"><dt>Хотелось</dt><dd>${esc(chapter.desire)}</dd></div>
+            <div class="put-fact"><dt>Решение</dt><dd>${esc(chapter.decision)}</dd></div>
+            <div class="put-fact"><dt>Нашлось</dt><dd>${esc(chapter.discovery)}</dd></div>
+          </dl>
+          ${
+            chapter.image
+              ? `<figure class="put-proof"><img src="${putAsset(comic && chapter.comicImage ? chapter.comicImage : chapter.image)}" alt="" loading="lazy" decoding="async"><figcaption><p class="put-proof-kind">${esc(chapter.proofKind)}</p><p class="put-proof-label">${esc(chapter.proof)}</p></figcaption></figure>`
+              : ''
+          }
+          ${chapter.dharma ? `<p class="put-dharma"><b>Production-процесс Dharma.</b> ${esc(chapter.dharma)}</p>` : ''}
+          <details class="put-details"><summary>Как это устроено</summary><p>Факты обеих версий страницы берутся из одного источника. Технические детали спрятаны здесь, чтобы рассказ не становился стеной текста.</p></details>
+        </div>
+      </article>`;
+
+const putPage = ({ comic = false } = {}) => {
+  const mode = comic ? 'Комиксная версия' : 'Документальная версия';
+  const otherHref = comic ? '/put/' : '/put/comic/';
+  const otherLabel = comic ? 'Документальная версия' : 'Комикс-версия';
+  const heroImage = comic ? 'put/put-comic-team-pilot.webp' : put.hero.image;
+  return `<!doctype html>
+<html lang="ru">
+${putHead(`${put.title}: ${mode}`, put.subtitle, comic)}
+  <body class="put-page${comic ? ' put-comic' : ''}">
+    <a class="put-skip" href="#первые-проекты">К истории</a>
+    <header class="put-topbar"><div class="put-shell"><a class="put-home" href="/">aka<span>-</span>gst</a><a class="put-mode" href="${otherHref}">${otherLabel} ↗</a></div></header>
+    <main>
+      <section class="put-hero"><div class="put-shell">
+        <div class="put-hero-grid"><div>
+          <p class="put-eyebrow">${esc(comic ? 'aka-gst / комиксная версия' : put.hero.eyebrow)}</p>
+          <h1>${esc(put.title)}</h1>
+          <p class="put-statement">${esc(put.hero.statement)}</p>
+          <nav class="put-hero-nav" aria-label="Путь"><a href="#первые-проекты">Начать путь</a><a href="${otherHref}">${otherLabel}</a></nav>
+        </div><figure class="put-hero-art"><img src="${putAsset(heroImage)}" alt="${esc(put.hero.imageAlt)}" fetchpriority="high" decoding="async"></figure></div>
+      </div></section>
+      <nav class="put-index" aria-label="Главы пути" data-put-index><div class="put-shell"><ol class="put-index-list">${put.chapters
+        .map((chapter) => `<li><a href="#${esc(chapter.id)}"><b>${esc(chapter.number)}</b>${esc(chapter.title)}</a></li>`)
+        .join('')}</ol></div></nav>
+      <section class="put-story"><div class="put-shell">${put.chapters.map((chapter) => putChapter(chapter, { comic })).join('')}<footer class="put-foot"><p>Страница собирается из подтверждённых фактов. Правила Dharma отделены от результатов Сергея; графика помечена как пилот, пока не утверждена.</p></footer></div></section>
+    </main>
+  </body>
+</html>`.replace(/[ \t]+\n/g, '\n');
+};
+
+mkdirSync(join(root, 'put', 'comic'), { recursive: true });
+writeFileSync(join(root, 'put', 'index.html'), putPage());
+writeFileSync(join(root, 'put', 'comic', 'index.html'), putPage({ comic: true }));
+console.log(`  путь: 2 версии, ${put.chapters.length} глав из одного источника`);
+
 // ── Страница 404 ─────────────────────────────────────────────────────
 const notFound = `<!doctype html>
 <html lang="ru" data-track="work">
@@ -1572,6 +1650,8 @@ writeFileSync(join(root, '503.html'), unavailable);
 // ── Карта собственных страниц ────────────────────────────────────────
 const pageUrls = [
   '/',
+  '/put/',
+  '/put/comic/',
   '/praktikum/',
   ...courses.map((p) => p.courseFeed.mount),
   ...db.projects
