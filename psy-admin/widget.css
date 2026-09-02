@@ -23,12 +23,10 @@
 .psy-widget[data-fullscreen="true"] .psy-widget-form,
 .psy-widget[data-fullscreen="true"] .psy-widget-handoff,
 .psy-widget[data-fullscreen="true"] .psy-widget-voice-status { width: min(960px, 100%); margin-left: auto; margin-right: auto; }
-.psy-widget-boundary,
-.psy-widget-source-boundary { margin: 0; padding: 12px 18px; color: #563a30; font-size: .82rem; line-height: 1.42; }
+.psy-widget-boundary { margin: 0; padding: 16px 24px; color: #563a30; font-size: .9rem; line-height: 1.55; }
 .psy-widget-boundary { background: #fff3e9; }
-.psy-widget-source-boundary { border-bottom: 1px solid #eeeaf5; background: #faf8ff; color: #5d526e; }
-.psy-widget-messages { display: grid; gap: 10px; min-height: 126px; padding: 16px; }
-.psy-widget-message { max-width: 92%; margin: 0; padding: 11px 13px; border-radius: 13px; line-height: 1.42; }
+.psy-widget-messages { display: grid; gap: 18px; min-height: 170px; padding: 32px 28px 22px; }
+.psy-widget-message { max-width: 88%; margin: 0; padding: 22px 26px; border-radius: 22px; font-size: 1.12rem; line-height: 1.48; }
 .psy-widget-message b { display: block; margin-bottom: 5px; }
 .psy-widget-message p { margin: 0; }
 .psy-widget-message.assistant { background: #f1edf9; }
@@ -37,8 +35,8 @@
 .psy-widget-links { display: grid; gap: 7px; margin-top: 10px; }
 .psy-widget-links a { color: #4c3682; font-size: .86rem; font-weight: 700; }
 .psy-widget-links .psy-widget-action { display: inline-flex; align-items: center; min-height: 38px; width: fit-content; padding: 0 11px; border-radius: 9px; background: #2d5a4c; color: #fff; text-decoration: none; }
-.psy-widget-suggestions { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 16px 14px; }
-.psy-widget-suggestions button { min-height: var(--psy-widget-touch-target); padding: 8px 10px; border: 1px solid #d3cae8; border-radius: 999px; background: #fff; color: #4b397c; font-size: .84rem; font-weight: 700; cursor: pointer; }
+.psy-widget-suggestions { display: flex; flex-wrap: wrap; gap: 12px; padding: 4px 28px 26px; }
+.psy-widget-suggestions button { min-height: 52px; padding: 10px 18px; border: 1px solid #d3cae8; border-radius: 999px; background: #fff; color: #4b397c; font-size: .84rem; font-weight: 650; cursor: pointer; }
 .psy-widget-form { display: flex; gap: 8px; padding: 14px 16px; }
 .psy-widget-form input { min-width: 0; flex: 1; min-height: var(--psy-widget-touch-target); border: 1px solid #c9c5bc; border-radius: 9px; padding: 10px; background: #fff; color: #292537; }
 .psy-widget-form button,
@@ -58,6 +56,10 @@
   .psy-widget-trigger span:last-child { display: none; }
   .psy-widget-panel { right: 0; bottom: 0; width: 100vw; max-height: min(76vh, 680px); border-radius: 22px 22px 0 0; }
   .psy-widget-fullscreen { display: none; }
+  .psy-widget-boundary { padding: 14px 20px; }
+  .psy-widget-messages { padding: 28px 20px 20px; }
+  .psy-widget-message { max-width: 92%; padding: 20px; }
+  .psy-widget-suggestions { padding: 4px 20px 22px; }
   .psy-widget-form { flex-wrap: wrap; }
   .psy-widget-form input { flex-basis: calc(100% - 52px); }
 }

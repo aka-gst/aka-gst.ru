@@ -1,4 +1,4 @@
-import { answerQuestion } from "./router.js?v=psy-widget-20260902-2";
+import { answerQuestion } from "./router.js?v=psy-widget-20260902-3";
 
 export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoice = false) {
   const presentation = {

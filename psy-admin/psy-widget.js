@@ -1,8 +1,8 @@
-import { createWidgetState, demoHandoffOutcome, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260902-2";
+import { createWidgetState, demoHandoffOutcome, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260902-3";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260902-3", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -19,8 +19,7 @@ mount.innerHTML = `
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
         </div>
       </header>
-      <p class="psy-widget-boundary">Демо не связано с центром, не хранит переписку и не заменяет психолога, врача или экстренную службу.</p>
-      <p class="psy-widget-source-boundary">Ответы ведут только к подтверждённым открытым страницам «Орион-С».</p>
+      <p class="psy-widget-boundary">Демо по открытым страницам центра. Не заменяет специалиста или экстренную помощь.</p>
       <div class="psy-widget-messages" aria-live="polite"></div>
       <div class="psy-widget-suggestions" aria-label="Примеры вопросов">
         <button type="button" data-question="Какие мероприятия ближайшие?">Расписание</button>
@@ -226,5 +225,5 @@ if (!voiceCapabilities.recognitionAvailable) {
   });
 }
 
-appendMessage("assistant", { text: "Здравствуйте. Помогу найти расписание, консультации, программы или ответ о психологическом клубе." });
+appendMessage("assistant", { text: "Здравствуйте. Помогу с расписанием, консультациями, программами и психологическим клубом." });
 render();
