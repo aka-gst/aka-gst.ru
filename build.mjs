@@ -241,6 +241,20 @@ const imageSize = (relative) => {
   if (bytes.readUInt32BE(0) === 0x89504e47) {
     return { w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20) };
   }
+  if (bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP') {
+    const kind = bytes.toString('ascii', 12, 16);
+    const data = 20;
+    if (kind === 'VP8 ') {
+      return { w: bytes.readUInt16LE(data + 6) & 0x3fff, h: bytes.readUInt16LE(data + 8) & 0x3fff };
+    }
+    if (kind === 'VP8L') {
+      const bits = bytes.readUInt32LE(data + 1);
+      return { w: (bits & 0x3fff) + 1, h: ((bits >> 14) & 0x3fff) + 1 };
+    }
+    if (kind === 'VP8X') {
+      return { w: bytes.readUIntLE(data + 4, 3) + 1, h: bytes.readUIntLE(data + 7, 3) + 1 };
+    }
+  }
   let i = 2;
   while (i + 9 < bytes.length) {
     if (bytes[i] !== 0xff) { i += 1; continue; }
@@ -1481,6 +1495,10 @@ console.log(`  рассказы: ${storyList.length} страниц + оглав
 // Обе формы страницы используют один put.json. Поэтому комикс не получает
 // свою версию биографии и не начинает незаметно спорить с документальной.
 const putAsset = (relative) => `/assets/${relative}?v=${assetVersion(`assets/${relative}`)}`;
+const putImage = (relative, { alt = '', lazy = false, priority = 'auto' } = {}) => {
+  const { w, h } = imageSize(`assets/${relative}`);
+  return `<img src="${putAsset(relative)}" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async"${lazy ? ' loading="lazy"' : ''}${priority === 'high' ? ' fetchpriority="high"' : ''}>`;
+};
 const putHead = (title, description, comic) => `
   <head>
     <meta charset="utf-8">
@@ -1512,7 +1530,7 @@ const putChapter = (chapter, { comic = false } = {}) => `
           </dl>
           ${
             chapter.image
-              ? `<figure class="put-proof"><img src="${putAsset(comic && chapter.comicImage ? chapter.comicImage : chapter.image)}" alt="" loading="lazy" decoding="async"><figcaption><p class="put-proof-kind">${esc(chapter.proofKind)}</p><p class="put-proof-label">${esc(chapter.proof)}</p></figcaption></figure>`
+              ? `<figure class="put-proof">${putImage(comic && chapter.comicImage ? chapter.comicImage : chapter.image, { lazy: true })}<figcaption><p class="put-proof-kind">${esc(chapter.proofKind)}</p><p class="put-proof-label">${esc(chapter.proof)}</p></figcaption></figure>`
               : ''
           }
           ${chapter.dharma ? `<p class="put-dharma"><b>Production-процесс Dharma.</b> ${esc(chapter.dharma)}</p>` : ''}
@@ -1538,7 +1556,7 @@ ${putHead(`${put.title}: ${mode}`, put.subtitle, comic)}
           <h1>${esc(put.title)}</h1>
           <p class="put-statement">${esc(put.hero.statement)}</p>
           <nav class="put-hero-nav" aria-label="Путь"><a href="#первые-проекты">Начать путь</a><a href="${otherHref}">${otherLabel}</a></nav>
-        </div><figure class="put-hero-art"><img src="${putAsset(heroImage)}" alt="${esc(put.hero.imageAlt)}" fetchpriority="high" decoding="async"></figure></div>
+        </div><figure class="put-hero-art">${putImage(heroImage, { alt: put.hero.imageAlt, priority: 'high' })}</figure></div>
       </div></section>
       <nav class="put-index" aria-label="Главы пути" data-put-index><div class="put-shell"><ol class="put-index-list">${put.chapters
         .map((chapter) => `<li><a href="#${esc(chapter.id)}"><b>${esc(chapter.number)}</b>${esc(chapter.title)}</a></li>`)

@@ -28,6 +28,14 @@ for (const page of ['put/index.html', 'put/comic/index.html']) {
     assert.match(html, /data-put-chapter/);
     assert.doesNotMatch(html, /Production-процесс Dharma\.<\/b>\s*Production-процесс Dharma/i);
     assert.doesNotMatch(html, /\n[ \t]+\n/, 'сборщик оставил пробелы в пустых строках');
+
+    const proofImages = [...html.matchAll(/<figure class="put-proof"><img\b([^>]+)>/g)];
+    assert.equal(proofImages.length, 7, 'у каждой главы есть один снимок');
+    for (const [, attrs] of proofImages) {
+      assert.match(attrs, /\bwidth="\d+"/, 'снимок должен заранее резервировать ширину');
+      assert.match(attrs, /\bheight="\d+"/, 'снимок должен заранее резервировать высоту');
+    }
+    assert.match(html, /<figure class="put-hero-art"><img\b[^>]*\bwidth="\d+"[^>]*\bheight="\d+"/, 'обложка должна заранее резервировать место');
   });
 }
 
