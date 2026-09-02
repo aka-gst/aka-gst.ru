@@ -166,10 +166,10 @@ echo "== содержимое сайта =="
 if $go; then
   # shellcheck disable=SC2086
   # shellcheck disable=SC2086
-  rsync -avz --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
+  rsync -avz --omit-dir-times --exclude='.DS_Store' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
 else
   # shellcheck disable=SC2086
-  rsync -avzn --itemize-changes --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
+  rsync -avzn --omit-dir-times --itemize-changes --exclude='.DS_Store' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
   echo
   echo "  (черновой прогон; повторите с --go)"
 fi
