@@ -618,7 +618,7 @@ const workLead = `
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
               <span>66 тестов · Allure ↗</span>
             </a>
-          </div>
+          </article>
           <a class="work-quest" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>
             <div class="work-quest-shot">
               ${leadImage(qaQuest.shots[0].file, qaQuest.shots[0].alt)}
