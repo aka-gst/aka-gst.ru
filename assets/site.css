@@ -202,7 +202,7 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 .work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
 .work-quest { display: grid; min-width: 0; grid-template-rows: auto 1fr; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); color: var(--text); text-decoration: none; }
 .work-quest-shot { overflow: hidden; border-bottom: 1px solid var(--line); }
-.work-quest-shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: center; transition: transform .35s ease, filter .35s ease; }
+.work-quest-shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: center; transition: transform .35s ease, filter .35s ease; }
 .work-quest-copy { display: grid; align-content: start; gap: 9px; padding: 18px; }
 .work-quest h2 { margin: 0; font-size: 25px; line-height: 1; }
 .work-quest p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
