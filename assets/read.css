@@ -30,7 +30,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
    берутся из грунта раздела: чёрная полоса над бумажным фоном выглядела бы
    заплаткой с другого сайта — а смысл шапки ровно обратный. */
 .reader .topbar {
-  max-width: 720px; padding: 16px 20px 0;
+  max-width: var(--maxw); padding: 16px 20px 0;
   background: transparent; backdrop-filter: none; border: 0;
   position: static;
 }
@@ -69,7 +69,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 
 .reader-top {
   display: flex; align-items: center; gap: 14px;
-  max-width: 720px; margin: 0 auto; padding: 20px 20px 8px;
+  max-width: var(--maxw); margin: 0 auto; padding: 20px 20px 8px;
 }
 .reader-top .site-home { color: var(--ink-soft); border-color: currentColor; }
 .reader-top .site-home:hover { color: var(--ink); }
@@ -87,6 +87,9 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 /* Та же безопасная зона, что и в подвале: без неё плашка с адресом сайта
    на iPhone закрывает последние строки текста. */
 .reader-main { max-width: 720px; margin: 0 auto; padding: 0 20px calc(80px + env(safe-area-inset-bottom, 0px)); }
+/* Оглавление — часть сайта, а не узкая колонка книги. Сам текст рассказа
+   остаётся комфортной строкой в .reader-main--wide / .story-body. */
+.reader-main:not(.reader-main--wide) { max-width: var(--maxw); }
 
 /* ── Оглавление ─────────────────────────────────────────────────────── */
 
@@ -276,7 +279,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
     color: var(--ink); background: var(--ground-soft);
     box-shadow: inset 2px 0 0 var(--accent-read);
   }
-  .reader .topbar, .reader-top { max-width: 1060px; }
+  .reader .topbar, .reader-top { max-width: var(--maxw); }
 }
 
 .book-list { list-style: none; margin: 0; padding: 0; counter-reset: story; }

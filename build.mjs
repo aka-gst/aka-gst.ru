@@ -477,7 +477,7 @@ const skillsBlock = profile.skills
   .map(
     (s) => `
           <div class="skill">
-            <dt>${esc(s.group)}<i>${s.items.length}</i></dt>
+            <dt>${esc(s.group)}</dt>
             <dd>${s.items.map((i) => `<span>${esc(i)}</span>`).join('')}</dd>
           </div>`
   )
@@ -490,7 +490,7 @@ const skillsBlock = profile.skills
 // правим собранный index.html: он собирается заново, и ручная правка в нём
 // живёт до первой сборки — так уже потерялась одна.
 const строкаОпыта = (e) => `
-          <article class="job">
+          <article class="job${e.shot ? ' job--with-shot' : ''}">
             <p class="job-period">${esc(e.period)}${
               // Собственный проект помечается прямо в ленте: без пометки он
               // читается как место работы, а это единственная строчка в
@@ -592,6 +592,52 @@ ${practicumProjects.map((project, index) => practicumCard(project, index === 0))
         </div>
       </section>`;
 
+// Главная витрина работы — не отчёт на высоту экрана, а три связанных
+// доказательства: шлюз для локальной модели, продукт с агентами и работа с
+// настоящими файлами. Снимки стоят рядом, чтобы смысл не распадался на
+// «текст слева / декоративная картинка справа».
+const leadImage = (file, alt) => {
+  const { w, h } = imageSize(`assets/shots/${file}`);
+  return `<img src="${shotSrc(file)}" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async">`;
+};
+
+const workLead = `
+      <section class="work-lead" aria-labelledby="work-lead-title">
+        <div class="work-lead-intro">
+          <p class="kicker">Главное / 2026</p>
+          <h1 id="work-lead-title">Пускаю ИИ в продукт — и ставлю ему границы.</h1>
+          <p>Local Agent Gateway соединяет рабочую программу с локальной моделью. В Dharma та же дисциплина держит агентов-продавцов: они ведут к заказу, но не выдумывают цену, не берут лишнее и не сливают данные.</p>
+          <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно — не прячется за зелёным CI.</p>
+        </div>
+        <div class="work-lead-scenes">
+          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
+            ${leadImage('gateway-console.jpg', 'Консоль Local Agent Gateway с локальной моделью')}
+            <span><b>Local Agent Gateway</b><small>локальная LLM и проверяемые ответы</small></span>
+          </a>
+          <a class="work-scene" href="https://dharma-ai.io" target="_blank" rel="noopener">
+            ${leadImage('anigma.jpg', 'Интерфейс Dharma AI с агентами-продавцами')}
+            <span><b>Dharma AI</b><small>агенты доводят покупателя до заказа</small></span>
+          </a>
+          <a class="work-scene" href="/photodata/">
+            ${leadImage('photodata.jpg', 'Интерфейс ФотоДата для изменения даты снимка')}
+            <span><b>ФотоДата</b><small>дата съёмки меняется в EXIF</small></span>
+          </a>
+        </div>
+      </section>`;
+
+// На главной показываем один вход в обучение. Второй маршрут остаётся
+// отдельной страницей, а не растягивает витрину двумя почти одинаковыми
+// карточками.
+const practicumTeaser = `
+      <section class="block practicum-teaser" aria-labelledby="practicum-title">
+        <div class="block-head">
+          <p class="kicker">Практикум</p>
+          <h2 id="practicum-title">Проверка локального AI-агента</h2>
+          <p>Один маршрут с заданиями и экспериментами. Второй практикум — уже внутри, когда нужен следующий уровень.</p>
+        </div>
+${practicumCard(practicumProjects[0], true).trim()}
+      </section>`;
+
 // Первый экран не повторяет ни отчёт, ни карточки ниже: за несколько секунд
 // он объясняет, что именно лежит на сайте, и даёт три настоящих пути дальше.
 // Изображение — не логотип: у разделов уже есть три чётких SVG-знака в шапке,
@@ -631,25 +677,25 @@ const partnerForm = `
 
 // ── Панель «Работа» ──────────────────────────────────────────────────
 const workPanel = `
-      ${reportScreen}
+      ${workLead}
 
-      <section class="block block--lead qa-spotlight" aria-labelledby="qa-quest-title">
+      <section class="block work-minis" aria-labelledby="learning-title">
         <div class="block-head">
-          <p class="kicker">02</p>
-          <h2 id="qa-quest-title">QA Quest</h2>
-          <p>Учебная игра, где настоящий Python двигает историю и отвечает живой стенд.</p>
+          <p class="kicker">Учусь и проверяю на живых вещах</p>
+          <h2 id="learning-title">Не презентации — рабочие куски</h2>
+          <p>QA Quest — небольшая учебная игра с живым Python-стендом. Psy Admin пока остаётся отдельным продуктом, а не вторым главным экраном.</p>
         </div>
         <div class="grid">${card(qaQuest)}
         </div>
       </section>
 
-${practicumSwitch.trim()}
+${practicumTeaser.trim()}
 
       <section class="block" aria-labelledby="products-title">
         <div class="block-head">
-          <p class="kicker">04</p>
-          <h2 id="products-title">Продукты с заказчиком</h2>
-          <p>Работающие демо, где требования, границы безопасности и проверки описаны заранее.</p>
+          <p class="kicker">С заказчиками</p>
+          <h2 id="products-title">Продукты, которые остаются у людей</h2>
+          <p>Автоматизация, в которой виден путь: что делает система, где её границы и чем подтверждён результат.</p>
         </div>
         <div class="grid">${byGroup('client-products').map(card).join('')}
         </div>
@@ -657,11 +703,11 @@ ${practicumSwitch.trim()}
 
       <section class="block" aria-labelledby="own-products-title">
         <div class="block-head">
-          <p class="kicker">05</p>
+          <p class="kicker">Свои</p>
           <h2 id="own-products-title">Свои продукты</h2>
           <p>Сделано без заказчика: задача, сроки и мера готовности собственные.</p>
         </div>
-        <div class="grid">${byGroup('own-products').map(card).join('')}
+        <div class="grid">${byGroup('own-products').filter((project) => project.id !== 'buddhist-diary-bot').map(card).join('')}
         </div>
       </section>
 
@@ -684,11 +730,14 @@ ${practicumSwitch.trim()}
 
       <section class="block" aria-labelledby="all-work-title">
         <div class="block-head">
-          <p class="kicker">07</p>
+          <p class="kicker">Архив</p>
           <h2 id="all-work-title">Все проекты</h2>
         </div>
-        <ul class="list">${allWork.map(listRow).join('')}
-        </ul>
+        <details class="project-index">
+          <summary>Показать все ${allWork.length} проектов <b>↓</b></summary>
+          <ul class="list">${allWork.map(listRow).join('')}
+          </ul>
+        </details>
       </section>
 
       <section class="block contact" aria-labelledby="contact-title" id="contact">
@@ -853,7 +902,7 @@ ${playBar}
 
         <p class="story-cross story-cross--code">
           <a href="https://github.com/aka-gst?tab=repositories" target="_blank" rel="noopener"
-             data-umami-event="code-open" data-umami-event-from="games">Код всех одиннадцати игр открыт — заходите и берите <b>↗</b></a>
+             data-umami-event="code-open" data-umami-event-from="games">Код всех игр открыт <b>↗</b></a>
         </p>`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
@@ -918,7 +967,7 @@ ${socialLinks('header')}
       </nav>
     </header>
 
-    <main id="main">${siteHero}
+    <main id="main">
       <div class="panel" data-panel="work">${workPanel}
       </div>
       <div class="panel" data-panel="play">${playPanel}

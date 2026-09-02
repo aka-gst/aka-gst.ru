@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=eb6ae635">
+    <link rel="stylesheet" href="/assets/site.css?v=ce900592">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -42,7 +42,7 @@
   <body>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" data-brand-mark data-mark-work="/assets/mark-work.svg?v=0e673dab" data-mark-play="/assets/mark-games.svg?v=ac8d37e9" src="/assets/mark-work.svg?v=0e673dab" alt="" width="64" height="64" decoding="async">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" data-brand-mark data-mark-work="/assets/mark-work.svg?v=1f6b8c1f" data-mark-play="/assets/mark-games.svg?v=2460e1b9" src="/assets/mark-work.svg?v=1f6b8c1f" alt="" width="64" height="64" decoding="async">aka<span>-</span>gst</a>
 
       <div class="rec" aria-label="Рекорды: сегодня и за неделю" hidden>
         <span class="rec-label">REC</span>
@@ -78,116 +78,36 @@
     </header>
 
     <main id="main">
-      <section class="site-hero" aria-labelledby="site-hero-title">
-        <img class="site-hero-art" src="/assets/hero-signal.jpg?v=4493a8ab" alt="" width="1672" height="941" fetchpriority="high" decoding="async">
-        <div class="site-hero-copy">
-          <p class="kicker">aka-gst / 2026</p>
-          <h1 id="site-hero-title">ИИ-инструменты, игры и рассказы — сделанные до результата.</h1>
-          <p>Здесь можно открыть работающие вещи, сыграть в браузере и прочитать тексты Сергея Гостова.</p>
-          <nav class="site-hero-routes" aria-label="Что есть на сайте">
-            <a href="#work"><span>Работа</span><b>ИИ и проверка</b></a>
-            <a href="#games"><span>Игры</span><b>прямо в браузере</b></a>
-            <a href="/rasskazy/"><span>Рассказы</span><b>23 текста</b></a>
-          </nav>
-        </div>
-      </section>
       <div class="panel" data-panel="work">
       
-      <section class="report" aria-labelledby="flagship-title">
-        <div class="report-brief">
-          <p class="kicker">AI/LLM QA · <span data-metric-version>v0.3.0</span></p>
-          <h1 id="flagship-title">Локальный ИИ без передачи данных</h1>
-          <p class="report-name">Local Agent Gateway</p>
-          <div class="report-benefits">
-            <p>Рабочая программа получает помощь ИИ прямо на вашем компьютере.</p>
-            <p>Данные и секреты не уходят наружу.</p>
-          </div>
-          <p class="report-live"><b>Живой прогон LLM — отдельное измерение.</b> Его не подменяют зелёным тестом и не запускают на каждом push.</p>
+      <section class="work-lead" aria-labelledby="work-lead-title">
+        <div class="work-lead-intro">
+          <p class="kicker">Главное / 2026</p>
+          <h1 id="work-lead-title">Пускаю ИИ в продукт — и ставлю ему границы.</h1>
+          <p>Local Agent Gateway соединяет рабочую программу с локальной моделью. В Dharma та же дисциплина держит агентов-продавцов: они ведут к заказу, но не выдумывают цену, не берут лишнее и не сливают данные.</p>
+          <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно — не прячется за зелёным CI.</p>
         </div>
-
-        <details class="report-more">
-          <summary>Подробнее для специалистов <span>тесты, покрытие, evaluation и доказательства</span></summary>
-          <div class="report-more-content">
-            <div class="report-bar">
-              <span class="dot" data-status="passed" aria-hidden="true"></span>
-              <code>main @ 8c0115b · uv run pytest --cov</code>
-              <span class="verdict" data-metric-verdict data-status="passed">66 passed · 0 failed · 1948 ms</span>
-            </div>
-
-            <div class="report-grid">
-              <div class="report-lede">
-                <p class="detail-head">Как устроено</p>
-                <p class="summary">FastAPI-прокси с bearer-авторизацией, allowlist моделей и бэкендов, SSE-стримингом, таймаутами и защитой от утечки секретов в логи. Вокруг него собран слоёный QA-контур: контрактные и негативные API-тесты, реальный Chromium E2E по QA-консоли, детерминированные и live LLM-evaluation прогоны с метриками качества, стабильности, latency, токенов и стоимости, и prompt-injection canary.</p>
-                <ul class="stack"><li>Python 3.11+</li><li>FastAPI</li><li>pytest</li><li>httpx</li><li>Playwright</li><li>Allure</li><li>GitHub Actions</li><li>Docker Compose</li><li>Ollama</li><li>OpenRouter</li></ul>
-                <p class="card-links">
-                  <a class="link link-repo" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Исходный код <b>↗</b></a>
-                  <a class="link link-report" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">Allure-отчёт <b>↗</b></a>
-                  <a class="link link-run" data-metric-run href="https://github.com/aka-gst/local-agent-gateway/actions/runs/33139799019" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>
-                </p>
-              </div>
-              <div class="report-metrics" aria-label="Результаты последнего прогона">
-            <div class="metric" data-metric="tests" data-status="passed">
-              <b class="value">66</b>
-              <span class="label">Автотестов</span>
-              <span class="note">Gateway API 28 · LLM evaluation 33 · End-to-end 5</span>
-            </div>
-            <div class="metric" data-metric="coverage" data-status="passed">
-              <b class="value">99%</b>
-              <span class="label">Покрытие кода</span>
-              <span class="note">порог CI — 90%</span>
-            </div>
-            <div class="metric" data-metric="pass_rate" data-status="passed">
-              <b class="value">100%</b>
-              <span class="label">Pass rate</span>
-              <span class="note">66 из 66 в последнем прогоне</span>
-            </div>
-            <div class="metric" data-metric="median_latency" data-status="passed">
-              <b class="value">3483 ms</b>
-              <span class="label">Median latency</span>
-              <span class="note">qwen3:8b, локальный прогон, p95 — 14912 мс</span>
-            </div></div>
-            </div>
-
-            <div class="report-detail">
-              <div class="detail">
-                <p class="detail-head">Слои тестов</p>
-                <ul class="suites"><li data-status="passed">Gateway API <b>28/28</b></li><li data-status="passed">LLM evaluation <b>33/33</b></li><li data-status="passed">End-to-end <b>5/5</b></li></ul>
-              </div>
-              <div class="detail">
-                <p class="detail-head">Покрытие</p>
-                <p class="detail-body"><b>98.71%</b> при пороге CI 90% · 458 из 464 строк, не покрыто 6.</p>
-              </div>
-              <div class="detail">
-                <p class="detail-head">LLM-evaluation</p>
-                <p class="detail-body">Детерминированный набор «gateway-support-responses»: 3/3, mean score 0.855. Живой прогон qwen3:8b через ollama: 9/9, mean 0.755, median 3 483 мс, p95 14 912 мс, stability 1.000.</p>
-              </div>
-            </div>
-
-        <div class="report-proof">
-            <figure class="shot">
-              <img src="/assets/shots/allure-gateway.png?v=ff284351" alt="Allure-отчёт прогона Local Agent Gateway: 66 тест-кейсов, 100% пройдено, слои tests и tests.e2e"
-                width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low">
-              <figcaption>Тот же прогон в Allure: 66 кейсов, 100%, разбивка по слоям и рост набора.</figcaption>
-            </figure>
-            <figure class="shot">
-              <img src="/assets/shots/gateway-console.jpg?v=3d8e9ce2" alt="Gateway QA Console: поля bearer-токена, разрешённой модели и промпта, кнопки отправки запроса и запуска evaluation"
-                width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low">
-              <figcaption>QA-консоль: тот же контур руками — токен, allowlist моделей, SSE, evaluation.</figcaption>
-            </figure>
+        <div class="work-lead-scenes">
+          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
+            <img src="/assets/shots/gateway-console.jpg?v=3d8e9ce2" alt="Консоль Local Agent Gateway с локальной моделью" width="1200" height="750" decoding="async">
+            <span><b>Local Agent Gateway</b><small>локальная LLM и проверяемые ответы</small></span>
+          </a>
+          <a class="work-scene" href="https://dharma-ai.io" target="_blank" rel="noopener">
+            <img src="/assets/shots/anigma.jpg?v=828230f1" alt="Интерфейс Dharma AI с агентами-продавцами" width="1200" height="750" decoding="async">
+            <span><b>Dharma AI</b><small>агенты доводят покупателя до заказа</small></span>
+          </a>
+          <a class="work-scene" href="/photodata/">
+            <img src="/assets/shots/photodata.jpg?v=23d2c3a0" alt="Интерфейс ФотоДата для изменения даты снимка" width="602" height="332" decoding="async">
+            <span><b>ФотоДата</b><small>дата съёмки меняется в EXIF</small></span>
+          </a>
         </div>
-            <p class="report-context">
-              <span><b>Живой прогон</b>: записан один раз 2026-08-15 на машине Apple Silicon M5, 24 GB unified memory (macOS, Ollama 0.32.12, Q4_K_M, 8.2B), профиль 3×3, temperature 0, seed 42. Это не проверяется каждым push — в отличие от тестов и покрытия.</span>
-              <span>Прогон от <time data-metric-updated datetime="2026-08-28T03:45:44Z">2026-08-28T03:45:44Z</time></span>
-            </p>
-          </div>
-        </details>
       </section>
 
-      <section class="block block--lead qa-spotlight" aria-labelledby="qa-quest-title">
+      <section class="block work-minis" aria-labelledby="learning-title">
         <div class="block-head">
-          <p class="kicker">02</p>
-          <h2 id="qa-quest-title">QA Quest</h2>
-          <p>Учебная игра, где настоящий Python двигает историю и отвечает живой стенд.</p>
+          <p class="kicker">Учусь и проверяю на живых вещах</p>
+          <h2 id="learning-title">Не презентации — рабочие куски</h2>
+          <p>QA Quest — небольшая учебная игра с живым Python-стендом. Psy Admin пока остаётся отдельным продуктом, а не вторым главным экраном.</p>
         </div>
         <div class="grid">
         <article class="card" id="p-qa-quest">
@@ -224,22 +144,13 @@
         </div>
       </section>
 
-<section class="block practicum-switch" aria-labelledby="practicums-title" data-practicum-switch>
+<section class="block practicum-teaser" aria-labelledby="practicum-title">
         <div class="block-head">
-          <p class="kicker">03</p>
-          <h2 id="practicums-title">Практикумы</h2>
-          <p>Два самостоятельных маршрута: сначала выбери, что хочешь научиться делать.</p>
+          <p class="kicker">Практикум</p>
+          <h2 id="practicum-title">Проверка локального AI-агента</h2>
+          <p>Один маршрут с заданиями и экспериментами. Второй практикум — уже внутри, когда нужен следующий уровень.</p>
         </div>
-        <div class="practicum-tabs" role="tablist" aria-label="Практикумы">
-          <button type="button" role="tab" id="practicum-tab-praktikum-testing"
-                  data-practicum-to="praktikum-testing" aria-controls="practicum-panel-praktikum-testing"
-                  aria-selected="true">тестирование локального AI-агента</button><button type="button" role="tab" id="practicum-tab-ai-agent-service-lab"
-                  data-practicum-to="ai-agent-service-lab" aria-controls="practicum-panel-ai-agent-service-lab"
-                  aria-selected="false">настройка LLM и агентов</button>
-        </div>
-        <div class="practicum-panels">
-
-          <article class="practicum-card" id="practicum-panel-praktikum-testing" role="tabpanel"
+<article class="practicum-card" id="practicum-panel-praktikum-testing" role="tabpanel"
             aria-labelledby="practicum-tab-praktikum-testing" data-practicum-panel="praktikum-testing">
             <div class="card-head">
               <p class="kicker">Практикум · веб + PDF</p>
@@ -250,25 +161,13 @@
             <ul class="chips"><li><b>19</b> <span>разделов</span></li><li><b>16</b> <span>экспериментов</span></li><li><b>~82 мин</b> <span>чтения</span></li></ul>
             <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
           </article>
-          <article class="practicum-card" id="practicum-panel-ai-agent-service-lab" role="tabpanel"
-            aria-labelledby="practicum-tab-ai-agent-service-lab" data-practicum-panel="ai-agent-service-lab" hidden>
-            <div class="card-head">
-              <p class="kicker">Практикум · веб + сервис</p>
-              <span class="status status-live">открыт</span>
-            </div>
-            <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
-            <p class="tagline">Разбираю на живом примере, как устроен ИИ-агент: чем он пользуется, что помнит и как проверить, что он не выдумывает.</p>
-            <ul class="chips"><li><b>16</b> <span>разделов</span></li><li><b>10</b> <span>лабораторных</span></li><li><b>~51 мин</b> <span>чтения</span></li></ul><ul class="chips"><li><b>76</b> <span>автотестов</span></li><li><b>6/6</b> <span>evaluation</span></li><li><b>100%</b> <span>retrieval hit</span></li></ul>
-            <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
-          </article>
-        </div>
       </section>
 
       <section class="block" aria-labelledby="products-title">
         <div class="block-head">
-          <p class="kicker">04</p>
-          <h2 id="products-title">Продукты с заказчиком</h2>
-          <p>Работающие демо, где требования, границы безопасности и проверки описаны заранее.</p>
+          <p class="kicker">С заказчиками</p>
+          <h2 id="products-title">Продукты, которые остаются у людей</h2>
+          <p>Автоматизация, в которой виден путь: что делает система, где её границы и чем подтверждён результат.</p>
         </div>
         <div class="grid">
         <article class="card" id="p-dharma-ai">
@@ -374,25 +273,11 @@
 
       <section class="block" aria-labelledby="own-products-title">
         <div class="block-head">
-          <p class="kicker">05</p>
+          <p class="kicker">Свои</p>
           <h2 id="own-products-title">Свои продукты</h2>
           <p>Сделано без заказчика: задача, сроки и мера готовности собственные.</p>
         </div>
         <div class="grid">
-        <article class="card" id="p-buddhist-diary-bot">
-          <div class="card-head">
-            <p class="kicker">Бот · Telegram</p>
-            <span class="card-marks"><span class="status status-live">работает</span></span>
-          </div>
-          <h3><a class="card-title" href="https://t.me/Buddhist_Diary_bot" target="_blank" rel="noopener">Буддийский дневник</a></h3>
-          <p class="tagline">Шесть ежедневных осознанных отметок, личные записи и циклические списки практик.</p>
-          <p class="card-links"><a class="link link-telegram" href="https://t.me/Buddhist_Diary_bot" target="_blank" rel="noopener">Открыть в Telegram <b>↗</b></a></p>
-          <div class="card-more">
-            
-            <p class="summary">Отдельные дневники медитации и йоги с планом на день и на каждый день недели, недублирующиеся напоминания и приватные записи. У каждого пользователя свой seed: шесть обетов стабильны в течение дня и обновляются на следующий.</p>
-            <ul class="stack"><li>Python</li><li>Telegram Bot API</li></ul>
-          </div>
-        </article>
         </div>
       </section>
 
@@ -404,23 +289,23 @@
         </div>
         <dl class="skills">
           <div class="skill">
-            <dt>QA<i>9</i></dt>
+            <dt>QA</dt>
             <dd><span>функциональное</span><span>регрессионное</span><span>smoke</span><span>API</span><span>exploratory</span><span>тест-кейсы</span><span>чек-листы</span><span>баг-репорты</span><span>acceptance criteria</span></dd>
           </div>
           <div class="skill">
-            <dt>AI/LLM QA<i>6</i></dt>
+            <dt>AI/LLM QA</dt>
             <dd><span>оценка точности ответов</span><span>поиск галлюцинаций</span><span>пограничные сценарии</span><span>голосовой интерфейс</span><span>текстовый интерфейс</span><span>сравнение моделей</span></dd>
           </div>
           <div class="skill">
-            <dt>Автоматизация<i>11</i></dt>
+            <dt>Автоматизация</dt>
             <dd><span>Python</span><span>pytest</span><span>httpx</span><span>FastAPI TestClient</span><span>Playwright</span><span>JavaScript</span><span>Node.js test</span><span>REST API</span><span>GitHub Actions</span><span>Docker/Compose</span><span>Allure</span></dd>
           </div>
           <div class="skill">
-            <dt>LLM evaluation<i>11</i></dt>
+            <dt>LLM evaluation</dt>
             <dd><span>Ollama</span><span>OpenRouter</span><span>детерминированные</span><span>live-прогоны</span><span>quality</span><span>stability</span><span>latency</span><span>tokens</span><span>cost</span><span>prompt-injection canary</span><span>redaction</span></dd>
           </div>
           <div class="skill">
-            <dt>Инструменты<i>6</i></dt>
+            <dt>Инструменты</dt>
             <dd><span>Git</span><span>CLI</span><span>PowerShell</span><span>uv</span><span>Codex</span><span>базовый SQL</span></dd>
           </div>
         </dl>
@@ -454,7 +339,7 @@
             <h3>Новосибирский государственный технический университет, АВТФ</h3>
             <p class="job-role">Прикладная математика и информатика · квалификация «программист»</p>
           </article>
-          <article class="job">
+          <article class="job job--with-shot">
             <p class="job-period">январь 2008</p>
             <h3>PlayStation Magazine Russia</h3>
             <p class="job-role">Первая публикация · читательская рецензия</p>
@@ -471,10 +356,12 @@
 
       <section class="block" aria-labelledby="all-work-title">
         <div class="block-head">
-          <p class="kicker">07</p>
+          <p class="kicker">Архив</p>
           <h2 id="all-work-title">Все проекты</h2>
         </div>
-        <ul class="list">
+        <details class="project-index">
+          <summary>Показать все 9 проектов <b>↓</b></summary>
+          <ul class="list">
             <li>
               <span class="list-title"><a href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Local Agent Gateway</a></span>
               <span class="list-note">Программа-посредник: подключает обычное приложение к нейросети, которая работает прямо на компьютере — без интернета и без отправки данных наружу.</span>
@@ -520,7 +407,8 @@
               <span class="list-note">Шесть ежедневных осознанных отметок, личные записи и циклические списки практик.</span>
               <span class="status status-live">работает</span>
             </li>
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section class="block contact" aria-labelledby="contact-title" id="contact">
@@ -689,7 +577,7 @@
 
         <p class="story-cross story-cross--code">
           <a href="https://github.com/aka-gst?tab=repositories" target="_blank" rel="noopener"
-             data-umami-event="code-open" data-umami-event-from="games">Код всех одиннадцати игр открыт — заходите и берите <b>↗</b></a>
+             data-umami-event="code-open" data-umami-event-from="games">Код всех игр открыт <b>↗</b></a>
         </p>
       </div>
     </main>
