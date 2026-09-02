@@ -13,6 +13,7 @@ const site = read('site.json');
 const db = read('projects.json');
 const qa = read('qa-metrics.json');
 const put = read('put.json');
+const utro = read('utro.json');
 
 // Версия ассета — от его содержимого. Раньше в ссылке стояло ?v=1 вручную:
 // Caddy отдаёт /assets/* с кэшем на неделю, поэтому вернувшийся посетитель
@@ -1571,6 +1572,42 @@ mkdirSync(join(root, 'put', 'comic'), { recursive: true });
 writeFileSync(join(root, 'put', 'index.html'), putPage());
 writeFileSync(join(root, 'put', 'comic', 'index.html'), putPage({ comic: true }));
 console.log(`  путь: 2 версии, ${put.chapters.length} глав из одного источника`);
+
+// ── «Утро команды» ──────────────────────────────────────────────────
+// Это не витрина выполненных работ: данные намеренно разделяют найденный
+// разрыв, предложение пилота и измеритель будущей приёмки.
+const utroAsset = (relative) => `/assets/${relative}?v=${assetVersion(`assets/${relative}`)}`;
+const utroPage = `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#080a0e">
+    <meta name="description" content="Карта восьми коротких пилотов команды aka-gst: что найдено, что проверим и каким числом примем.">
+    <link rel="canonical" href="${esc(site.url)}/utro/">
+    <title>${esc(utro.title)} — ${esc(site.handle)}</title>
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="/assets/utro.css?v=${assetVersion('assets/utro.css')}">
+  </head>
+  <body>
+    <header class="utro-top"><div class="utro-shell">${brand('work')}<a class="utro-back" href="/">На витрину ↗</a></div></header>
+    <main>
+      <section class="utro-hero"><div class="utro-shell utro-hero-grid">
+        <div><p class="utro-kicker">${esc(utro.eyebrow)}</p><h1 class="utro-title">${esc(utro.title)}</h1><p class="utro-lede">${esc(utro.lede)}</p><div class="utro-equation" aria-label="69 навыков: 52 внешних и 17 наших"><b>69</b><span>52 внешних + ${utro.localCount} наших<br>без дублей</span></div></div>
+        <figure class="utro-hero-art"><img src="${utroAsset(utro.hero.file)}" alt="${esc(utro.hero.alt)}" width="1672" height="941" fetchpriority="high" decoding="async"><figcaption>Черновой герой-кадр: восемь связанных станций, без лиц, брендов и текста.</figcaption></figure>
+      </div></section>
+      <section class="utro-section"><div class="utro-shell"><div class="utro-section-head"><h2>Не каталог навыков. Карта того, что ими можно проверить.</h2><p class="utro-section-intro">52 внешних навыка собраны из шести проверенных источников; ${utro.localCount} — наши локальные практики.</p></div><div class="utro-origin-grid"><ul class="utro-origin-list">${utro.origins.map((source) => `<li><b>${source.count}</b><span>${esc(source.name)}</span></li>`).join('')}</ul><div class="utro-local"><b>${utro.localCount}</b><p>локальных навыков: игры, звук, визуальная приёмка, прогоны, координация и другое.</p><details><summary>Источники и ревизии</summary><p>Количество проверено двумя независимыми именами: папками и полями name в инструкциях. Два Vercel-навыка переименованы, но не продублированы.</p><ul class="utro-revisions">${utro.origins.map((source) => `<li><a href="${esc(source.url)}" target="_blank" rel="noopener">${esc(source.name)}</a> <code>${esc(source.revision)}</code></li>`).join('')}</ul></details></div></div></div></section>
+      <section class="utro-section"><div class="utro-shell"><div class="utro-section-head"><h2>8 пилотов на 1–3 часа</h2><p class="utro-section-intro">Каждая карточка — предложение следующей работы, не выданный за результат план.</p></div><div class="utro-pilots">${utro.pilots.map((pilot) => `<article class="utro-card" data-utro-pilot><p class="utro-card-state" data-found="${pilot.state.startsWith('Найдено')}">${esc(pilot.state)}</p><h3>${esc(pilot.title)}</h3><dl><div><dt>Что уже найдено</dt><dd>${esc(pilot.found)}</dd></div><div><dt>Пилот 1–3 часа</dt><dd>${esc(pilot.pilot)}</dd></div><div><dt>Метрика приёмки</dt><dd>${esc(pilot.metric)}</dd></div></dl><details><summary>Техническое доказательство</summary><p>${esc(pilot.proof)}</p></details></article>`).join('')}</div></div></section>
+      <section class="utro-section"><div class="utro-shell"><div class="utro-bottom-grid"><article><p class="utro-label">границы</p><h3>5 вещей, которые сознательно не ставим</h3><ul>${utro.refusals.map((item) => `<li>${esc(item)}</li>`).join('')}</ul></article><article><p class="utro-label">OneRedOak</p><h3>Берём принципы, не чужой репозиторий</h3><ul>${utro.oneRedOak.map((item) => `<li>${esc(item)}</li>`).join('')}</ul><p class="utro-note">Готовые workflows, YAML, настройки прав и CLAUDE-вставки не устанавливаем.</p></article></div></div></section>
+    </main>
+    <footer class="utro-foot"><div class="utro-shell"><p>Страница отделяет проверенные факты от предложений. Ни один из восьми пилотов пока не выполнен и не опубликован.</p></div></footer>
+  </body>
+</html>`;
+
+mkdirSync(join(root, 'utro'), { recursive: true });
+writeFileSync(join(root, 'utro', 'index.html'), utroPage.replace(/[ \t]+\n/g, '\n'));
+console.log(`  утро: ${utro.pilots.length} пилотов, ${utro.origins.length} источников`);
 
 // ── Страница 404 ─────────────────────────────────────────────────────
 const notFound = `<!doctype html>
