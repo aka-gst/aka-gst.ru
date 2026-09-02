@@ -1,8 +1,13 @@
-import { answerQuestion } from "./router.js";
+import { answerQuestion } from "./router.js?v=orion-copy-20260902-1";
 
 export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoice = false) {
-  const presentation = { mode: viewportWidth <= 620 ? "bottom-sheet" : "side-panel", minTouchTarget: 44 };
+  const presentation = {
+    mode: viewportWidth <= 620 ? "bottom-sheet" : "side-panel",
+    minTouchTarget: 44,
+  };
+
   if (!voiceCapabilities) return presentation;
+
   const inputAvailable = Boolean(voiceCapabilities.recognitionAvailable);
   const outputAvailable = Boolean(voiceCapabilities.speechAvailable);
   return {
@@ -23,11 +28,23 @@ export function createWidgetState() {
 }
 
 export function reduceWidgetState(state, action) {
-  if (action === "trigger") return state.open
-    ? { open: false, panelVisible: false, returnFocusToTrigger: true }
-    : { open: true, panelVisible: true, returnFocusToTrigger: false };
-  if (action === "close" || action === "escape") return { open: false, panelVisible: false, returnFocusToTrigger: true };
+  if (action === "trigger") {
+    return state.open
+      ? { open: false, panelVisible: false, returnFocusToTrigger: true }
+      : { open: true, panelVisible: true, returnFocusToTrigger: false };
+  }
+  if (action === "close" || action === "escape") {
+    return { open: false, panelVisible: false, returnFocusToTrigger: true };
+  }
   return state;
+}
+
+export function demoHandoffOutcome() {
+  return {
+    kind: "demo-only",
+    networkRequest: null,
+    message: "Демо: заявка никуда не отправляется. Канал связи с центром ещё не утверждён.",
+  };
 }
 
 export function routeWidgetQuestion(question) {

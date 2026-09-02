@@ -20,6 +20,9 @@ const naturalVariants = [
   "как вернуть оплату", "не помню пароль"
 ];
 assert.equal(naturalVariants.filter((question) => answerQuestion(question).kind === "fallback").length, 0);
+assert.equal(answerQuestion("где расписнаие").url, "https://orion-center.ru/schedule#actual");
+assert.equal(answerQuestion("где распсинаие").url, "https://orion-center.ru/schedule#actual");
+assert.match(answerQuestion("какого цвета кабинет").title, /нет в подтверждённых данных/i);
 
 const psychosomatics = answerQuestion("Что входит в практикум по психосоматике?");
 assert.equal(psychosomatics.title, "Практикум по психосоматике");

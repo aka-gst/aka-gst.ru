@@ -132,6 +132,29 @@ export function answerQuestion(rawQuestion) {
   }
 
   const mentionsSpecificProgram = /(психосомат|пилот.*волн|скрыт.*сокров)/i.test(query);
+
+  // Короткие организационные вопросы часто приходят с переставленными буквами.
+  // Расписание центра не должно случайно превращаться в расписание клуба.
+  if (/(распис|распс|афиш)/i.test(query) && !/клуб/i.test(query)) {
+    return {
+      kind: "curated",
+      title: "Ближайшие мероприятия",
+      text: "В расписании собраны актуальные семинары, курсы и встречи центра. У каждого события есть собственный анонс с темой, ведущими, форматом и способом регистрации.",
+      url: "https://orion-center.ru/schedule#actual",
+      linkText: "Открыть актуальную афишу"
+    };
+  }
+
+  if (/как(ого|ой).*цвет|цвет.*(кабинет|зал|стен)/i.test(query)) {
+    return {
+      kind: "fallback",
+      title: "Этого нет в подтверждённых данных",
+      text: "Я не буду угадывать внешний вид помещений. Посмотрите фотографии на странице аренды или уточните детали у администратора центра.",
+      url: "https://orion-center.ru/services",
+      linkText: "Посмотреть помещения"
+    };
+  }
+
   const intentMatch = mentionsSpecificProgram ? null : bestIntentMatch(query, intents);
 
   if (intentMatch?.score >= 32) {
