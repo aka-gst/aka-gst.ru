@@ -17,7 +17,7 @@
         { "title": "Zoo", "url": "/zoo/", "status": "тестовая сборка", "note": "Карта и Аудиосёрф работают локально в браузере; серверная карма будет подключена отдельно." },
         { "title": "QA Quest", "url": "/qa-quest/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/qa-quest" },
         { "title": "ACID UNO", "url": "/acid/", "status": "тестовая сборка · не финальная", "note": "Игровая версия для проверки механики; не выдаётся за финальную.", "repo": "https://github.com/aka-gst/acid-uno" },
-        { "title": "Тетколор", "url": "/tetcolor/", "status": "обновляется", "available": false },
+        { "title": "Тетколор", "url": "/tetcolor/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/tetcolor-columns" },
         { "title": "Деревня", "url": "/coin/", "status": "тестовая сборка", "repo": "https://github.com/aka-gst/orel-reshka" },
         { "title": "Лила", "url": "/leela/", "status": "тестовая сборка", "note": "Только для проверки; в общую витрину пока не добавлена." }
       ]
@@ -29,7 +29,7 @@
         { "title": "Практикум: тестирование локального AI-агента", "url": "/praktikum/testirovanie/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/agent-lab" },
         { "title": "Практикум: настройка LLM и агентов", "url": "/praktikum/llm/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/ai-agent-service-lab" },
         { "title": "ФотоДата", "url": "/photodata/", "status": "готова к тесту", "repo": "https://github.com/aka-gst/photo_meta_editer" },
-        { "title": "Psy AI Admin", "url": "/psy-admin/", "status": "обновляется", "available": false },
+        { "title": "Psy AI Admin", "url": "/psy-admin/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/psy-ai-admin" },
         { "title": "Буддийский дневник", "url": "https://t.me/Buddhist_Diary_bot", "status": "готов к тесту", "external": true, "repo": "https://github.com/aka-gst/buddhist-diary-bot" }
       ]
     }
