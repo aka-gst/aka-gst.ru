@@ -1,7 +1,20 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
 import { createWidgetState, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
+
+const widgetVersion = "psy-widget-20260902-2";
+const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
+const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
+const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
+assert.match(widgetSource, new RegExp(`widget-contract\\.js\\?v=${widgetVersion}`));
+assert.match(contractSource, new RegExp(`router\\.js\\?v=${widgetVersion}`));
+assert.match(buildSource, new RegExp(`\\?v=${widgetVersion}`));
+for (const page of ["index.html", "psycluborion/index.html", "services/index.html", "programs/index.html", "schedule/index.html", "consultation/index.html", "pweducation/index.html"]) {
+  const html = await readFile(new URL(`./${page}`, import.meta.url), "utf8");
+  assert.match(html, new RegExp(`psy-widget\\.js\\?v=${widgetVersion}`));
+}
 
 assert.equal(quickQuestions.length, 60);
 const preparedAnswers = quickQuestions.map(({ question }) => answerQuestion(question));

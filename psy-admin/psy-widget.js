@@ -1,4 +1,4 @@
-import { createWidgetState, demoHandoffOutcome, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=orion-copy-20260902-1";
+import { createWidgetState, demoHandoffOutcome, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260902-2";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";

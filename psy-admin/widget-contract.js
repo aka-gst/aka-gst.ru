@@ -1,4 +1,4 @@
-import { answerQuestion } from "./router.js?v=orion-copy-20260902-1";
+import { answerQuestion } from "./router.js?v=psy-widget-20260902-2";
 
 export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoice = false) {
   const presentation = {
