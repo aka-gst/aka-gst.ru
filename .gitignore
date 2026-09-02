@@ -11,6 +11,8 @@ node_modules/
 qa-quest/vendor/
 acid/
 .shots/
+.superpowers/
+.playwright-cli/
 
 # Временное: правило 30г. Не хранится и не выкладывается.
 trash/
