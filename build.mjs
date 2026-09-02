@@ -504,8 +504,9 @@ const строкаОпыта = (e) => `
                   )} <b>↗</b></a>`
                 : esc(e.org)
             }</h3>
-            <p class="job-role">${esc(e.role)}</p>
-            <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>${
+            <p class="job-role">${esc(e.role)}</p>${
+              e.points.length ? `<ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''
+            }${
               // Скан кликается: показан он маркой в 160 пикселей, и журнальный
               // кегль там не читается — но не читается он и в натуральную
               // величину, проверено. Полная версия открывается отдельной
@@ -603,24 +604,28 @@ const leadImage = (file, alt) => {
 
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
-        <div class="work-lead-intro">
-          <p class="kicker">Главное / 2026</p>
-          <h1 id="work-lead-title">Пускаю ИИ в продукт — и ставлю ему границы.</h1>
-          <p>Local Agent Gateway соединяет рабочую программу с локальной моделью. В Dharma та же дисциплина держит агентов-продавцов: они ведут к заказу, но не выдумывают цену, не берут лишнее и не сливают данные.</p>
-          <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно — не прячется за зелёным CI.</p>
+        <div class="work-lead-head">
+          <div class="work-lead-intro">
+            <p class="kicker">Главное / 2026</p>
+            <h1 id="work-lead-title">Запускаю ИИ в продукт и ограничиваю его возможности.</h1>
+            <p>Локальная модель работает с программой, а агенты в Dharma ведут покупателя до заказа. У каждого — только нужные инструменты и проверяемый результат.</p>
+            <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно.</p>
+          </div>
+          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
+            ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
+            <span><b>Local Agent Gateway</b><small>66 тестов · Allure</small></span>
+          </a>
         </div>
         <div class="work-lead-scenes">
-          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
-            ${leadImage('gateway-console.jpg', 'Консоль Local Agent Gateway с локальной моделью')}
-            <span><b>Local Agent Gateway</b><small>локальная LLM и проверяемые ответы</small></span>
-          </a>
           <a class="work-scene" href="https://dharma-ai.io" target="_blank" rel="noopener">
             ${leadImage('anigma.jpg', 'Интерфейс Dharma AI с агентами-продавцами')}
             <span><b>Dharma AI</b><small>агенты доводят покупателя до заказа</small></span>
           </a>
-          <a class="work-scene" href="/photodata/">
-            ${leadImage('photodata.jpg', 'Интерфейс ФотоДата для изменения даты снимка')}
-            <span><b>ФотоДата</b><small>дата съёмки меняется в EXIF</small></span>
+          <a class="work-scene work-scene--photodata" href="/photodata/">
+            <video autoplay muted loop playsinline preload="metadata" poster="${shotSrc('photodata.jpg')}" aria-label="Видео: в ФотоДате выбраны четыре изображения, новая дата применена ко всем файлам">
+              <source src="/assets/clips/clip-photodata.mp4?v=${assetVersion('assets/clips/clip-photodata.mp4')}" type="video/mp4">
+            </video>
+            <span><b>ФотоДата</b><small>новая дата применена к 4 файлам</small></span>
           </a>
         </div>
       </section>`;
@@ -633,7 +638,7 @@ const practicumTeaser = `
         <div class="block-head">
           <p class="kicker">Практикум</p>
           <h2 id="practicum-title">Проверка локального AI-агента</h2>
-          <p>Один маршрут с заданиями и экспериментами. Второй практикум — уже внутри, когда нужен следующий уровень.</p>
+          <p>Один маршрут с заданиями и экспериментами. <a href="/praktikum/llm/">Второй: настройка LLM и агентов →</a></p>
         </div>
 ${practicumCard(practicumProjects[0], true).trim()}
       </section>`;
@@ -683,7 +688,7 @@ const workPanel = `
         <div class="block-head">
           <p class="kicker">Учусь и проверяю на живых вещах</p>
           <h2 id="learning-title">Не презентации — рабочие куски</h2>
-          <p>QA Quest — небольшая учебная игра с живым Python-стендом. Psy Admin пока остаётся отдельным продуктом, а не вторым главным экраном.</p>
+          <p>QA Quest — учебная игра: пишешь настоящий Python и этим двигаешь историю.</p>
         </div>
         <div class="grid">${card(qaQuest)}
         </div>
@@ -698,16 +703,6 @@ ${practicumTeaser.trim()}
           <p>Автоматизация, в которой виден путь: что делает система, где её границы и чем подтверждён результат.</p>
         </div>
         <div class="grid">${byGroup('client-products').map(card).join('')}
-        </div>
-      </section>
-
-      <section class="block" aria-labelledby="own-products-title">
-        <div class="block-head">
-          <p class="kicker">Свои</p>
-          <h2 id="own-products-title">Свои продукты</h2>
-          <p>Сделано без заказчика: задача, сроки и мера готовности собственные.</p>
-        </div>
-        <div class="grid">${byGroup('own-products').filter((project) => project.id !== 'buddhist-diary-bot').map(card).join('')}
         </div>
       </section>
 
@@ -740,14 +735,7 @@ ${practicumTeaser.trim()}
         </details>
       </section>
 
-      <section class="block contact" aria-labelledby="contact-title" id="contact">
-        <div class="block-head">
-          <p class="kicker">08</p>
-          <h2 id="contact-title">${esc(site.contact.heading)}</h2>
-          <p>${esc(site.contact.intro)}</p>
-        </div>
-${partnerForm.trim()}
-      </section>`;
+      `.trim();
 
 // ── Панель «Игры» ────────────────────────────────────────────────────
 const gameCard = (project) => {

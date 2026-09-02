@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=ce900592">
+    <link rel="stylesheet" href="/assets/site.css?v=47520941">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -78,27 +78,29 @@
     </header>
 
     <main id="main">
-      <div class="panel" data-panel="work">
-      
-      <section class="work-lead" aria-labelledby="work-lead-title">
-        <div class="work-lead-intro">
-          <p class="kicker">Главное / 2026</p>
-          <h1 id="work-lead-title">Пускаю ИИ в продукт — и ставлю ему границы.</h1>
-          <p>Local Agent Gateway соединяет рабочую программу с локальной моделью. В Dharma та же дисциплина держит агентов-продавцов: они ведут к заказу, но не выдумывают цену, не берут лишнее и не сливают данные.</p>
-          <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно — не прячется за зелёным CI.</p>
+      <div class="panel" data-panel="work"><section class="work-lead" aria-labelledby="work-lead-title">
+        <div class="work-lead-head">
+          <div class="work-lead-intro">
+            <p class="kicker">Главное / 2026</p>
+            <h1 id="work-lead-title">Запускаю ИИ в продукт и ограничиваю его возможности.</h1>
+            <p>Локальная модель работает с программой, а агенты в Dharma ведут покупателя до заказа. У каждого — только нужные инструменты и проверяемый результат.</p>
+            <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно.</p>
+          </div>
+          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
+            <img src="/assets/shots/allure-gateway.png?v=ff284351" alt="Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено" width="1200" height="750" decoding="async">
+            <span><b>Local Agent Gateway</b><small>66 тестов · Allure</small></span>
+          </a>
         </div>
         <div class="work-lead-scenes">
-          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
-            <img src="/assets/shots/gateway-console.jpg?v=3d8e9ce2" alt="Консоль Local Agent Gateway с локальной моделью" width="1200" height="750" decoding="async">
-            <span><b>Local Agent Gateway</b><small>локальная LLM и проверяемые ответы</small></span>
-          </a>
           <a class="work-scene" href="https://dharma-ai.io" target="_blank" rel="noopener">
             <img src="/assets/shots/anigma.jpg?v=828230f1" alt="Интерфейс Dharma AI с агентами-продавцами" width="1200" height="750" decoding="async">
             <span><b>Dharma AI</b><small>агенты доводят покупателя до заказа</small></span>
           </a>
-          <a class="work-scene" href="/photodata/">
-            <img src="/assets/shots/photodata.jpg?v=23d2c3a0" alt="Интерфейс ФотоДата для изменения даты снимка" width="602" height="332" decoding="async">
-            <span><b>ФотоДата</b><small>дата съёмки меняется в EXIF</small></span>
+          <a class="work-scene work-scene--photodata" href="/photodata/">
+            <video autoplay muted loop playsinline preload="metadata" poster="/assets/shots/photodata.jpg?v=23d2c3a0" aria-label="Видео: в ФотоДате выбраны четыре изображения, новая дата применена ко всем файлам">
+              <source src="/assets/clips/clip-photodata.mp4?v=54b0a6c3" type="video/mp4">
+            </video>
+            <span><b>ФотоДата</b><small>новая дата применена к 4 файлам</small></span>
           </a>
         </div>
       </section>
@@ -107,7 +109,7 @@
         <div class="block-head">
           <p class="kicker">Учусь и проверяю на живых вещах</p>
           <h2 id="learning-title">Не презентации — рабочие куски</h2>
-          <p>QA Quest — небольшая учебная игра с живым Python-стендом. Psy Admin пока остаётся отдельным продуктом, а не вторым главным экраном.</p>
+          <p>QA Quest — учебная игра: пишешь настоящий Python и этим двигаешь историю.</p>
         </div>
         <div class="grid">
         <article class="card" id="p-qa-quest">
@@ -148,7 +150,7 @@
         <div class="block-head">
           <p class="kicker">Практикум</p>
           <h2 id="practicum-title">Проверка локального AI-агента</h2>
-          <p>Один маршрут с заданиями и экспериментами. Второй практикум — уже внутри, когда нужен следующий уровень.</p>
+          <p>Один маршрут с заданиями и экспериментами. <a href="/praktikum/llm/">Второй: настройка LLM и агентов →</a></p>
         </div>
 <article class="practicum-card" id="practicum-panel-praktikum-testing" role="tabpanel"
             aria-labelledby="practicum-tab-praktikum-testing" data-practicum-panel="praktikum-testing">
@@ -271,16 +273,6 @@
         </div>
       </section>
 
-      <section class="block" aria-labelledby="own-products-title">
-        <div class="block-head">
-          <p class="kicker">Свои</p>
-          <h2 id="own-products-title">Свои продукты</h2>
-          <p>Сделано без заказчика: задача, сроки и мера готовности собственные.</p>
-        </div>
-        <div class="grid">
-        </div>
-      </section>
-
       <section class="block" aria-labelledby="profile-title">
         <div class="block-head">
           <p class="kicker">06</p>
@@ -313,26 +305,22 @@
           <article class="job">
             <p class="job-period">конец 2025 — сейчас</p>
             <h3>Dharma AI</h3>
-            <p class="job-role">Агентные системы и их проверка · проектное участие</p>
-            <ul><li>ANIGMA — магазин одежды, которым управляют ИИ-агенты. Делаем вдвоём, проект в разработке: ассистент ведёт покупателя от вопроса до собранной корзины, за платформой три служебных агента. Моя часть — устройство агентной стороны: что строить, какие границы агенту нельзя переходить и как закрыть деньги механикой, а не доверием к модели. Рантайм под агентами даёт Dharma.</li><li>Развёл трёх служебных агентов по узким наборам инструментов — целостность каталога, маржинальность, разбор заказов. Узкий набор это не удобство, а граница: агент физически не может сделать того, что ему не поручено.</li><li>Задал, что проверять и как: не «модель оценивает модель», а проверяемые утверждения — вызвался ли инструмент, изменилась ли корзина, попала ли в ответ запрещённая строка. 12 сценариев, 8 покупательских и 4 служебных; на текущем прогоне проходят 8/8 и 4/4. Отдельная часть — сценарии, где правильное поведение это отказ: не называть замеры, которых нет в каталоге, не изобретать промокод, не собирать заказ в несуществующем размере.</li><li>Денежный контур закрыт не уговором с моделью, а устройством: цену пересчитывает сервер по каталогу, а объявить заказ оплаченным может только подписанный вебхук — агенту эта операция запрещена на уровне инструмента.</li><li>Из ранних падений моего же набора проверок примерно половина оказалась не дефектами агента, а плохими проверками: три сценария требовали конкретного пути к верному ответу и заваливали агента за другой маршрут, ещё один засчитывал аварию среды как успех. Набор проверок проверяет допущения своего автора не реже, чем систему под тестом.</li></ul>
+            <p class="job-role">Агентные системы и их проверка · проектное участие</p><ul><li>ANIGMA — магазин, где ИИ-агенты ведут покупателя до корзины. Моя часть — границы их действий и проверка результата.</li><li>12 сценариев: 8 покупательских и 4 служебных. Текущий прогон — 8/8 и 4/4.</li></ul>
           </article>
           <article class="job">
             <p class="job-period">2026<span class="job-own">свой проект</span></p>
             <h3>Local Agent Gateway / Agent Lab</h3>
-            <p class="job-role">Собственный проект · AI/LLM QA-контур и практикум</p>
-            <ul><li>Построил тестовый контур FastAPI-шлюза: 66 автотестов уровней unit / API / integration / browser E2E / LLM-eval и 98.71% покрытия при пороге CI 90%.</li><li>Настроил pytest, Playwright, Allure, GitHub Actions и Docker/Compose; проверил авторизацию, SSE-стриминг, таймауты, повторы и отсутствие утечек секретов.</li><li>Реализовал детерминированный и live-evaluator для Ollama/OpenRouter с метриками pass rate, stability, latency, tokens и estimated cost.</li><li>Провёл benchmark qwen3:8b: 9/9 сценариев, mean score 0.755, stability 1.000; оформил Allure-отчёт и машиночитаемый фид метрик, публикуемый CI вместе с ним (v0.3.0).</li></ul>
+            <p class="job-role">Собственный проект · AI/LLM QA-контур и практикум</p><ul><li>Шлюз между программой и локальной LLM: 66 автотестов, 98.71% покрытия, API / E2E / live LLM-evaluation.</li><li>Живой benchmark qwen3:8b: 9/9 сценариев, stability 1.000.</li></ul>
           </article>
           <article class="job">
             <p class="job-period">2020 — сейчас</p>
             <h3><a class="job-site" href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noopener">Yoga Studies Institute (YSI) <b>↗</b></a></h3>
-            <p class="job-role">Международный образовательный проект · мультимедиа и AI-инструменты · самозанятый</p>
-            <ul><li>Проверяю и улучшаю видео, субтитры, презентации и документы международной команды: ищу ошибки, контролирую комплектность и качество.</li><li>Несколько лет обрабатывал 50+ роликов в месяц, включая восстановление проблемных исходников и пакетный рендеринг.</li><li>Сейчас применяю AI для субтитров, преобразования документов и автоматизации повторяющихся операций.</li></ul>
+            <p class="job-role">Международный образовательный проект · мультимедиа и AI-инструменты · самозанятый</p><ul><li>Видео, субтитры, презентации и AI-инструменты для международной образовательной команды.</li></ul>
           </article>
           <article class="job">
             <p class="job-period">2018 — 2020</p>
             <h3>Инди-студия образовательных игр</h3>
-            <p class="job-role">Геймдизайнер / Project Manager / креативный руководитель</p>
-            <ul><li>Координировал команду 9–10 человек: программисты, 3D-художники и геймдизайнер.</li><li>Спроектировал мир, системы, баланс и более 100 квестов образовательной RPG; проект доведён до двухчасовой играбельной альфы и протестирован на целевой аудитории.</li><li>Участвовал в выпущенных мобильных играх и проекте с удалённо управляемыми LEGO-роботами: игровая логика, физические лабиринты, тестовые сценарии.</li></ul>
+            <p class="job-role">Геймдизайнер / Project Manager / креативный руководитель</p><ul><li>Команда 9–10 человек, мир и 100+ квестов образовательной RPG; довели до двухчасовой играбельной альфы.</li></ul>
           </article>
           <article class="job">
             <p class="job-period">2010 — 2017</p>
@@ -342,8 +330,7 @@
           <article class="job job--with-shot">
             <p class="job-period">январь 2008</p>
             <h3>PlayStation Magazine Russia</h3>
-            <p class="job-role">Первая публикация · читательская рецензия</p>
-            <ul><li>Разбор Resistance: Fall of Man в рубрике «Твоё ревю» — восьмая полоса, с редакционной оценкой 90 и читательским вердиктом.</li><li>Первый раз, когда за мой текст про игры заплатили полугодовой подпиской.</li></ul><a class="shot-link" href="/assets/shots/psm-2008-polnyy.jpg" target="_blank" rel="noopener"
+            <p class="job-role">Первая публикация: «Твоё ревю» о Resistance: Fall of Man.</p><a class="shot-link" href="/assets/shots/psm-2008-polnyy.jpg" target="_blank" rel="noopener"
                          aria-label="Открыть полосу журнала целиком">
             <figure class="shot">
               <img src="/assets/shots/psm-2008.jpg?v=f0e7b050" alt="Полоса журнала PSM Russia за январь 2008: рубрика «Твоё ревю», рецензия на Resistance: Fall of Man"
@@ -409,30 +396,6 @@
             </li>
           </ul>
         </details>
-      </section>
-
-      <section class="block contact" aria-labelledby="contact-title" id="contact">
-        <div class="block-head">
-          <p class="kicker">08</p>
-          <h2 id="contact-title">Обсудить партнёрство</h2>
-          <p>Опиши задачу и удобный способ ответить. Сообщение приходит напрямую владельцу; почта и телефон на странице не публикуются.</p>
-        </div>
-<form class="partner-form" data-contact-form action="/api/contact/submit" method="post">
-            <label>Как к вам обращаться
-              <input name="name" maxlength="80" autocomplete="name" required>
-            </label>
-            <label>Как ответить
-              <input name="reply" maxlength="120" autocomplete="email" placeholder="Telegram, e-mail или другой удобный способ" required>
-            </label>
-            <label class="partner-message">Что хотите сделать вместе
-              <textarea name="message" maxlength="2000" rows="5" required></textarea>
-            </label>
-            <label class="partner-honeypot" aria-hidden="true">Компания
-              <input name="company" tabindex="-1" autocomplete="off">
-            </label>
-            <button type="submit">Отправить запрос</button>
-            <p class="partner-status" data-contact-status aria-live="polite"></p>
-          </form>
       </section>
       </div>
       <div class="panel" data-panel="play">
