@@ -40,6 +40,11 @@ assert.match(clubVisit.text, /1\s*000\s*(руб|₽)/i);
 assert.equal(clubVisit.action?.url, "https://orion-center.ru/psycluborion");
 assert.match(clubVisit.action?.label || "", /записаться/i);
 
+const quickClubPrice = answerQuestion("Сколько стоит психологический клуб?");
+assert.match(quickClubPrice.text, /1\s*000\s*(руб|₽)/i);
+assert.equal(quickClubPrice.action?.url, "https://orion-center.ru/psycluborion");
+assert.match(quickClubPrice.action?.label || "", /записаться/i);
+
 const clubPass = answerQuestion("Сколько стоит абонемент клуба?");
 assert.match(clubPass.text, /3\s*000\s*(руб|₽)/i);
 assert.equal(clubPass.action?.url, "https://orion-center.ru/psycluborion");
