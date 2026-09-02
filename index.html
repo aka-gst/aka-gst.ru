@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=47520941">
+    <link rel="stylesheet" href="/assets/site.css?v=a101ae88">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -79,71 +79,33 @@
 
     <main id="main">
       <div class="panel" data-panel="work"><section class="work-lead" aria-labelledby="work-lead-title">
-        <div class="work-lead-head">
-          <div class="work-lead-intro">
-            <p class="kicker">Главное / 2026</p>
-            <h1 id="work-lead-title">Запускаю ИИ в продукт и ограничиваю его возможности.</h1>
-            <p>Локальная модель работает с программой, а агенты в Dharma ведут покупателя до заказа. У каждого — только нужные инструменты и проверяемый результат.</p>
-            <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно.</p>
+        <div class="work-duet">
+          <article class="work-gateway">
+            <div class="work-gateway-copy">
+              <p class="kicker">01 / рабочая система</p>
+              <h1 id="work-lead-title">Local Agent Gateway</h1>
+              <p>Программа подключает обычное приложение к локальной модели — без передачи данных наружу. У модели есть только нужные инструменты, а у результата — проверка.</p>
+              <p class="work-lead-fact"><b>66 проверок прошли.</b> API, браузер и живой LLM-прогон измеряются отдельно.</p>
+              <a class="work-gateway-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
+            </div>
+            <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
+              <img src="/assets/shots/allure-gateway.png?v=ff284351" alt="Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено" width="1200" height="750" decoding="async">
+              <span>66 тестов · Allure ↗</span>
+            </a>
           </div>
-          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
-            <img src="/assets/shots/allure-gateway.png?v=ff284351" alt="Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено" width="1200" height="750" decoding="async">
-            <span><b>Local Agent Gateway</b><small>66 тестов · Allure</small></span>
+          <a class="work-quest" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">
+            <div class="work-quest-shot">
+              <img src="/assets/shots/qa-quest-lesson.jpg?v=2be616e2" alt="Стенд QA Quest: машина с включёнными фарами и открытыми дверями, рядом консоль с командами ping, enable lights и unlock doors" width="1056" height="596" decoding="async">
+            </div>
+            <div class="work-quest-copy">
+              <p class="kicker">02 / практика</p>
+              <h2>QA Quest</h2>
+              <p>Пишешь настоящий Python — и машина в истории отвечает: включает фары, открывает двери, двигает сюжет.</p>
+              <span>Открыть игру <b>→</b></span>
+            </div>
           </a>
         </div>
-        <div class="work-lead-scenes">
-          <a class="work-scene" href="https://dharma-ai.io" target="_blank" rel="noopener">
-            <img src="/assets/shots/anigma.jpg?v=828230f1" alt="Интерфейс Dharma AI с агентами-продавцами" width="1200" height="750" decoding="async">
-            <span><b>Dharma AI</b><small>агенты доводят покупателя до заказа</small></span>
-          </a>
-          <a class="work-scene work-scene--photodata" href="/photodata/">
-            <video autoplay muted loop playsinline preload="metadata" poster="/assets/shots/photodata.jpg?v=23d2c3a0" aria-label="Видео: в ФотоДате выбраны четыре изображения, новая дата применена ко всем файлам">
-              <source src="/assets/clips/clip-photodata.mp4?v=54b0a6c3" type="video/mp4">
-            </video>
-            <span><b>ФотоДата</b><small>новая дата применена к 4 файлам</small></span>
-          </a>
-        </div>
-      </section>
-
-      <section class="block work-minis" aria-labelledby="learning-title">
-        <div class="block-head">
-          <p class="kicker">Учусь и проверяю на живых вещах</p>
-          <h2 id="learning-title">Не презентации — рабочие куски</h2>
-          <p>QA Quest — учебная игра: пишешь настоящий Python и этим двигаешь историю.</p>
-        </div>
-        <div class="grid">
-        <article class="card" id="p-qa-quest">
-          <figure class="shot"><img src="/assets/shots/qa-quest-lesson.jpg?v=2be616e2" alt="Стенд QA Quest: машина с включёнными фарами и открытыми дверями, рядом консоль с командами ping, enable lights и unlock doors"
-                width="1056" height="596" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                  data-src="/assets/clips/clip-qa-quest.mp4?v=bc658d0d"></video></figure>
-          <div class="card-head">
-            <p class="kicker">Обучение · браузер</p>
-            <span class="card-marks"><span class="status status-live">открыт</span></span>
-          </div>
-          <h3><a class="card-title" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QA Quest</a></h3>
-          <p class="tagline">Учу программировать на Питоне через игру: пишешь настоящий код и этим открываешь историю дальше.</p>
-          <p class="card-links"><a class="link link-demo" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/qa-quest" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
-          <div class="card-more">
-            
-          <dl class="band" data-count="3">
-            <div title="16 шагов в ночи · два сюжета первой ступени · 11 тестирование · 9 LLM. За один проход открывается 36.">
-              <dt>52</dt>
-              <dd>урока</dd>
-            </div>
-            <div title="У каждой эталонное решение и проверки.">
-              <dt>154</dt>
-              <dd>задачи</dd>
-            </div>
-            <div title="«Ночь в боксе» и «Взлом сети» — на выбор в первой ступени.">
-              <dt>2</dt>
-              <dd>сюжета</dd>
-            </div>
-          </dl>
-            <p class="summary">Первая ступень — шестнадцать шагов за ночь от первой строки до собственного замка для блока управления машиной: на каждом свой рабочий код, а не пересказ учебника. Ночей две на выбор, «Ночь в боксе» и «Взлом сети», дальше ступени тестирования и работы с LLM: всего 52 урока и 154 задачи с эталонными решениями, за один проход открывается 36. Python настоящий и работает прямо на странице, ставить нечего. Рядом живой стенд: команды уходят в шину, и машина отвечает — включает фары, открывает двери. Разбираются настоящие случаи: реле-атака на брелок, команды в шину через фару. Прогресс сохраняется в учётной записи сайта и переезжает между устройствами.</p>
-            <ul class="stack"><li>Python</li><li>Pyodide</li><li>JavaScript</li><li>HTML</li><li>CSS</li><li>общий вход aka-gst</li></ul>
-          </div>
-        </article>
-        </div>
+        <p class="work-duet-note"><b>Один контур</b> ставит ИИ границы. <b>Второй</b> учит проверять его кодом.</p>
       </section>
 
 <section class="block practicum-teaser" aria-labelledby="practicum-title">

@@ -551,8 +551,9 @@ const leaderboards = db.projects.filter((p) => p.leaderboard);
 const projectById = (id) => db.projects.find((project) => project.id === id);
 const qaQuest = projectById('qa-quest');
 const practicumProjects = ['praktikum-testing', 'ai-agent-service-lab'].map(projectById);
+const qaQuestDemo = qaQuest?.links.find((link) => link.type === 'demo');
 
-if (!qaQuest || practicumProjects.some((project) => !project)) {
+if (!qaQuest || !qaQuestDemo || practicumProjects.some((project) => !project)) {
   throw new Error('не найдены QA Quest или один из двух практикумов');
 }
 
@@ -593,10 +594,10 @@ ${practicumProjects.map((project, index) => practicumCard(project, index === 0))
         </div>
       </section>`;
 
-// Главная витрина работы — не отчёт на высоту экрана, а три связанных
-// доказательства: шлюз для локальной модели, продукт с агентами и работа с
-// настоящими файлами. Снимки стоят рядом, чтобы смысл не распадался на
-// «текст слева / декоративная картинка справа».
+// Главная витрина работы — связанная пара, а не три конкурирующих продукта.
+// Gateway — сильная рабочая система, QA Quest — место, где на настоящем
+// Python видно, зачем такие системы нужно уметь проверять. ФотоДата и Dharma
+// остаются в своих обычных разделах ниже, не претендуя на главный тезис.
 const leadImage = (file, alt) => {
   const { w, h } = imageSize(`assets/shots/${file}`);
   return `<img src="${shotSrc(file)}" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async">`;
@@ -604,30 +605,33 @@ const leadImage = (file, alt) => {
 
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
-        <div class="work-lead-head">
-          <div class="work-lead-intro">
-            <p class="kicker">Главное / 2026</p>
-            <h1 id="work-lead-title">Запускаю ИИ в продукт и ограничиваю его возможности.</h1>
-            <p>Локальная модель работает с программой, а агенты в Dharma ведут покупателя до заказа. У каждого — только нужные инструменты и проверяемый результат.</p>
-            <p class="work-lead-fact"><b>66 проверок прошли.</b> Живой LLM-прогон измеряется отдельно.</p>
+        <div class="work-duet">
+          <article class="work-gateway">
+            <div class="work-gateway-copy">
+              <p class="kicker">01 / рабочая система</p>
+              <h1 id="work-lead-title">Local Agent Gateway</h1>
+              <p>Программа подключает обычное приложение к локальной модели — без передачи данных наружу. У модели есть только нужные инструменты, а у результата — проверка.</p>
+              <p class="work-lead-fact"><b>66 проверок прошли.</b> API, браузер и живой LLM-прогон измеряются отдельно.</p>
+              <a class="work-gateway-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
+            </div>
+            <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
+              ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
+              <span>66 тестов · Allure ↗</span>
+            </a>
           </div>
-          <a class="work-scene work-scene--gateway" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">
-            ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
-            <span><b>Local Agent Gateway</b><small>66 тестов · Allure</small></span>
+          <a class="work-quest" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>
+            <div class="work-quest-shot">
+              ${leadImage(qaQuest.shots[0].file, qaQuest.shots[0].alt)}
+            </div>
+            <div class="work-quest-copy">
+              <p class="kicker">02 / практика</p>
+              <h2>QA Quest</h2>
+              <p>Пишешь настоящий Python — и машина в истории отвечает: включает фары, открывает двери, двигает сюжет.</p>
+              <span>Открыть игру <b>→</b></span>
+            </div>
           </a>
         </div>
-        <div class="work-lead-scenes">
-          <a class="work-scene" href="https://dharma-ai.io" target="_blank" rel="noopener">
-            ${leadImage('anigma.jpg', 'Интерфейс Dharma AI с агентами-продавцами')}
-            <span><b>Dharma AI</b><small>агенты доводят покупателя до заказа</small></span>
-          </a>
-          <a class="work-scene work-scene--photodata" href="/photodata/">
-            <video autoplay muted loop playsinline preload="metadata" poster="${shotSrc('photodata.jpg')}" aria-label="Видео: в ФотоДате выбраны четыре изображения, новая дата применена ко всем файлам">
-              <source src="/assets/clips/clip-photodata.mp4?v=${assetVersion('assets/clips/clip-photodata.mp4')}" type="video/mp4">
-            </video>
-            <span><b>ФотоДата</b><small>новая дата применена к 4 файлам</small></span>
-          </a>
-        </div>
+        <p class="work-duet-note"><b>Один контур</b> ставит ИИ границы. <b>Второй</b> учит проверять его кодом.</p>
       </section>`;
 
 // На главной показываем один вход в обучение. Второй маршрут остаётся
@@ -683,16 +687,6 @@ const partnerForm = `
 // ── Панель «Работа» ──────────────────────────────────────────────────
 const workPanel = `
       ${workLead}
-
-      <section class="block work-minis" aria-labelledby="learning-title">
-        <div class="block-head">
-          <p class="kicker">Учусь и проверяю на живых вещах</p>
-          <h2 id="learning-title">Не презентации — рабочие куски</h2>
-          <p>QA Quest — учебная игра: пишешь настоящий Python и этим двигаешь историю.</p>
-        </div>
-        <div class="grid">${card(qaQuest)}
-        </div>
-      </section>
 
 ${practicumTeaser.trim()}
 
