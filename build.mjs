@@ -592,6 +592,25 @@ ${practicumProjects.map((project, index) => practicumCard(project, index === 0))
         </div>
       </section>`;
 
+// Первый экран не повторяет ни отчёт, ни карточки ниже: за несколько секунд
+// он объясняет, что именно лежит на сайте, и даёт три настоящих пути дальше.
+// Изображение — не логотип: у разделов уже есть три чётких SVG-знака в шапке,
+// а здесь ему нужна живая фактура, чтобы страница не начиналась пустотой.
+const siteHero = `
+      <section class="site-hero" aria-labelledby="site-hero-title">
+        <img class="site-hero-art" src="/assets/hero-signal.jpg?v=${assetVersion('assets/hero-signal.jpg')}" alt="" width="1672" height="941" fetchpriority="high" decoding="async">
+        <div class="site-hero-copy">
+          <p class="kicker">aka-gst / 2026</p>
+          <h1 id="site-hero-title">ИИ-инструменты, игры и рассказы — сделанные до результата.</h1>
+          <p>Здесь можно открыть работающие вещи, сыграть в браузере и прочитать тексты Сергея Гостова.</p>
+          <nav class="site-hero-routes" aria-label="Что есть на сайте">
+            <a href="#work"><span>Работа</span><b>ИИ и проверка</b></a>
+            <a href="#games"><span>Игры</span><b>прямо в браузере</b></a>
+            <a href="/rasskazy/"><span>Рассказы</span><b>23 текста</b></a>
+          </nav>
+        </div>
+      </section>`;
+
 const partnerForm = `
           <form class="partner-form" data-contact-form action="/api/contact/submit" method="post">
             <label>Как к вам обращаться
@@ -614,7 +633,7 @@ const partnerForm = `
 const workPanel = `
       ${reportScreen}
 
-      <section class="block block--lead" aria-labelledby="qa-quest-title">
+      <section class="block block--lead qa-spotlight" aria-labelledby="qa-quest-title">
         <div class="block-head">
           <p class="kicker">02</p>
           <h2 id="qa-quest-title">QA Quest</h2>
@@ -899,7 +918,7 @@ ${socialLinks('header')}
       </nav>
     </header>
 
-    <main id="main">
+    <main id="main">${siteHero}
       <div class="panel" data-panel="work">${workPanel}
       </div>
       <div class="panel" data-panel="play">${playPanel}

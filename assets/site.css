@@ -181,6 +181,59 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 24px 80px; }
 html[data-track="work"] .panel[data-panel="work"],
 html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
+/* ── Общий первый экран ───────────────────────────────────────────── */
+/* Не отдельная промо-страница, а короткий ориентир: дальше сразу идут
+   выбранный раздел и настоящие проекты. Арт правее текста и обрезается
+   контейнером, поэтому на узком экране остаётся фактурой, а не стеной. */
+.site-hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  min-height: 292px; margin-top: 26px; padding: 32px;
+  border: 1px solid var(--line); border-radius: 16px;
+  background: #111318;
+}
+.site-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(11, 12, 13, .98) 0%, rgba(11, 12, 13, .91) 43%, rgba(11, 12, 13, .32) 80%, rgba(11, 12, 13, .14) 100%),
+    linear-gradient(180deg, transparent 55%, rgba(6, 7, 9, .65));
+}
+.site-hero-art {
+  position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+}
+.site-hero-copy { position: relative; max-width: 620px; }
+.site-hero h1 { max-width: 600px; margin: 9px 0 12px; font-size: clamp(30px, 4.5vw, 50px); }
+.site-hero-copy > p:last-of-type { max-width: 570px; color: var(--muted); font-size: 15px; }
+.site-hero-routes {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 25px;
+}
+.site-hero-routes a {
+  display: grid; gap: 1px; min-width: 132px; padding: 8px 11px;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, var(--accent)); border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 76%, transparent); text-decoration: none;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.site-hero-routes a:hover, .site-hero-routes a:focus-visible {
+  border-color: var(--accent); background: var(--accent-dim); transform: translateY(-2px);
+}
+.site-hero-routes span { color: var(--accent); font: 600 10px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.site-hero-routes b { font-size: 12px; font-weight: 600; }
+html[data-track="play"] .site-hero { border-color: #332856; }
+html[data-track="play"] .site-hero::before {
+  background:
+    linear-gradient(90deg, rgba(6, 6, 10, .98) 0%, rgba(6, 6, 10, .9) 43%, rgba(6, 6, 10, .3) 80%, rgba(6, 6, 10, .12) 100%),
+    linear-gradient(180deg, transparent 55%, rgba(6, 6, 10, .68));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-hero::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(105deg, transparent 43%, rgba(94, 227, 155, .12) 50%, transparent 57%);
+    transform: translateX(-80%); animation: heroScan 9s ease-in-out infinite;
+  }
+}
+@keyframes heroScan { 0%, 48% { transform: translateX(-80%); } 62%, 100% { transform: translateX(80%); } }
+
 .kicker {
   font-family: var(--mono); font-size: 11px; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase; color: var(--dim);
@@ -189,7 +242,7 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 /* ── Первый экран «Работа»: отчёт прогона ─────────────────────────── */
 
 .report {
-  margin: 34px 0 0;
+  margin: 22px 0 0;
   border: 1px solid var(--line); border-radius: var(--r);
   background: var(--panel);
   overflow: hidden;
@@ -197,7 +250,7 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
 /* Первый экран продаёт понятный результат, а не стек. Доказательства никуда
    не делись: они раскрываются нативной кнопкой и доступны без JavaScript. */
-.report-brief { padding: 30px 28px 24px; max-width: 720px; }
+.report-brief { padding: 24px 26px 20px; max-width: 720px; }
 .report-brief h1 { margin: 7px 0 5px; font-size: clamp(30px, 4.4vw, 46px); }
 .report-name { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .08em; }
 .report-benefits { display: grid; gap: 4px; margin-top: 16px; }
@@ -361,7 +414,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 
 /* ── Общие блоки ──────────────────────────────────────────────────── */
 
-.block { margin-top: 64px; }
+.block { margin-top: 48px; }
 /* Первому блоку панели верхний отступ не нужен: над ним только шапка сайта. */
 .panel > .block:first-child { margin-top: 34px; }
 /* Без заголовка блоку не нужен прежний отступ — карточки поднимаются выше. */
@@ -546,9 +599,14 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   display: grid; gap: 10px; padding: 20px; border: 1px solid var(--line); border-radius: var(--r);
   background: var(--panel);
 }
+.practicum-card[hidden] { display: none; }
 .practicum-card .card-head { padding-top: 0; }
 .practicum-card h3 { font-size: 20px; }
 .practicum-card .tagline { color: var(--text); font-size: 14px; }
+
+/* QA Quest остаётся реальным снимком игры, но не забирает почти весь экран
+   одной иллюстрацией до того, как человек прочитал, что это за вещь. */
+.qa-spotlight .card > .shot img { aspect-ratio: 16 / 6.2; }
 
 /* ── Заявка о партнёрстве ─────────────────────────────────────────── */
 .partner-form {
@@ -1102,6 +1160,17 @@ html[data-track] .rec[hidden] { display: none; }
 
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
+  .site-hero { min-height: 0; margin-top: 18px; padding: 24px 20px 20px; }
+  .site-hero::before {
+    background:
+      linear-gradient(90deg, rgba(11, 12, 13, .96) 0%, rgba(11, 12, 13, .87) 70%, rgba(11, 12, 13, .5)),
+      linear-gradient(180deg, transparent 52%, rgba(6, 7, 9, .65));
+  }
+  .site-hero h1 { font-size: clamp(29px, 9vw, 39px); }
+  .site-hero-copy > p:last-of-type { font-size: 14px; line-height: 1.45; }
+  .site-hero-routes { gap: 6px; margin-top: 20px; }
+  .site-hero-routes a { flex: 1 1 calc(50% - 6px); min-width: 0; padding: 8px 9px; }
+  .qa-spotlight .card > .shot img { aspect-ratio: 16 / 8; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   /* На телефоне переключатель — главный элемент шапки: две крупные цели
      во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь
@@ -1138,7 +1207,7 @@ html[data-track] .rec[hidden] { display: none; }
   .practicum-tabs button { min-height: 44px; }
   .partner-form { grid-template-columns: 1fr; padding: 16px; }
   .partner-message { grid-column: auto; }
-  .block { margin-top: 48px; }
+  .block { margin-top: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
