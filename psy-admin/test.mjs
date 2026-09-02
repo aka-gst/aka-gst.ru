@@ -32,7 +32,25 @@ assert.equal(answerQuestion("У меня мысли о самоубийстве"
 assert.equal(answerQuestion("Поставь мне диагноз").kind, "boundary");
 
 const price = answerQuestion("Сколько стоит практикум по психосоматике сейчас?");
-assert.match(price.text, /точные условия.*даты.*стоимость.*публикует/i);
+assert.equal(price.kind, "unconfirmed");
 assert.doesNotMatch(price.text, /\d+\s*(руб|₽)/i);
+
+const clubVisit = answerQuestion("Сколько стоит разовое посещение клуба?");
+assert.match(clubVisit.text, /1\s*000\s*(руб|₽)/i);
+assert.equal(clubVisit.action?.url, "https://orion-center.ru/psycluborion");
+assert.match(clubVisit.action?.label || "", /записаться/i);
+
+const clubPass = answerQuestion("Сколько стоит абонемент клуба?");
+assert.match(clubPass.text, /3\s*000\s*(руб|₽)/i);
+assert.equal(clubPass.action?.url, "https://orion-center.ru/psycluborion");
+
+const observation = answerQuestion("Сколько стоят встречи насмотренности?");
+assert.match(observation.text, /3\s*000\s*(руб|₽)/i);
+assert.equal(observation.action?.url, "https://orion-center.ru/pwdemonstration");
+
+const psychosomaticsPrice = answerQuestion("Сколько стоит психосоматика?");
+assert.equal(psychosomaticsPrice.kind, "unconfirmed");
+assert.doesNotMatch(psychosomaticsPrice.text, /\d+\s*(руб|₽)/i);
+assert.equal(psychosomaticsPrice.action?.url, "https://orion-center.ru/contacts");
 
 console.log("psy-admin: 60 prepared questions and safety checks passed");

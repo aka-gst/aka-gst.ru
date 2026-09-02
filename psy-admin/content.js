@@ -1,5 +1,46 @@
 export const CENTER_URL = "https://orion-center.ru/";
 
+// Единственное место, где помощник вправе назвать цену.
+// Каждая запись сверена с открытой страницей центра в checkedAt.
+export const approvedOfferings = [
+  {
+    id: "club-single-visit",
+    keywords: ["разовое посещение клуба", "разовое посещение", "сколько стоит клуб", "цена клуба", "клуб платный"],
+    title: "Разовое посещение психологического клуба",
+    text: "Разовое посещение клуба «Вечер с пользой» — 1 000 руб. Встречи проходят очно в Санкт-Петербурге; регистрация на каждую встречу обязательна.",
+    format: "очно, Санкт-Петербург",
+    price: "1 000 руб.",
+    sourceUrl: "https://orion-center.ru/psycluborion",
+    registrationUrl: "https://orion-center.ru/psycluborion",
+    checkedAt: "2026-09-02",
+    actionLabel: "Записаться на встречу клуба"
+  },
+  {
+    id: "club-pass",
+    keywords: ["абонемент клуба", "абонемент в клуб", "четыре посещения клуба"],
+    title: "Абонемент психологического клуба",
+    text: "Абонемент клуба «Вечер с пользой» на 4 посещения — 3 000 руб. В него входит возможность один раз пригласить нового для клуба друга без оплаты.",
+    format: "очно, Санкт-Петербург",
+    price: "3 000 руб.",
+    sourceUrl: "https://orion-center.ru/psycluborion",
+    registrationUrl: "https://orion-center.ru/psycluborion",
+    checkedAt: "2026-09-02",
+    actionLabel: "Оформить абонемент клуба"
+  },
+  {
+    id: "processwork-observation",
+    keywords: ["встречи насмотренности", "насмотренность", "сколько стоят встречи насмотренности"],
+    title: "Встречи насмотренности в ProcessWork",
+    text: "Встречи насмотренности в ProcessWork стоят 3 000 руб. и проходят онлайн. Точные даты и регистрация опубликованы на странице программы.",
+    format: "онлайн",
+    price: "3 000 руб.",
+    sourceUrl: "https://orion-center.ru/pwdemonstration",
+    registrationUrl: "https://orion-center.ru/pwdemonstration",
+    checkedAt: "2026-09-02",
+    actionLabel: "Открыть регистрацию на встречи"
+  }
+];
+
 export const catalog = [
   {
     id: "hidden-treasures",

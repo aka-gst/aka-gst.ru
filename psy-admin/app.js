@@ -51,6 +51,16 @@ function addAnswer(answer) {
     article.append(link);
   }
 
+  if (answer.action) {
+    const action = document.createElement("a");
+    action.className = "answer-action";
+    action.href = answer.action.url;
+    action.target = "_blank";
+    action.rel = "noopener noreferrer";
+    action.textContent = answer.action.label;
+    article.append(action);
+  }
+
   const meta = document.createElement("small");
   meta.textContent = "Ответ составлен по открытым страницам центра. Переписка не сохраняется.";
   article.append(meta);

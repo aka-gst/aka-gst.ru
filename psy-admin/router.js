@@ -1,4 +1,4 @@
-import { catalog, CENTER_URL } from "./content.js";
+import { approvedOfferings, catalog, CENTER_URL } from "./content.js";
 import { intents, safetyIntents } from "./intents.js";
 
 const normalize = (value) => value
@@ -53,6 +53,15 @@ function bestIntentMatch(query, candidates) {
     .sort((a, b) => b.score - a.score)[0];
 }
 
+function findApprovedOffering(query) {
+  return approvedOfferings
+    .map((offering) => ({
+      offering,
+      score: offering.keywords.reduce((best, keyword) => Math.max(best, query.includes(normalize(keyword)) ? normalize(keyword).length : 0), 0)
+    }))
+    .sort((a, b) => b.score - a.score)[0];
+}
+
 export function answerQuestion(rawQuestion) {
   const question = String(rawQuestion || "").trim();
   const query = normalize(question);
@@ -95,6 +104,30 @@ export function answerQuestion(rawQuestion) {
       text: "Не сообщайте в чате пароли, данные банковской карты или документы. Для личного обращения используйте официальные контакты центра.",
       url: "https://orion-center.ru/contacts",
       linkText: "Открыть контакты центра"
+    };
+  }
+
+  const approvedOffering = findApprovedOffering(query);
+  if (approvedOffering?.score > 0) {
+    const offering = approvedOffering.offering;
+    return {
+      kind: "offer",
+      title: offering.title,
+      text: `${offering.text} Сверено: ${offering.checkedAt}.`,
+      url: offering.sourceUrl,
+      linkText: "Открыть официальный источник",
+      action: { label: offering.actionLabel, url: offering.registrationUrl }
+    };
+  }
+
+  if (/(психосомат)/i.test(query) && currentFactPattern.test(query)) {
+    return {
+      kind: "unconfirmed",
+      title: "Цена психосоматики сейчас не подтверждена",
+      text: "В открытых материалах центра есть противоречащие друг другу даты набора, поэтому я не буду называть стоимость. Уточните актуальную цену и возможность предзаписи у администратора центра.",
+      url: "https://orion-center.ru/contacts",
+      linkText: "Открыть официальные контакты",
+      action: { label: "Уточнить цену у администратора", url: "https://orion-center.ru/contacts" }
     };
   }
 

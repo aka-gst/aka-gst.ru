@@ -35,6 +35,8 @@ h1 { margin: 0; max-width: 760px; font-size: clamp(38px, 6.4vw, 72px); line-heig
 .answer p { margin: 0; font-size: 18px; line-height: 1.55; }
 .answer-link { display: block; margin-top: 18px; padding: 17px 19px; border: 2px solid #7353b8; border-radius: 14px; background: #fff; color: #412b79; font-size: 18px; font-weight: 780; text-decoration: none; }
 .answer-link:hover { background: #f8f4ff; }
+.answer-action { display: inline-flex; margin-top: 12px; padding: 13px 17px; border-radius: 13px; background: #2d5a4c; color: #fff; font-size: 17px; font-weight: 780; text-decoration: none; }
+.answer-action:hover, .answer-action:focus-visible { background: #183f34; }
 .answer-link span { display: block; margin-bottom: 5px; color: #74668f; font-size: 12px; font-weight: 720; letter-spacing: .04em; text-transform: uppercase; }
 .answer-link strong { display: block; font-size: 18px; line-height: 1.35; }
 .answer small { display: block; margin-top: 12px; color: #777080; font-size: 12px; }
