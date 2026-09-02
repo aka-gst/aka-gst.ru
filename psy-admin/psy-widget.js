@@ -24,7 +24,12 @@ const questionForm = root.querySelector(".psy-widget-form");
 const questionInput = root.querySelector("#psy-widget-question");
 const mic = root.querySelector(".psy-widget-mic");
 const voiceStatus = root.querySelector(".psy-widget-voice-status");
-let state = createWidgetState();
+// На широком экране это часть демонстрации, а не скрытая функция: панель
+// видна сразу. На телефоне оставляем компактную кнопку, чтобы не перекрывать
+// первый экран сайта.
+let state = window.innerWidth > 620
+  ? { open: true, panelVisible: true, returnFocusToTrigger: false }
+  : createWidgetState();
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const voiceCapabilities = { recognitionAvailable: Boolean(Recognition), speechAvailable: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window };
 
