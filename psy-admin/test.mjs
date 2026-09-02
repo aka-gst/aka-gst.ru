@@ -56,6 +56,12 @@ assert.equal(observation.action?.url, "https://orion-center.ru/pwdemonstration")
 const psychosomaticsPrice = answerQuestion("Сколько стоит психосоматика?");
 assert.equal(psychosomaticsPrice.kind, "unconfirmed");
 assert.doesNotMatch(psychosomaticsPrice.text, /\d+\s*(руб|₽)/i);
+
+const crisis = answerQuestion("У меня кризис, что делать?");
+assert.equal(crisis.kind, "crisis");
+assert.match(crisis.text, /112/);
+assert.equal(crisis.url, undefined);
+assert.equal(crisis.action, undefined);
 assert.equal(psychosomaticsPrice.action?.url, "https://orion-center.ru/contacts");
 
 console.log("psy-admin: 60 prepared questions and safety checks passed");
