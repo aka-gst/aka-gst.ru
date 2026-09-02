@@ -94,6 +94,39 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .reader-lede h1 { font-size: clamp(30px, 6vw, 44px); letter-spacing: -.02em; }
 .reader-lede p { margin-top: 8px; color: var(--ink-soft); font-size: 14px; }
 
+/* Одна короткая «послесветовая» сборка: сначала остаётся зернистый след
+   заголовка, затем текст становится обычным. Это не скрывает чтение и не
+   требует скрипта или тяжёлого canvas. */
+.afterimage-title {
+  position: relative; display: inline-block; isolation: isolate;
+  animation: reader-afterimage-solid 1.25s cubic-bezier(.16, .8, .24, 1) both;
+  animation-delay: var(--afterimage-delay, 0s); animation-play-state: paused;
+}
+.afterimage-title::after {
+  content: attr(data-afterimage); position: absolute; inset: 0; z-index: -1;
+  pointer-events: none; color: transparent;
+  background: radial-gradient(circle, var(--accent-read) 0 1px, transparent 1.7px) 0 0 / 7px 7px;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: .12em -.05em 0 rgba(132, 91, 218, .5), -.1em .08em 0 rgba(116, 201, 90, .32);
+  animation: reader-afterimage-grain 1.25s cubic-bezier(.16, .8, .24, 1) both;
+  animation-delay: var(--afterimage-delay, 0s); animation-play-state: paused;
+}
+@keyframes reader-afterimage-solid {
+  0% { opacity: 1; filter: none; transform: none; }
+  55% { opacity: .76; filter: blur(.25px); }
+  100% { opacity: .24; filter: blur(1.2px); transform: translateY(-3px); }
+}
+@keyframes reader-afterimage-grain {
+  0% { opacity: 0; transform: translate(-.16em, .08em) scaleX(1.06); filter: blur(.5px); }
+  58% { opacity: .52; transform: translate(.08em, -.03em) scaleX(.99); }
+  100% { opacity: .94; transform: translate(.28em, -.12em) scaleX(.92); filter: blur(1.4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .afterimage-title { animation: none; }
+  .afterimage-title::after { display: none; animation: none; }
+}
+
 /* Три сборника — тремя карточками в ряд, в том же языке, что карточки игр
    и работы на главной: полоса с картинкой, кикер, название, строка
    действия. Просьба владельца — «сделай их тремя блоками, в духе моего

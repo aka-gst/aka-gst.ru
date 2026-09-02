@@ -1142,6 +1142,7 @@ const readerHead = (title, description, canonical) => `
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
+    <script defer src="/assets/afterimage-scroll.js?v=${assetVersion('assets/afterimage-scroll.js')}"></script>
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>`;
 
 // Шапка сайта на страницах рассказов. Владелец: «почему рассказы не в стиле
@@ -1279,7 +1280,7 @@ ${readerTopbar}
     </header>
     <main id="main" class="reader-main">
       <div class="reader-lede">
-        <h1>Рассказы</h1>
+        <h1 class="afterimage-title" data-afterimage="Рассказы" data-afterimage-scroll>Рассказы</h1>
         <p>${esc(book.автор)} · ${storyList.length} ${plural(storyList.length, [
       'текст',
       'текста',
