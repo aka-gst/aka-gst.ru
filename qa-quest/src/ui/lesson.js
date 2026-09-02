@@ -16,14 +16,17 @@ import { runPython, runner, onRunnerChange } from '../runner.js';
 import { decorateGlossary } from '../glossary.js';
 import { activeTheme } from '../content/themes.js';
 import { standPanel, standPlay, standRestore } from './stand.js';
+import { errorGuidance } from './error-guidance.js';
 import { track } from '../analytics.js';
 import { el, clear } from './dom.js';
+import { autoHintLevel } from './hint-policy.js';
 
 const view = {
   lesson: null,
   taskIndex: 0,
   attempted: false,
   hintLevel: 0,
+  failures: new Map(),
   nodes: {},
   detachRunner: null,
   // Последний прогон каждой задачи: после перерисовки экрана
@@ -46,45 +49,34 @@ function visibleTasks() {
 
 function briefing() {
   const lesson = view.lesson;
-  const mode = store.state.mode;
   const body = el('div', { class: 'brief-body' });
 
   // Сюжетная рамка идёт отдельным блоком и намеренно не смешивается с
   // объяснением: обстановка помогает дойти до финала, но учит не она.
   if (lesson.story) body.append(el('p', { class: 'brief-story', text: lesson.story }));
 
-  if (mode === 'sprint') {
-    body.append(el('div', { class: 'brief-idea', html: lesson.sprint.idea }));
-    if (lesson.tasks.length > 1) {
-      body.append(el('p', {
-        class: 'brief-more',
-        text: `В режиме «Подробно» здесь ещё ${lesson.tasks.length - 1} задачи и подробное объяснение.`,
-      }));
-    }
-  } else {
-    body.append(el('div', { class: 'brief-theory', html: lesson.deep.theory }));
-    body.append(el('div', { class: 'brief-notes' }, [
-      el('div', {}, [el('span', { text: isLab() ? 'ГДЕ ВЫПОЛНЯТЬ' : 'ГДЕ ПРИМЕНЯЕТСЯ' }), el('div', { html: lesson.deep.where })]),
-      el('div', {}, [el('span', { text: 'ТИПИЧНАЯ ОШИБКА' }), el('div', { html: lesson.deep.pitfall })]),
+  body.append(el('div', { class: 'brief-theory', html: lesson.deep.theory }));
+  body.append(el('div', { class: 'brief-notes' }, [
+    el('div', {}, [el('span', { text: isLab() ? 'ГДЕ ВЫПОЛНЯТЬ' : 'ГДЕ ПРИМЕНЯЕТСЯ' }), el('div', { html: lesson.deep.where })]),
+    el('div', {}, [el('span', { text: 'ТИПИЧНАЯ ОШИБКА' }), el('div', { html: lesson.deep.pitfall })]),
+  ]));
+  // Публично разобранный случай из новостей. Он не учит приёму — он
+  // объясняет, зачем приём нужен, и это единственное место в уроке, где
+  // говорится про настоящий мир, а не про придуманный.
+  if (lesson.deep.real) {
+    body.append(el('div', { class: 'brief-real' }, [
+      el('span', { text: 'БЫЛО НА САМОМ ДЕЛЕ' }),
+      el('div', { html: lesson.deep.real }),
     ]));
-    // Публично разобранный случай из новостей. Он не учит приёму — он
-    // объясняет, зачем приём нужен, и это единственное место в уроке, где
-    // говорится про настоящий мир, а не про придуманный.
-    if (lesson.deep.real) {
-      body.append(el('div', { class: 'brief-real' }, [
-        el('span', { text: 'БЫЛО НА САМОМ ДЕЛЕ' }),
-        el('div', { html: lesson.deep.real }),
-      ]));
-    }
-    if (lesson.deep.examples.length) {
-      body.append(el('details', { class: 'brief-examples' }, [
-        el('summary', { text: isLab() ? 'Фрагменты из практикума' : 'Примеры' }),
-        ...lesson.deep.examples.map((example) => el('div', { class: 'example' }, [
-          el('pre', { text: example.code }),
-          example.note ? el('p', { html: example.note }) : null,
-        ])),
-      ]));
-    }
+  }
+  if (lesson.deep.examples.length) {
+    body.append(el('details', { class: 'brief-examples' }, [
+      el('summary', { text: isLab() ? 'Фрагменты из практикума' : 'Примеры' }),
+      ...lesson.deep.examples.map((example) => el('div', { class: 'example' }, [
+        el('pre', { text: example.code }),
+        example.note ? el('p', { html: example.note }) : null,
+      ])),
+    ]));
   }
 
   // Сеттинг не должен съесть предмет: за сюжетной рамкой человек обязан видеть,
@@ -302,24 +294,47 @@ function stuckButton(task) {
 
 function hintButton(task) {
   const box = el('div', { class: 'hint-box', hidden: true });
+  const rememberedFailures = view.failures.get(resultKey()) || 0;
+  view.hintLevel = autoHintLevel({
+    failedAttempts: rememberedFailures,
+    currentLevel: view.hintLevel,
+    hasSolution: Boolean(task.solution),
+  });
+
+  const reveal = (level, { automatic = false } = {}) => {
+    view.hintLevel = level;
+    box.hidden = false;
+    box.classList.toggle('automatic', automatic);
+    if (level === 1) {
+      const children = [el('p', { text: task.hint })];
+      if (automatic) children.unshift(el('p', { class: 'hint-auto', text: 'Третья попытка — вот ориентир:' }));
+      box.replaceChildren(...children);
+      if (task.solution) button.textContent = 'Показать решение';
+      else button.disabled = true;
+      return;
+    }
+
+    box.replaceChildren(
+      el('p', {
+        class: automatic ? 'hint-auto' : 'hint-note',
+        text: automatic
+          ? 'Пятая попытка — показываю решение целиком. Перепиши его руками и запусти.'
+          : 'Решение целиком. Лучше сначала перепиши его руками, а не вставляй.',
+      }),
+      el('pre', { text: task.solution }),
+    );
+    button.disabled = true;
+  };
+
   const button = el('button', {
     class: 'hint-button',
     onclick: () => {
-      view.hintLevel += 1;
-      if (view.hintLevel === 1) {
-        box.hidden = false;
-        box.replaceChildren(el('p', { text: task.hint }));
-        if (task.solution) button.textContent = 'Показать решение';
-        else button.disabled = true;
-      } else {
-        box.replaceChildren(
-          el('p', { class: 'hint-note', text: 'Решение целиком. Лучше сначала перепиши его руками, а не вставляй.' }),
-          el('pre', { text: task.solution }),
-        );
-        button.disabled = true;
-      }
+      const nextLevel = task.solution ? Math.min(view.hintLevel + 1, 2) : 1;
+      reveal(nextLevel);
     },
   }, 'Подсказка');
+  view.nodes.revealHint = reveal;
+  if (view.hintLevel > 0) reveal(view.hintLevel);
   return [button, box];
 }
 
@@ -399,11 +414,17 @@ function checklistPanel(rerender) {
 
 /** Показывает результат прогона: терминал, проверки и переход к следующему шагу. */
 function showResult(result) {
-  standPlay(result, view.nodes.editor ? view.nodes.editor.value : '');
+  const source = view.nodes.editor ? view.nodes.editor.value : '';
+  standPlay(result, source);
   renderChecks(result.checks);
   if (result.error) {
     const parts = [result.error.text];
     if (result.error.hint) parts.push('', `Подсказка: ${result.error.hint}`);
+    const expectedText = currentTask().checks.find((check) => (
+      check.kind === 'stdout' && check.mode === 'equals' && typeof check.value === 'string'
+    ))?.value;
+    const guidance = errorGuidance({ error: result.error, source, expectedText });
+    if (guidance) parts.push('', `Почему так: ${guidance.text}`);
     writeConsole(parts.join('\n'), 'error');
     view.nodes.runState.textContent = 'ошибка';
     return false;
@@ -469,12 +490,24 @@ async function run() {
   if (!passed) {
     track.taskFailed(lesson, task, result);
     view.attempted = true;
+    const key = resultKey();
+    const failedAttempts = (view.failures.get(key) || 0) + 1;
+    view.failures.set(key, failedAttempts);
+    const nextHintLevel = autoHintLevel({
+      failedAttempts,
+      currentLevel: view.hintLevel,
+      hasSolution: Boolean(task.solution),
+    });
+    if (nextHintLevel > view.hintLevel && view.nodes.revealHint) {
+      view.nodes.revealHint(nextHintLevel, { automatic: true });
+    }
     return;
   }
 
   const firstTry = !view.attempted && view.hintLevel === 0;
   track.taskSolved(lesson, task, { firstTry });
   const outcome = completeTask(lesson, task, { firstTry });
+  view.failures.delete(resultKey());
   view.attempted = false;
   if (!outcome.already) view.onProgress(outcome, lesson, task);
 }

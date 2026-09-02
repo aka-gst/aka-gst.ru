@@ -63,6 +63,17 @@ const trackIcon = (key) =>
   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TRACK_ICONS[key]}</svg>`;
 
+// У разделов один язык — крупные лаймово-фиолетовые плоскости, — но разные
+// силуэты: работа — ворота, игры — искра в портале, рассказы — раскрытая книга.
+// SVG, а не растровая эмблема: на высоте 28 px знак остаётся знаком.
+const brand = (kind = 'work', { switchable = false } = {}) => {
+  const src = (name) => `/assets/mark-${name}.svg?v=${assetVersion(`assets/mark-${name}.svg`)}`;
+  const data = switchable
+    ? ` data-brand-mark data-mark-work="${src('work')}" data-mark-play="${src('games')}"`
+    : '';
+  return `<a class="brand" href="/"><img class="brand-znak"${data} src="${src(kind)}" alt="" width="64" height="64" decoding="async">aka<span>-</span>gst</a>`;
+};
+
 const socials = site.socials.filter((item) => item.enabled && ICONS[item.id]);
 
 const socialLinks = (place) =>
@@ -382,81 +393,65 @@ const reportProof = flagship.shots?.length
 
 const reportScreen = `
       <section class="report" aria-labelledby="flagship-title">
-        <div class="report-bar">
-          <span class="dot" data-status="${esc(qa.status)}" aria-hidden="true"></span>
-          <code>${esc(qa.commit.branch)} @ ${esc(qa.commit.short)} · uv run pytest --cov</code>
-          <span class="verdict" data-metric-verdict data-status="${esc(qa.status)}">${esc(
+        <div class="report-brief">
+          <p class="kicker">AI/LLM QA · <span data-metric-version>v${esc(qa.project.version)}</span></p>
+          <h1 id="flagship-title">Локальный ИИ без передачи данных</h1>
+          <p class="report-name">${esc(flagship.title)}</p>
+          <div class="report-benefits">
+            <p>Рабочая программа получает помощь ИИ прямо на вашем компьютере.</p>
+            <p>Данные и секреты не уходят наружу.</p>
+          </div>
+          <p class="report-live"><b>Живой прогон LLM — отдельное измерение.</b> Его не подменяют зелёным тестом и не запускают на каждом push.</p>
+        </div>
+
+        <details class="report-more">
+          <summary>Подробнее для специалистов <span>тесты, покрытие, evaluation и доказательства</span></summary>
+          <div class="report-more-content">
+            <div class="report-bar">
+              <span class="dot" data-status="${esc(qa.status)}" aria-hidden="true"></span>
+              <code>${esc(qa.commit.branch)} @ ${esc(qa.commit.short)} · uv run pytest --cov</code>
+              <span class="verdict" data-metric-verdict data-status="${esc(qa.status)}">${esc(
   qa.tests.passed
 )} passed · ${esc(qa.tests.failed)} failed · ${esc(qa.tests.duration_ms)} ms</span>
-        </div>
+            </div>
 
-        <div class="report-grid">
-          <div class="report-lede">
-            <p class="kicker">${esc(flagship.kicker)} · <span data-metric-version>v${esc(
-  qa.project.version
-)}</span></p>
-            <h1 id="flagship-title">${esc(flagship.title)}</h1>
-            <p class="tagline">${esc(flagship.tagline)}</p>
-            <p class="summary">${esc(flagship.summary)}</p>
-            ${stackRow(flagship)}
-            <p class="card-links">
-              <a class="link link-repo" href="${esc(
-                qa.project.repository
-              )}" target="_blank" rel="noopener">Исходный код <b>↗</b></a>
-              <a class="link link-report" href="${esc(
-                qa.project.report
-              )}" target="_blank" rel="noopener">Allure-отчёт <b>↗</b></a>
-              <a class="link link-run" data-metric-run href="${esc(
-                qa.commit.run_url
-              )}" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>
+            <div class="report-grid">
+              <div class="report-lede">
+                <p class="detail-head">Как устроено</p>
+                <p class="summary">${esc(flagship.summary)}</p>
+                ${stackRow(flagship)}
+                <p class="card-links">
+                  <a class="link link-repo" href="${esc(qa.project.repository)}" target="_blank" rel="noopener">Исходный код <b>↗</b></a>
+                  <a class="link link-report" href="${esc(qa.project.report)}" target="_blank" rel="noopener">Allure-отчёт <b>↗</b></a>
+                  <a class="link link-run" data-metric-run href="${esc(qa.commit.run_url)}" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>
+                </p>
+              </div>
+              <div class="report-metrics" aria-label="Результаты последнего прогона">${headlineCards}</div>
+            </div>
+
+            <div class="report-detail">
+              <div class="detail">
+                <p class="detail-head">Слои тестов</p>
+                <ul class="suites">${suiteRows}</ul>
+              </div>
+              <div class="detail">
+                <p class="detail-head">Покрытие</p>
+                <p class="detail-body"><b>${esc(qa.coverage.percent)}%</b> при пороге CI ${esc(
+  qa.coverage.threshold
+)}% · ${esc(num(qa.coverage.covered_lines))} из ${esc(num(qa.coverage.total_lines))} строк, не покрыто ${esc(qa.coverage.missing_lines)}.</p>
+              </div>
+              <div class="detail">
+                <p class="detail-head">LLM-evaluation</p>
+                <p class="detail-body">Детерминированный набор «${esc(det.suite)}»: ${esc(det.passed)}/${esc(det.cases)}, mean score ${esc(det.mean_score)}. Живой прогон ${esc(live.model)} через ${esc(live.provider)}: ${esc(live.passed)}/${esc(live.runs)}, mean ${esc(live.mean_score)}, median ${esc(num(live.latency_ms.median))} мс, p95 ${esc(num(live.latency_ms.p95))} мс, stability ${esc(live.stability.min.toFixed(3))}.</p>
+              </div>
+            </div>
+${reportProof}
+            <p class="report-context">
+              <span><b>Живой прогон</b>: записан один раз ${esc(live.recorded_at)} на машине ${esc(live.environment.machine)} (${esc(live.environment.os)}, ${esc(live.environment.runtime)}, ${esc(live.environment.quantization)}, ${esc(live.environment.parameters)}), профиль ${esc(live.profile.cases)}×${esc(live.profile.repetitions)}, temperature ${esc(live.profile.temperature)}, seed ${esc(live.profile.seed)}. Это не проверяется каждым push — в отличие от тестов и покрытия.</span>
+              <span>Прогон от <time data-metric-updated datetime="${esc(qa.generated_at)}">${esc(qa.generated_at)}</time></span>
             </p>
           </div>
-
-          <div class="report-metrics" aria-label="Результаты последнего прогона">${headlineCards}
-          </div>
-        </div>
-
-        <div class="report-detail">
-          <div class="detail">
-            <p class="detail-head">Слои тестов</p>
-            <ul class="suites">${suiteRows}</ul>
-          </div>
-          <div class="detail">
-            <p class="detail-head">Покрытие</p>
-            <p class="detail-body"><b>${esc(qa.coverage.percent)}%</b> при пороге CI ${esc(
-  qa.coverage.threshold
-)}% · ${esc(num(qa.coverage.covered_lines))} из ${esc(
-  num(qa.coverage.total_lines)
-)} строк, не покрыто ${esc(qa.coverage.missing_lines)}.</p>
-          </div>
-          <div class="detail">
-            <p class="detail-head">LLM-evaluation</p>
-            <p class="detail-body">Детерминированный набор «${esc(det.suite)}»: ${esc(
-  det.passed
-)}/${esc(det.cases)}, mean score ${esc(det.mean_score)}. Живой прогон ${esc(
-  live.model
-)} через ${esc(live.provider)}: ${esc(live.passed)}/${esc(live.runs)}, mean ${esc(
-  live.mean_score
-)}, median ${esc(num(live.latency_ms.median))} мс, p95 ${esc(
-  num(live.latency_ms.p95)
-)} мс, stability ${esc(live.stability.min.toFixed(3))}.</p>
-          </div>
-        </div>
-${reportProof}
-        <p class="report-context">
-          <span><b>Живой прогон</b>: записан один раз ${esc(live.recorded_at)} на машине ${esc(
-  live.environment.machine
-)} (${esc(live.environment.os)}, ${esc(live.environment.runtime)}, ${esc(
-  live.environment.quantization
-)}, ${esc(live.environment.parameters)}), профиль ${esc(live.profile.cases)}×${esc(
-  live.profile.repetitions
-)}, temperature ${esc(live.profile.temperature)}, seed ${esc(
-  live.profile.seed
-)}. Это не проверяется каждым push — в отличие от тестов и покрытия.</span>
-          <span>Прогон от <time data-metric-updated datetime="${esc(
-            qa.generated_at
-          )}">${esc(qa.generated_at)}</time></span>
-        </p>
+        </details>
       </section>`;
 
 // ── Опыт и навыки ────────────────────────────────────────────────────
@@ -536,24 +531,88 @@ const allPlay = db.projects.filter((p) => p.tracks.includes('play') && p.kind ==
 const playable = db.projects.filter((p) => p.groups.includes('playable'));
 const otherGames = allPlay.filter((p) => !p.groups.includes('playable'));
 const leaderboards = db.projects.filter((p) => p.leaderboard);
+const projectById = (id) => db.projects.find((project) => project.id === id);
+const qaQuest = projectById('qa-quest');
+const practicumProjects = ['praktikum-testing', 'ai-agent-service-lab'].map(projectById);
+
+if (!qaQuest || practicumProjects.some((project) => !project)) {
+  throw new Error('не найдены QA Quest или один из двух практикумов');
+}
+
+const practicumCard = (project, active) => `
+          <article class="practicum-card" id="practicum-panel-${esc(project.id)}" role="tabpanel"
+            aria-labelledby="practicum-tab-${esc(project.id)}" data-practicum-panel="${esc(project.id)}"${
+              active ? '' : ' hidden'
+            }>
+            <div class="card-head">
+              <p class="kicker">${esc(project.kicker)}</p>
+              ${statusBadge(project)}
+            </div>
+            <h3>${cardTitle(project)}</h3>
+            <p class="tagline">${esc(project.tagline)}</p>
+            ${metricChips(project)}
+            ${linkRow(project)}
+          </article>`;
+
+const practicumSwitch = `
+      <section class="block practicum-switch" aria-labelledby="practicums-title" data-practicum-switch>
+        <div class="block-head">
+          <p class="kicker">03</p>
+          <h2 id="practicums-title">Практикумы</h2>
+          <p>Два самостоятельных маршрута: сначала выбери, что хочешь научиться делать.</p>
+        </div>
+        <div class="practicum-tabs" role="tablist" aria-label="Практикумы">
+          ${practicumProjects
+            .map(
+              (project, index) =>
+                `<button type="button" role="tab" id="practicum-tab-${esc(project.id)}"
+                  data-practicum-to="${esc(project.id)}" aria-controls="practicum-panel-${esc(project.id)}"
+                  aria-selected="${index === 0 ? 'true' : 'false'}">${esc(project.title.replace('Практикум: ', ''))}</button>`
+            )
+            .join('')}
+        </div>
+        <div class="practicum-panels">
+${practicumProjects.map((project, index) => practicumCard(project, index === 0)).join('')}
+        </div>
+      </section>`;
+
+const partnerForm = `
+          <form class="partner-form" data-contact-form action="/api/contact/submit" method="post">
+            <label>Как к вам обращаться
+              <input name="name" maxlength="80" autocomplete="name" required>
+            </label>
+            <label>Как ответить
+              <input name="reply" maxlength="120" autocomplete="email" placeholder="Telegram, e-mail или другой удобный способ" required>
+            </label>
+            <label class="partner-message">Что хотите сделать вместе
+              <textarea name="message" maxlength="2000" rows="5" required></textarea>
+            </label>
+            <label class="partner-honeypot" aria-hidden="true">Компания
+              <input name="company" tabindex="-1" autocomplete="off">
+            </label>
+            <button type="submit">Отправить запрос</button>
+            <p class="partner-status" data-contact-status aria-live="polite"></p>
+          </form>`;
 
 // ── Панель «Работа» ──────────────────────────────────────────────────
 const workPanel = `
       ${reportScreen}
 
-      <section class="block" aria-labelledby="practicums-title">
+      <section class="block block--lead" aria-labelledby="qa-quest-title">
         <div class="block-head">
           <p class="kicker">02</p>
-          <h2 id="practicums-title">Практикумы и обучение</h2>
-          <p>Собрано из настоящей работы: инструкция, автотесты и то, что осталось после проверки.</p>
+          <h2 id="qa-quest-title">QA Quest</h2>
+          <p>Учебная игра, где настоящий Python двигает историю и отвечает живой стенд.</p>
         </div>
-        <div class="grid">${byGroup('practicums').map(card).join('')}
+        <div class="grid">${card(qaQuest)}
         </div>
       </section>
 
+${practicumSwitch.trim()}
+
       <section class="block" aria-labelledby="products-title">
         <div class="block-head">
-          <p class="kicker">03</p>
+          <p class="kicker">04</p>
           <h2 id="products-title">Продукты с заказчиком</h2>
           <p>Работающие демо, где требования, границы безопасности и проверки описаны заранее.</p>
         </div>
@@ -563,7 +622,7 @@ const workPanel = `
 
       <section class="block" aria-labelledby="own-products-title">
         <div class="block-head">
-          <p class="kicker">04</p>
+          <p class="kicker">05</p>
           <h2 id="own-products-title">Свои продукты</h2>
           <p>Сделано без заказчика: задача, сроки и мера готовности собственные.</p>
         </div>
@@ -573,7 +632,7 @@ const workPanel = `
 
       <section class="block" aria-labelledby="profile-title">
         <div class="block-head">
-          <p class="kicker">05</p>
+          <p class="kicker">06</p>
           <h2 id="profile-title">Опыт и навыки</h2>
           <p>${esc(profile.summary)}</p>
         </div>
@@ -590,7 +649,7 @@ const workPanel = `
 
       <section class="block" aria-labelledby="all-work-title">
         <div class="block-head">
-          <p class="kicker">06</p>
+          <p class="kicker">07</p>
           <h2 id="all-work-title">Все проекты</h2>
         </div>
         <ul class="list">${allWork.map(listRow).join('')}
@@ -599,12 +658,11 @@ const workPanel = `
 
       <section class="block contact" aria-labelledby="contact-title" id="contact">
         <div class="block-head">
-          <p class="kicker">07</p>
+          <p class="kicker">08</p>
           <h2 id="contact-title">${esc(site.contact.heading)}</h2>
           <p>${esc(site.contact.intro)}</p>
         </div>
-        <div class="channels">${contactChannels()}
-        </div>
+${partnerForm.trim()}
       </section>`;
 
 // ── Панель «Игры» ────────────────────────────────────────────────────
@@ -808,7 +866,7 @@ const html = `<!doctype html>
   <body>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
+      ${brand('work', { switchable: true })}
 ${recTicker}
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
@@ -887,7 +945,7 @@ const praktikumPage = `<!doctype html>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
+      ${brand()}
     </header>
     <main id="main">
       <section class="block" style="margin-top:34px">
@@ -960,7 +1018,7 @@ const enPage = `<!doctype html>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
+      ${brand()}
       <a class="link" href="/">По-русски <b>→</b></a>
     </header>
     <main id="main">
@@ -1076,7 +1134,7 @@ const readerHead = (title, description, canonical) => `
 // странице нет, переключать нечего, а увести на главную нужно.
 const readerTopbar = `
       <header class="topbar">
-        <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
+        ${brand('stories')}
         <div class="track-switch" role="group" aria-label="Разделы сайта">
           <a href="/#work">${trackIcon('work')}<span>${esc(site.tracks.work.label)}</span></a>
           <a href="/#games">${trackIcon('games')}<span>${esc(site.tracks.play.label)}</span></a>
@@ -1434,7 +1492,7 @@ const notFound = `<!doctype html>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
+      ${brand()}
     </header>
     <main id="main">
       <section class="report" style="margin-top:34px">
@@ -1482,7 +1540,7 @@ const unavailable = `<!doctype html>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" src="/assets/znak.png?v=${assetVersion('assets/znak.png')}" alt="" width="96" height="96" decoding="async">aka<span>-</span>gst</a>
+      ${brand()}
     </header>
     <main id="main">
       <section class="report" style="margin-top:34px">

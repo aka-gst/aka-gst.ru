@@ -102,15 +102,9 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
   border-bottom: 1px solid var(--line-soft);
 }
 
-/* Знак стоит РЯДОМ с надписью, а не вместо неё. Надпись «aka-gst» —
-   то, по чему сайт узнают и что произносят; знак к ней добавляется, а
-   не заменяет её.
-
-   Размер выбран сравнением, а не на глаз: на 26 пикселях голова
-   рассыпается в фиолетово-зелёное пятно, на 44 начинает спорить с
-   названием, на 34 читаются кольцо и лицо. Знак нарисован подробным, и
-   меньше 34 он перестаёт быть знаком — это то же ограничение, из-за
-   которого для значка вкладки понадобился отдельный файл. */
+/* Знак стоит рядом с надписью, а не вместо неё. Три SVG используют один
+   лаймово-фиолетовый язык, но разные силуэты; на 28 px они остаются
+   различимыми, в отличие от прежней подробной растровой эмблемы. */
 .brand-znak {
   height: 34px; width: auto; margin-right: 10px;
   vertical-align: -10px; display: inline-block;
@@ -200,6 +194,30 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
   background: var(--panel);
   overflow: hidden;
 }
+
+/* Первый экран продаёт понятный результат, а не стек. Доказательства никуда
+   не делись: они раскрываются нативной кнопкой и доступны без JavaScript. */
+.report-brief { padding: 30px 28px 24px; max-width: 720px; }
+.report-brief h1 { margin: 7px 0 5px; font-size: clamp(30px, 4.4vw, 46px); }
+.report-name { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .08em; }
+.report-benefits { display: grid; gap: 4px; margin-top: 16px; }
+.report-benefits p { color: var(--text); font-size: 16px; line-height: 1.45; }
+.report-live {
+  margin-top: 16px; padding: 10px 12px; border-left: 2px solid var(--warn);
+  background: var(--bg-soft); color: var(--muted); font-size: 12.5px; line-height: 1.45;
+}
+.report-live b { color: var(--warn); }
+.report-more { border-top: 1px solid var(--line); }
+.report-more > summary {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  min-height: 54px; padding: 14px 28px; cursor: pointer; list-style: none;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+}
+.report-more > summary::-webkit-details-marker { display: none; }
+.report-more > summary::after { content: '+'; flex: none; font-size: 18px; line-height: 1; }
+.report-more[open] > summary::after { content: '−'; }
+.report-more > summary span { color: var(--dim); font-family: var(--sans); font-size: 12px; letter-spacing: 0; text-transform: none; }
+.report-more-content { border-top: 1px solid var(--line); }
 
 .report-bar {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -515,6 +533,44 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .link:hover { border-bottom-color: currentColor; }
 .link b { font-weight: 400; }
 .link.muted { color: var(--dim); }
+
+/* ── Переключаемые практикумы ─────────────────────────────────────── */
+.practicum-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.practicum-tabs button {
+  flex: 1 1 0; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line);
+  border-radius: 9px; background: var(--bg-soft); color: var(--muted); cursor: pointer;
+  font: 600 12px/1.25 var(--sans); text-align: left;
+}
+.practicum-tabs button[aria-selected="true"] { border-color: var(--accent); background: var(--accent-dim); color: var(--text); }
+.practicum-card {
+  display: grid; gap: 10px; padding: 20px; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel);
+}
+.practicum-card .card-head { padding-top: 0; }
+.practicum-card h3 { font-size: 20px; }
+.practicum-card .tagline { color: var(--text); font-size: 14px; }
+
+/* ── Заявка о партнёрстве ─────────────────────────────────────────── */
+.partner-form {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+  max-width: 760px; padding: 20px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel);
+}
+.partner-form label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; }
+.partner-form input, .partner-form textarea {
+  width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg-soft); color: var(--text); font: inherit; resize: vertical;
+}
+.partner-form input:focus, .partner-form textarea:focus { border-color: var(--accent); outline: 0; }
+.partner-message { grid-column: 1 / -1; }
+.partner-form button {
+  justify-self: start; min-height: 44px; padding: 10px 15px; border: 1px solid var(--accent); border-radius: 8px;
+  background: var(--accent); color: #092013; font: 700 13px/1 var(--sans); cursor: pointer;
+}
+.partner-form button:disabled { opacity: .6; cursor: wait; }
+.partner-honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.partner-status { align-self: center; margin: 0; color: var(--muted); font-size: 13px; }
+.partner-status[data-state="ok"] { color: var(--accent); }
+.partner-status[data-state="error"] { color: var(--fail); }
 
 /* ── Опыт и навыки ────────────────────────────────────────────────── */
 
@@ -1071,6 +1127,17 @@ html[data-track] .rec[hidden] { display: none; }
   .rec-label { display: inline; font-size: 9px; }
   .sitefoot { padding: 20px 16px calc(36px + env(safe-area-inset-bottom, 0px)); }
   .report-metrics { grid-template-columns: 1fr; }
+  .report-brief { padding: 18px 18px 14px; }
+  .report-brief h1 { font-size: 28px; line-height: 1.04; }
+  .report-benefits { margin-top: 12px; gap: 3px; }
+  .report-benefits p { font-size: 14px; line-height: 1.35; }
+  .report-live { margin-top: 12px; padding: 8px 10px; font-size: 11.5px; line-height: 1.4; }
+  .report-more > summary { min-height: 48px; padding: 11px 18px; font-size: 10.5px; }
+  .report-more > summary span { display: none; }
+  .practicum-tabs { flex-direction: column; }
+  .practicum-tabs button { min-height: 44px; }
+  .partner-form { grid-template-columns: 1fr; padding: 16px; }
+  .partner-message { grid-column: auto; }
   .block { margin-top: 48px; }
 }
 

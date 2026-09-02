@@ -20,6 +20,7 @@
 import { el } from './dom.js';
 import { activeTheme } from './../content/themes.js';
 import { scene } from './pingcar.js';
+import { incidentForRun } from './incident-feed.js';
 
 /*
  * Русские числительные. Тернарник «одно или много» здесь не работает: выходит
@@ -90,7 +91,34 @@ export function standPanel() {
     ]),
     box,
     el('div', { class: 'stand-extra', hidden: true }),
+    el('aside', { class: 'incident-feed', hidden: true, 'aria-live': 'polite' }),
   ]);
+}
+
+function renderIncident(feed, result) {
+  const incident = incidentForRun({
+    themeId: activeTheme().id,
+    outcome: result.error ? 'error' : 'success',
+  });
+  if (!incident) {
+    feed.hidden = true;
+    feed.replaceChildren();
+    return;
+  }
+  feed.replaceChildren(
+    el('span', { class: 'incident-eyebrow', text: incident.eyebrow }),
+    el('b', { text: incident.title }),
+    el('p', { class: 'incident-lead', text: incident.lead }),
+    el('p', { text: incident.fact }),
+    el('p', { class: 'incident-defense', text: incident.defense }),
+    el('a', {
+      href: incident.sourceUrl,
+      target: '_blank',
+      rel: 'noopener',
+      text: `${incident.sourceLabel} →`,
+    }),
+  );
+  feed.hidden = false;
 }
 
 /*
@@ -194,10 +222,12 @@ export function standPlay(result, source = '', quiet = false) {
   const svg = wrap.querySelector('svg');
   const note = wrap.querySelector('.stand-note');
   const extra = wrap.querySelector('.stand-extra');
+  const feed = wrap.querySelector('.incident-feed');
   clearTimers();
   extra.hidden = true;
   extra.replaceChildren();
   last = { result, source };
+  renderIncident(feed, result);
   svg.classList.remove('fault', 'ok', 'no', 'lights');
 
   if (result.error) {

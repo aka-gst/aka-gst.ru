@@ -15,6 +15,10 @@
     if (track !== 'work' && track !== 'play') return;
     root.dataset.track = track;
     document.title = titles[track];
+    const markKey = track === 'play' ? 'markPlay' : 'markWork';
+    document.querySelectorAll('[data-brand-mark]').forEach((mark) => {
+      if (mark.dataset[markKey]) mark.src = mark.dataset[markKey];
+    });
     try {
       localStorage.setItem(STORE, track);
     } catch (e) {}
@@ -398,6 +402,85 @@
   кнопка.addEventListener('click', () => показать(список.classList.contains('is-folded')));
   список.after(кнопка);
   показать(false);
+})();
+
+// ── Компактный блок практикумов ─────────────────────────────────────
+// Оба маршрута приходят в HTML целиком. Скрипт лишь выбирает, какой из них
+// показать первым, поэтому без JavaScript курсы всё равно доступны.
+(() => {
+  document.querySelectorAll('[data-practicum-switch]').forEach((switcher) => {
+    const buttons = [...switcher.querySelectorAll('[data-practicum-to]')];
+    const panels = [...switcher.querySelectorAll('[data-practicum-panel]')];
+    if (buttons.length !== 2 || panels.length !== 2) return;
+
+    const show = (id, focus = false) => {
+      buttons.forEach((button) => {
+        const selected = button.dataset.practicumTo === id;
+        button.setAttribute('aria-selected', String(selected));
+        button.tabIndex = selected ? 0 : -1;
+        if (selected && focus) button.focus();
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.practicumPanel !== id;
+      });
+    };
+
+    buttons.forEach((button, index) => {
+      button.addEventListener('click', () => show(button.dataset.practicumTo));
+      button.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        const next = buttons[(index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length];
+        show(next.dataset.practicumTo, true);
+      });
+    });
+
+    show(buttons.find((button) => button.getAttribute('aria-selected') === 'true')?.dataset.practicumTo || buttons[0].dataset.practicumTo);
+  });
+})();
+
+// ── Заявка о партнёрстве ────────────────────────────────────────────
+// Сервис сам валидирует поля, ловит заполненный honeypot и режет частые
+// запросы. Здесь только UX: не отправить одну форму дважды и назвать ответ.
+(() => {
+  const form = document.querySelector('[data-contact-form]');
+  if (!form) return;
+  const status = form.querySelector('[data-contact-status]');
+  const submit = form.querySelector('button[type="submit"]');
+  const say = (text, state) => {
+    status.textContent = text;
+    status.dataset.state = state;
+  };
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity() || submit.disabled) return;
+
+    const data = new FormData(form);
+    const payload = Object.fromEntries(['name', 'reply', 'message', 'company'].map((key) => [key, data.get(key)]));
+    submit.disabled = true;
+    say('Отправляю…', 'pending');
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        form.reset();
+        say('Запрос отправлен. Отвечу по указанному способу связи.', 'ok');
+      } else if (response.status === 429) {
+        say('С этого устройства запросов уже много. Попробуй позже.', 'error');
+      } else {
+        say('Не получилось отправить. Проверь поля и повтори позже.', 'error');
+      }
+    } catch (error) {
+      say('Связь оборвалась. Попробуй ещё раз.', 'error');
+    } finally {
+      submit.disabled = false;
+    }
+  });
 })();
 
 // ── Карточки проектов: техника прячется под «подробнее» ───────────────
