@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
-import { createWidgetState, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
+import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260902-3";
+const widgetVersion = "psy-widget-20260902-4";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -17,6 +17,12 @@ for (const page of ["index.html", "psycluborion/index.html", "services/index.htm
 }
 
 assert.equal(quickQuestions.length, 60);
+assert.equal(preparedQuestionCases().length, 60);
+assert.deepEqual(preparedQuestionCases().map(({ category, question }) => ({ category, question })), quickQuestions);
+assert.equal(preparedQuestionCases().filter(({ expected }) => !expected).length, 0);
+assert.match(widgetSource, /Показать 60 проверочных вопросов/);
+assert.match(widgetSource, /preparedQuestionCases/);
+assert.doesNotMatch(widgetSource, /data-question="У меня мысли о самоубийстве"/);
 const preparedAnswers = quickQuestions.map(({ question }) => answerQuestion(question));
 assert.equal(preparedAnswers.filter(({ kind }) => kind === "fallback" || kind === "empty").length, 0);
 assert.equal(preparedAnswers.filter(({ url }) => Boolean(url)).length, 59); // Кризисный ответ намеренно без ссылки.

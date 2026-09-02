@@ -25,6 +25,17 @@
 .psy-widget[data-fullscreen="true"] .psy-widget-voice-status { width: min(960px, 100%); margin-left: auto; margin-right: auto; }
 .psy-widget-boundary { margin: 0; padding: 16px 24px; color: #563a30; font-size: .9rem; line-height: 1.55; }
 .psy-widget-boundary { background: #fff3e9; }
+.psy-widget-evaluation { padding: 12px 24px; border-bottom: 1px solid #eeeaf5; background: #fcfbff; }
+.psy-widget-evaluation-open { width: 100%; min-height: 46px; border: 1px solid #d3cae8; border-radius: 12px; background: #fff; color: #4b397c; font-weight: 750; cursor: pointer; }
+.psy-widget-evaluation-panel { display: grid; gap: 14px; padding-top: 14px; }
+.psy-widget-evaluation-panel > p { margin: 0; color: #5d526e; font-size: .86rem; line-height: 1.45; }
+.psy-widget-evaluation-list { display: grid; gap: 14px; }
+.psy-widget-evaluation-group { display: grid; gap: 8px; }
+.psy-widget-evaluation-group h3 { margin: 0; color: #4b397c; font-size: .92rem; }
+.psy-widget-evaluation-question { display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; align-items: center; padding: 12px; border: 1px solid #e5e0ef; border-radius: 12px; background: #fff; }
+.psy-widget-evaluation-question p { margin: 0; font-size: .92rem; line-height: 1.35; }
+.psy-widget-evaluation-question small { color: #6a6378; font-size: .76rem; }
+.psy-widget-evaluation-question button { grid-column: 2; grid-row: 1 / span 2; min-height: 38px; padding: 0 10px; border: 0; border-radius: 9px; background: #6955a4; color: #fff; font-size: .82rem; font-weight: 750; cursor: pointer; }
 .psy-widget-messages { display: grid; gap: 18px; min-height: 170px; padding: 32px 28px 22px; }
 .psy-widget-message { max-width: 88%; margin: 0; padding: 22px 26px; border-radius: 22px; font-size: 1.12rem; line-height: 1.48; }
 .psy-widget-message b { display: block; margin-bottom: 5px; }
@@ -57,6 +68,7 @@
   .psy-widget-panel { right: 0; bottom: 0; width: 100vw; max-height: min(76vh, 680px); border-radius: 22px 22px 0 0; }
   .psy-widget-fullscreen { display: none; }
   .psy-widget-boundary { padding: 14px 20px; }
+  .psy-widget-evaluation { padding: 12px 20px; }
   .psy-widget-messages { padding: 28px 20px 20px; }
   .psy-widget-message { max-width: 92%; padding: 20px; }
   .psy-widget-suggestions { padding: 4px 20px 22px; }

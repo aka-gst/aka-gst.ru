@@ -1,4 +1,24 @@
-import { answerQuestion } from "./router.js?v=psy-widget-20260902-3";
+import { quickQuestions } from "./content.js";
+import { answerQuestion } from "./router.js?v=psy-widget-20260902-4";
+
+const preparedAnswerLabels = {
+  boundary: "граница безопасности",
+  crisis: "экстренная помощь",
+  offer: "подтверждённое предложение",
+  unconfirmed: "не называет неподтверждённое",
+};
+
+export function preparedQuestionCases() {
+  return quickQuestions.map((item, index) => {
+    const answer = answerQuestion(item.question);
+    return {
+      id: `prepared-question-${index + 1}`,
+      category: item.category,
+      question: item.question,
+      expected: preparedAnswerLabels[answer.kind] || "подтверждённый ответ",
+    };
+  });
+}
 
 export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoice = false) {
   const presentation = {

@@ -70,7 +70,7 @@ function sanitise(html, widgetPath) {
     #psy-demo-notice{position:fixed;z-index:2147482990;left:12px;bottom:12px;max-width:min(390px,calc(100vw - 24px));padding:10px 12px;border-radius:8px;background:#171420e8;color:#fff;font:12px/1.35 Arial,sans-serif;box-shadow:0 8px 28px #0005}#psy-demo-notice b{display:block;margin-bottom:2px}.psy-demo-form{opacity:.58;pointer-events:none}
   </style></head>`);
   page = page.replace(/<body\b([^>]*)>/i, `<body$1><aside id="psy-demo-notice"><b>Независимое демонстрационное демо</b>Не официальный сайт «Орион-С». Формы, оплата, аналитика и личный кабинет отключены.</aside>`);
-  const widget = `<script type="module" src="${widgetPath}?v=psy-widget-20260902-3"></script>`;
+  const widget = `<script type="module" src="${widgetPath}?v=psy-widget-20260902-4"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }
