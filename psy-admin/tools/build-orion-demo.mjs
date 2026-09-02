@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
+const outputRoot = resolve(here, "..");
 const snapshot = "/Users/gst/dev/psy-ai-admin/reference/orion-center-public-snapshot";
 const pages = {
   "index.html": "index.html",
@@ -47,6 +48,19 @@ function sanitise(html, widgetPath) {
       ? tag.replace(/background-image\s*:\s*url\((['"]?).*?\1\)/i, `background-image:url('${original}')`)
       : tag
   ));
+  // Обложки Tilda хранят полноразмерный фон не в data-original, а в дочернем
+  // carrier. Без tilda-cover JS внешний .t-cover иначе остаётся на превью 20px.
+  const coverBackgrounds = new Map(
+    [...page.matchAll(/data-content-cover-id=(['"])(\d+)\1[^>]*\bdata-content-cover-bg=(['"])(.*?)\3/gi)]
+      .map((match) => [match[2], match[4]]),
+  );
+  page = page.replace(/<div\b([^>]*\bid=(['"])recorddiv(\d+)\2[^>]*)>/gi, (tag, attrs, _quote, id) => {
+    const original = coverBackgrounds.get(id);
+    if (!original || !/\bt-cover\b/i.test(attrs)) return tag;
+    return /background-image\s*:/i.test(tag)
+      ? tag.replace(/background-image\s*:\s*url\((['"]?).*?\1\)/i, `background-image:url('${original}')`)
+      : tag.replace(/\sstyle=(['"])(.*?)\1/i, (_style, quote, body) => ` style=${quote}${body};background-image:url('${original}')${quote}`);
+  });
   page = page.replace(/\bhref=(['"])(.*?)\1/gi, (_all, quote, href) => `href=${quote}${localHref(href)}${quote}`);
   page = page.replace(/<\/head>/i, `<style>
     /* Снимок больше не исполняет Tilda JS, поэтому раскрываем их стартовые
@@ -62,7 +76,7 @@ function sanitise(html, widgetPath) {
 }
 
 for (const [output, source] of Object.entries(pages)) {
-  const target = resolve(here, output);
+  const target = resolve(outputRoot, output);
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, sanitise(await readFile(resolve(snapshot, source), "utf8"), output === "index.html" ? "./psy-widget.js" : "../psy-widget.js"));
 }
