@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
+import { createWidgetState, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 
 assert.equal(quickQuestions.length, 60);
 const preparedAnswers = quickQuestions.map(({ question }) => answerQuestion(question));
@@ -66,5 +67,35 @@ assert.match(crisis.text, /112/);
 assert.equal(crisis.url, undefined);
 assert.equal(crisis.action, undefined);
 assert.equal(psychosomaticsPrice.action?.url, "https://orion-center.ru/contacts");
+
+const unsafeSpeech = sanitizeSpokenText(
+  "Подробный ответ: https://orion-center.ru/file.html www.orion-center.ru /path/form.php. Открыть файл и Записаться на встречу клуба.",
+  ["Открыть файл", "Записаться на встречу клуба"],
+);
+assert.doesNotMatch(unsafeSpeech, /https?:\/\/|www\.|[\\/]|\.(?:html?|php)\b|Открыть файл|Записаться на встречу клуба/i);
+assert.match(unsafeSpeech, /Подробный ответ/i);
+
+const routedClub = routeWidgetQuestion("Сколько стоит психологический клуб?");
+assert.match(routedClub.text, /1\s*000\s*(руб|₽)/i); // Полный ответ остаётся видимым.
+assert.match(routedClub.action?.label || "", /записаться/i); // И кнопка ссылки остаётся видимой.
+assert.ok(routedClub.spokenText.length > 0);
+assert.doesNotMatch(routedClub.spokenText, /https?:\/\/|www\.|[\\/]|\.(?:html?|php)\b|записаться/i);
+
+let widgetState = reduceWidgetState(createWidgetState(), "trigger");
+widgetState = reduceWidgetState(widgetState, "fullscreen");
+assert.equal(widgetState.fullScreen, true);
+widgetState = reduceWidgetState(widgetState, "fullscreen");
+assert.equal(widgetState.fullScreen, false); // fullscreen → normal
+
+widgetState = reduceWidgetState(widgetState, "fullscreen");
+widgetState = reduceWidgetState(widgetState, "close");
+assert.deepEqual(widgetState, { open: false, panelVisible: false, fullScreen: false, returnFocusToTrigger: true }); // fullscreen → close
+
+widgetState = reduceWidgetState(reduceWidgetState(createWidgetState(), "trigger"), "fullscreen");
+widgetState = reduceWidgetState(widgetState, "escape");
+assert.equal(widgetState.fullScreen, false);
+assert.equal(widgetState.open, true); // Первый Escape только сворачивает fullscreen.
+widgetState = reduceWidgetState(widgetState, "escape");
+assert.equal(widgetState.open, false); // Следующий Escape закрывает.
 
 console.log("psy-admin: 60 prepared questions and safety checks passed");

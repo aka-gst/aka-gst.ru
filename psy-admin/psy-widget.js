@@ -14,7 +14,10 @@ mount.innerHTML = `
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
         <div><b>AI-администратор</b><span>Только открытые источники</span></div>
-        <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
+        <div class="psy-widget-head-actions">
+          <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
+          <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
+        </div>
       </header>
       <p class="psy-widget-boundary">Демо не связано с центром, не хранит переписку и не заменяет психолога, врача или экстренную службу.</p>
       <p class="psy-widget-source-boundary">Ответы ведут только к подтверждённым открытым страницам «Орион-С».</p>
@@ -63,6 +66,7 @@ const root = mount.querySelector("[data-psy-widget]");
 const trigger = root.querySelector(".psy-widget-trigger");
 const panel = root.querySelector(".psy-widget-panel");
 const closeButton = root.querySelector(".psy-widget-close");
+const fullScreenButton = root.querySelector(".psy-widget-fullscreen");
 const messages = root.querySelector(".psy-widget-messages");
 const questionForm = root.querySelector(".psy-widget-form");
 const questionInput = root.querySelector("#psy-widget-question");
@@ -72,7 +76,7 @@ const handoffOpen = root.querySelector(".psy-widget-handoff-open");
 const handoffForm = root.querySelector(".psy-widget-handoff-form");
 const handoffStatus = root.querySelector(".psy-widget-handoff-status");
 let state = window.innerWidth > 620
-  ? { open: true, panelVisible: true, returnFocusToTrigger: false }
+  ? { open: true, panelVisible: true, fullScreen: false, returnFocusToTrigger: false }
   : createWidgetState();
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const voiceCapabilities = {
@@ -121,9 +125,12 @@ function render() {
   const presentation = widgetPresentation(window.innerWidth, voiceCapabilities);
   root.dataset.open = String(state.open);
   root.dataset.mode = presentation.mode;
+  root.dataset.fullscreen = String(state.fullScreen);
   root.style.setProperty("--psy-widget-touch-target", `${presentation.minTouchTarget}px`);
   panel.hidden = !state.panelVisible;
   trigger.setAttribute("aria-expanded", String(state.open));
+  fullScreenButton.setAttribute("aria-label", state.fullScreen ? "Вернуть обычный размер" : "Развернуть чат на весь экран");
+  fullScreenButton.setAttribute("aria-pressed", String(state.fullScreen));
   if (state.open && document.activeElement === trigger) questionInput.focus({ preventScroll: true });
   if (state.returnFocusToTrigger) trigger.focus();
 }
@@ -137,10 +144,10 @@ function setVoiceStatus(message) {
   voiceStatus.textContent = message;
 }
 
-function speak(text) {
+function speak(spokenText) {
   if (!voiceCapabilities.speechAvailable) return;
   window.speechSynthesis.cancel();
-  const utterance = new window.SpeechSynthesisUtterance(text);
+  const utterance = new window.SpeechSynthesisUtterance(spokenText);
   utterance.lang = "ru-RU";
   window.speechSynthesis.speak(utterance);
 }
@@ -151,13 +158,14 @@ async function ask(question, askedByVoice = false) {
   appendMessage("user", { text: value });
   const result = routeWidgetQuestion(value);
   appendMessage("assistant", result);
-  if (widgetPresentation(window.innerWidth, voiceCapabilities, askedByVoice).voice.shouldSpeakReply) speak(result.text);
+  if (widgetPresentation(window.innerWidth, voiceCapabilities, askedByVoice).voice.shouldSpeakReply && result.spokenText) speak(result.spokenText);
   questionInput.value = "";
   questionInput.focus({ preventScroll: true });
 }
 
 trigger.addEventListener("click", () => transition("trigger"));
 closeButton.addEventListener("click", () => transition("close"));
+fullScreenButton.addEventListener("click", () => transition("fullscreen"));
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && state.open) transition("escape");
 });

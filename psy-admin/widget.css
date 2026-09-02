@@ -13,7 +13,12 @@
 .psy-widget-head b,
 .psy-widget-head span { display: block; }
 .psy-widget-head span { margin-top: 3px; color: #6a6378; font-size: .82rem; }
-.psy-widget-close { min-width: var(--psy-widget-touch-target); min-height: var(--psy-widget-touch-target); border: 1px solid #d7cfea; border-radius: 50%; background: #fff; color: #4f3b80; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.psy-widget-head-actions { display: flex; gap: 8px; }
+.psy-widget-close,
+.psy-widget-fullscreen { min-width: var(--psy-widget-touch-target); min-height: var(--psy-widget-touch-target); border: 1px solid #d7cfea; border-radius: 50%; background: #fff; color: #4f3b80; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.psy-widget-fullscreen { font-size: 1.1rem; }
+.psy-widget[data-fullscreen="true"] .psy-widget-panel { inset: 24px; width: auto; max-width: 960px; max-height: none; margin: auto; border-radius: 22px; }
+.psy-widget[data-fullscreen="true"] .psy-widget-messages { min-height: 360px; }
 .psy-widget-boundary,
 .psy-widget-source-boundary { margin: 0; padding: 12px 18px; color: #563a30; font-size: .82rem; line-height: 1.42; }
 .psy-widget-boundary { background: #fff3e9; }
@@ -48,6 +53,7 @@
   .psy-widget-trigger { right: 16px; bottom: 16px; min-width: var(--psy-widget-touch-target); padding: 12px; }
   .psy-widget-trigger span:last-child { display: none; }
   .psy-widget-panel { right: 0; bottom: 0; width: 100vw; max-height: min(76vh, 680px); border-radius: 22px 22px 0 0; }
+  .psy-widget-fullscreen { display: none; }
   .psy-widget-form { flex-wrap: wrap; }
   .psy-widget-form input { flex-basis: calc(100% - 52px); }
 }
