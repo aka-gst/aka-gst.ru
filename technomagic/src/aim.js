@@ -147,19 +147,36 @@ function alive(world, target) {
 
 function visible(world, target, limit) {
   if (!alive(world, target)) return false;
+
   const player = world.player;
-  const dist = Math.hypot(target.x - player.x, target.y - player.y);
+  const dx = target.x - player.x;
+  const dy = target.y - player.y;
+  const dist = Math.hypot(dx, dy);
   if (dist > limit) return false;
-  return hasSight(world, player.x, player.y, target.x, target.y);
+  if (!dist) return true;
+
+  /*
+   * До предмета луч ведётся не до середины клетки, а до её лицевой
+   * стороны. Иначе стог загораживает сам себя: проверка упирается в ту
+   * самую клетку, в которую целятся, и объявляет её невидимой.
+   *
+   * Из-за этого нельзя было выбрать ни стог, ни валун, ни ящик — то есть
+   * ровно те вещи, ради которых прицел по предметам и делался. Видно их
+   * при этом было прекрасно.
+   */
+  const back = target.prop !== undefined ? Math.min(dist - 1, TILE_SIZE * 0.7) : 0;
+  const face = { x: target.x - (dx / dist) * back, y: target.y - (dy / dist) * back };
+
+  return hasSight(world, player.x, player.y, face.x, face.y);
 }
 
 /* Все цели по порядку удобства: сначала живые, потом предметы. */
-export function lockCandidates(world, facing) {
+export function lockCandidates(world, facing, limit = LOCK_RANGE) {
   const player = world.player;
   const out = [];
 
   const add = (target, penalty) => {
-    if (!visible(world, target, LOCK_RANGE)) return;
+    if (!visible(world, target, limit)) return;
     const dx = target.x - player.x;
     const dy = target.y - player.y;
     const off = Math.abs(angleDelta(facing, Math.atan2(dy, dx)));
@@ -175,6 +192,18 @@ export function lockCandidates(world, facing) {
   return out.sort((a, b) => a.score - b.score).map((entry) => entry.target);
 }
 
+/*
+ * Обновить выбранную руками цель. Она либо остаётся собой, либо исчезает —
+ * подменять её на ближайшую нельзя: игрок целился в бочку, а удар ушёл бы
+ * в того, кто рядом, и виноват был бы он.
+ */
+export function keepPicked(world, picked) {
+  if (!picked) return null;
+  const limit = Math.max(LOCK_KEEP, (world.viewRadius || 0) + 160);
+  if (!visible(world, picked, limit)) return null;
+  return picked.prop !== undefined ? targetAt(world, picked.prop) : picked;
+}
+
 export function lockTarget(world, previous, facing) {
   if (visible(world, previous, LOCK_KEEP)) {
     /* Предмет пересобирается каждый кадр, поэтому возвращаем свежий
@@ -182,6 +211,37 @@ export function lockTarget(world, previous, facing) {
     return previous.prop !== undefined ? targetAt(world, previous.prop) : previous;
   }
   return lockCandidates(world, facing)[0] || null;
+}
+
+/*
+ * Цель под пальцем. Тап по полю выбирает то, что ближе всего к точке
+ * касания, — живого или предмет, без разницы: половина игры в том, чтобы
+ * ударить в бочку, а не в того, кто рядом с ней.
+ *
+ * Радиус щедрый намеренно. Палец толще курсора, и требовать от него
+ * пиксельной точности значит требовать промахов.
+ */
+export function targetNear(world, x, y, reach = 90) {
+  let best = null;
+  let bestDist = reach;
+
+  /*
+   * Ткнуть можно во всё, что видно на экране. Автонаведение держится
+   * ближнего круга нарочно — оно выбирает за игрока, и хватать цель через
+   * полкарты ему не положено. Но когда игрок показал пальцем сам, ограничивать
+   * его тем же кругом незачем: он именно этого и хотел — ударить дальнюю
+   * бочку, стоя далеко.
+   */
+  const reachAll = Math.max(LOCK_RANGE, (world.viewRadius || 0) + 120);
+
+  for (const target of lockCandidates(world, 0, reachAll)) {
+    const dist = Math.hypot(target.x - x, target.y - y);
+    if (dist >= bestDist) continue;
+    bestDist = dist;
+    best = target;
+  }
+
+  return best;
 }
 
 /* Следующая цель по кругу. Один и тот же список, тот же порядок — значит

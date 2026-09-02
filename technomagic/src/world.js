@@ -119,6 +119,59 @@ function solidAt(world, x, y) {
  * залипает в углу. Раздельность важнее точности — в дверном проёме
  * шириной в клетку игрок иначе застревает и умирает не по своей вине.
  */
+/*
+ * ИМПУЛЬС ЛЕТЯЩЕГО ТЕЛА
+ * =========================================================
+ * Тело, которое летит, — снаряд. Не «трупы от бочки сбивают соседей», а
+ * общее правило: во что попало, тому и передалось. Разница
+ * принципиальная. Частный случай — украшение, красивое один раз; общее
+ * правило даёт игроку новый глагол — швырять врагов друг в друга, — и
+ * порождает решения, которых никто не задумывал.
+ *
+ * Порог низкий намеренно, и это безопасно: сюда попадают только тела,
+ * которые уже летят — отброшенные и мёртвые. Бегущий своим ходом враг в
+ * эту ветку не заходит вовсе, поэтому случайных столкновений на бегу не
+ * будет даже при скорости вдвое выше порога.
+ *
+ * Высокий порог пробовался первым и не работал: тело тормозит быстрее,
+ * чем долетает, и к моменту касания скорость успевала упасть ниже
+ * порога — снаряд честно долетал и вежливо останавливался.
+ */
+const FLING_SPEED = 105;
+
+function fling(world, mover, from) {
+  const speed = Math.hypot(mover.vx || 0, mover.vy || 0);
+  if (speed < FLING_SPEED) return;
+
+  const angle = Math.atan2(mover.vy, mover.vx);
+
+  for (const body of [world.player, ...world.enemies]) {
+    if (body === mover || body === from || !body.alive) continue;
+    if (Math.hypot(body.x - mover.x, body.y - mover.y) > BODY * 2) continue;
+
+    /* Половина скорости уходит дальше, в того, кого сбили. */
+    body.vx = (body.vx || 0) + Math.cos(angle) * speed * 0.5;
+    body.vy = (body.vy || 0) + Math.sin(angle) * speed * 0.5;
+    body.stagger = Math.max(body.stagger || 0, 0.4);
+    body.shove = Math.max(body.shove || 0, 0.4);
+
+    world.fx.shake = Math.max(world.fx.shake, 5);
+    world.events.push({ type: 'fling' });
+
+    if (body === world.player) {
+      killPlayer(world, angle);
+    } else {
+      killEnemy(world, body, angle, 'fling',
+        { by: 'player', weapon: 'body', elements: [] });
+    }
+
+    /* Летящее тело тормозит о того, кого снесло. */
+    mover.vx *= 0.4;
+    mover.vy *= 0.4;
+    return;
+  }
+}
+
 function moveBody(world, body, dx, dy) {
   const r = BODY;
 
@@ -203,11 +256,33 @@ export function hasShot(world, ax, ay, bx, by) {
 export function emitNoise(world, x, y, radius, source) {
   world.noises.push({ x, y, radius, life: 0.45, max: 0.45 });
 
+  /*
+   * Шаги — не преступление. Пока этаж спокоен, на них никто не идёт
+   * смотреть: иначе достаточно было пройти мимо, чтобы получить хвост, и
+   * тихого прохода не существовало. Как только тревога поднята, шаги
+   * снова слышны — тогда за тобой уже честно охотятся.
+   */
+  if (source === 'step' && !world.engaged) return;
+
   for (const enemy of world.enemies) {
     if (!enemy.alive || enemy.downed > 0) continue;
-    if (Math.hypot(enemy.x - x, enemy.y - y) > radius) continue;
+
+    const gap = Math.hypot(enemy.x - x, enemy.y - y);
+    if (gap > radius) continue;
     if (enemy.state === 'chase') continue;
-    enemy.heard = { x, y };
+
+    /*
+     * Услышанное место тем точнее, чем ближе слушатель. У самого звука
+     * идут прямо на него; с края слышимости — примерно в ту сторону.
+     * Отсюда и берётся выгода бить издалека: грохот слышали все, а куда
+     * бежать, никто толком не знает, и обыск уходит мимо.
+     */
+    const blur = (gap / radius) * radius * 0.5;
+    const away = Math.random() * Math.PI * 2;
+    enemy.heard = {
+      x: x + Math.cos(away) * blur * Math.random(),
+      y: y + Math.sin(away) * blur * Math.random(),
+    };
     enemy.state = 'alert';
     enemy.think = 0;
     if (source === 'player') enemy.suspicion = Math.min(1, enemy.suspicion + 0.6);
@@ -218,6 +293,23 @@ export function emitNoise(world, x, y, radius, source) {
 /* =========================================================
    ЧАСТИЦЫ, КРОВЬ, ГИЛЬЗЫ
    ========================================================= */
+
+/*
+ * Брызги по краю растекающейся лужи. Вода в игре — не заливка клетки, а
+ * событие: без летящих капель кольцо просто меняет цвет пола, и разлив
+ * читается как переключение, а не как течение.
+ */
+function splash(world, x, y, radius) {
+  for (let i = 0; i < 7; i += 1) {
+    const a = Math.random() * 6.29;
+    const r = radius * (0.7 + Math.random() * 0.35);
+    world.particles.push({
+      x: x + Math.cos(a) * r, y: y + Math.sin(a) * r,
+      vx: Math.cos(a) * 26, vy: Math.sin(a) * 26 - 12,
+      life: 0.3, max: 0.3, color: '#5fd6ff', size: 1 + Math.random() * 1.6,
+    });
+  }
+}
 
 function spark(world, x, y, angle, spread, count, color, speed) {
   for (let i = 0; i < count; i += 1) {
@@ -328,6 +420,16 @@ export function createWorld(level) {
     flowFrom: -1,
 
     fx: { shake: 0, hitstop: 0, flash: 0, punch: 0 },
+    beats: [],
+    charged: null,
+
+    /*
+     * Всплывающие подписи прямо в мире: «+300 ПО ВОДЕ» там, где это
+     * случилось. Ответ на вопрос «а это вообще засчиталось?» должен
+     * приходить в момент действия и на месте действия — в углу экрана
+     * его читают уже после того, как перестали смотреть.
+     */
+    marks: [],
     events: [],
   };
 
@@ -343,6 +445,7 @@ export function createWorld(level) {
         kind: 'carrier',
         weapon: 'bat',
         ammo: 0,
+        hp: 2,
         element: SHIELD_BY_TYPE[entity.type],
         resist: SHIELD_BY_TYPE[entity.type],
         x, y, vx: 0, vy: 0,
@@ -590,8 +693,63 @@ export function knockDown(world, enemy, angle) {
   world.events.push({ type: 'knock' });
 }
 
+/*
+ * ЖИВУЧЕСТЬ
+ * =========================================================
+ * С одного удара умирают слабые. Крепкого — носителя щита — одиночная
+ * стихия в лоб не берёт: он её держит и отшатывается. Это не про
+ * «бить дважды», а про то, чтобы найти, чем взять; способов четыре, и
+ * каждый убивает крепкого сразу.
+ *
+ * 1. Состояние. Мокрый под разрядом, горящий под чем угодно — по телу
+ *    уже идёт то, что его добьёт, и удар только заканчивает начатое.
+ * 2. Состав. Две стихии и больше — это вещество, а не искра; за него
+ *    заплачено очередью, и оно того стоит.
+ * 3. Дорогая форма. Луч, пробой и вспышка стоят долгого набора и бьют
+ *    насквозь; требовать от них ещё и второго попадания — обесценить.
+ * 4. Добивание. Оглушённый и сбитый с ног не держит ничего.
+ *
+ * Всё вместе и есть ответ на вопрос, ради которого крепкий и стоит на
+ * этаже: можно ли убрать его одним ходом. Можно — если ход выстроен.
+ */
+function outright(enemy, cause, source) {
+  if (cause === 'chain' || cause === 'fire' || cause === 'melee') return true;
+
+  /* Состояние тела. */
+  if (enemy.burning > 0) return true;
+  if ((enemy.wet || 0) > 0 && source.traits && source.traits.shock) return true;
+
+  /* Добивание. */
+  if (enemy.stagger > 0 || enemy.downed > 0) return true;
+
+  /* Состав и дорогая форма. */
+  if (source.elements && source.elements.length >= 2) return true;
+  if (source.form === 'beam' || source.form === 'nova') return true;
+
+  return false;
+}
+
 export function killEnemy(world, enemy, angle, cause, source = {}) {
   if (!enemy.alive) return;
+
+  /*
+   * Крепкий держит удар — но только тот, который нечем было усилить.
+   * Событие уходит наружу: игрок обязан понять, что промаха не было, а
+   * был неподходящий удар, иначе он решит, что игра его обманула.
+   */
+  if ((enemy.hp || 1) > 1 && !outright(enemy, cause, source)) {
+    enemy.hp -= 1;
+    /* Надломленный остаётся помечен: кольцо вокруг него рвётся, и видно,
+       что теперь его добьёт что угодно. */
+    enemy.wasTough = true;
+    enemy.stagger = Math.max(enemy.stagger || 0, 0.3);
+    enemy.hitFlash = 0.3;
+    enemy.vx += Math.cos(angle) * 90;
+    enemy.vy += Math.sin(angle) * 90;
+    world.fx.shake = Math.max(world.fx.shake, 4);
+    world.events.push({ type: 'held', kind: enemy.kind });
+    return;
+  }
   enemy.alive = false;
   world.kills += 1;
 
@@ -617,6 +775,30 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
     angle: enemy.angle,
     kind: enemy.kind,
     twitch: 0.5,
+
+    /*
+     * Падение — отдельное состояние, а не мгновенная подмена фигуры
+     * лежащим телом. Без него смерть выглядит как «было / стало»: маг
+     * стоял, маг лежит, а что между — игрок не увидел. Из «было / стало»
+     * модель правил в голове не собирается, а вся игра на ней и держится.
+     *
+     * Треть секунды — минимум, при котором видно, что тело валится, и
+     * при котором это ещё не мешает темпу.
+     */
+    fall: 0.34,
+    sheet: enemy.kind,
+    lean: (Math.random() - 0.5) * 0.6,
+
+    /*
+     * Труп уносит с собой скорость. Именно этого просил автор: тело,
+     * отлетевшее от взрыва, сносит второго — «у нас же маджика, физика и
+     * веселье». Правило одно на всех, поэтому живой, отброшенный
+     * ОТБОЕМ, сносит так же.
+     */
+    vx: enemy.vx || 0,
+    vy: enemy.vy || 0,
+    shove: 0.6,
+    alive: false,
   });
 
   world.fx.hitstop = Math.max(world.fx.hitstop, 0.045);
@@ -629,6 +811,10 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
    */
   world.events.push({
     type: 'kill',
+    /* Место смерти нужно снаружи: плату за способ показывают там, где
+       способ сработал, а не в углу экрана. */
+    x: enemy.x,
+    y: enemy.y,
     cause,
     by: source.by || 'player',
     weapon: source.weapon || null,
@@ -749,6 +935,9 @@ function spawnDaemon(world, angle, spell) {
     oy: player.y,
     elements: spell.elements,
     substance,
+    /* Снаряд несёт форму с собой: живучесть крепкого решается в месте
+       попадания, а там от заклинания остаётся только снаряд. */
+    form: form.kind,
     trail: Boolean(spell.signature && spell.signature.trail),
     pierce: form.pierce || 0,
     breaks: Boolean(form.breaks),
@@ -771,7 +960,7 @@ function castCone(world, spell, angle) {
     if (Math.abs(angleDelta(angle, toEnemy)) > form.arc / 2) continue;
     if (!hasSight(world, player.x, player.y, enemy.x, enemy.y)) continue;
     if (resisted(world, enemy, toEnemy, { elements })) continue;
-    killEnemy(world, enemy, toEnemy, 'daemon', { by: 'player', weapon: 'daemon', elements });
+    killEnemy(world, enemy, toEnemy, 'daemon', { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
   }
 
   world.blasts.push({
@@ -816,7 +1005,7 @@ function castBeam(world, spell, angle) {
       if (!enemy.alive) continue;
       if (Math.hypot(enemy.x - x, enemy.y - y) > BODY + 2) continue;
       if (resisted(world, enemy, angle, { elements })) continue;
-      killEnemy(world, enemy, angle, 'daemon', { by: 'player', weapon: 'daemon', elements });
+      killEnemy(world, enemy, angle, 'daemon', { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
     }
 
     distance += step;
@@ -917,7 +1106,7 @@ function novaAt(world, spell, x, y, atFeet) {
     if (!hasSight(world, x, y, enemy.x, enemy.y)) continue;
     const toEnemy = Math.atan2(dy, dx);
     if (resisted(world, enemy, toEnemy, { elements })) continue;
-    killEnemy(world, enemy, toEnemy, 'daemon', { by: 'player', weapon: 'daemon', elements });
+    killEnemy(world, enemy, toEnemy, 'daemon', { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
   }
 
   /*
@@ -1018,6 +1207,43 @@ function land(world, tiles, substance, at, force = false) {
  * бочку; перечислять составы поимённо значило бы править этот список при
  * каждой новой смеси.
  */
+/*
+ * ОТЛОЖЕННЫЕ ШАГИ
+ * =========================================================
+ * Цепочка из бочки — главный ход игры: одно нажатие, три следствия.
+ * Пока все три случались в одном кадре, игрок видел только результат:
+ * все умерли. Причина была не видна, а значит и не читалась как своя
+ * заслуга. Поэтому следствия разложены по времени и идут по очереди:
+ * бочку вскрыло, вода разошлась, разряд добежал, тела задёргались.
+ *
+ * Очередь живёт внутри мира и умирает вместе с ним: перезапуск этажа
+ * не может донести до нового мира чужой взрыв.
+ */
+/* Скорость, с которой разряд бежит по воде, и сколько тело дёргается,
+   прежде чем упасть. Обе величины про читаемость, а не про баланс: ниже
+   них цепочка снова слипается в один кадр. */
+const ARC_SPEED = 900;
+const STUN_TIME = 0.18;
+
+function schedule(world, delay, run) {
+  world.beats.push({ left: delay, run });
+}
+
+function runBeats(world, dt) {
+  if (!world.beats.length || dt <= 0) return;
+
+  /* Шаг может поставить следующий — он попадёт уже в новый кадр. */
+  const due = [];
+  world.beats = world.beats.filter((beat) => {
+    beat.left -= dt;
+    if (beat.left > 0) return true;
+    due.push(beat);
+    return false;
+  });
+
+  for (const beat of due) beat.run();
+}
+
 function shatter(world, at, substance) {
   if (at < 0 || at >= world.tiles.length) return false;
 
@@ -1032,21 +1258,41 @@ function shatter(world, at, substance) {
   world.fx.shake = Math.max(world.fx.shake, 5);
 
   if (tile === TILE.BARREL) {
-    /* Вода льётся на соседние клетки, а не только на свою: лужа в одну
-       клетку никого не поймает, и бочка была бы просто мусором. */
-    paint(world, tilesInCircle(world, x, y, TILE_SIZE * 1.7), SPILL, { x, y }, true);
+    /* Сначала — только грохот и осколки. Воды ещё нет. */
     spark(world, x, y, 0, 3.2, 14, '#7fe6ff', 150);
     emitNoise(world, x, y, 260, 'barrel');
     world.events.push({ type: 'barrel', x, y });
+    world.fx.hitstop = Math.max(world.fx.hitstop, 0.05);
 
     /*
-     * Разряд, вскрывший бочку, идёт по той воде, которую сам и вылил.
-     * Иначе разбить её молнией было бы хуже, чем огнём: снаряд летит
-     * дальше и бьёт током уже где-то за спиной у мокрых. А это ровно тот
-     * ход, ради которого бочка в игре и стоит — одно нажатие, три
-     * следствия.
+     * Вода расходится двумя кольцами, а не появляется готовой лужей:
+     * игрок должен успеть увидеть, что она течёт под ноги врагу. Льётся
+     * она на соседние клетки, а не только на свою — лужа в одну клетку
+     * никого не поймает, и бочка была бы просто мусором.
      */
-    if (substance.traits.shock) discharge(world, x, y, substance);
+    for (let ring = 0; ring < 4; ring += 1) {
+      const radius = TILE_SIZE * (0.55 + ring * 0.4);
+      schedule(world, 0.09 + ring * 0.09, () => {
+        paint(world, tilesInCircle(world, x, y, radius), SPILL, { x, y }, true);
+        splash(world, x, y, radius);
+        if (ring === 3) world.events.push({ type: 'spill', x, y });
+      });
+    }
+
+    /*
+     * Разряд, вскрывший бочку, идёт по той воде, которую сам и вылил, —
+     * но идёт последним, когда воде уже есть где стоять. Это тот самый
+     * ход, ради которого бочка в игре и стоит: одно нажатие, три
+     * следствия, и все три видно по очереди.
+     */
+    /*
+     * Разряд ждёт, пока вода дотечёт. Кольца ложатся до 0.36 секунды, и
+     * удар раньше этого бил по недоразлитой луже: крайние оставались
+     * сухими и выживали. Порядок здесь не украшение — он и есть правило.
+     */
+    if (substance.traits.shock) {
+      schedule(world, 0.5, () => discharge(world, x, y, substance));
+    }
     return true;
   }
 
@@ -1067,13 +1313,29 @@ function shatter(world, at, substance) {
     emitNoise(world, x, y, 300, 'hay');
     world.events.push({ type: 'hay', x, y });
 
+    /*
+     * Солома поджигает солому — но не в тот же кадр. Раньше копна из
+     * девяти клеток исчезала целиком за одно мгновение, и правило,
+     * которое стоило показать, не было видно вовсе: игрок наблюдал не
+     * пожар, а подмену картинки.
+     *
+     * Теперь огонь идёт по копне клетка за клеткой. Восьмая доля секунды
+     * на шаг — этого хватает, чтобы увидеть направление, и мало, чтобы
+     * успеть уйти из уже занявшегося: копна остаётся ловушкой, но
+     * ловушкой понятной.
+     *
+     * Рекурсия по-прежнему конечна: клетка гасится в пол сразу, и
+     * отложенный вызов на уже сгоревшую просто ничего не находит.
+     */
     const tx = at % world.w;
     const ty = (at / world.w) | 0;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const nx = tx + dx;
       const ny = ty + dy;
       if (nx < 0 || ny < 0 || nx >= world.w || ny >= world.h) continue;
-      shatter(world, ny * world.w + nx, FLARE);
+      const next = ny * world.w + nx;
+      if (world.tiles[next] !== TILE.HAY) continue;
+      schedule(world, 0.12, () => shatter(world, next, FLARE));
     }
     return true;
   }
@@ -1167,20 +1429,71 @@ function discharge(world, x, y, substance) {
 
   if (!hit.size) return;
 
-  for (const body of hit) {
-    const angle = Math.atan2(body.y - y, body.x - x);
-    if (body === world.player) {
-      world.events.push({ type: 'shocked-self' });
-      killPlayer(world, angle);
-      continue;
-    }
-    if (resisted(world, body, angle, { elements: substance.elements })) continue;
-    killEnemy(world, body, angle, 'chain',
-      { by: 'player', weapon: 'daemon', elements: substance.elements });
-  }
-
+  /* Треск идёт сразу: он и есть предупреждение тем, кто стоит в воде. */
   world.events.push({ type: 'chain', size: hit.size });
   world.fx.flash = Math.max(world.fx.flash, 0.2);
+
+  /*
+   * Сначала светится земля. Ток идёт по воде, а не по воздуху, и порядок
+   * «залило → зарядило → ударило» игрок должен видеть глазами, а не
+   * достраивать в уме: без светящейся лужи посередине выходит, что
+   * молния убила троих через полкомнаты неизвестно как.
+   *
+   * Фронт бежит наружу от точки удара с той же скоростью, с какой
+   * назначены удары по телам, — поэтому свет добегает до врага ровно
+   * тогда, когда врага бьёт.
+   */
+  world.charged = { tiles: live, x, y, life: 0.5, max: 0.5 };
+
+  let order = 0;
+
+  for (const body of hit) {
+    const angle = Math.atan2(body.y - y, body.x - x);
+
+    /*
+     * Разряд не возникает всюду разом — он добегает. Дальний в луже
+     * дёргается позже ближнего, и по этой задержке видно, что убило их
+     * одно и то же, а не пять отдельных случайностей.
+     */
+    /*
+     * К расстоянию добавляется шаг по счёту. Трое, стоящие бок о бок,
+     * одинаково далеки от бочки — и падали в один кадр, отчего цепь
+     * читалась как «все умерли разом», а не как разряд, идущий дальше.
+     * Разница в восьмую долю секунды делает из этого домино.
+     */
+    const travel = Math.min(0.3, Math.hypot(body.x - x, body.y - y) / ARC_SPEED)
+      + order * 0.13;
+    order += 1;
+
+    schedule(world, travel, () => {
+      if (!body.alive) return;
+
+      /*
+       * Сначала бьёт — тело дёргается. Смерть приходит следом.
+       * Оглушение берётся то же самое, что у сорванного щита: оно уже
+       * выключает управление, и врага не должно тянуть стрелять в момент,
+       * когда его бьёт током.
+       */
+      body.zap = Math.max(body.zap || 0, STUN_TIME);
+      if (body !== world.player) {
+        body.stagger = Math.max(body.stagger || 0, STUN_TIME);
+      }
+      spark(world, body.x, body.y, angle, 2.4, 9, '#9fe8ff', 130);
+      world.fx.shake = Math.max(world.fx.shake, 3);
+
+      schedule(world, STUN_TIME, () => {
+        if (!body.alive) return;
+        if (body === world.player) {
+          world.events.push({ type: 'shocked-self' });
+          killPlayer(world, angle);
+          return;
+        }
+        if (resisted(world, body, angle, { elements: substance.elements })) return;
+        killEnemy(world, body, angle, 'chain',
+          { by: 'player', weapon: 'daemon', elements: substance.elements });
+      });
+    });
+  }
 }
 
 /*
@@ -1252,6 +1565,17 @@ export function update(world, dt, intent) {
   world.fx.flash = Math.max(0, world.fx.flash - dt * 3.2);
   world.fx.punch = Math.max(0, world.fx.punch - dt * 4);
 
+  runBeats(world, dt);
+
+  if (world.charged) {
+    world.charged.life -= dt;
+    if (world.charged.life <= 0) world.charged = null;
+  }
+
+  /* Метка «бьёт током» гаснет сама — её носят и живые, и игрок. */
+  world.player.zap = Math.max(0, (world.player.zap || 0) - dt);
+  for (const enemy of world.enemies) enemy.zap = Math.max(0, (enemy.zap || 0) - dt);
+
   if (world.state === 'play') world.time += dt;
 
   updateField(world, dt);
@@ -1273,7 +1597,24 @@ export function update(world, dt, intent) {
   for (const noise of world.noises) noise.life -= dt;
   world.noises = world.noises.filter((n) => n.life > 0);
 
-  for (const corpse of world.corpses) corpse.twitch = Math.max(0, corpse.twitch - dt);
+  world.marks = world.marks.filter((mark) => {
+    mark.life -= dt;
+    mark.y -= dt * 26;
+    return mark.life > 0;
+  });
+
+  for (const corpse of world.corpses) {
+    corpse.twitch = Math.max(0, corpse.twitch - dt);
+    if (corpse.fall > 0) corpse.fall = Math.max(0, corpse.fall - dt);
+
+    /* Летящее тело едет и сбивает, пока не остановится. */
+    if (Math.hypot(corpse.vx || 0, corpse.vy || 0) > 4) {
+      moveBody(world, corpse, corpse.vx * dt, corpse.vy * dt);
+      fling(world, corpse, null);
+      corpse.vx *= 0.9;
+      corpse.vy *= 0.9;
+    }
+  }
 
   if (world.decals.length > 420) world.decals.splice(0, world.decals.length - 420);
 }
@@ -1308,7 +1649,7 @@ function updatePlayer(world, dt, intent) {
   player.step += Math.hypot(player.vx, player.vy) * dt;
   if (player.step > 26) {
     player.step = 0;
-    emitNoise(world, player.x, player.y, 58, 'player');
+    emitNoise(world, player.x, player.y, 58, 'step');
     world.events.push({ type: 'step' });
   }
 
@@ -1360,7 +1701,7 @@ function updatePlayer(world, dt, intent) {
     if (player.chargeLeft <= 0) {
       player.stack.push(player.charging);
       player.charging = null;
-      world.events.push({ type: 'charge', size: player.stack.length });
+      world.events.push({ type: 'charge', size: player.stack.length, element: player.stack[player.stack.length - 1] });
     }
   }
 
@@ -1421,6 +1762,9 @@ function updateEnemy(world, enemy, dt) {
     enemy.vx *= drag;
     enemy.vy *= drag;
     moveBody(world, enemy, enemy.vx * dt, enemy.vy * dt);
+
+    /* Отброшенный живой — такой же снаряд, как и мёртвый. Правило одно. */
+    fling(world, enemy, null);
     return;
   }
 
@@ -1541,7 +1885,9 @@ function updateBullets(world, dt) {
 
           if (!resisted(world, enemy, angle, { elements: bullet.elements })) {
             killEnemy(world, enemy, angle, bullet.weapon === 'daemon' ? 'daemon' : 'bullet',
-              { by: 'player', weapon: bullet.weapon, elements: bullet.elements });
+              { by: 'player', weapon: bullet.weapon, elements: bullet.elements,
+                form: bullet.form,
+                traits: bullet.substance ? bullet.substance.traits : null });
           }
 
           if (bullet.pierce > 0) { bullet.pierce -= 1; continue; }

@@ -18,9 +18,9 @@
  * стекло или не вскрыли бочку, а тысяча клеток каждый кадр — чистая трата.
  */
 
-import { TILE, TILE_SIZE, weakTo } from './level.js';
+import { TILE, TILE_SIZE, weakTo, brokenBy } from './level.js';
 import { BODY } from './world.js';
-import { colourOf, CHARGE_STEP } from './magic.js';
+import { colourOf, CHARGE_STEP, spellOf } from './magic.js';
 import { GROUND, FIRE_CATCH, groundAt, conducts } from './field.js';
 import { art, tinted, drawAuto, drawDirFrame, neighbourMask } from './art.js';
 
@@ -96,8 +96,16 @@ export function createRenderer(canvas) {
   let viewH = 0;
   let dpr = 1;
 
+  /*
+   * Потолок плотности пикселей. Телефон рапортует три, и на трёх холст
+   * выходит в одиннадцать мегапикселей — по нему каждый кадр гуляют два
+   * полноэкранных прохода света. Двойки хватает: разницы на глаз нет, а
+   * работы вчетверо меньше.
+   */
+  const MAX_DPR = 2;
+
   function resize(cssW, cssH, ratio) {
-    const next = Math.min(ratio || 1, 2.5);
+    const next = Math.min(ratio || 1, MAX_DPR);
     if (viewW === cssW && viewH === cssH && dpr === next) return;
 
     dpr = next;
@@ -127,6 +135,15 @@ export function createRenderer(canvas) {
    * носом в две клетки.
    */
   function zoomFor(world) {
+    /*
+     * Съёмка просит крупный план и получает его напрямую. Иначе камера
+     * считает так, чтобы этаж влез целиком, — а на витрине от этого
+     * фигура доезжает до зрителя размером в двенадцать пикселей, и по
+     * кадру нельзя понять, во что играют. Приближение — не свет, светом
+     * это не чинится.
+     */
+    if (world && world.zoomOverride) return world.zoomOverride;
+
     const short = Math.min(viewW, viewH);
     const base = Math.max(1.05, Math.min(2, short / 520));
     if (!world) return base;
@@ -497,6 +514,57 @@ export function createRenderer(canvas) {
     [GROUND.FIRE]: 'field-fire',
   };
 
+  /*
+   * Наэлектризованная вода. Свет бежит наружу от точки удара с той же
+   * скоростью, с какой разряд назначает удары по телам, — поэтому клетка
+   * под врагом загорается ровно тогда, когда врага бьёт.
+   *
+   * Рисуется поверх воды и до тел: игрок должен прочитать «залило →
+   * зарядило → ударило» именно в этом порядке, иначе три смерти через
+   * полкомнаты выглядят необъяснимыми.
+   */
+  function drawCharge(g, world, range) {
+    const live = world.charged;
+    if (!live) return;
+
+    const gone = live.max - live.life;
+    const front = gone * 900;
+    const fade = Math.min(1, live.life / (live.max * 0.6));
+
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+
+    for (let ty = range.y0; ty <= range.y1; ty += 1) {
+      for (let tx = range.x0; tx <= range.x1; tx += 1) {
+        const i = ty * world.w + tx;
+        if (!live.tiles.has(i)) continue;
+
+        const px = tx * TILE_SIZE;
+        const py = ty * TILE_SIZE;
+        const gap = Math.hypot(px + TILE_SIZE / 2 - live.x, py + TILE_SIZE / 2 - live.y);
+        if (gap > front) continue;
+
+        /* Ярче всего на самом фронте, дальше остаётся ровное свечение. */
+        const edge = Math.max(0, 1 - (front - gap) / 90);
+        const power = (0.22 + edge * 0.5) * fade;
+
+        g.fillStyle = `rgba(150,235,255,${power})`;
+        g.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+
+        if (edge > 0.35 && Math.random() < 0.5) {
+          g.strokeStyle = `rgba(220,250,255,${power})`;
+          g.lineWidth = 1.4;
+          g.beginPath();
+          g.moveTo(px + Math.random() * TILE_SIZE, py);
+          g.lineTo(px + Math.random() * TILE_SIZE, py + TILE_SIZE);
+          g.stroke();
+        }
+      }
+    }
+
+    g.restore();
+  }
+
   function drawGround(g, world, range) {
     if (!world.ground) return;
 
@@ -806,13 +874,13 @@ export function createRenderer(canvas) {
     /* Слабое свечение, а не заливка: метка не должна спорить с кольцом
        стойкости — то говорит, чем НЕ брать, и оно важнее. */
     const pulse = 0.72 + Math.sin(world.time * 4 + body_.x) * 0.28;
-    const r = BODY + 9;
+    const r = BODY + 11;
 
     g.save();
     g.globalCompositeOperation = 'lighter';
     const glow = g.createRadialGradient(body_.x, body_.y, 1, body_.x, body_.y, r);
-    glow.addColorStop(0, `rgba(${colour},${0.34 * pulse})`);
-    glow.addColorStop(0.6, `rgba(${colour},${0.2 * pulse})`);
+    glow.addColorStop(0, `rgba(${colour},${0.55 * pulse})`);
+    glow.addColorStop(0.6, `rgba(${colour},${0.32 * pulse})`);
     glow.addColorStop(1, `rgba(${colour},0)`);
     g.fillStyle = glow;
     g.beginPath();
@@ -843,9 +911,34 @@ export function createRenderer(canvas) {
      ТЕЛА
      ======================================================= */
 
+  const CORPSE_SHEETS = { caster: 'sparker', carrier: 'warden' };
+
   function drawCorpses(g, world) {
     for (const corpse of world.corpses) {
       const jitter = corpse.twitch > 0 ? (Math.random() - 0.5) * corpse.twitch * 2 : 0;
+
+      /*
+       * Падающий рисуется ещё собой, но заваливается: фигура кренится и
+       * оседает, и только потом на её месте оказывается тело. Без этого
+       * смерть была подменой картинки — стоял и лежит, — а между ними
+       * игрок не видел ничего и обобщать ему было не из чего.
+       */
+      if (corpse.fall > 0) {
+        const gone = 1 - corpse.fall / 0.34;
+        g.save();
+        g.translate(corpse.x + jitter, corpse.y + gone * 3);
+        g.rotate(corpse.lean * gone * 2.2);
+        g.scale(1 - gone * 0.16, 1 - gone * 0.34);
+        mage(g, {
+          x: 0, y: 0, angle: corpse.angle,
+          palette: ROBES[corpse.kind] || ROBES.thug,
+          sheet: CORPSE_SHEETS[corpse.kind] || 'punk',
+          phase: 0, downed: true,
+        });
+        g.restore();
+        continue;
+      }
+
       mage(g, {
         x: corpse.x + jitter, y: corpse.y, angle: corpse.angle,
         palette: ROBES.dead, sheet: 'corpse', phase: 0, downed: true,
@@ -856,6 +949,17 @@ export function createRenderer(canvas) {
   function drawEnemies(g, world) {
     for (const enemy of world.enemies) {
       if (!enemy.alive) continue;
+
+      /*
+       * Пока по телу идёт ток, его трясёт. Смещается весь маг целиком, а
+       * не свечение под ним: дёргаться должен человек, иначе непонятно,
+       * что с ним происходит, и смерть выглядит беспричинной.
+       */
+      const jolt = (enemy.zap || 0) > 0;
+      if (jolt) {
+        g.save();
+        g.translate((Math.random() - 0.5) * 3.6, (Math.random() - 0.5) * 3.6);
+      }
 
       stateMark(g, world, enemy);
 
@@ -873,6 +977,33 @@ export function createRenderer(canvas) {
         g.arc(enemy.x, enemy.y, BODY + 7, 0, 6.29);
         g.stroke();
         g.globalAlpha = 1;
+      }
+
+      /*
+       * Крепкого видно до удара. Двойное кольцо значит «одиночная стихия
+       * не возьмёт»; когда запас надломлен, внутреннее кольцо рвётся —
+       * добить можно чем угодно, и это должно быть видно через полкомнаты.
+       */
+      if ((enemy.hp || 1) > 1 || enemy.tough) {
+        g.save();
+        g.strokeStyle = '#d9e2ea';
+        g.globalAlpha = 0.55;
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(enemy.x, enemy.y, BODY + 3, 0, 6.29);
+        g.stroke();
+        g.restore();
+      } else if (enemy.wasTough) {
+        g.save();
+        g.strokeStyle = '#ffb0b8';
+        g.globalAlpha = 0.6;
+        g.lineWidth = 2;
+        g.setLineDash([5, 6]);
+        g.beginPath();
+        g.arc(enemy.x, enemy.y, BODY + 3, 0, 6.29);
+        g.stroke();
+        g.setLineDash([]);
+        g.restore();
       }
 
       mage(g, {
@@ -899,7 +1030,85 @@ export function createRenderer(canvas) {
         g.fill();
         g.restore();
       }
+
+      /*
+       * Замах. Он был виден только позой мага — этого мало: игрок смотрит
+       * на своё поле, а не на чужие руки, и удар прилетал ниоткуда.
+       * Теперь замах чертит линию туда, куда прилетит, и линия за свои
+       * четыре десятых секунды дотягивается до цели. Уйти с неё — и есть
+       * ответ на выстрел.
+       */
+      if ((enemy.windup || 0) > 0.02) drawWindup(g, world, enemy);
+
+      if (jolt) {
+        arcs(g, enemy);
+        g.restore();
+      }
     }
+  }
+
+  /* Ближний бой бьёт по дуге у себя под носом, а не до игрока: линия
+     обязана показывать настоящую дальность, иначе она врёт. */
+  const WEAPON_REACH = { bat: 38 };
+
+  function drawWindup(g, world, enemy) {
+    const player = world.player;
+    const melee = WEAPON_REACH[enemy.weapon] || 0;
+    const full = melee || Math.hypot(player.x - enemy.x, player.y - enemy.y);
+    const grow = Math.min(1, enemy.windup / 0.42);
+    const angle = enemy.angle;
+    const tint = enemy.element ? colourOf(enemy.element) : '#ff5d7a';
+
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+
+    /* Линия удара: тонкая в начале замаха, яркая к выстрелу. */
+    g.strokeStyle = tint;
+    g.globalAlpha = 0.25 + grow * 0.55;
+    g.lineWidth = 1 + grow * 2;
+    g.setLineDash([7, 6]);
+    g.lineDashOffset = -world.time * 40;
+    g.beginPath();
+    g.moveTo(enemy.x, enemy.y);
+    g.lineTo(enemy.x + Math.cos(angle) * full * grow, enemy.y + Math.sin(angle) * full * grow);
+    g.stroke();
+    g.setLineDash([]);
+
+    /* Кольцо, стягивающееся к телу: видно, сколько осталось до удара. */
+    g.globalAlpha = 0.35 + grow * 0.5;
+    g.lineWidth = 2;
+    g.beginPath();
+    g.arc(enemy.x, enemy.y, BODY + 16 - grow * 12, 0, 6.29);
+    g.stroke();
+
+    g.restore();
+  }
+
+  /*
+   * Дуги вокруг бьющегося током. Рисуются ломаной от края тела наружу и
+   * каждый кадр другие: ровные лучи читались бы как заклинание игрока, а
+   * это с ним происходит, а не он это делает.
+   */
+  function arcs(g, body_) {
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = '#9fe8ff';
+    g.lineWidth = 1.6;
+    for (let i = 0; i < 5; i += 1) {
+      const a = Math.random() * 6.29;
+      let x = body_.x + Math.cos(a) * (BODY - 2);
+      let y = body_.y + Math.sin(a) * (BODY - 2);
+      g.globalAlpha = 0.5 + Math.random() * 0.5;
+      g.beginPath();
+      g.moveTo(x, y);
+      for (let k = 0; k < 3; k += 1) {
+        x += Math.cos(a) * 5 + (Math.random() - 0.5) * 7;
+        y += Math.sin(a) * 5 + (Math.random() - 0.5) * 7;
+        g.lineTo(x, y);
+      }
+      g.stroke();
+    }
+    g.restore();
   }
 
   function drawPlayer(g, world) {
@@ -924,6 +1133,7 @@ export function createRenderer(canvas) {
     g.restore();
 
     stateMark(g, world, player);
+    if ((player.zap || 0) > 0) arcs(g, player);
 
     mage(g, {
       x: player.x, y: player.y, angle: player.angle,
@@ -981,6 +1191,190 @@ export function createRenderer(canvas) {
     crush: '#d08a3e',
     shock: '#ffe14d',
   };
+
+/*
+ * ОПАСНАЯ ЗОНА
+ * =========================================================
+ * Игра не только про то, как убить всех разом, но и про то, как при этом
+ * уцелеть самому. Второе не работает, если зону поражения видно только
+ * после выстрела: тогда это не тактика, а сюрприз, и единственный способ
+ * научиться — умереть.
+ *
+ * Поэтому набранное заклинание рисует круг там, куда прилетит, ещё до
+ * нажатия. Круг обычный, пока игрок вне его, и тревожный, когда внутри:
+ * вспышка бьёт вокруг себя и накрывает своего всегда, а огонь достаёт
+ * дальше места попадания — солома вокруг займётся сама.
+ */
+  function dangerZone(world) {
+    const player = world.player;
+    if (!player.stack || !player.stack.length) return null;
+
+    const spell = spellOf(player.stack);
+    if (!spell || !spell.form) return null;
+
+    const reach = spell.substance.traits.reach || 1;
+    const burns = Boolean(spell.substance.traits.burn);
+
+    /* Вспышка бьёт от себя — центр всегда на игроке. */
+    if (spell.form.kind === 'nova') {
+      return {
+        x: player.x, y: player.y,
+        r: (spell.form.radius || 104) * reach,
+        colour: spell.substance.colour, burns, self: true,
+      };
+    }
+
+    /* Остальное прилетает туда, куда смотрит прицел. Точку берём по
+       захваченной цели, а без неё — по лучу, как летел бы снаряд. */
+    const aim = world.locked
+      ? { x: world.locked.x, y: world.locked.y }
+      : rayEnd(world, player.x, player.y, player.angle, 320 * reach);
+
+    const r = TILE_SIZE * 0.9 * reach * (burns ? 1.7 : 1);
+    return {
+      x: aim.x, y: aim.y, r,
+      colour: spell.substance.colour, burns,
+      self: Math.hypot(aim.x - player.x, aim.y - player.y) < r + BODY,
+    };
+  }
+
+  /* Докуда долетит: шагаем тем же шагом, что и снаряд. */
+  function rayEnd(world, x, y, angle, limit) {
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    for (let t = 6; t < limit; t += 6) {
+      const nx = x + dx * t;
+      const ny = y + dy * t;
+      const tile = world.tiles[tileRangeIndex(world, nx, ny)];
+      if (tile === TILE.WALL) return { x: x + dx * (t - 6), y: y + dy * (t - 6) };
+    }
+    return { x: x + dx * limit, y: y + dy * limit };
+  }
+
+  function tileRangeIndex(world, x, y) {
+    const tx = Math.max(0, Math.min(world.w - 1, (x / TILE_SIZE) | 0));
+    const ty = Math.max(0, Math.min(world.h - 1, (y / TILE_SIZE) | 0));
+    return ty * world.w + tx;
+  }
+
+  function drawDanger(g, world) {
+    const zone = dangerZone(world);
+    if (!zone) return;
+
+    const beat = 0.6 + Math.sin(world.time * 7) * 0.4;
+
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+
+    if (zone.self) {
+      /* Внутри своей же зоны. Тут не оттенок, тут предупреждение. */
+      g.strokeStyle = '#ff4d5e';
+      g.globalAlpha = 0.5 + beat * 0.5;
+      g.lineWidth = 2.6;
+      g.setLineDash([9, 7]);
+      g.lineDashOffset = -world.time * 60;
+    } else {
+      g.strokeStyle = zone.colour;
+      g.globalAlpha = 0.45;
+      g.lineWidth = 1.6;
+      g.setLineDash([6, 8]);
+    }
+
+    g.beginPath();
+    g.arc(zone.x, zone.y, zone.r, 0, 6.29);
+    g.stroke();
+    g.setLineDash([]);
+
+    /* У огня рисуем ещё и внешний круг: пожар уходит дальше попадания. */
+    if (zone.burns) {
+      g.globalAlpha = 0.22;
+      g.lineWidth = 1.2;
+      g.strokeStyle = zone.self ? '#ff4d5e' : '#ff8a3d';
+      g.beginPath();
+      g.arc(zone.x, zone.y, zone.r * 1.35, 0, 6.29);
+      g.stroke();
+    }
+
+    g.restore();
+  }
+
+  /*
+   * Всплывающая плата. Рисуется в мире, а не в интерфейсе: смотреть в
+   * угол экрана игроку некогда, а ответ «твой способ засчитан» нужен ему
+   * ровно там, где способ сработал.
+   */
+/*
+ * ПОДХОДЯЩЕЕ ПОДСВЕЧИВАЕТСЯ
+ * =========================================================
+ * Набрал огонь — обвелась солома и бочка. Набрал молнию — кристалл.
+ * Это не подсказка «сделай так», а свойство мира: подсветка говорит «сюда
+ * подходит», а решает по-прежнему игрок. Разница принципиальная —
+ * подсказку, указывающую на предмет, сегодня убрали нарочно, и возвращать
+ * её нельзя.
+ *
+ * Подходит или нет, решает тот же brokenBy, который решает и само
+ * разрушение. Отдельный список «вот эти предметы» рано или поздно
+ * разошёлся бы с правилами, и игрок обнаружил бы подсвеченное, которое
+ * не ломается, — а это хуже, чем отсутствие подсветки: мир перестаёт
+ * быть надёжным, и предвкушение связки исчезает вместе с доверием.
+ *
+ * Обводка тонкая и без свечения намеренно. Светится в кадре одна вещь —
+ * круг опасности; добавить сюда второй ореол значит погасить первый.
+ */
+  function drawMatching(g, world, range) {
+    const player = world.player;
+    if (!player.alive || !player.stack || !player.stack.length) return;
+
+    const spell = spellOf(player.stack);
+    if (!spell) return;
+
+    const traits = spell.substance.traits;
+    const beat = 0.5 + Math.sin(world.time * 4) * 0.18;
+
+    g.save();
+    g.strokeStyle = spell.substance.colour;
+    g.lineWidth = 1.6;
+    g.setLineDash([5, 5]);
+    g.lineDashOffset = -world.time * 22;
+    g.globalAlpha = beat;
+
+    for (let ty = range.y0; ty <= range.y1; ty += 1) {
+      for (let tx = range.x0; tx <= range.x1; tx += 1) {
+        const tile = world.tiles[ty * world.w + tx];
+        if (!weakTo(tile) || !brokenBy(tile, traits)) continue;
+        g.strokeRect(tx * TILE_SIZE + 2.5, ty * TILE_SIZE + 2.5,
+          TILE_SIZE - 5, TILE_SIZE - 5);
+      }
+    }
+
+    g.setLineDash([]);
+    g.restore();
+  }
+
+  function drawMarks(g, world) {
+    if (!world.marks || !world.marks.length) return;
+
+    g.save();
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+
+    for (const mark of world.marks) {
+      const fade = Math.min(1, mark.life / (mark.max * 0.45));
+      g.globalAlpha = fade;
+      g.font = `800 ${mark.big ? 13 : 11}px ui-monospace, Menlo, monospace`;
+
+      /* Тёмная подложка буквой: подпись ложится и на светлую лужу, и на
+         тёмную траву, и читаться должна на обеих. */
+      g.lineWidth = 3;
+      g.strokeStyle = 'rgba(6,8,14,.85)';
+      g.strokeText(mark.text, mark.x, mark.y);
+
+      g.fillStyle = mark.big ? '#ffe14d' : '#e8f2f6';
+      g.fillText(mark.text, mark.x, mark.y);
+    }
+
+    g.restore();
+  }
 
   function drawLock(g, world) {
     if (!world.locked) return;
@@ -1215,17 +1609,57 @@ export function createRenderer(canvas) {
         blast.tint || blast.colour || '#ffffff', fade);
     }
 
+    /*
+     * Больше двух десятков источников в кадре не нужно и вредно: каждый —
+     * это два радиальных градиента, а на глаз двадцать пятый костёр уже не
+     * различить. Оставляем ближние к камере.
+     */
+    if (lights.length > 22) {
+      lights.sort((a, b) => (Math.hypot(a.x - camX, a.y - camY)
+        - Math.hypot(b.x - camX, b.y - camY)));
+      lights.length = 22;
+    }
+
     return lights;
   }
 
+  /*
+   * Свет считается вполовину меньше кадра и растягивается обратно.
+   *
+   * Пятно света — это мягкое размытое ничто; половина разрешения на нём не
+   * видна вообще, а работы вчетверо меньше. На телефоне это разница между
+   * игрой и слайд-шоу: два полноэкранных прохода с десятками радиальных
+   * градиентов — самое дорогое, что вообще делает кадр.
+   */
+  const LIGHT_SCALE = 0.5;
+
+/* Ночь снята до отдельной работы по освещению: см. drawLights. */
+const DARKNESS = false;
+
   function drawLights(world, theme, camX, camY, zoom, shakeX, shakeY, halfW, halfH) {
-    if (lightLayer.width !== canvas.width || lightLayer.height !== canvas.height) {
-      lightLayer.width = canvas.width;
-      lightLayer.height = canvas.height;
+    /*
+     * Затемнение выключено. Ночь давала настроение и отнимала игру: на
+     * телефоне поле уходило почти в чёрное, и предметы, ради которых сюда
+     * и целятся, приходилось угадывать. Цветной проход остался — он
+     * только добавляет свет и ничего не прячет, поэтому огонь и разряд
+     * по-прежнему подсвечивают своё.
+     *
+     * Освещение вернётся отдельной работой: тьма имеет смысл, только если
+     * в ней видно, что важно, а это надо делать нарочно, а не остатком
+     * от полноэкранной заливки.
+     */
+    if (!DARKNESS) { drawLightColour(world, theme, camX, camY, zoom, shakeX, shakeY, halfW, halfH); return; }
+
+    const lw = Math.max(1, Math.round(canvas.width * LIGHT_SCALE));
+    const lh = Math.max(1, Math.round(canvas.height * LIGHT_SCALE));
+    if (lightLayer.width !== lw || lightLayer.height !== lh) {
+      lightLayer.width = lw;
+      lightLayer.height = lh;
     }
 
     const g = lightCtx;
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const scale = dpr * LIGHT_SCALE;
+    g.setTransform(scale, 0, 0, scale, 0, 0);
     g.globalCompositeOperation = 'source-over';
     g.clearRect(0, 0, viewW, viewH);
     g.fillStyle = NIGHT;
@@ -1253,13 +1687,22 @@ export function createRenderer(canvas) {
     g.restore();
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(lightLayer, 0, 0);
+    ctx.drawImage(lightLayer, 0, 0, canvas.width, canvas.height);
 
-    /*
-     * Второй проход — цветом. Тьма показывает, где светло; этот проход —
-     * каким оно светится. Без него огонь и разряд освещают одинаково
-     * белым, и цвет стихии, главный язык игры, пропадает.
-     */
+    drawLightColour(world, theme, camX, camY, zoom, shakeX, shakeY, halfW, halfH, lights);
+  }
+
+  /*
+   * Проход цветом. Тьма показывает, где светло; этот проход — каким оно
+   * светится. Без него огонь и разряд освещают одинаково белым, и цвет
+   * стихии, главный язык игры, пропадает.
+   *
+   * Он только добавляет свет, поэтому работает и без затемнения: горящая
+   * лужа отсвечивает оранжевым на светлом полу ровно так же.
+   */
+  function drawLightColour(world, theme, camX, camY, zoom, shakeX, shakeY, halfW, halfH, ready) {
+    const lights = ready || collectLights(world, theme, camX, camY, halfW, halfH);
+
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.save();
     ctx.translate(viewW / 2, viewH / 2);
@@ -1314,11 +1757,15 @@ export function createRenderer(canvas) {
 
     drawFloor(ctx, world, theme, range);
     drawGround(ctx, world, range);
+    drawCharge(ctx, world, range);
+    drawDanger(ctx, world);
     drawDecals(ctx, world);
     drawCorpses(ctx, world);
     drawProps(ctx, world, theme, range);
     drawEnemies(ctx, world);
+    drawMatching(ctx, world, range);
     drawLock(ctx, world);
+    drawMarks(ctx, world);
     drawPlayer(ctx, world);
     drawBullets(ctx, world);
     drawBlasts(ctx, world);

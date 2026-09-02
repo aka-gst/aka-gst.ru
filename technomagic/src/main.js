@@ -9,7 +9,7 @@
 import { CAMPAIGN } from './levels.js';
 import { decode, encode } from './level.js';
 import { createWorld, update } from './world.js';
-import { AIM_CONE, assistAim, closeThreat, hasTargetUnderAim, lockTarget, cycleTarget } from './aim.js';
+import { AIM_CONE, assistAim, closeThreat, hasTargetUnderAim, lockTarget, keepPicked, cycleTarget, targetNear } from './aim.js';
 import { createRenderer } from './render.js';
 import { createInput } from './input.js';
 import { createAudio } from './audio.js';
@@ -17,6 +17,10 @@ import { createScore, readBest, writeBest } from './score.js';
 import { ELEMENTS, ELEMENT_ORDER, STACK_LIMIT, CHARGE_STEP, spellOf, colourOf } from './magic.js';
 import { parseHash, buildLink, compare, cleanNick, NICK_KEY } from './challenge.js';
 import { loadBook, noteSpell, bookPages, bookCount, elementMarks } from './book.js';
+import { iconTag } from './icons.js';
+import { pulse } from './pulse.js';
+import { createTrace, traceEvent, traceKey } from './trace.js';
+import { createShowcase, withSeed } from './showcase.js';
 import { loadArt } from './art.js';
 
 const $ = (id) => document.getElementById(id);
@@ -104,6 +108,7 @@ const SFX_BY_EVENT = {
   swing: 'swing',
   impact: 'impact',
   'charge-start': 'charge',
+  charge: 'land',
   'daemon-windup': 'beamup',
   resist: 'resist',
   knock: 'knock',
@@ -117,12 +122,14 @@ const SFX_BY_EVENT = {
   chain: 'chain',
   ignite: 'ignite',
   doused: 'doused',
+  spill: 'doused',
 };
 
 let levelIndex = 0;
 let custom = false;
 let challenge = null;   /* чужой результат, если этаж открыт по ссылке */
 let locked = null;      /* цель, за которую держится прицел на клавиатуре */
+let picked = null;      /* цель, выбранная руками: тап, клик или Tab */
 let level = CAMPAIGN[0];
 let world = null;
 let score = null;
@@ -280,8 +287,9 @@ function controlsHint() {
   return byTouch()
     ? 'ЛЕВЫЙ ПАЛЕЦ ПО ПОЛЮ ВЕДЁТ, ПРАВЫЙ ЦЕЛИТ И БЬЁТ САМ. '
       + 'КНОПКИ ВНИЗУ НАБИРАЮТ СТИХИИ, БОЛЬШАЯ ВЫПУСКАЕТ.'
-    : `WASD — ИДТИ. СТИХИИ: ${given}. ПРОБЕЛ ВЫПУСКАЕТ, Q СБРАСЫВАЕТ. `
-      + 'TAB МЕНЯЕТ ЦЕЛЬ — ИМ ЖЕ НАВОДЯТСЯ НА БОЧКИ И КАМНИ. '
+    : `WASD — ИДТИ. СТИХИИ: ${given} — ИЛИ МЫШЬЮ ПО КНОПКАМ ВНИЗУ. `
+      + 'КЛИК ПО БОЧКЕ ИЛИ ВРАГУ НАВОДИТ НА НЕГО, TAB МЕНЯЕТ ЦЕЛЬ ПО КРУГУ, '
+      + 'КЛИК ПО ПУСТОМУ МЕСТУ СНИМАЕТ. ПРОБЕЛ ИЛИ ПУСК ВЫПУСКАЕТ, Q СБРАСЫВАЕТ. '
       + 'СОСТАВ РЕШАЕТ, ЧТО ВЫЛЕТИТ, ПОРЯДОК — КАКОЙ ФОРМЫ. B — КНИГА, R — ЗАНОВО.';
 }
 
@@ -361,8 +369,15 @@ function startLevel(next, { silent } = {}) {
   attempts += 1;
   result = null;
   locked = null;
+  picked = null;
   score = createScore(level, attempts);
   if (!silent) audio.playTrack(level.track || 0);
+
+  trace = createTrace();
+
+  /* Начало попытки. Номер попытки здесь важнее всего остального: он и
+     отвечает на вопрос, сколько раз человек готов вернуться. */
+  pulse('etazh-nachat', { etazh: level.title, popytka: attempts });
   updateHud(true);
 }
 
@@ -386,11 +401,34 @@ function callScreen() {
 
 function deathScreen() {
   scene = 'dead';
+
+  /*
+   * Смерть от своей же руки — не то же самое, что смерть от чужой, и
+   * называться должна иначе. Считаем своей ту, что случилась в пределах
+   * пары секунд после собственного пожара или своего разряда: дальше это
+   * уже совпадение, а не причина.
+   */
+  const ownDeath = selfHarm && world.time - selfHarm.at < 2.5 ? selfHarm.kind : null;
+  selfHarm = null;
+
+  /* Смерть с числами: сколько успел вырезать и сколько прожил. По ним
+     видно разницу между «не понял управление» и «не хватило чуть-чуть». */
+  pulse('smert', {
+    etazh: level.title,
+    popytka: attempts,
+    vyrezano: world.kills,
+    vsego: world.total,
+    sekund: Math.round(world.time),
+  });
   showVeil({
     tone: 'dead',
     kicker: `ПОПЫТКА ${attempts}`,
-    title: 'ТЕБЯ УБИЛИ',
-    text: 'Здесь умирают с одного удара — и ты, и они. Разница только в том, кто ударил первым.',
+    title: ownDeath ? 'САМ' : 'ТЕБЯ УБИЛИ',
+    text: ownDeath
+      ? (ownDeath === 'fire'
+        ? 'Ты сгорел в своём собственном костре. Огонь не смотрит, кто его позвал: он просто идёт по соломе дальше — и по тебе тоже.'
+        : 'Ты сам разлил воду, сам в неё встал и сам пустил по ней разряд. Ток не спрашивает, чья лужа.')
+      : 'Здесь умирают с одного удара — и ты, и они. Разница только в том, кто ударил первым.',
     stats: `<span>ВЫРЕЗАНО ${world.kills} ИЗ ${world.total}</span><span>${formatTime(world.time)}</span>`
       + `<span>СГОРЕЛО ОЧКОВ: ${score.state.score}</span>`,
     action: 'ЗАНОВО',
@@ -405,6 +443,21 @@ function clearScreen() {
   scene = 'clear';
 
   result = score.finish(world);
+
+  pulse('etazh-zachischen', {
+    etazh: level.title,
+    popytka: attempts,
+    sekund: Math.round(world.time),
+    rang: result.rank,
+
+    /*
+     * След решения. Отвечает не на «прошёл ли», а на «чем прошёл», и
+     * только он позволяет посчитать, сколькими разными способами комнату
+     * проходят. Про человека в нём нет ничего.
+     */
+    sled: traceKey(trace),
+    pravil: trace.rules.size,
+  });
   const record = writeBest(levelCode, result, world.time);
   const more = hasNextFloor();
 
@@ -479,10 +532,44 @@ function buildIntent(raw) {
     if (input.tookKey(code)) intent.charge = CHARGE_KEYS[code];
   }
 
+  /*
+   * Тап и клик по полю выбирают цель — то же, что Tab, только сразу в
+   * нужную, а не по кругу. Промах по пустому месту снимает выбор: иначе
+   * от навязанной цели нельзя было бы избавиться, не убив её.
+   */
+  const tapped = input.tookTap();
+  if (tapped) {
+    const at = renderer.toWorld(tapped.x, tapped.y, lastView);
+    const target = targetNear(world, at.x, at.y);
+    if (target) {
+      picked = target;
+      audio.sfx('spot');
+    } else {
+      picked = null;
+    }
+  }
+
+  /* Мёртвое и разбитое перестаёт быть целью само — но подменять его на
+     соседнее нельзя: выбор делал игрок. */
+  if (picked && picked.alive === false) picked = null;
+  if (picked) picked = keepPicked(world, picked);
+
   if (raw.aimStick !== null) {
+    /* Стик — это прямое прицеливание рукой, и оно главнее выбранной цели. */
+    picked = null;
     locked = null;
     world.locked = null;
     intent.aimAngle = assistAim(world, raw.aimStick, AIM_CONE.stick);
+  } else if (picked) {
+    /*
+     * Выбранная руками цель держится, чем бы игрок ни водил. Раньше её
+     * стирало любое движение мыши — то есть на настольном компьютере
+     * выбор не работал вовсе, ни тапом, ни клавишей: следующий же кадр
+     * возвращал прицел под курсор.
+     */
+    locked = picked;
+    world.locked = picked;
+    intent.aimAngle = Math.atan2(picked.y - player.y, picked.x - player.x);
   } else if (!raw.touch && raw.mouse.moved) {
     locked = null;
     world.locked = null;
@@ -541,6 +628,105 @@ function buildIntent(raw) {
 
 let tutorStep = 0;
 
+/*
+ * ОБУЧАЛКА
+ * =========================================================
+ * Две фразы, и обе в первых двух комнатах. Дальше молчим.
+ *
+ * Так просил автор дословно: «выстрели в эту точку, чтобы понять, как
+ * работает магия; тут собери линию — а потом тебя отпускают в уровень, и
+ * там ты уже сам барахтайся». Ключевое слово — отпускают. Подсказка,
+ * которая идёт весь этаж, отменяет игру: придумывать нечего, за игрока
+ * уже придумали, а предвкушение связки и есть то, ради чего в это играют.
+ *
+ * Последняя фраза — «ДАЛЬШЕ САМ» — не украшение. Игрок должен знать, что
+ * подсказок больше не будет, иначе он будет их ждать и не начнёт пробовать.
+ */
+/*
+ * ПОДКОЛЫ
+ * =========================================================
+ * Игра про то, как убить всех разом, — и ровно в той же мере про то, как
+ * при этом уцелеть. Собственный пожар и своя лужа под током не изъян, а
+ * половина тактики, поэтому наказывать за них скучной строкой нельзя:
+ * над этим надо смеяться.
+ *
+ * Первый раз, впрочем, объясняем. Игрок, который горит впервые, не знает,
+ * что делать, и шутка вместо инструкции — это издевательство, а не юмор.
+ * Дальше объяснять нечего, и слово переходит к насмешке.
+ */
+const JABS = {
+  ignite: [
+    'ГОРИШЬ КРАСИВО, НО НЕДОЛГО',
+    'ОГОНЬ НЕ РАЗБИРАЕТ, КТО ЕГО ЗВАЛ',
+    'ЗАЖИГАЛКА СРАБОТАЛА. НА ТЕБЕ',
+    'ТЁПЛО? ЭТО ТЫ',
+    'СВОЙ ЖЕ КОСТЁР. ПОЗДРАВЛЯЕМ',
+  ],
+  shock: [
+    'ТОК НЕ СПРАШИВАЕТ, ЧЬЯ ЛУЖА',
+    'САМ НАЛИЛ, САМ И ВСТАЛ',
+    'ФИЗИКА РАБОТАЕТ В ОБЕ СТОРОНЫ',
+    'ГЕНИАЛЬНО. ТЕПЕРЬ ЕЩЁ РАЗ, НО В СТОРОНЕ',
+    'ВОДА ПРОВОДИТ. ДАЖЕ ТЕБЯ',
+  ],
+  held: [
+    'НЕ ВПЕЧАТЛИЛО',
+    'ОН ТАКОЕ НА ЗАВТРАК ЕСТ',
+    'ИСКРА ЕМУ НЕ СОПЕРНИК — НУЖНО ВЕЩЕСТВО',
+    'ЩЕКОТНО. ПОПРОБУЙ СЕРЬЁЗНЕЕ',
+  ],
+  fling: [
+    'КЕГЛЯ',
+    'ОДНИМ ТЕЛОМ ДВОИХ',
+    'ОН ПРИЛЕТЕЛ НЕ ОДИН',
+    'БИЛЬЯРД',
+  ],
+  backfire: [
+    'ВСПЫШКА В ТЕСНОТЕ — ПРИВЕТ ОТ СЕБЯ',
+    'РАДИУС БОЛЬШЕ КОМНАТЫ. КАК И ЗАДУМАНО?',
+    'ВЗОРВАЛ ВСЕХ. СЕБЯ В ТОМ ЧИСЛЕ',
+  ],
+};
+
+const jabSeen = {};
+
+/* Чем игрок навредил себе последний раз и когда. Экран смерти
+   спрашивает об этом, чтобы не говорить «тебя убили» тому, кто убил
+   себя сам: это разные события и разного тона. */
+let selfHarm = null;
+
+/* Чем прошли эту попытку. Живёт от начала этажа до его конца. */
+let trace = createTrace();
+
+/* Сколько стихий было в очереди на прошлом кадре: по разнице видно, что
+   одна только что легла, и её ячейку надо зажечь. */
+let landed = 0;
+
+/* Идёт съёмка витрины. Пока не null — игра стоит, а кадр рисует сцена. */
+let shooting = null;
+
+function jab(kind, first) {
+  const seen = jabSeen[kind] || 0;
+  jabSeen[kind] = seen + 1;
+
+  /* Первый раз — что делать. Дальше — что о тебе думают. */
+  if (!seen) return first;
+
+  const lines = JABS[kind];
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
+const TUTOR_STEPS = [
+  {
+    on: (event) => event.type === 'kill',
+    say: 'СОБЕРИ ЛИНИЮ: ТРИ ОДИНАКОВЫХ — ЛУЧ. ОН ИДЁТ НАСКВОЗЬ',
+  },
+  {
+    on: (event) => event.type === 'crystal',
+    say: 'ДАЛЬШЕ САМ',
+  },
+];
+
 function tutorStart() {
   tutorStep = level.tutorial ? 1 : 0;
   /* Клавиши берутся из самих стихий: раскладка уже переезжала, и вшитый
@@ -556,23 +742,11 @@ function tutorStart() {
 function tutorFeed(event) {
   if (!tutorStep) return;
 
-  if (tutorStep === 1 && event.type === 'kill') {
-    tutorStep = 2;
-    setToast(byTouch()
-      ? 'ВПЕРЕДИ БОЧКА С ВОДОЙ — БЕЙ В НЕЁ МОЛНИЕЙ'
-      : 'ВПЕРЕДИ БОЧКА С ВОДОЙ. TAB НАВЕДЁТ — БЕЙ МОЛНИЕЙ', 4.2);
-    return;
-  }
+  const step = TUTOR_STEPS[tutorStep - 1];
+  if (!step || !step.on(event)) return;
 
-  if (tutorStep <= 2 && event.type === 'barrel') {
-    tutorStep = 3;
-    setToast('ВОДА РАЗЛИЛАСЬ И ПРОВЕЛА РАЗРЯД. СОЛОМА СПРАВА — ГОРИТ', 4.2);
-    return;
-  }
-
-  if (tutorStep === 3 && event.type === 'chain' && event.size > 1) {
-    tutorStep = 4;
-  }
+  tutorStep += 1;
+  setToast(step.say, 4.2);
 }
 
 
@@ -601,8 +775,12 @@ function renderTome() {
       ? `<span class="tome-note">${entry.note}</span>`
       : '';
 
+    /* Значок только у открытого: закрытая клетка обязана оставаться
+       вопросом, а картинка выдала бы ответ раньше времени. */
+    const icon = entry.known ? iconTag(entry.name) : '';
+
     return `<div class="tome-cell" data-known="${entry.known ? 1 : 0}">`
-      + `<span class="tome-marks">${marks}</span>${name}${note}</div>`;
+      + `<span class="tome-marks">${marks}</span>${icon}${name}${note}</div>`;
   }).join('');
 
   /*
@@ -617,6 +795,7 @@ function renderTome() {
   ui.tomeSignatures.innerHTML = shown.map((entry) => {
     if (entry.known) {
       return `<li data-known="1" style="border-left-color:${entry.colour}">`
+        + iconTag(entry.name)
         + `<b class="tome-sign" style="color:${entry.colour}">${entry.name}</b> `
         + `<span class="tome-recipe">${entry.substance} · ${entry.form}</span>`
         + `<br><span class="tome-note">${entry.note}</span></li>`;
@@ -634,6 +813,11 @@ function renderTome() {
 }
 
 function showTome() {
+  /* Книга — половина игры, и до сих пор неизвестно, открывает ли её
+     кто-нибудь вообще. Считаем только сам факт открытия и сколько к тому
+     моменту найдено: что именно найдено — это уже про человека. */
+  pulse('kniga-otkryta', { naydeno: bookCount(book).substances });
+
   renderTome();
   ui.tome.hidden = false;
   tomeVisible = true;
@@ -668,7 +852,16 @@ function updateHud(force) {
     for (let i = 0; i < STACK_LIMIT; i += 1) {
       const element = player2.stack[i];
       if (element) {
-        slots += `<i style="background:${colourOf(element)};box-shadow:0 0 8px ${colourOf(element)}"></i>`;
+        /*
+         * Только что легшая стихия помечается отдельно и вспыхивает.
+         * Набор из трёх — это три события, а не одно действие: между
+         * ними и живёт предвкушение связки, ради которого в игру играют.
+         * Пока ячейка просто оказывалась заполненной, три нажатия
+         * читались как одно движение руки.
+         */
+        const fresh = i === player2.stack.length - 1 && landed === player2.stack.length;
+        slots += `<i class="${fresh ? 'is-landed' : ''}" style="background:${colourOf(element)};`
+          + `box-shadow:0 0 8px ${colourOf(element)}"></i>`;
       } else if (i === player2.stack.length && player2.chargeLeft > 0) {
         const fill = 1 - player2.chargeLeft / CHARGE_STEP;
         slots += `<i class="is-charging" style="border-color:${colourOf(player2.charging)};`
@@ -737,10 +930,18 @@ function updateHud(force) {
 
 function drainEvents() {
   for (const event of world.events) {
+    /* След решения собирается здесь же: все правила, какие срабатывают,
+       проходят через события, и второго места для этого не нужно. */
+    traceEvent(trace, event);
+
     const name = SFX_BY_EVENT[event.type];
     if (name) audio.sfx(name, event);
 
     if (event.type === 'daemon') {
+      /* Очередь ушла в выстрел — метка «только что легла» больше ни к
+         чему не относится и должна погаснуть вместе с ней. */
+      landed = 0;
+
       audio.sfx(event.form === 'beam' ? 'beam' : event.form === 'nova' ? 'nova' : 'zap', event);
       if (event.form === 'nova') vibrate(30);
 
@@ -760,18 +961,32 @@ function drainEvents() {
         audio.sfx('pickup');
       }
     } else if (event.type === 'backfire') {
-      setToast('ВСПЫШКА В ТЕСНОТЕ — СВОИМ ЖЕ', 2.4);
+      setToast(jab('backfire', 'ВСПЫШКА В ТЕСНОТЕ — СВОИМ ЖЕ'), 2.4);
+    } else if (event.type === 'charge') {
+      landed = event.size;
+      updateHud(true);
+    } else if (event.type === 'fling') {
+      /* Новый глагол, и о нём надо сказать: врагами можно бросаться. */
+      setToast(jab('fling', 'ТЕЛО ТОЖЕ СНАРЯД'), 1.8);
+      vibrate([10, 20]);
+    } else if (event.type === 'held') {
+      /* Промаха не было — был неподходящий удар, и сказать это надо
+         сразу, иначе игрок решит, что игра его обманула. */
+      setToast(jab('held', 'ДЕРЖИТ УДАР — НУЖЕН СОСТАВ, ДОРОГАЯ ФОРМА ИЛИ ДОБИВАНИЕ'), 2.2);
+      vibrate(12);
     } else if (event.type === 'resist') {
       setToast(`${ELEMENTS[event.element].name} ЕГО НЕ БЕРЁТ — БЕЙ ДРУГИМ`, 1.8);
     } else if (event.type === 'ignite' && event.player) {
       /* У горящего есть полсекунды и один выход — вода. Сказать об этом
          надо ровно один раз и ровно тогда, а не в подсказках перед боем. */
-      setToast('ГОРИШЬ — В ВОДУ ИЛИ В ГРЯЗЬ', 1.4);
+      setToast(jab('ignite', 'ГОРИШЬ — В ВОДУ ИЛИ В ГРЯЗЬ'), 1.6);
+      selfHarm = { kind: 'fire', at: world.time };
       vibrate(20);
     } else if (event.type === 'locked') {
       setToast(`${ELEMENTS[event.element].name} — НЕ НА ЭТОМ ЭТАЖЕ`, 1.4);
     } else if (event.type === 'shocked-self') {
-      setToast('СВОЯ ЖЕ ЛУЖА ПОД ТОКОМ', 2.4);
+      setToast(jab('shock', 'СВОЯ ЖЕ ЛУЖА ПОД ТОКОМ'), 2.4);
+      selfHarm = { kind: 'shock', at: world.time };
     } else if (event.type === 'chain' && event.size > 1) {
       /* Цепь — единственное место, где одно нажатие стоит нескольких, и
          число обязано быть на экране: без него игрок не поймёт, что
@@ -779,7 +994,9 @@ function drainEvents() {
       setToast(`ЦЕПЬ ×${event.size}`, 1.8);
       vibrate([15, 25, 15]);
     } else if (event.type === 'barrel') {
-      setToast('БОЧКА ВСКРЫТА — ВОДА НА ПОЛУ', 1.6);
+      /* Про воду больше не пишем: она теперь растекается на глазах, и
+         подпись успевала объявить её раньше, чем она появлялась. */
+      setToast('БОЧКА ВСКРЫТА', 1.4);
     } else if (event.type === 'crystal') {
       setToast('КРИСТАЛЛ ОТДАЛ РАЗРЯД', 1.6);
     } else if (event.type === 'hay') {
@@ -820,11 +1037,48 @@ function vibrate(pattern) {
 
 let previous = performance.now();
 
+/*
+ * Кадр не имеет права убить игру.
+ *
+ * Пока планирование следующего кадра стояло последней строкой самого
+ * кадра, любая ошибка внутри останавливала цикл навсегда: мир замирал,
+ * кнопки переставали отвечать, и снаружи это выглядело как «игра просто не
+ * двигается» — без единой строчки в консоли, потому что ошибка случалась
+ * один раз и больше некому было её повторить.
+ *
+ * Теперь следующий кадр планируется всегда, а ошибка показывается игроку
+ * и запоминается в window.technomagic.error. Сломанная игра должна об этом
+ * говорить, а не молчать.
+ */
 function frame(now) {
+  requestAnimationFrame(frame);
+
+  try {
+    step(now);
+  } catch (error) {
+    if (!window.technomagic.error) {
+      window.technomagic.error = error;
+      setToast(`СБОЙ: ${String(error && error.message || error).slice(0, 60)}`, 6);
+      console.error('кадр упал', error);
+    }
+  }
+}
+
+function step(now) {
   const dt = Math.min(0.05, (now - previous) / 1000);
   previous = now;
 
   resize();
+
+  /*
+   * На съёмке свой цикл игры молчит, но отрисовка работает. Останавливать
+   * надо ход, а не рисование: холст очищается при любом изменении размера,
+   * и остановленная отрисовка даёт пустой кадр вместо сцены.
+   */
+  if (shooting) {
+    shooting.render();
+    return;
+  }
 
   const raw = input.read();
 
@@ -833,8 +1087,9 @@ function frame(now) {
   /* Tab перебирает цели: живых сначала, предметы следом. Без него до
      бочки с клавиатуры было не добраться — прицел держится за живого. */
   if (world && scene === 'play' && input.tookKey('Tab')) {
-    locked = cycleTarget(world, locked, world.player.angle);
-    world.locked = locked;
+    picked = cycleTarget(world, picked || locked, world.player.angle);
+    locked = picked;
+    world.locked = picked;
   }
 
   if (input.tookKey('Escape') || input.tookKey('KeyP')) {
@@ -848,7 +1103,22 @@ function frame(now) {
   if (scene === 'play' && !tomeVisible) {
     const intent = buildIntent(raw);
     update(world, dt, intent);
-    score.feed(world.events);
+    /*
+     * Плата за способ показывается сразу и на месте. До сих пор весь счёт
+     * игрок видел только в конце этажа — то есть узнавал, что его ход
+     * засчитан, через минуту после того, как перестал на него смотреть.
+     */
+    for (const award of score.feed(world.events)) {
+      if (!award.x && !award.y) continue;
+      world.marks.push({
+        x: award.x,
+        y: award.y - 14,
+        text: `+${award.gain} ${award.reason}`,
+        big: award.combo > 1,
+        life: 1.1,
+        max: 1.1,
+      });
+    }
     score.update(dt);
     drainEvents();
 
@@ -880,6 +1150,12 @@ function frame(now) {
     }
   } else if (restart && (scene === 'play' || scene === 'pause')) {
     startLevel(level, { silent: true });
+  } else if (scene === 'call' && !tomeVisible
+      && (input.tookKey('Fire') || input.tookKey('Enter') || input.tookKey('Space'))) {
+    /* Стартовый экран тоже открывается тем, что под рукой. Единственный вход
+       в игру не должен зависеть от одной кнопки: пока он от неё зависел,
+       пропавший стиль этой кнопки означал, что игру нельзя начать вовсе. */
+    ui.veilAction.click();
   }
 
   if (world) {
@@ -920,7 +1196,6 @@ function frame(now) {
   markCharging();
 
   input.endFrame();
-  requestAnimationFrame(frame);
 }
 
 
@@ -1065,12 +1340,115 @@ window.addEventListener('pointerdown', wake);
  * снаружи: дошло ли нажатие до мира и в каком состоянии игра. Ничего не
  * меняет — только отдаёт ссылки на живые объекты.
  */
-window.avto = {
+/*
+ * ВХОД СНАРУЖИ
+ * =========================================================
+ * Имя своё, а не общее. Раньше здесь стояло window.avto — наследство от
+ * прежнего названия игры, — и ровно такое же имя оказалось у соседнего
+ * проекта. Две разные игры, две разные сцены, одно имя: на разных
+ * страницах это не ломается само, но тот, кто снимает шесть игр по
+ * записанному рецепту, применит к одной порядок вызовов другой. Ошибка
+ * будет выглядеть как «сцена не работает», а искать её станут в сцене.
+ *
+ * Старое имя оставлено синонимом: на него могли уже сослаться.
+ */
+window.technomagic = {
   get world() { return world; },
   get scene() { return scene; },
   get level() { return level; },
+
+  /* Ввод и отрисовка — тоже наружу. Проверить, доходит ли касание до мира
+     и во что обходится кадр, иначе нечем: кадровый цикл в отладочных окнах
+     не крутится, а спросить напрямую можно всегда. */
+  get input() { return input; },
+  get renderer() { return renderer; },
+  get view() { return lastView; },
+  get picked() { return picked; },
+
+  /*
+   * СНАРЯД ДЛЯ ВИТРИНЫ
+   * ---------------------------------------------------------
+   * Ставит сцену и отдаёт рычаги: шаг, отрисовку, состояние. Снимает
+   * другой — это разделение труда, а не лень: сцену умеет поставить
+   * только тот, кто знает игру.
+   *
+   *   const s = window.technomagic.showcase({ width: 960, height: 540 });
+   *   while (s.state().упавших < 2) s.step(1/60);
+   *   s.render();                           // кадр в холсте
+   *   s.stop();                             // вернуть игру
+   *
+   * Без аргументов сцена ещё и играет сама, с постоянным шагом: этого
+   * хватает, чтобы снять петлю простым захватом холста.
+   */
+  showcase(options = {}) {
+    const seed = options.seed || 20260830;
+
+    /*
+     * Размер холста ставит кадровый цикл — а на съёмке он молчит, и без
+     * этой строки сцена рисуется в холст по умолчанию, триста на сто
+     * пятьдесят. Кадр при этом выходит не пустой, а хуже: почти
+     * правильный, только мелкий, и заметить это можно лишь замерив.
+     * Поймано счётчиком прозрачных пикселей: их оказалось не ноль.
+     *
+     * Размер можно задать и прямо — снимающему обычно нужен постоянный
+     * кадр, не зависящий от того, каким окном его открыли. А в скрытой
+     * вкладке холст вообще не имеет размера, и спросить его не у кого.
+     */
+    if (options.width && options.height) {
+      renderer.resize(options.width, options.height, options.dpr || 1);
+    } else {
+      resize();
+    }
+
+    const made = withSeed(seed, () => createShowcase(CAMPAIGN[0], renderer));
+
+    document.body.classList.add('is-shooting');
+
+    /* Каждый шаг и каждая отрисовка идут под тем же сидом: иначе искры
+       и дым разойдутся на втором прогоне, и «детерминировано» окажется
+       неправдой ровно там, где это важнее всего. */
+    const wrapped = {
+      world: made.world,
+      step: (dt) => withSeed((seed + Math.round(made.state().секунд * 1000)) >>> 0,
+        () => made.step(dt)),
+      render: () => withSeed(seed, () => made.render()),
+      state: () => made.state(),
+      stop() {
+        shooting = null;
+        document.body.classList.remove('is-shooting');
+        renderer.invalidate();
+      },
+    };
+
+    /* Кадр рисует обёртка, а не сама сцена: подменять её собственный
+       метод — верный способ получить бесконечную рекурсию, что и вышло
+       с первой попытки. */
+    shooting = wrapped;
+
+    if (options.play !== false) {
+      const tick = () => {
+        if (shooting !== wrapped) return;
+        wrapped.step(1 / 60);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    return wrapped;
+  },
 };
 
+
+/*
+ * Синоним под прежним именем — временный, до 6 сентября 2026 года.
+ * Держится ради ссылок, которые могли остаться снаружи.
+ *
+ * Срок стоит здесь не для порядка: одна вещь под двумя именами — ровно та
+ * болезнь, из-за которой это переименование и понадобилось. Синоним без
+ * срока живёт вечно, и через полгода никто не помнит, какое имя
+ * настоящее.
+ */
+window.avto = window.technomagic;
 const fromHash = levelFromHash();
 if (fromHash) { level = fromHash; custom = true; }
 
