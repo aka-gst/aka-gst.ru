@@ -1,8 +1,8 @@
-import { createWidgetState, demoHandoffOutcome, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260902-4";
+import { createWidgetState, demoHandoffOutcome, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260902-5";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260902-4", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260902-5", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -21,11 +21,11 @@ mount.innerHTML = `
       </header>
       <p class="psy-widget-boundary">Демо по открытым страницам центра. Не заменяет специалиста или экстренную помощь.</p>
       <div class="psy-widget-evaluation">
-        <button class="psy-widget-evaluation-open" type="button" aria-controls="psy-widget-evaluation-panel" aria-expanded="false">Показать 60 проверочных вопросов</button>
-        <section class="psy-widget-evaluation-panel" id="psy-widget-evaluation-panel" aria-label="60 проверочных вопросов" hidden>
-          <p>Вопросы, по которым проверяли помощника: на каждом видно ожидаемый режим ответа.</p>
-          <div class="psy-widget-evaluation-list"></div>
-        </section>
+        <label for="psy-widget-evaluation-select">60 проверочных вопросов</label>
+        <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select" aria-describedby="psy-widget-evaluation-status">
+          <option value="">Выбери вопрос для проверки</option>
+        </select>
+        <p class="psy-widget-evaluation-status" id="psy-widget-evaluation-status" aria-live="polite"></p>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
       <div class="psy-widget-suggestions" aria-label="Примеры вопросов">
@@ -80,9 +80,8 @@ const voiceStatus = root.querySelector(".psy-widget-voice-status");
 const handoffOpen = root.querySelector(".psy-widget-handoff-open");
 const handoffForm = root.querySelector(".psy-widget-handoff-form");
 const handoffStatus = root.querySelector(".psy-widget-handoff-status");
-const evaluationOpen = root.querySelector(".psy-widget-evaluation-open");
-const evaluationPanel = root.querySelector(".psy-widget-evaluation-panel");
-const evaluationList = root.querySelector(".psy-widget-evaluation-list");
+const evaluationSelect = root.querySelector(".psy-widget-evaluation-select");
+const evaluationStatus = root.querySelector(".psy-widget-evaluation-status");
 let state = window.innerWidth > 620
   ? { open: true, panelVisible: true, fullScreen: false, returnFocusToTrigger: false }
   : createWidgetState();
@@ -178,26 +177,17 @@ function renderPreparedQuestions() {
     groups.get(item.category).push(item);
   }
   for (const [category, items] of groups) {
-    const group = document.createElement("section");
-    group.className = "psy-widget-evaluation-group";
-    const heading = document.createElement("h3");
-    heading.textContent = `${category} · ${items.length}`;
-    group.append(heading);
+    const group = document.createElement("optgroup");
+    group.label = `${category} · ${items.length}`;
     for (const item of items) {
-      const row = document.createElement("article");
-      row.className = "psy-widget-evaluation-question";
-      const question = document.createElement("p");
-      question.textContent = item.question;
-      const expected = document.createElement("small");
-      expected.textContent = `Ожидается: ${item.expected}`;
-      const askButton = document.createElement("button");
-      askButton.type = "button";
-      askButton.dataset.preparedQuestion = item.question;
-      askButton.textContent = "Спросить";
-      row.append(question, expected, askButton);
-      group.append(row);
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.question;
+      option.dataset.question = item.question;
+      option.dataset.expected = item.expected;
+      group.append(option);
     }
-    evaluationList.append(group);
+    evaluationSelect.append(group);
   }
 }
 
@@ -213,15 +203,14 @@ questionForm.addEventListener("submit", (event) => {
   void ask(questionInput.value, false);
 });
 root.querySelectorAll("[data-question]").forEach((button) => button.addEventListener("click", () => void ask(button.dataset.question)));
-evaluationOpen.addEventListener("click", () => {
-  const willOpen = evaluationPanel.hidden;
-  evaluationPanel.hidden = !willOpen;
-  evaluationOpen.setAttribute("aria-expanded", String(willOpen));
-  evaluationOpen.textContent = willOpen ? "Скрыть 60 проверочных вопросов" : "Показать 60 проверочных вопросов";
-});
-evaluationList.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-prepared-question]");
-  if (button) void ask(button.dataset.preparedQuestion);
+evaluationSelect.addEventListener("change", () => {
+  const option = evaluationSelect.selectedOptions[0];
+  if (!option?.dataset.question) {
+    evaluationStatus.textContent = "";
+    return;
+  }
+  evaluationStatus.textContent = `Ожидается: ${option.dataset.expected}.`;
+  void ask(option.dataset.question);
 });
 handoffOpen.addEventListener("click", () => {
   handoffOpen.hidden = true;
