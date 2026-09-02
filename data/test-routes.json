@@ -1,0 +1,37 @@
+{
+  "title": "Тестировать всё",
+  "intro": "Пульт для живых сборок: здесь только то, что можно открыть и потрогать. Обновляемые проекты не выданы за готовые.",
+  "groups": [
+    {
+      "title": "Игры",
+      "items": [
+        { "title": "Наотмашь", "url": "/naotmash/", "status": "готова к тесту" },
+        { "title": "ПЕРИМЕТР", "url": "/stealth/", "status": "готова к тесту" },
+        { "title": "ТЕХНОМАГИЯ", "url": "/technomagic/", "status": "готова к тесту" },
+        { "title": "Неон Линии", "url": "/lines/", "status": "готова к тесту" },
+        { "title": "Битва Стихий", "url": "/stihii/", "status": "готова к тесту" },
+        { "title": "HOTLINE ABAKAN", "url": "/hotline-abakan/", "status": "готова к тесту" },
+        { "title": "NEON CLAW", "url": "/claw/", "status": "готова к тесту" },
+        { "title": "ПЕРЕЛОМ", "url": "/perelom/", "status": "готова к тесту" },
+        { "title": "Пазл-квест", "url": "/puzzle-quest/", "status": "готова к тесту" },
+        { "title": "Zoo", "url": "/zoo/", "status": "тестовая сборка", "note": "Карта и Аудиосёрф работают локально в браузере; серверная карма будет подключена отдельно." },
+        { "title": "QA Quest", "url": "/qa-quest/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/qa-quest" },
+        { "title": "ACID UNO", "url": "/acid/", "status": "тестовая сборка · не финальная", "note": "Игровая версия для проверки механики; не выдаётся за финальную.", "repo": "https://github.com/aka-gst/acid-uno" },
+        { "title": "Тетколор", "url": "/tetcolor/", "status": "обновляется", "available": false },
+        { "title": "Деревня", "url": "/coin/", "status": "тестовая сборка", "repo": "https://github.com/aka-gst/orel-reshka" },
+        { "title": "Лила", "url": "/leela/", "status": "тестовая сборка", "note": "Только для проверки; в общую витрину пока не добавлена." }
+      ]
+    },
+    {
+      "title": "Инструменты и практикумы",
+      "items": [
+        { "title": "Local Agent Gateway", "url": "https://aka-gst.github.io/local-agent-gateway/", "status": "отчёт доступен", "external": true, "repo": "https://github.com/aka-gst/local-agent-gateway" },
+        { "title": "Практикум: тестирование локального AI-агента", "url": "/praktikum/testirovanie/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/agent-lab" },
+        { "title": "Практикум: настройка LLM и агентов", "url": "/praktikum/llm/", "status": "готов к тесту", "repo": "https://github.com/aka-gst/ai-agent-service-lab" },
+        { "title": "ФотоДата", "url": "/photodata/", "status": "готова к тесту", "repo": "https://github.com/aka-gst/photo_meta_editer" },
+        { "title": "Psy AI Admin", "url": "/psy-admin/", "status": "обновляется", "available": false },
+        { "title": "Буддийский дневник", "url": "https://t.me/Buddhist_Diary_bot", "status": "готов к тесту", "external": true, "repo": "https://github.com/aka-gst/buddhist-diary-bot" }
+      ]
+    }
+  ]
+}

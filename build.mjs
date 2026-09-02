@@ -14,6 +14,7 @@ const db = read('projects.json');
 const qa = read('qa-metrics.json');
 const put = read('put.json');
 const utro = read('utro.json');
+const testRoutes = read('test-routes.json');
 
 // Версия ассета — от его содержимого. Раньше в ссылке стояло ?v=1 вручную:
 // Caddy отдаёт /assets/* с кэшем на неделю, поэтому вернувшийся посетитель
@@ -887,6 +888,59 @@ ${playBar}
              data-umami-event="code-open" data-umami-event-from="games">Код всех игр открыт <b>↗</b></a>
         </p>`;
 
+// Тестовый пульт отделён от витрины: здесь не убеждают, а дают быстро открыть
+// все доступные сборки. Обновляемые вещи не получают ссылку на старую версию.
+const testRows = testRoutes.groups
+  .map(
+    (group) => `
+      <section class="test-group" aria-labelledby="test-group-${esc(group.title).toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-')}">
+        <h2 id="test-group-${esc(group.title).toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-')}">${esc(group.title)}</h2>
+        <div class="test-list">
+${group.items
+  .map((item) => {
+    const available = item.available !== false;
+    const target = item.external ? ' target="_blank" rel="noopener"' : '';
+    return `          <article class="test-row${available ? '' : ' test-row--pending'}">
+            <div><h3>${esc(item.title)}</h3>${item.note ? `<p>${esc(item.note)}</p>` : ''}</div>
+            <p class="test-status">${esc(item.status)}</p>
+            ${available ? `<a class="test-open" href="${esc(item.url)}"${target}>Открыть <b>${item.external ? '↗' : '→'}</b></a>` : '<span class="test-wait">ждём сборку</span>'}
+            ${item.repo ? `<a class="test-repo" href="${esc(item.repo)}" target="_blank" rel="noopener">Исходники ↗</a>` : ''}
+          </article>`;
+  })
+  .join('\n')}
+        </div>
+      </section>`
+  )
+  .join('\n');
+
+const testPage = `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="${esc(site.themeColor)}">
+    <title>${esc(testRoutes.title)} — ${esc(site.handle)}</title>
+    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
+  </head>
+  <body class="test-page">
+    <a class="skip" href="#main">К списку сборок</a>
+    <header class="topbar">
+      ${brand('work')}
+      <a class="topbar-link" href="/">Работа</a>
+      <a class="topbar-link" href="/#games">Игры</a>
+      <a class="topbar-link" href="/rasskazy/">Рассказы</a>
+      <nav class="socials" aria-label="Профили">${socialLinks('test')}</nav>
+    </header>
+    <main id="main" class="test-main">
+      <header class="test-intro"><p class="kicker">пульт проверки</p><h1>${esc(testRoutes.title)}</h1><p>${esc(testRoutes.intro)}</p></header>
+${testRows}
+    </main>
+  </body>
+</html>`;
+
 // ── Сборка страницы ──────────────────────────────────────────────────
 const html = `<!doctype html>
 <html lang="ru" data-track="work">
@@ -943,6 +997,7 @@ ${recTicker}
         )}<span>${esc(site.tracks.play.label)}</span></button>
       </div>
       <a class="topbar-link" href="/rasskazy/">Рассказы</a>
+      <a class="topbar-link topbar-link--test" href="/test/">Тест</a>
       <a class="topbar-link" href="/en/" hreflang="en" lang="en" data-umami-event="en-open">EN</a>
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}
@@ -970,6 +1025,8 @@ ${socialLinks('footer')}
 `;
 
 writeFileSync(join(root, 'index.html'), html);
+mkdirSync(join(root, 'test'), { recursive: true });
+writeFileSync(join(root, 'test', 'index.html'), testPage);
 
 // ── Индекс раздела практикумов ───────────────────────────────────────
 // Редирект /praktikum вёл в пустоту, пока этой страницы не было.

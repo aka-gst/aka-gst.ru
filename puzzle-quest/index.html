@@ -1,0 +1,442 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>матч-квест</title>
+<!-- счётчик стоит с рождения игры (правило 30); на localhost его нет — обёртка молчит -->
+<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
+<style>
+  :root { --fon:#12121a; --plitka:#1c1c28; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--fon); color:#eee; font:16px/1.4 -apple-system,system-ui,sans-serif;
+         display:flex; flex-direction:column; align-items:center; min-height:100dvh;
+         padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom); }
+  /* верхняя полоса: выход слева, враг справа. Кнопка выхода не меньше 44 точек (правило 29б) */
+  #verh { display:flex; gap:10px; align-items:stretch; width:100%; max-width:420px; margin:8px 0; }
+  #na_sajt { min-height:44px; min-width:44px; background:#2a2a3c; color:#bbb; border:0;
+             border-radius:10px; padding:6px 12px; font-size:12px; letter-spacing:.03em; }
+  #na_sajt.sprosil { background:#5a2a34; color:#ffd9de; }
+  #vrag { flex:1; background:var(--plitka); border-radius:10px; padding:6px 10px;
+          display:flex; flex-direction:column; gap:4px; justify-content:center; }
+  #vrag .stroka { display:flex; justify-content:space-between; font-size:13px; }
+  #vrag .stroka b { letter-spacing:.06em; }
+  #vrag .stroka span { opacity:.65; font-variant-numeric:tabular-nums; }
+  .polosa { height:8px; border-radius:4px; background:#0d0d14; overflow:hidden; }
+  .polosa i { display:block; height:100%; border-radius:4px; transition:width .3s ease; }
+  #vrag_hp i { background:#e8465e; }
+  #vrag.bolno { animation:bolno .3s ease; }
+  @keyframes bolno { 30% { filter:brightness(2.2); transform:translateX(3px) } 60% { transform:translateX(-3px) } }
+  /* overflow прячет камни, летящие в поле сверху, — иначе они висят над панелью врага */
+  #pole { position:relative; touch-action:none; overflow:hidden; }
+  .k { position:absolute; border-radius:22%; transition:transform .13s cubic-bezier(.4,1.4,.6,1); z-index:2 }
+  /* подложка рисуется ТОЛЬКО под существующими клетками — по ней и читается форма поля */
+  .pl { position:absolute; border-radius:22%; background:var(--plitka); z-index:1 }
+  /* у камня обрезана форма, поэтому рамка выбора не годится — она обрезалась бы
+     вместе с ним. Выбор показывается ростом и яркостью */
+  .k.vybran { filter:brightness(1.55); transform:scale(1.14); z-index:3; }
+  .k.gasnet { animation:gasnet .28s ease-in both; z-index:4 }
+  @keyframes gasnet { to { transform:scale(.04) rotate(120deg); opacity:0; filter:brightness(2.8) } }
+  /* отклик нарастает: сила задаётся --sila, её ставит код по величине события */
+  #pole.tryaska { animation:tryaska .42s cubic-bezier(.36,.07,.19,.97) both; }
+  #pole.tryaska::after { content:''; position:absolute; inset:0; z-index:6; pointer-events:none;
+       mix-blend-mode:screen; border-radius:8px;
+       background:radial-gradient(circle at 50% 50%,#fff,#8ff 42%,transparent 72%);
+       animation:vspyshka .42s ease-out forwards; }
+  @keyframes tryaska {
+    0%,100% { transform:translate3d(0,0,0) }
+    15% { transform:translate3d(calc(var(--sila,1)*-3px),calc(var(--sila,1)*2px),0) rotate(calc(var(--sila,1)*-.2deg)) }
+    33% { transform:translate3d(calc(var(--sila,1)*3px),calc(var(--sila,1)*-2px),0) rotate(calc(var(--sila,1)*.24deg)) }
+    52% { transform:translate3d(calc(var(--sila,1)*-2px),calc(var(--sila,1)*1px),0) }
+    74% { transform:translate3d(calc(var(--sila,1)*1px),calc(var(--sila,1)*-1px),0) }
+  }
+  @keyframes vspyshka { 0%{opacity:0} 14%{opacity:calc(var(--sila,1)*.15)} 100%{opacity:0} }
+  @media (prefers-reduced-motion:reduce) {
+    #pole.tryaska { animation:none } #pole.tryaska::after { display:none }
+    .k { animation:none; transition:none }
+    #vrag.bolno { animation:none }
+  }
+  /* игрок: здоровье полосой под полем */
+  #igrok { width:100%; max-width:420px; margin-top:10px; }
+  #igrok .stroka { display:flex; justify-content:space-between; font-size:13px; margin-bottom:3px; }
+  #igrok .stroka span { opacity:.65; font-variant-numeric:tabular-nums; }
+  #igrok_hp i { background:#33cc77; }
+  #igrok.lechenie i { filter:brightness(1.8); }
+  #igrok.bolno { animation:bolno .3s ease; }
+  /* заклинания: пять кнопок-полосок маны. Тап по полной — каст. Не меньше 44 точек */
+  #zakl { display:flex; gap:6px; width:100%; max-width:420px; margin-top:10px; }
+  .z { flex:1; min-height:52px; border:0; border-radius:10px; position:relative; overflow:hidden;
+       background:var(--plitka); color:#eee; font-size:11px; padding:4px 2px;
+       display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:1px; }
+  .z i { position:absolute; left:0; right:0; bottom:0; z-index:0; opacity:.4; transition:height .3s ease; }
+  .z b { z-index:1; font-weight:600; }
+  .z span { z-index:1; opacity:.7; font-size:10px; font-variant-numeric:tabular-nums; }
+  .z.gotov { outline:2px solid #fff8; }
+  .z.gotov i { opacity:.85; animation:gorit 1.1s ease-in-out infinite alternate; }
+  @keyframes gorit { from { filter:brightness(1) } to { filter:brightness(1.5) } }
+  #itog { margin-top:12px; min-height:26px; font-size:15px; text-align:center; }
+  #zanovo { background:#2a2a3c; color:#eee; border:0; border-radius:10px;
+            padding:11px 20px; font-size:15px; margin-top:8px; min-height:44px; }
+</style>
+
+<div id="verh">
+  <button id="na_sajt">НА САЙТ</button>
+  <div id="vrag">
+    <div class="stroka"><b id="vrag_imya">СТРАЖ</b><span id="vrag_chislo">45/45</span></div>
+    <div class="polosa" id="vrag_hp"><i style="width:100%"></i></div>
+    <div class="stroka"><span id="vrag_status">удар через 3 хода</span></div>
+  </div>
+</div>
+<div id="pole"></div>
+<div id="igrok">
+  <div class="stroka"><b>ты</b><span id="igrok_chislo">30/30</span></div>
+  <div class="polosa" id="igrok_hp"><i style="width:100%"></i></div>
+</div>
+<div id="zakl"></div>
+<div id="itog"></div>
+<button id="zanovo" hidden>ещё раз</button>
+
+<script type="module">
+import { Zvuk } from './zvuk.js';
+import { pole, najti, menyat, hod_dayot, est_hod, uronit, peremeshat,
+         FORMY, FORMA, NET, CVETA, koord, est_kletka } from './igra.js';
+import { boj_novy, nabrat_manu, hod_proshyol, kast, gotovo, ZAKLINANIYA } from './boj.js';
+
+// У КАЖДОГО ЦВЕТА СВОЯ ФИГУРА — как в референсе: набор читается и без цвета
+// (дальтоник и чёрно-белый экран различают камни формой). Индексы = CVETA.
+const FIGURY = [
+  { br: '50%', cp: 'none' },                                                    // красный — круг
+  { br: '0',   cp: 'polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%)' },              // синий — ромб
+  { br: '22%', cp: 'none' },                                                    // зелёный — квадрат
+  { br: '0',   cp: 'polygon(25% 3%, 75% 3%, 97% 50%, 75% 97%, 25% 97%, 3% 50%)' }, // жёлтый — шестиугольник
+  { br: '0',   cp: 'polygon(50% 2%, 97% 37%, 79% 97%, 21% 97%, 3% 37%)' },     // фиолетовый — пятиугольник
+];
+function pridat_vid(d, c) {
+  d.style.background = CVETA[c];
+  d.style.borderRadius = FIGURY[c].br;
+  d.style.clipPath = FIGURY[c].cp;
+}
+
+const adres = new URL(location);
+// немой запуск для проверок и прогонов — звук не будит колонки (?тихо или ?tiho)
+const TIHO = adres.searchParams.has('тихо') || adres.searchParams.has('tiho');
+
+// счётчик: события уходят, только если скрипт счётчика реально доехал.
+// Уронить кадр обёртка права не имеет — поэтому try и молчание
+function sobytie(imya, dannye) {
+  try { if (window.umami) window.umami.track(imya, dannye); } catch (e) {}
+}
+
+// --- сохранение партии: тихая потеря прогресса ищется раньше новых фич (правило 29)
+const KLYUCH = 'match-kvest-partiya';
+function sohranit() {
+  try { localStorage.setItem(KLYUCH, JSON.stringify({ v: 1, forma: imya_formy, p, b, hodov })); }
+  catch (e) {}
+}
+function zabyt() { try { localStorage.removeItem(KLYUCH); } catch (e) {} }
+function vspomnit() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KLYUCH));
+    if (s && s.v === 1 && !s.b.ishod && FORMY[s.forma]) return s;
+  } catch (e) {}
+  return null;
+}
+
+// форма: явный ?forma= сильнее сохранения — посмотреть уровень должно быть дёшево
+const forma_iz_adresa = adres.searchParams.get('forma');
+const pamyat = forma_iz_adresa ? null : vspomnit();
+const imya_formy = forma_iz_adresa && FORMY[forma_iz_adresa] ? forma_iz_adresa
+                 : (pamyat ? pamyat.forma : 'mysterymatch');
+const FORMA_UROVNYA = FORMY[imya_formy] || FORMA;
+const SHIR = FORMA_UROVNYA[0].length, VYS = FORMA_UROVNYA.length;
+
+const zv = new Zvuk(TIHO);
+const el = document.getElementById('pole');
+let p, b, kletki, vybran = null, zanyato = false, hodov = 0;
+
+if (pamyat) { p = pamyat.p; b = pamyat.b; hodov = pamyat.hodov || 0; }
+else {
+  p = pole(Math.random, FORMA_UROVNYA); b = boj_novy(); hodov = 0;
+  sobytie('boj-nachalo', { forma: imya_formy });
+}
+
+function razmer() {
+  // поле не квадрат — влезать должно и по ширине, и по высоте, вместе с панелями
+  const po_shirine = Math.min(window.innerWidth - 24, 420) / SHIR;
+  const po_vysote = (window.innerHeight * .52) / VYS;
+  return Math.max(22, Math.floor(Math.min(po_shirine, po_vysote)));
+}
+let S = razmer();
+
+function narisovat() {
+  el.innerHTML = ''; kletki = [];
+  S = razmer();
+  el.style.width = S * SHIR + 'px';
+  el.style.height = S * VYS + 'px';
+  for (let y = 0; y < VYS; y++) {
+    kletki[y] = [];
+    for (let x = 0; x < SHIR; x++) {
+      // КЛЕТКИ, КОТОРОЙ НЕТ, НЕ СУЩЕСТВУЕТ И НА ЭКРАНЕ: ни камня, ни подложки,
+      // ни обработчика. Иначе по пустому месту можно тыкнуть
+      if (!est_kletka(p, x, y)) { kletki[y][x] = null; continue; }
+      const pl = document.createElement('div');
+      pl.className = 'pl';
+      pl.style.width = pl.style.height = (S - 4) + 'px';
+      pl.style.left = (x * S + 2) + 'px';
+      pl.style.top = (y * S + 2) + 'px';
+      el.appendChild(pl);
+
+      const d = document.createElement('div');
+      d.className = 'k';
+      d.style.width = d.style.height = (S - 4) + 'px';
+      d.style.left = (x * S + 2) + 'px';
+      d.style.top = (y * S + 2) + 'px';
+      pridat_vid(d, p[y][x]);
+      d.onpointerdown = e => {
+        e.preventDefault();
+        svayp = { x, y, px: e.clientX, py: e.clientY };
+        tyk(x, y);
+      };
+      el.appendChild(d); kletki[y][x] = d;
+    }
+  }
+}
+
+// кнопки заклинаний строятся из ZAKLINANIYA — новое заклинание не трогает разметку
+const zakl_el = document.getElementById('zakl');
+const knopki = ZAKLINANIYA.map((z, i) => {
+  const k = document.createElement('button');
+  k.className = 'z';
+  k.innerHTML = `<i style="background:${CVETA[z.cvet]}"></i><b>${z.imya}</b><span></span>`;
+  k.title = z.opisanie;
+  k.onpointerdown = e => { e.preventDefault(); kastanut(i); };
+  zakl_el.appendChild(k);
+  return k;
+});
+
+function obnovit() {
+  for (let y = 0; y < VYS; y++) for (let x = 0; x < SHIR; x++)
+    if (kletki[y][x]) pridat_vid(kletki[y][x], p[y][x]);
+  document.getElementById('vrag_chislo').textContent = `${b.vrag}/${b.vrag_max}`;
+  document.querySelector('#vrag_hp i').style.width = (b.vrag / b.vrag_max * 100) + '%';
+  document.getElementById('vrag_status').textContent =
+    b.ishod === 'pobeda' ? 'повержен' :
+    b.zamorozhen > 0 ? `в оковах ещё ${b.zamorozhen} хода` :
+    `удар через ${b.do_udara} ход${b.do_udara === 1 ? '' : 'а'}`;
+  document.getElementById('igrok_chislo').textContent = `${b.hp}/${b.hp_max}`;
+  document.querySelector('#igrok_hp i').style.width = (b.hp / b.hp_max * 100) + '%';
+  ZAKLINANIYA.forEach((z, i) => {
+    knopki[i].querySelector('span').textContent = `${b.mana[z.cvet]}/${z.cena}`;
+    knopki[i].querySelector('i').style.height = Math.min(100, b.mana[z.cvet] / z.cena * 100) + '%';
+    knopki[i].classList.toggle('gotov', gotovo(b, i) && !b.ishod);
+  });
+}
+const kletka_po_nomeru = i => { const k = koord(p, i); return kletki[k.y][k.x]; };
+const cvet_po_nomeru = i => { const k = koord(p, i); return p[k.y][k.x]; };
+const zhdat = ms => new Promise(r => setTimeout(r, ms));
+
+function tryahnut(sila) {
+  el.style.setProperty('--sila', sila.toFixed(2));
+  el.classList.remove('tryaska'); void el.offsetWidth; el.classList.add('tryaska');
+  setTimeout(() => el.classList.remove('tryaska'), 430);
+}
+
+// анимации выключаются системной настройкой доступности вместе с CSS-ными
+const BEZ_DVIZHENIYA = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// видимый обмен: камни едут навстречу. При отказе — туда и обратно: видно,
+// ЧТО игра попробовала и почему не приняла, а не просто «тап в никуда»
+async function pokazat_obmen(ot, k, obratno) {
+  const A = kletki[ot.y][ot.x], B = kletki[k.y][k.x];
+  if (!A || !B || BEZ_DVIZHENIYA) return;
+  const dx = (k.x - ot.x) * S, dy = (k.y - ot.y) * S;
+  A.style.transition = B.style.transition = 'transform .12s ease';
+  A.style.transform = `translate(${dx}px,${dy}px)`;
+  B.style.transform = `translate(${-dx}px,${-dy}px)`;
+  await zhdat(130);
+  if (obratno) {
+    A.style.transform = B.style.transform = '';
+    await zhdat(130);
+    A.style.transition = B.style.transition = '';
+  } else {
+    // клетки сейчас перекрасятся в правильные цвета — сброс без анимации
+    A.style.transition = B.style.transition = 'none';
+    A.style.transform = B.style.transform = '';
+    void el.offsetWidth;
+    A.style.transition = B.style.transition = '';
+  }
+}
+
+// видимое падение: камень стартует на s_vysoty клеток выше и доезжает с
+// разгоном; звук приземления — в момент приземления, а не по расписанию.
+// «Звук камушков — как они падают» он назвал вторым по важности
+async function pokazat_padenie(padeniya) {
+  if (BEZ_DVIZHENIYA) {
+    padeniya.forEach(f => setTimeout(() => zv.kamen(f.s_vysoty, .5), f.s_vysoty * 26));
+    await zhdat(200);
+    return;
+  }
+  let dolshe = 0;
+  padeniya.forEach(f => {
+    const k = kletki[f.y] && kletki[f.y][f.x];
+    if (!k) return;
+    k.style.transition = 'none';
+    k.style.transform = `translateY(${-f.s_vysoty * S}px)`;
+  });
+  void el.offsetWidth;
+  padeniya.forEach(f => {
+    const k = kletki[f.y] && kletki[f.y][f.x];
+    if (!k) return;
+    const dl = 90 + f.s_vysoty * 55;
+    dolshe = Math.max(dolshe, dl);
+    k.style.transition = `transform ${dl}ms cubic-bezier(.45,0,.85,.55)`;
+    k.style.transform = '';
+    setTimeout(() => { k.style.transition = ''; zv.kamen(f.s_vysoty, .5); }, dl);
+  });
+  await zhdat(dolshe + 50);
+}
+
+async function hod(ot, k) {
+  if (Math.abs(ot.x - k.x) + Math.abs(ot.y - k.y) !== 1) return;
+  if (!est_kletka(p, k.x, k.y)) return;          // свайп в дырку или за край
+  if (!hod_dayot(p, ot, k)) {
+    zanyato = true;
+    zv.kamen(0, .35);
+    await pokazat_obmen(ot, k, true);
+    zanyato = false;
+    return;
+  }
+  zanyato = true; hodov++;
+  await pokazat_obmen(ot, k, false);
+  menyat(p, ot, k); obnovit();
+  let kaskad = 0, est;
+  while ((est = najti(p)).size > 0) {
+    est.forEach(i => kletka_po_nomeru(i).classList.add('gasnet'));
+    // цвета читаются ДО падения — после uronit на этих местах уже другие камни
+    nabrat_manu(b, [...est].map(cvet_po_nomeru));
+    // ОТКЛИК НАРАСТАЕТ: обычная тройка тихо, длинная цепь и каскад — событие
+    const sila = Math.min((est.size - 3) * 0.4 + kaskad * 0.9, 3.2);
+    zv.sovpadenie(est.size, kaskad);
+    if (sila > 0.35) tryahnut(sila);
+    obnovit();
+    await zhdat(240);
+    const padeniya = uronit(p, est);
+    kletki.flat().forEach(k => k && k.classList.remove('gasnet'));
+    obnovit();
+    await pokazat_padenie(padeniya);
+    kaskad++;
+  }
+  // ход сделан — очередь врага
+  if (hod_proshyol(b) === 'udar') {
+    zv.vzryv();
+    const ig = document.getElementById('igrok');
+    ig.classList.add('bolno'); setTimeout(() => ig.classList.remove('bolno'), 320);
+  }
+  if (!est_hod(p)) { peremeshat(p); zv.vzryv();
+    document.getElementById('itog').textContent = 'ходов не было — камни перемешались'; }
+  obnovit(); sohranit();
+  zanyato = false;
+  proverit();
+}
+
+function tyk(x, y) {
+  if (zanyato || b.ishod) return;
+  zv.razbudit();
+  if (!vybran) { vybran = {x, y}; kletki[y][x].classList.add('vybran'); return; }
+  const ot = vybran;
+  kletki[ot.y][ot.x].classList.remove('vybran');
+  vybran = null;
+  if (ot.x === x && ot.y === y) return;   // тап по тому же камню снимает выбор
+  hod(ot, { x, y });
+}
+
+// свайп — тот же ход, что тап-тап: палец ведёт камень в сторону соседа
+let svayp = null;
+window.addEventListener('pointermove', e => {
+  if (!svayp || zanyato) return;
+  const dx = e.clientX - svayp.px, dy = e.clientY - svayp.py;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < S * 0.35) return;
+  const ot = { x: svayp.x, y: svayp.y };
+  const k = Math.abs(dx) > Math.abs(dy)
+    ? { x: ot.x + Math.sign(dx), y: ot.y }
+    : { x: ot.x, y: ot.y + Math.sign(dy) };
+  svayp = null;
+  if (vybran) { kletki[vybran.y][vybran.x].classList.remove('vybran'); vybran = null; }
+  hod(ot, k);
+});
+window.addEventListener('pointerup', () => { svayp = null; });
+
+async function kastanut(i) {
+  if (zanyato || b.ishod || !gotovo(b, i)) return;
+  zv.razbudit();
+  zanyato = true;
+  const delo = kast(b, i);
+  const vr = document.getElementById('vrag');
+  if (delo === 'uron') { zv.vzryv(); tryahnut(2.4);
+    vr.classList.add('bolno'); setTimeout(() => vr.classList.remove('bolno'), 320); }
+  if (delo === 'okovy') zv.sovpadenie(6, 2);
+  if (delo === 'lechenie') { zv.sovpadenie(5, 1);
+    const ig = document.getElementById('igrok');
+    ig.classList.add('lechenie'); setTimeout(() => ig.classList.remove('lechenie'), 500); }
+  if (delo === 'peremeshat') { peremeshat(p); zv.vzryv(); narisovat(); }
+  obnovit(); sohranit();
+  zanyato = false;
+  proverit();
+}
+
+function proverit() {
+  const t = document.getElementById('itog');
+  if (b.ishod === 'pobeda') {
+    t.textContent = `${b.vrag_imya} пал! ${hodov} ходов`;
+    sobytie('pobeda', { forma: imya_formy, hodov });
+    konec();
+  } else if (b.ishod === 'porazhenie') {
+    t.textContent = 'ты пал — ещё разок';
+    sobytie('porazhenie', { forma: imya_formy, hodov, vrag_ostalos: b.vrag });
+    konec();
+  }
+}
+function konec() { zanyato = true; zabyt(); document.getElementById('zanovo').hidden = false; }
+
+document.getElementById('zanovo').onclick = () => {
+  p = pole(Math.random, FORMA_UROVNYA); b = boj_novy(); hodov = 0; zanyato = false;
+  document.getElementById('itog').textContent = '';
+  document.getElementById('zanovo').hidden = true;
+  sobytie('boj-nachalo', { forma: imya_formy });
+  narisovat(); obnovit(); sohranit();
+};
+window.addEventListener('resize', () => { narisovat(); obnovit(); });
+
+// «НА САЙТ» есть всегда; при начатой партии первое нажатие спрашивает словами
+// о цене, второе уводит (правило 29б). Партия начата = есть ходы и нет исхода.
+// Сохранение партию бережёт, но обещать это молча нельзя — вопрос остаётся.
+const vyhod = document.getElementById('na_sajt');
+let vyhod_sprosil = null;
+vyhod.onclick = () => {
+  const partiya_idyot = hodov > 0 && !b.ishod;
+  if (!partiya_idyot || vyhod_sprosil) { location.href = 'https://aka-gst.ru/'; return; }
+  vyhod.textContent = 'ТОЧНО? БОЙ ПРЕРВЁТСЯ';
+  vyhod.classList.add('sprosil');
+  vyhod_sprosil = setTimeout(() => {
+    vyhod_sprosil = null;
+    vyhod.textContent = 'НА САЙТ';
+    vyhod.classList.remove('sprosil');
+  }, 4000);
+};
+
+p && narisovat(); obnovit(); sohranit();
+window.__zv = zv;   // для замера звука
+// пульт: чем спросить состояние, не читая исходников (навык igry)
+window.__sost = () => ({
+  hodov, zanyato, tiho: TIHO,
+  hp: b.hp, vrag: b.vrag, mana: [...b.mana], zamorozhen: b.zamorozhen,
+  do_udara: b.do_udara, ishod: b.ishod,
+  forma: imya_formy,
+  shirina: SHIR, vysota: VYS,
+  kletok: p.flat().filter(v => v !== NET).length,
+  dyrok: p.flat().filter(v => v === NET).length,
+  narisovano_kamney: document.querySelectorAll('#pole .k').length,
+  narisovano_podlozhek: document.querySelectorAll('#pole .pl').length,
+  hod_est: est_hod(p),
+});
+window.__kast = i => kastanut(i);        // пульт: каст по номеру заклинания
+window.__formy = () => Object.keys(FORMY);
+</script>

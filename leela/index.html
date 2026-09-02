@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#182c2b" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <title>Лила — пространство хода</title>
+    <meta name="description" content="Игра-наблюдение на поле из 72 клеток: бросок, клетка, обязательная запись в дневнике. Прогресс сохраняется на сервере." />
+    <meta property="og:url" content="https://aka-gst.ru/leela/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Лила — игра-наблюдение" />
+    <meta property="og:description" content="Поле из 72 клеток, змеи и лестницы, дневник после каждого хода. Можно играть без регистрации." />
+    <meta property="og:image" content="https://aka-gst.ru/leela/assets/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead"><h1>Лила</h1><p class="lede">Игра-наблюдение</p><div class="masthead-actions"><button class="rules-trigger" id="accountButton" type="button">Войти</button><button class="rules-trigger" id="rulesButton" type="button">Правила</button></div></header>
+
+      <section class="game-layout" aria-label="Игра Лила">
+        <aside class="panel controls">
+          <div class="progress"><span>Ваш путь</span><strong id="position">Вне поля</strong></div>
+          <div class="die" id="die" aria-live="polite">—</div>
+          <p class="hint" id="turnHint">Чтобы войти в игру, нужен бросок 6.</p>
+          <div class="turn-timer" aria-disabled="true" title="Будет включён в полной версии">
+            <span>Время на ход · 24 часа</span>
+            <strong>24:00:00</strong>
+            <small id="serverStatus">Таймер отключён · подключение…</small>
+          </div>
+          <button class="quiet-button" id="adoptButton" type="button" hidden>Перенести игру этого браузера в аккаунт</button>
+
+          <div class="karma">
+            <div class="karma-head"><span>Карма</span><strong id="karmaValue">0</strong></div>
+            <p class="small" id="rollCost">Бросок сегодня бесплатный</p>
+            <p class="small">Отметьте сделанное — за каждое даётся карма, раз в сутки:</p>
+            <div class="practices">
+              <button type="button" data-practice="walk" aria-pressed="false">Прогулка</button>
+              <button type="button" data-practice="meditation" aria-pressed="false">Медитация</button>
+              <button type="button" data-practice="sleep" aria-pressed="false">Сон</button>
+              <button type="button" data-practice="reading" aria-pressed="false">Чтение</button>
+              <button type="button" data-practice="kindness" aria-pressed="false">Доброе дело</button>
+            </div>
+          </div>
+
+          <form id="emotionForm">
+            <h2>Перед броском</h2>
+            <p class="small">Сочетание шкал, базового броска и свежей случайной последовательности влияет на результат. Даже небольшое выбранное значение участвует сильно.</p>
+            <label class="scale"><span>Счастье <output id="joyValue">Не выбрано</output></span><input id="joy" type="range" min="0" max="14" value="0" step="1" aria-describedby="joyValue" /></label>
+            <label class="scale"><span>Гнев <output id="angerValue">Не выбрано</output></span><input id="anger" type="range" min="0" max="14" value="0" step="1" aria-describedby="angerValue" /></label>
+            <label class="scale"><span>Растерянность <output id="confusionValue">Не выбрано</output></span><input id="confusion" type="range" min="0" max="14" value="0" step="1" aria-describedby="confusionValue" /></label>
+            <div class="roll-wrap" id="rollWrap"><button class="roll" id="rollButton" type="submit">Бросить кубик</button></div>
+          </form>
+          <button class="quiet-button" id="restartButton" type="button">Начать заново</button>
+        </aside>
+
+        <section class="board-wrap" aria-label="Игровое поле">
+          <div class="board-legend"><span><i class="arrow-dot"></i>лестницы</span><span><i class="snake-dot"></i>змеи</span><span class="route-help">наведите или нажмите значок</span></div>
+          <div class="board-zoom" aria-hidden="false">
+            <button type="button" id="boardZoomOut" aria-label="Отдалить поле">−</button>
+            <button type="button" id="boardZoomFit" aria-label="Показать поле целиком">◻</button>
+            <button type="button" id="boardZoomIn" aria-label="Приблизить поле">+</button>
+          </div>
+          <div class="board-stage">
+            <div class="board" id="board"></div>
+            <svg class="board-paths" id="boardPaths" aria-hidden="true"></svg>
+            <div class="player-piece" id="playerPiece" aria-hidden="true"><img id="playerPieceImage" alt="" /></div>
+          </div>
+        </section>
+
+        <aside class="panel reflection">
+          <p class="eyebrow" id="cellContextLabel">Текущая клетка</p>
+          <h2 id="cellTitle"><span class="row-mark" id="rowMark" hidden aria-hidden="true"></span><span id="cellTitleText">Порог игры</span></h2>
+          <img class="cell-art" id="cellArt" alt="" hidden />
+          <p class="world-mark" id="worldMark" hidden></p>
+          <div class="cell-reading">
+            <p id="cellText">Бросьте кубик и начните путь. В Лилу можно войти только на шестёрке.</p>
+            <div class="cell-more-hint" id="cellMoreHint" aria-hidden="true">↓</div>
+          </div>
+          <p class="cell-ask" id="cellAsk" hidden></p>
+          <div class="transition" id="transition" hidden></div>
+          <form id="journalForm" hidden>
+            <label for="journalEntry">Дневник <span>обязательно</span></label>
+            <textarea id="journalEntry" rows="5" required placeholder="Что сейчас откликается? Что происходит в жизни?"></textarea>
+            <button type="submit">Сохранить запись в Дневнике и завершить ход</button>
+          </form>
+        </aside>
+      </section>
+
+      <nav class="mobile-nav" aria-label="Разделы игры">
+        <button type="button" data-mobile-view="turn" aria-pressed="true"><svg class="nav-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"> <path d="M6.5 3.75h11a2.75 2.75 0 0 1 2.75 2.75v11a2.75 2.75 0 0 1-2.75 2.75h-11a2.75 2.75 0 0 1-2.75-2.75v-11A2.75 2.75 0 0 1 6.5 3.75Z"/> <path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01" stroke-width="2.4"/> </svg>Ход</button>
+        <button type="button" data-mobile-view="board" aria-pressed="false"><svg class="nav-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"> <path d="M4.25 4.25h15.5v15.5H4.25zM9.42 4.25v15.5M14.58 4.25v15.5M4.25 9.42h15.5M4.25 14.58h15.5"/> <path d="m6.25 17.75 1.25-1.25 1.25 1.25M15.25 6.25h2.5v2.5"/> </svg>Поле</button>
+        <button type="button" data-mobile-view="cell" aria-pressed="false"><svg class="nav-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"> <path d="M3.75 5.25c2.85-.9 5.6-.45 8.25 1.35v12.15c-2.65-1.8-5.4-2.25-8.25-1.35V5.25Zm16.5 0c-2.85-.9-5.6-.45-8.25 1.35v12.15c2.65-1.8 5.4-2.25 8.25-1.35V5.25Z"/> <path d="M6.25 9.1c1.3-.2 2.45.02 3.45.65M14.3 9.75c1-.63 2.15-.85 3.45-.65M6.25 12.15c1.3-.2 2.45.02 3.45.65M14.3 12.8c1-.63 2.15-.85 3.45-.65"/> </svg>Клетка</button>
+      </nav>
+
+      <details class="history-section">
+        <summary>История</summary>
+        <button class="history-close" id="closeHistoryButton" type="button" aria-label="Скрыть Историю">×</button>
+        <div class="history-meta">
+          <p class="small">Хранится только в этом браузере.</p>
+          <button class="quiet-button clear-history" id="clearHistoryButton" type="button">Очистить историю</button>
+        </div>
+        <ol id="history" class="history"></ol>
+      </details>
+    </main>
+    <dialog class="move-dialog" id="moveDialog">
+      <button class="dialog-close" id="moveDialogClose" type="button" aria-label="Закрыть">×</button>
+      <p class="eyebrow">Результат броска</p>
+      <div class="dialog-die" id="dialogDie">—</div>
+      <h2 id="moveDialogTitle"></h2>
+      <p id="moveDialogCell"></p>
+      <img class="dialog-art" id="dialogArt" alt="" hidden />
+      <p class="dialog-message" id="moveDialogMessage"></p>
+      <button class="dialog-primary" id="moveDialogContinue" type="button">Продолжить</button>
+    </dialog>
+    <dialog class="rules-dialog" id="rulesDialog">
+      <button class="dialog-close" id="rulesClose" type="button" aria-label="Закрыть правила">×</button>
+      <p class="eyebrow">Как играть</p>
+      <h2>Правила Лилы</h2>
+      <div class="rules-copy">
+        <section>
+          <h3>Поле и цель</h3>
+          <ul>
+            <li>Поле состоит из 72 клеток: 8 рядов по 9 клеток.</li>
+            <li>Путь начинается с клетки 1. Войти в игру можно только после выпадения шестёрки: тогда игрок переходит на клетку 6.</li>
+            <li>Попыток выбросить первую шестёрку может быть сколько угодно.</li>
+            <li>Клетка 68 — финал игры.</li>
+            <li>Лестница поднимает игрока на указанную клетку, змея переносит вниз. Такой переход выполняется автоматически.</li>
+            <li>Фишка движется последовательно по возрастающим номерам клеток на величину броска, а затем выполняет переход по лестнице или змее.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Перед броском</h3>
+          <ul>
+            <li>Нужно отметить текущее состояние хотя бы на одной из трёх шкал: счастье, гнев или растерянность.</li>
+            <li>Значения трёх шкал соединяются с базовым броском и свежей случайной последовательностью. Даже низкий выбранный уровень может изменить кубик; высокие уровни лишь немного усиливают вероятность.</li>
+            <li>После обычного хода в полной версии следующий бросок откроется через 24 часа. Таймер в этом MVP пока отключён.</li>
+            <li>Если выпала шестёрка, после заполнения Дневника можно бросить снова сразу, без 24-часового ожидания.</li>
+            <li>Классическое правило серии шестёрок: после первой и второй шестёрки игрок бросает ещё раз. Если за один ход выпало три или больше шестёрок подряд, броски продолжаются до первого другого числа; затем игрок возвращается на клетку начала хода и проходит только последнее выпавшее число. Для MVP это правило пока отмечено как следующее обновление механики.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Клетка и Дневник</h3>
+          <ul>
+            <li>После перемещения прочитайте описание клетки. Если сработала лестница или змея, прочитайте описание итоговой клетки.</li>
+            <li>После каждого успешного хода запись в Дневнике обязательна. До её сохранения следующий бросок недоступен.</li>
+            <li>В истории сохраняются время, бросок, выбранные состояния, пройденные клетки и текст Дневника.</li>
+            <li>В MVP Дневник и история остаются только в текущем браузере и не публикуются.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Профиль и сохранение</h3>
+          <ul>
+            <li>Сейчас можно играть как гость в одном браузере. В полной версии вход в игру будет доступен зарегистрированным пользователям.</li>
+            <li>У одного пользователя одновременно может быть только один активный путь.</li>
+            <li>Фишкой станет личный аватар: изображение самого игрока, части тела или принадлежащего ему предмета. Без изображения будут показаны первые буквы имени.</li>
+            <li>Авторизация позволит восстановить игру на другом устройстве. Пользователь сможет удалить аккаунт и все связанные с ним данные.</li>
+            <li>В старых правилах путь удалялся после 13 месяцев без единого хода. Для полной версии срок и предупреждения перед удалением будут определены отдельно.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Смысл игры</h3>
+          <ul>
+            <li>Традиционное название — «Джняна-чаупада», то есть «Игра знания». Лила используется как карта внутренних состояний и инструмент самонаблюдения.</li>
+            <li>Каждая клетка обозначает определённое состояние или план бытия. Задача игрока — соотнести содержание клетки со своей жизнью, мыслями и переживаниями.</li>
+            <li>Змеи символизируют состояния и действия, ведущие к снижению, а лестницы — качества, поддерживающие внутренний подъём.</li>
+            <li>В игре нет окончательной «смерти»: путь состоит из подъёмов, падений и возвращений. Завершением считается достижение клетки 68 — Космического Сознания.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Устройство доски</h3>
+          <ul>
+            <li>Восемь горизонтальных рядов связывают с проявленным миром: пятью элементами и тремя силами — умом, интеллектом и эго.</li>
+            <li>Девять вертикальных столбцов связывают с завершённостью и Высшим Сознанием. Число 72 также сводится к девяти: 7 + 2 = 9.</li>
+            <li>Движение идёт серпантином. Каждый горизонтальный ряд начинается числом, сводимым к единице, и заканчивается числом, сводимым к девяти.</li>
+            <li>Центральный столбец образует линию равновесия; остальные столбцы объединяют взаимодополняющие числовые пары.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Короткий словарь</h3>
+          <ul>
+            <li><strong>Дхарма</strong> — внутренний закон и принципы, поддерживающие целостную жизнь.</li>
+            <li><strong>Карма</strong> — действие и его последствия; <strong>карма-йога</strong> — путь бескорыстного действия.</li>
+            <li><strong>Йога</strong> — практика соединения и внутреннего развития; традиционно выделяют пути действия, знания и преданности.</li>
+            <li><strong>Веданта</strong> исследует природу «Я» и различение реального и нереального; <strong>санкхья</strong> описывает порядок проявления мира.</li>
+            <li><strong>Веды, Шрути, Смрити и Пураны</strong> — связанные пласты индийской духовной и философской традиции, на которую опирается символика игры.</li>
+            <li><strong>Шлока</strong> — санскритская стихотворная строфа; в традиционной игре после броска читали текст, связанный с выпавшей клеткой.</li>
+          </ul>
+        </section>
+      </div>
+      <button class="dialog-primary" id="rulesContinue" type="button">Понятно</button>
+    </dialog>
+    <dialog class="character-dialog" id="characterDialog">
+      <p class="eyebrow">Новая игра</p>
+      <h2>Выберите своего проводника</h2>
+      <p class="small">Персонаж будет сопровождать вас по всему полю. Позже его можно сменить, начав новую игру.</p>
+      <div class="character-grid">
+        <button class="character-option" type="button" data-character="traveler"><img src="assets/characters/traveler.png" alt="" /><strong>Путешественник</strong><span>Идёт, оглядывается и поправляет сумку</span></button>
+        <button class="character-option" type="button" data-character="totem"><img src="assets/characters/totem.png" alt="" /><strong>Тотем</strong><span>Парит, вращается и пульсирует светом</span></button>
+        <button class="character-option" type="button" data-character="wooden"><img src="assets/characters/wooden.png" alt="" /><strong>Деревянный странник</strong><span>Шагает как живая игровая фигурка</span></button>
+        <button class="character-option" type="button" data-character="spirit"><img src="assets/characters/spirit.png" alt="" /><strong>Дух-сфера</strong><span>Летит, покачивается и оставляет свет</span></button>
+      </div>
+    </dialog>
+    <template id="cellTemplate"><div class="cell"><span class="cell-number"></span><span class="cell-name"></span><span class="token" aria-label="Вы здесь">●</span></div></template>
+    <script src="auth.js"></script>
+    <script src="cells.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

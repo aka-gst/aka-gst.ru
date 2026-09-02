@@ -211,6 +211,29 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 .work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-quest:hover img, .work-quest:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
 .work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
 .work-duet-note b { color: var(--text); }
+
+/* ── Тестовый пульт ───────────────────────────────────────────────── */
+/* Это не витрина: одна строка отвечает на три вопроса — что открыть,
+   в каком оно состоянии и откуда взялось. Поэтому здесь нет больших обложек. */
+.test-main { padding-top: 36px; max-width: 920px; }
+.test-intro { max-width: 660px; margin-bottom: 30px; }
+.test-intro h1 { margin: 8px 0 11px; font-size: clamp(34px, 5vw, 54px); }
+.test-intro > p:not(.kicker) { color: var(--muted); line-height: 1.5; }
+.test-group + .test-group { margin-top: 28px; }
+.test-group > h2 { margin-bottom: 10px; font-size: 20px; }
+.test-list { display: grid; gap: 7px; }
+.test-row {
+  display: grid; grid-template-columns: minmax(190px, 1fr) auto auto auto; align-items: center; gap: 12px;
+  min-height: 64px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+}
+.test-row h3 { font-size: 15px; }
+.test-row p { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.test-status, .test-wait { margin: 0 !important; padding: 5px 8px; border-radius: 999px; background: var(--bg-soft); color: var(--muted) !important; font: 11px/1.2 var(--mono); white-space: nowrap; }
+.test-open, .test-repo { color: var(--accent); font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.test-repo { color: var(--muted); font-weight: 600; }
+.test-open:hover, .test-open:focus-visible, .test-repo:hover, .test-repo:focus-visible { color: var(--text); }
+.test-row--pending { opacity: .66; }
+.test-row--pending .test-wait { color: var(--warn) !important; }
 /* Короткий акцент, а не медленная декоративная полоса. */
 @media (prefers-reduced-motion: no-preference) {
   .work-lead::after {
@@ -1178,6 +1201,13 @@ html[data-track] .rec[hidden] { display: none; }
   .work-quest-copy { padding: 15px; }
   .work-quest h2 { font-size: 22px; }
   .work-quest p { font-size: 12px; }
+  .test-main { padding-top: 24px; }
+  .test-intro { margin-bottom: 24px; }
+  .test-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; min-height: 0; padding: 12px; }
+  .test-row > div { grid-column: 1 / -1; }
+  .test-status { grid-column: 1; justify-self: start; }
+  .test-open, .test-wait { grid-column: 2; grid-row: 2; }
+  .test-repo { grid-column: 1; grid-row: 3; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   /* На телефоне переключатель — главный элемент шапки: две крупные цели
      во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь

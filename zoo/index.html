@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>Zoo Game</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="head">
+        <h1>Zoo</h1>
+        <div class="counters">
+          <span title="Открывает новые места">Карма <b id="karma">0</b></span>
+          <span title="Покупает снаряжение">Золото <b id="gold">0</b></span>
+          <span title="Очищено мест">Очищено <b id="cleanCount">1 из 16</b></span>
+          <span title="Спутники">Спутники <b id="allies">0</b></span>
+          <span class="who" id="who">гость</span>
+        </div>
+      </header>
+
+      <p class="say" id="say">Вы очнулись в чужом мире. Выбраться отсюда можно, только набрав кармы.</p>
+
+      <section class="layout">
+        <section class="panel place" id="place">
+          <div class="place-head">
+            <h2 id="placeName">Порог</h2>
+            <span class="place-state" id="placeState">заражено</span>
+          </div>
+          <img class="place-art" id="placeArt" alt="" hidden />
+          <p class="place-text" id="placeText"></p>
+          <div class="here" id="here"></div>
+
+          <div class="fight" id="fight" hidden>
+            <div class="foe">
+              <img class="foe-art" id="foeArt" alt="" hidden />
+              <b id="foeName"></b> <span class="el" id="foeEl"></span>
+              <p class="intent">Сейчас существо <span id="intent"></span></p>
+            </div>
+            <div class="bars">
+              <div class="bar"><span>Сила</span><i><b id="barPower"></b></i></div>
+              <div class="bar calm"><span>Покой</span><i><b id="barCalm"></b></i></div>
+            </div>
+            <p class="resolve">Ваша стойкость: <b id="resolve">20</b></p>
+            <div class="moves" id="moves"></div>
+            <ul class="fight-log" id="fightLog"></ul>
+          </div>
+        </section>
+
+        <section class="panel map-panel">
+          <div class="map" id="map"></div>
+          <p class="small">Соседнее место открывается за карму. Очистить место — значит
+            разобраться со всеми, кто в нём остался.</p>
+        </section>
+
+        <aside class="panel side">
+          <h3>Журнал</h3>
+          <ul class="journal" id="journal"></ul>
+          <h3>Сумка</h3>
+          <ul class="bag" id="bag"></ul>
+          <p class="small"><a href="games/audiosurf/">Аудиосёрф →</a></p>
+        </aside>
+      </section>
+    </main>
+    <script src="karma.js"></script>
+    <script src="world.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

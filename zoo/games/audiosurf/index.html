@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#17312f" />
+    <title>Аудиосёрф — Zoo</title>
+    <link rel="stylesheet" href="../../styles.css" />
+    <link rel="stylesheet" href="surf.css" />
+  </head>
+  <body class="surf-body">
+    <main class="surf">
+      <header class="surf-head">
+        <a class="surf-back" href="../../">← Путь</a>
+        <h1>Аудиосёрф</h1>
+        <span class="surf-karma" id="karmaBadge" hidden>карма +<b id="karmaGained">0</b></span>
+      </header>
+
+      <section class="surf-intro" id="intro">
+        <p class="surf-lead">Трасса строится из вашей музыки: ритм становится поворотами,
+          громкие места — плотностью блоков. Каждый трек даёт свою трассу.</p>
+        <p class="surf-privacy"><b>Файл никуда не отправляется.</b> Он разбирается прямо в браузере
+          и остаётся на устройстве. Ни загрузки, ни сохранения на сервере.</p>
+        <label class="surf-pick">
+          <input type="file" id="file" accept="audio/*" />
+          <span>Выбрать трек с устройства</span>
+        </label>
+        <p class="surf-note" id="pickNote">Подойдёт mp3, m4a, wav, ogg — любой файл, который умеет
+          проигрывать браузер. На айфоне доступны файлы из «Файлов»: треки из Apple Music защищены
+          и не открываются ни в одном браузере.</p>
+        <p class="surf-error" id="error" hidden></p>
+      </section>
+
+      <section class="surf-stage" id="stage" hidden>
+        <canvas id="road" width="720" height="960"></canvas>
+        <div class="surf-hud">
+          <div><span>Очки</span><strong id="score">0</strong></div>
+          <div><span>Подряд</span><strong id="combo">0</strong></div>
+          <div><span>Трек</span><strong id="trackName">—</strong></div>
+        </div>
+        <div class="surf-controls">
+          <button type="button" id="left" aria-label="Влево">◀</button>
+          <button type="button" id="pause">Пауза</button>
+          <button type="button" id="right" aria-label="Вправо">▶</button>
+        </div>
+      </section>
+
+      <section class="surf-done" id="done" hidden>
+        <h2>Заезд окончен</h2>
+        <p class="surf-result"><span>Очки</span><strong id="finalScore">0</strong></p>
+        <p class="surf-result"><span>Собрано</span><strong id="finalPicked">0</strong></p>
+        <p class="surf-result"><span>Карма за игру</span><strong id="finalKarma">0</strong></p>
+        <p class="surf-note">Карма из игр помогает открывать новые места в Zoo. Вернитесь к Пути, когда будете готовы продолжить.</p>
+        <button type="button" class="surf-again" id="again">Другой трек</button>
+      </section>
+    </main>
+    <script src="../../karma.js"></script>
+    <script src="surf.js"></script>
+  </body>
+</html>

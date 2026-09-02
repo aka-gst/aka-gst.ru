@@ -9,8 +9,20 @@ import { store, tierState, lessonState, isLessonOpen, nextLesson, unlockTier } f
 import { decorateGlossary } from '../glossary.js';
 import { el, clear } from './dom.js';
 import { rigButton } from './rig.js';
-import { carConsole } from './pingcar.js';
 import { buildStoryChoices } from './onboarding-model.js';
+
+const NEXT_ROUTES = {
+  testing: {
+    label: 'МАРШРУТ 1',
+    title: 'ПРОВЕРИТЬ СИСТЕМУ',
+    about: 'Найди место, где чужая система врёт, и докажи это тестом.',
+  },
+  llm: {
+    label: 'МАРШРУТ 2',
+    title: 'СОБРАТЬ АГЕНТА',
+    about: 'Собери помощника, задай ему границы и проверь, что он их держит.',
+  },
+};
 
 function lessonNode(lesson, index, onOpen) {
   const progress = lessonState(lesson);
@@ -125,13 +137,14 @@ function tierSection(tier, { onOpen }) {
  */
 function welcome(upNext, onOpen) {
   const theme = activeTheme();
+  const startLabel = theme.id === 'garage' ? 'Подключиться к блоку →' : 'Войти в сеть →';
   return el('section', { class: 'welcome' }, [
     storyChoice(),
     el('div', { class: 'welcome-text' }, [
       el('span', { class: 'continue-label', text: theme.welcome.label }),
       el('h2', { text: theme.welcome.title }),
       el('p', { class: 'welcome-story', text: theme.welcome.story }),
-      el('p', { class: 'welcome-about', text: 'Это курс питона с нуля. Код запускается прямо на этой странице — настоящий Python, а не имитация. Ни на компьютер, ни на телефон ставить ничего не нужно.' }),
+      el('p', { class: 'welcome-about', text: 'Это ночь, которую нужно пройти. Код здесь — твой инструмент: им ты заставляешь систему отвечать, находишь дыру и ставишь свой замок. Ничего устанавливать не нужно.' }),
       // Итог стоит прямо над кнопкой: человек должен видеть, ради чего нажимает,
       // а не узнавать это на шестнадцатом шаге.
       theme.welcome.outcome ? el('p', { class: 'welcome-outcome' }, [
@@ -141,10 +154,10 @@ function welcome(upNext, onOpen) {
       upNext ? el('button', {
         class: 'welcome-start',
         onclick: () => onOpen(upNext),
-      }, 'Начать с первого урока →') : null,
+      }, startLabel) : null,
       /*
-       * Факты стоят в левой колонке под кнопкой. Правая с живой машиной выше,
-       * и без них под кнопкой оставалась пустая треть карточки.
+       * Факты стоят под первым настоящим действием, а не рядом с игровым
+       * терминалом: первая команда человека должна ждать Python в уроке.
        *
        * Карточки второй истории здесь больше нет: тот же выбор стоит
        * переключателем в шапке, и повторять его внизу — значит спрашивать
@@ -155,15 +168,12 @@ function welcome(upNext, onOpen) {
        * то же правило у GOV.UK и у Microsoft.
        */
       el('ul', { class: 'welcome-facts' }, [
-        el('li', { text: 'Первый урок — три минуты, знать заранее ничего не надо' }),
+        el('li', { text: 'Первый ход — три минуты, знать заранее ничего не надо' }),
         el('li', { text: 'Прогресс сохранится сам, вход нужен только для переноса на другой телефон' }),
         el('li', { text: 'Первый запуск скачает около 13 МБ — на мобильном лучше дождаться Wi-Fi' }),
       ]),
     ]),
     el('div', { class: 'welcome-side' }, [
-      // Живая машина стоит первой в правой колонке: обещание «код работает
-      // прямо здесь» лучше показать, чем написать.
-      carConsole(),
       theme.welcome.selling ? el('ul', { class: 'welcome-selling' },
         theme.welcome.selling.map((line) => el('li', { text: line }))) : null,
     ]),
@@ -182,7 +192,7 @@ function storyChoice() {
   return el('div', { class: 'story-choice' }, [
     el('div', { class: 'story-choice-head' }, [
       el('span', { text: 'ВЫБЕРИ СВОЮ ИСТОРИЮ' }),
-      el('small', { text: 'Python один и тот же — меняется мир задач' }),
+      el('small', { text: 'Навык один — меняется мир, который ты берёшь под контроль' }),
     ]),
     el('div', { class: 'story-choice-grid', role: 'group', 'aria-label': 'Выбор истории курса' },
       choices.map((choice) => el('button', {
@@ -230,10 +240,9 @@ export function renderMap(root, { onOpen }) {
     ]));
   }
 
-  // Первая ступень — это и есть продукт для того, кто пришёл учиться питону.
-  // Ступени 2 и 3 обращены к другому человеку: он уже пишет код и ищет
-  // профессиональный материал. Раньше обе аудитории встречались на одном
-  // экране, и ни одной он не говорил ничего внятного.
+  // Первая ступень — вход в историю. Следующие маршруты растут из неё, а не
+  // продаются как отдельные предметы: сначала научился влиять на систему,
+  // потом выбираешь, проверять её или строить своего помощника.
   // Поездка стоит перед списком шагов, а не после: награда, до которой надо
   // домотать страницу, наградой не работает.
   const rig = rigButton();
@@ -245,11 +254,12 @@ export function renderMap(root, { onOpen }) {
   return store.state;
 }
 
-/** Вторая и третья ступени: отдельный разговор с другим человеком. */
+/** Два продолжения одной истории: проверка системы или свой агент. */
 function nextCourses(onOpen) {
   const rest = TIERS.slice(1).map((tier) => {
     const state = tierState(tier.id);
     const open = state.unlocked;
+    const route = NEXT_ROUTES[tier.id];
     return el('button', {
       class: `next-course accent-${tier.accent} ${open ? '' : 'locked'}`,
       onclick: () => {
@@ -267,15 +277,16 @@ function nextCourses(onOpen) {
         class: 'next-course-cover', src: tier.cover, alt: tier.coverAlt || '',
         loading: 'lazy', decoding: 'async', width: 1200, height: 600,
       }) : null,
-      el('strong', { text: tier.title }),
-      el('small', { text: tier.about }),
+      el('span', { class: 'next-route-label', text: route.label }),
+      el('strong', { text: route.title }),
+      el('small', { text: route.about }),
       el('span', { class: 'next-course-go', text: open ? `${state.complete} / ${state.total} · открыть →` : 'открыть ступень →' }),
     ]);
   });
 
   return el('section', { class: 'next-courses' }, [
-    el('h2', { text: 'Дальше, когда код уже пишется' }),
-    el('p', { text: 'Продолжение для тех, кто программирует: как проверять чужой код и как работать с языковыми моделями. Отдельный материал и другой уровень — новичку сюда рано, и ничего страшного, если вы сюда не пойдёте.' }),
+    el('h2', { text: 'Две дороги после первой ночи' }),
+    el('p', { text: 'Ты уже умеешь заставить систему отвечать. Дальше выбираешь, что делать с этим правом: искать в чужой системе поломки или собрать себе помощника и научить его не выходить за границы.' }),
     el('div', { class: 'next-course-grid' }, rest),
   ]);
 }

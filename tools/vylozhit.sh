@@ -30,7 +30,7 @@ SITE="${SITE:-https://aka-gst.ru}"
 
 if [ "${1:-}" = "--vse" ]; then
   set -- index.html 404.html 503.html assets rasskazy praktikum psy-admin photodata \
-         qa-quest technomagic robots.txt sitemap.xml sitemap-pages.xml og.png favicon.svg \
+         qa-quest technomagic test leela zoo puzzle-quest robots.txt sitemap.xml sitemap-pages.xml og.png favicon.svg \
          game-menu.css player-name.js
 fi
 [ $# -gt 0 ] || { echo "  что выкладываем? имена файлов и папок от корня репозитория"; exit 2; }

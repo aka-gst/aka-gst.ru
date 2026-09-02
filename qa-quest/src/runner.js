@@ -18,6 +18,28 @@ let readyPromise = null;
 let counter = 0;
 const pending = new Map();
 
+function unavailableResult(message, checks = []) {
+  return {
+    stdout: '',
+    error: {
+      type: 'PythonUnavailable',
+      text: message || 'Python не загрузился.',
+      hint: 'Проверь соединение и попробуй запустить ещё раз.',
+      line: null,
+    },
+    checks: checks.map(() => ({ ok: false, detail: '' })),
+    ms: 0,
+  };
+}
+
+function failPending(message) {
+  pending.forEach(({ resolve, timer, checks }) => {
+    clearTimeout(timer);
+    resolve(unavailableResult(message, checks));
+  });
+  pending.clear();
+}
+
 export function onRunnerChange(callback) {
   listeners.add(callback);
   callback(runner);
@@ -43,11 +65,7 @@ function createWorker() {
     }
     if (message.type === 'fatal') {
       emit({ status: 'failed', message: message.message });
-      pending.forEach(({ reject, timer }) => {
-        clearTimeout(timer);
-        reject(new Error(message.message));
-      });
-      pending.clear();
+      failPending(message.message);
       return;
     }
     if (message.type === 'result') {
@@ -59,7 +77,9 @@ function createWorker() {
     }
   };
   instance.onerror = (event) => {
-    emit({ status: 'failed', message: event.message || 'воркер не запустился' });
+    const message = event.message || 'воркер не запустился';
+    emit({ status: 'failed', message });
+    failPending(message);
   };
   return instance;
 }
@@ -91,10 +111,11 @@ export function restartRunner() {
   return bootRunner();
 }
 
-export function runPython({ source, preamble = '', checks = [], stdin = [] }) {
-  bootRunner();
+export async function runPython({ source, preamble = '', checks = [], stdin = [] }) {
+  const ready = await bootRunner();
+  if (!ready) return unavailableResult(runner.message, checks);
   const id = ++counter;
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const timer = setTimeout(() => {
       pending.delete(id);
       restartRunner();
@@ -110,7 +131,7 @@ export function runPython({ source, preamble = '', checks = [], stdin = [] }) {
         ms: HARD_LIMIT,
       });
     }, HARD_LIMIT);
-    pending.set(id, { resolve, reject, timer });
+    pending.set(id, { resolve, timer, checks });
     worker.postMessage({ type: 'run', id, source, preamble, checks, stdin, timeLimit: SOFT_LIMIT });
   });
 }
