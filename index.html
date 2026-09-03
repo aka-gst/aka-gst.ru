@@ -27,14 +27,15 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=5366acd3">
+    <link rel="stylesheet" href="/assets/site.css?v=ce32d838">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
         var t = location.hash === '#games' ? 'play'
+              : location.hash === '#stories' ? 'stories'
               : location.hash === '#work' ? 'work'
               : localStorage.getItem('aka-gst:track');
-        if (t === 'play' || t === 'work') document.documentElement.dataset.track = t;
+        if (t === 'play' || t === 'work' || t === 'stories') document.documentElement.dataset.track = t;
       } catch (e) {}
     </script>
     <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
@@ -42,7 +43,7 @@
   <body>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
-      <a class="brand" href="/"><img class="brand-znak" data-brand-mark data-mark-work="/assets/mark-work.svg?v=1f6b8c1f" data-mark-play="/assets/mark-games.svg?v=2460e1b9" src="/assets/mark-work.svg?v=1f6b8c1f" alt="" width="64" height="64" decoding="async">aka<span>-</span>gst</a>
+      <a class="brand" href="/"><img class="brand-znak" data-brand-mark data-mark-work="/assets/mark-work.svg?v=82e9b9c1" data-mark-play="/assets/mark-games.svg?v=1be8f5a1" data-mark-stories="/assets/mark-stories.svg?v=f40b32b9" src="/assets/mark-work.svg?v=82e9b9c1" alt="" width="64" height="64" decoding="async">aka<span>-</span>gst</a>
 
       <div class="rec" aria-label="Рекорды: сегодня и за неделю" hidden>
         <span class="rec-label">REC</span>
@@ -55,8 +56,9 @@
      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5-5-5" /><path d="M12 19h8" /></svg><span>Работа</span></button>
         <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h4M9 10v4" /><circle cx="16" cy="11" r=".6" fill="currentColor" stroke="none" /><circle cx="18" cy="13.5" r=".6" fill="currentColor" stroke="none" /><path d="M17.5 5.5h-11A4.5 4.5 0 0 0 2 10v5a4 4 0 0 0 7 2.6h6A4 4 0 0 0 22 15v-5a4.5 4.5 0 0 0-4.5-4.5z" /></svg><span>Игры</span></button>
+        <button type="button" data-track-to="stories" data-umami-event="track-switch" data-umami-event-track="stories"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V6h6v14H4Zm6-2V4h7v14h-7Zm7 0V6h3v14h-3Z" /><path d="M12 15V9c0-2 3-2 3 0v6" /></svg><span>Рассказы</span></button>
       </div>
-      <a class="topbar-link" href="/rasskazy/">Рассказы</a>
       <a class="topbar-link topbar-link--test" href="/test/">Тест</a>
       <a class="topbar-link" href="/en/" hreflang="en" lang="en" data-umami-event="en-open">EN</a>
       <nav class="socials" aria-label="Профили">
@@ -109,13 +111,22 @@
         <p class="work-duet-note"><b>Один контур</b> ставит ИИ границы. <b>Второй</b> учит проверять его кодом.</p>
       </section>
 
-<section class="block practicum-teaser" aria-labelledby="practicum-title">
+<section class="block practicum-switch" aria-labelledby="practicums-title" data-practicum-switch>
         <div class="block-head">
-          <p class="kicker">Практикум</p>
-          <h2 id="practicum-title">Проверка локального AI-агента</h2>
-          <p>Один маршрут с заданиями и экспериментами. <a href="/praktikum/llm/">Второй: настройка LLM и агентов →</a></p>
+          <p class="kicker">03</p>
+          <h2 id="practicums-title">Практикумы</h2>
+          <p>Два самостоятельных маршрута: сначала выбери, что хочешь научиться делать.</p>
         </div>
-<article class="practicum-card" id="practicum-panel-praktikum-testing" role="tabpanel"
+        <div class="practicum-tabs" role="tablist" aria-label="Практикумы">
+          <button type="button" role="tab" id="practicum-tab-praktikum-testing"
+                  data-practicum-to="praktikum-testing" aria-controls="practicum-panel-praktikum-testing"
+                  aria-selected="true">тестирование локального AI-агента</button><button type="button" role="tab" id="practicum-tab-ai-agent-service-lab"
+                  data-practicum-to="ai-agent-service-lab" aria-controls="practicum-panel-ai-agent-service-lab"
+                  aria-selected="false">настройка LLM и агентов</button>
+        </div>
+        <div class="practicum-panels">
+
+          <article class="practicum-card" id="practicum-panel-praktikum-testing" role="tabpanel"
             aria-labelledby="practicum-tab-praktikum-testing" data-practicum-panel="praktikum-testing">
             <div class="card-head">
               <p class="kicker">Практикум · веб + PDF</p>
@@ -126,6 +137,18 @@
             <ul class="chips"><li><b>19</b> <span>разделов</span></li><li><b>16</b> <span>экспериментов</span></li><li><b>~82 мин</b> <span>чтения</span></li></ul>
             <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
           </article>
+          <article class="practicum-card" id="practicum-panel-ai-agent-service-lab" role="tabpanel"
+            aria-labelledby="practicum-tab-ai-agent-service-lab" data-practicum-panel="ai-agent-service-lab" hidden>
+            <div class="card-head">
+              <p class="kicker">Практикум · веб + сервис</p>
+              <span class="status status-live">открыт</span>
+            </div>
+            <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
+            <p class="tagline">Разбираю на живом примере, как устроен ИИ-агент: чем он пользуется, что помнит и как проверить, что он не выдумывает.</p>
+            <ul class="chips"><li><b>16</b> <span>разделов</span></li><li><b>10</b> <span>лабораторных</span></li><li><b>~51 мин</b> <span>чтения</span></li></ul><ul class="chips"><li><b>76</b> <span>автотестов</span></li><li><b>6/6</b> <span>evaluation</span></li><li><b>100%</b> <span>retrieval hit</span></li></ul>
+            <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
+          </article>
+        </div>
       </section>
 
       <section class="block" aria-labelledby="products-title">
@@ -506,6 +529,22 @@
              data-umami-event="code-open" data-umami-event-from="games">Код всех игр открыт <b>↗</b></a>
         </p>
       </div>
+      <div class="panel" data-panel="stories">
+      <section class="story-lead" aria-labelledby="stories-lead-title">
+        <div>
+          <p class="kicker">Рассказы Сергея Гостова</p>
+          <h1 id="stories-lead-title">23 текстов, которые можно читать сразу</h1>
+          <p>Короткая проза, фантастика и истории про людей, машины и странные правила мира.</p>
+        </div>
+        <a class="story-lead-book" href="/rasskazy/">
+          <img src="/assets/covers/book-solyanochka.jpg" alt="Сборник рассказов Сергея Гостова" width="600" height="900" loading="lazy">
+          <span>Открыть читалку <b>→</b></span>
+        </a>
+      </section>
+      <div class="story-bar" aria-label="Где читают рассказы">
+        <span><b>5</b> площадок</span><span><b>75 000+</b> обращений к текстам</span><a href="/rasskazy/">Все рассказы <b>→</b></a>
+      </div>
+      </div>
     </main>
 
     <footer class="sitefoot">
@@ -530,6 +569,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=42d37d1f" defer></script>
+    <script src="/assets/app.js?v=e7de820a" defer></script>
   </body>
 </html>

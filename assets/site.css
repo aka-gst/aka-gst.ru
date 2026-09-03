@@ -149,6 +149,9 @@ html[data-track="play"] .track-switch [data-track-to="play"] {
   box-shadow: 0 0 22px rgba(154, 99, 255, .5);
 }
 html[data-track="play"] .track-switch [data-track-to="play"] svg { color: #f6f2ff; }
+html[data-track="stories"] .track-switch [data-track-to="stories"] {
+  background: var(--accent); color: #08120c; box-shadow: 0 0 20px rgba(94, 227, 155, .3);
+}
 
 /* Выбранная вкладка чуть дышит — тем же приёмом, что полоски в шапке игр. */
 @media (prefers-reduced-motion: no-preference) {
@@ -180,7 +183,17 @@ html[data-track="play"] .track-switch button[aria-pressed="true"] {
 main { max-width: var(--maxw); margin: 0 auto; padding: 0 24px 80px; }
 .panel { display: none; }
 html[data-track="work"] .panel[data-panel="work"],
-html[data-track="play"] .panel[data-panel="play"] { display: block; }
+html[data-track="play"] .panel[data-panel="play"],
+html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
+
+.story-lead { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:28px; align-items:center; margin-top:26px; padding:28px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+.story-lead h1 { margin:8px 0 12px; font-size:clamp(30px,4vw,47px); line-height:1.03; }
+.story-lead p:not(.kicker) { max-width:560px; color:var(--muted); line-height:1.5; }
+.story-lead-book { display:grid; gap:10px; justify-items:center; color:var(--accent); font-weight:700; text-decoration:none; }
+.story-lead-book img { width:150px; height:210px; object-fit:cover; border:1px solid var(--line); border-radius:9px; box-shadow:0 15px 35px rgba(0,0,0,.35); }
+.story-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 24px; margin-top:14px; padding:13px 18px; border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:13px; }
+.story-bar b { color:var(--accent); font-size:16px; }.story-bar a { margin-left:auto; color:var(--text); font-weight:700; text-decoration:none; }
+@media (max-width:640px){.story-lead{grid-template-columns:1fr;}.story-lead-book{justify-items:start; grid-template-columns:92px 1fr; align-items:center;}.story-lead-book img{width:92px;height:128px;}.story-bar a{margin-left:0;}}
 
 /* ── Первый экран работы ──────────────────────────────────────────── */
 /* Gateway и QA Quest — не две карточки в сетке, а один маршрут: большая

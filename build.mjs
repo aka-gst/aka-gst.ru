@@ -60,6 +60,7 @@ const TRACK_ICONS = {
     '<circle cx="16" cy="11" r=".6" fill="currentColor" stroke="none" />' +
     '<circle cx="18" cy="13.5" r=".6" fill="currentColor" stroke="none" />' +
     '<path d="M17.5 5.5h-11A4.5 4.5 0 0 0 2 10v5a4 4 0 0 0 7 2.6h6A4 4 0 0 0 22 15v-5a4.5 4.5 0 0 0-4.5-4.5z" />',
+  stories: '<path d="M4 20V6h6v14H4Zm6-2V4h7v14h-7Zm7 0V6h3v14h-3Z" /><path d="M12 15V9c0-2 3-2 3 0v6" />',
 };
 
 const trackIcon = (key) =>
@@ -72,7 +73,7 @@ const trackIcon = (key) =>
 const brand = (kind = 'work', { switchable = false } = {}) => {
   const src = (name) => `/assets/mark-${name}.svg?v=${assetVersion(`assets/mark-${name}.svg`)}`;
   const data = switchable
-    ? ` data-brand-mark data-mark-work="${src('work')}" data-mark-play="${src('games')}"`
+    ? ` data-brand-mark data-mark-work="${src('work')}" data-mark-play="${src('games')}" data-mark-stories="${src('stories')}"`
     : '';
   return `<a class="brand" href="/"><img class="brand-znak"${data} src="${src(kind)}" alt="" width="64" height="64" decoding="async">aka<span>-</span>gst</a>`;
 };
@@ -689,7 +690,7 @@ const partnerForm = `
 const workPanel = `
       ${workLead}
 
-${practicumTeaser.trim()}
+${practicumSwitch.trim()}
 
       <section class="block" aria-labelledby="products-title">
         <div class="block-head">
@@ -888,6 +889,24 @@ ${playBar}
              data-umami-event="code-open" data-umami-event-from="games">Код всех игр открыт <b>↗</b></a>
         </p>`;
 
+// Рассказы — третий равный раздел главной: не отдельная «длинная страница»,
+// а тот же экран, что работа и игры. Полное оглавление остаётся в читалке.
+const storiesPanel = `
+      <section class="story-lead" aria-labelledby="stories-lead-title">
+        <div>
+          <p class="kicker">Рассказы Сергея Гостова</p>
+          <h1 id="stories-lead-title">${esc(storyList.length)} текстов, которые можно читать сразу</h1>
+          <p>Короткая проза, фантастика и истории про людей, машины и странные правила мира.</p>
+        </div>
+        <a class="story-lead-book" href="/rasskazy/">
+          <img src="/assets/covers/book-solyanochka.jpg" alt="Сборник рассказов Сергея Гостова" width="600" height="900" loading="lazy">
+          <span>Открыть читалку <b>→</b></span>
+        </a>
+      </section>
+      <div class="story-bar" aria-label="Где читают рассказы">
+        <span><b>5</b> площадок</span><span><b>75 000+</b> обращений к текстам</span><a href="/rasskazy/">Все рассказы <b>→</b></a>
+      </div>`;
+
 // Тестовый пульт отделён от витрины: здесь не убеждают, а дают быстро открыть
 // все доступные сборки. Обновляемые вещи не получают ссылку на старую версию.
 const testRows = testRoutes.groups
@@ -976,9 +995,10 @@ const html = `<!doctype html>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
         var t = location.hash === '#games' ? 'play'
+              : location.hash === '#stories' ? 'stories'
               : location.hash === '#work' ? 'work'
               : localStorage.getItem('aka-gst:track');
-        if (t === 'play' || t === 'work') document.documentElement.dataset.track = t;
+        if (t === 'play' || t === 'work' || t === 'stories') document.documentElement.dataset.track = t;
       } catch (e) {}
     </script>
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
@@ -995,8 +1015,8 @@ ${recTicker}
         <button type="button" data-track-to="play" data-umami-event="track-switch" data-umami-event-track="play">${trackIcon(
           'games'
         )}<span>${esc(site.tracks.play.label)}</span></button>
+        <button type="button" data-track-to="stories" data-umami-event="track-switch" data-umami-event-track="stories">${trackIcon('stories')}<span>Рассказы</span></button>
       </div>
-      <a class="topbar-link" href="/rasskazy/">Рассказы</a>
       <a class="topbar-link topbar-link--test" href="/test/">Тест</a>
       <a class="topbar-link" href="/en/" hreflang="en" lang="en" data-umami-event="en-open">EN</a>
       <nav class="socials" aria-label="Профили">
@@ -1008,6 +1028,8 @@ ${socialLinks('header')}
       <div class="panel" data-panel="work">${workPanel}
       </div>
       <div class="panel" data-panel="play">${playPanel}
+      </div>
+      <div class="panel" data-panel="stories">${storiesPanel}
       </div>
     </main>
 

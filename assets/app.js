@@ -5,17 +5,18 @@
   const root = document.documentElement;
   const STORE = 'aka-gst:track';
 
-  // ── Переключатель «Работа / Игры» ─────────────────────────────────
+  // ── Переключатель «Работа / Игры / Рассказы» ──────────────────────
   const titles = {
     work: 'aka-gst — AI/LLM QA и автоматизация',
     play: 'aka-gst — игры в браузере',
+    stories: 'aka-gst — рассказы Сергея Гостова',
   };
 
   const setTrack = (track, { push = true } = {}) => {
-    if (track !== 'work' && track !== 'play') return;
+    if (!['work', 'play', 'stories'].includes(track)) return;
     root.dataset.track = track;
     document.title = titles[track];
-    const markKey = track === 'play' ? 'markPlay' : 'markWork';
+    const markKey = track === 'play' ? 'markPlay' : track === 'stories' ? 'markStories' : 'markWork';
     document.querySelectorAll('[data-brand-mark]').forEach((mark) => {
       if (mark.dataset[markKey]) mark.src = mark.dataset[markKey];
     });
@@ -23,7 +24,7 @@
       localStorage.setItem(STORE, track);
     } catch (e) {}
     if (push) {
-      const hash = track === 'play' ? '#games' : '#work';
+      const hash = track === 'play' ? '#games' : track === 'stories' ? '#stories' : '#work';
       if (location.hash !== hash) history.replaceState(null, '', hash);
     }
     document.querySelectorAll('[data-track-to]').forEach((button) => {
@@ -42,6 +43,7 @@
   addEventListener('hashchange', () => {
     if (location.hash === '#games') setTrack('play', { push: false });
     if (location.hash === '#work') setTrack('work', { push: false });
+    if (location.hash === '#stories') setTrack('stories', { push: false });
   });
 
   // ── Живые метрики прогона ─────────────────────────────────────────
