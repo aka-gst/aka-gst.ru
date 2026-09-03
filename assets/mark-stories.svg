@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <path d="M9 54V15h18v39H9Z" fill="#18382C" stroke="#69F3AD" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M23 51V11h20v40H23Z" fill="#20272A" stroke="#D9FFD0" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M43 51V15h12v39H43Z" fill="#593A83" stroke="#B77BFF" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M28 47V24c0-5 10-5 10 0v23H28Z" fill="#69F3AD"/>
-  <circle cx="33" cy="21" r="3" fill="#D9FFD0"/>
-  <path d="M14 23h7M14 32h7M47 25h4M47 34h4" stroke="#BFFFD2" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="24" fill="#151321" stroke="#FF73B5" stroke-width="3"/>
+  <path d="M13 29A22 22 0 0 1 51 18" stroke="#B77BFF" stroke-width="5" stroke-linecap="round"/>
+  <rect x="19" y="17" width="26" height="22" rx="7" fill="#20272A" stroke="#F8F3FF" stroke-width="3"/>
+  <circle cx="27" cy="28" r="3" fill="#69F3AD"/>
+  <circle cx="37" cy="28" r="3" fill="#FF73B5"/>
+  <path d="M32 42c-5-4-11-4-16-2v11c6-2 11-1 16 3m0-12c5-4 11-4 16-2v11c-6-2-11-1-16 3V42Z" fill="#33264A" stroke="#D9FFD0" stroke-width="2.5" stroke-linejoin="round"/>
 </svg>

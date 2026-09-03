@@ -292,6 +292,24 @@ test('рассказы разбиты на абзацы и подписаны', 
   assert.match(site('assets/read.css'), /html\[data-ground="paper"\] \.reader/);
 });
 
+test('на главной обложка раскрывает один сборник, затем рассказ', () => {
+  const html = site('index.html');
+  const js = site('assets/app.js');
+  const css = site('assets/site.css');
+
+  assert.equal((html.match(/data-story-collection="/g) || []).length, 3, 'должны быть три обложки');
+  assert.equal((html.match(/data-story-collection-panel="/g) || []).length, 3, 'должны быть три сборника');
+  assert.match(html, /class="story-collection-intro"/, 'вступление должно быть внутри сборника');
+  assert.match(html, /data-story-top/, 'в читалке нужна постоянная кнопка наверх');
+  assert.match(js, /collection\.hidden = collection\.dataset\.storyCollectionPanel !== id/,
+    'по обложке должен оставаться только выбранный сборник');
+  assert.match(js, /scrollIntoView\(\{ behavior: 'smooth', block: 'start' \}\)/,
+    'раскрытый сборник должен попасть в поле зрения');
+  assert.match(js, /showCollection\(currentCollection\)/,
+    'возврат из рассказа должен вести к его сборнику');
+  assert.match(css, /\.story-to-top \{ position:fixed;/, 'кнопка наверх должна оставаться на экране');
+});
+
 // Кириллица в именах переменных оболочки: POSIX-шелл их не принимает и
 // падает на первом же присваивании, а zsh молча превращает строку в мусор.
 // Правило записано у нас давно, и за одни сутки я нарушил его ПЯТЬ раз —

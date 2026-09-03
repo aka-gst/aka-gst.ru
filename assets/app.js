@@ -441,7 +441,7 @@
   });
 })();
 
-// ── Рассказы на главной: сборник и текст остаются в янтарной панели ──
+// ── Рассказы на главной: обложка → сборник → текст в одной панели ──
 (() => {
   const panel = document.querySelector('.story-lead');
   if (!panel) return;
@@ -450,16 +450,23 @@
   const reader = panel.querySelector('[data-story-reader]');
   const source = panel.querySelector('.story-source');
   const all = panel.querySelector('[data-story-all]');
+  let currentCollection = null;
   const closeReader = () => { if (reader) reader.hidden = true; };
   const showCollection = (id) => {
+    currentCollection = id;
     closeReader();
     covers.forEach((cover) => cover.setAttribute('aria-expanded', String(cover.dataset.storyCollection === id)));
     collections.forEach((collection) => { collection.hidden = collection.dataset.storyCollectionPanel !== id; });
+    all?.setAttribute('aria-expanded', 'false');
+    if (all?.querySelector('b')) all.querySelector('b').textContent = '↓';
+    const current = collections.find((collection) => collection.dataset.storyCollectionPanel === id);
+    requestAnimationFrame(() => current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
   covers.forEach((cover) => cover.addEventListener('click', () => showCollection(cover.dataset.storyCollection)));
   all?.addEventListener('click', () => {
     closeReader();
     const open = all.getAttribute('aria-expanded') !== 'true';
+    currentCollection = null;
     all.setAttribute('aria-expanded', String(open));
     all.querySelector('b').textContent = open ? '↑' : '↓';
     collections.forEach((collection) => { collection.hidden = !open; });
@@ -468,6 +475,7 @@
   panel.querySelectorAll('[data-story-open]').forEach((button) => button.addEventListener('click', () => {
     const story = source?.querySelector(`[data-story-source="${CSS.escape(button.dataset.storyOpen)}"]`);
     if (!story || !reader) return;
+    currentCollection = button.dataset.storyOpen.split('--')[0];
     reader.querySelector('[data-story-reader-meta]').textContent = `Рассказ · ${story.dataset.storyBook}`;
     reader.querySelector('[data-story-reader-title]').textContent = story.dataset.storyTitle;
     reader.querySelector('[data-story-reader-copy]').innerHTML = story.innerHTML;
@@ -476,10 +484,10 @@
     reader.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
   panel.querySelector('[data-story-back]')?.addEventListener('click', () => {
-    closeReader();
-    collections.forEach((collection) => { collection.hidden = false; });
-    all?.setAttribute('aria-expanded', 'true');
+    if (currentCollection) showCollection(currentCollection);
+    else closeReader();
   });
+  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }));
 })();
 
 // ── Заявка о партнёрстве ────────────────────────────────────────────

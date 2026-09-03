@@ -878,6 +878,15 @@ const storyBodyInline = (slug) =>
     .map((p) => /^\*\*\*$|^\*\s*\*\s*\*$/.test(p) ? '<hr class="story-break">' : `<p>${esc(p)}</p>`)
     .join('\n');
 
+const storyCollectionPanel = (collection) => {
+  const intro = collection.stories.find((story) => /^(вступление|предисловие)$/i.test(story.title));
+  const contents = collection.stories.filter((story) => story !== intro);
+  return `          <section class="story-collection" id="story-collection-${esc(collection.id)}" data-story-collection-panel="${esc(collection.id)}" hidden>
+            <img src="/assets/covers/${esc(collection.cover)}" alt="" width="600" height="900" loading="lazy">
+            <div><p class="kicker">Сборник · ${esc(collection.year)}</p><h2>${esc(collection.title)}</h2>${intro ? `<div class="story-collection-intro"><p class="kicker">Вступительное слово</p>${storyBodyInline(`${collection.id}--${intro.slug}`)}</div>` : ''}<p class="story-collection-count">${esc(contents.length)} ${plural(contents.length, ['рассказ', 'рассказа', 'рассказов'])}. Выбери из оглавления — текст раскроется здесь же.</p><ol>${contents.map((story) => `<li><button type="button" data-story-open="${esc(collection.id)}--${esc(story.slug)}">${esc(story.title)}</button></li>`).join('')}</ol></div>
+          </section>`;
+};
+
 // Полки рассказов на вкладке «Игры» больше нет. Стояла с 30 августа как
 // перелинковка разделов: пришедший за играми не узнавал, что есть проза.
 // Владелец спросил «почему в играх рассказы?», довод выслушал и сказал
@@ -921,12 +930,9 @@ ${сборникиПоказ.map((collection) => `
           </button>`).join('')}
         </div>
         <div class="story-collections">
-${сборникиПоказ.map((collection) => `          <section class="story-collection" id="story-collection-${esc(collection.id)}" data-story-collection-panel="${esc(collection.id)}" hidden>
-            <img src="/assets/covers/${esc(collection.cover)}" alt="" width="600" height="900" loading="lazy">
-            <div><p class="kicker">Сборник · ${esc(collection.year)}</p><h2>${esc(collection.title)}</h2><p>${esc(collection.stories.length)} рассказов. Выбери из оглавления — текст раскроется здесь же.</p><ol>${collection.stories.map((story) => `<li><button type="button" data-story-open="${esc(collection.id)}--${esc(story.slug)}">${esc(story.title)}</button></li>`).join('')}</ol></div>
-          </section>`).join('\n')}
+${сборникиПоказ.map(storyCollectionPanel).join('\n')}
         </div>
-        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div></article>
+        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑ <span>Наверх</span></button></article>
         <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
       </section>`;
 
