@@ -53,6 +53,32 @@
   const слаг = рассказ.dataset.story;
   const полоса = document.querySelector('.reader-progress i');
 
+  // Одна дверь наверх, а не второй набор навигации. На первом экране её нет:
+  // появляется только после целой высоты чтения и только если странице есть
+  // куда прокручиваться. Так короткий рассказ не получает бесполезную кнопку.
+  const наверх = document.createElement('button');
+  наверх.type = 'button';
+  наверх.className = 'reader-back-to-top';
+  наверх.hidden = true;
+  наверх.setAttribute('aria-label', 'Вернуться к началу рассказа');
+  наверх.title = 'Вернуться к началу рассказа';
+  наверх.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 14 5-5 5 5"/></svg>';
+  document.body.append(наверх);
+
+  const меньшеДвижения = matchMedia('(prefers-reduced-motion: reduce)');
+  const высотаОкна = () => Math.max(1, window.visualViewport?.height || innerHeight);
+  const обновитьНаверх = () => {
+    const высота = высотаОкна();
+    const длинныйТекст = document.documentElement.scrollHeight > высота + 1;
+    наверх.hidden = !(длинныйТекст && scrollY >= высота);
+  };
+  наверх.addEventListener('click', () => {
+    scrollTo({ top: 0, behavior: меньшеДвижения.matches ? 'auto' : 'smooth' });
+    // При reduced motion браузер прыгает сразу; не ждём следующего scroll,
+    // чтобы круг не висел на верхнем экране лишний кадр.
+    requestAnimationFrame(обновитьНаверх);
+  });
+
   // Доля прочитанного считается по самому тексту, а не по всей странице:
   // шапка и навигация внизу не должны попадать в «сколько осталось».
   const доля = () => {
@@ -76,6 +102,11 @@
     { passive: true }
   );
   обновить();
+  обновитьНаверх();
+  addEventListener('scroll', обновитьНаверх, { passive: true });
+  addEventListener('resize', обновитьНаверх);
+  addEventListener('load', обновитьНаверх);
+  window.visualViewport?.addEventListener('resize', обновитьНаверх);
 
   // Место храним в долях высоты, а не в пикселях: при другом размере шрифта
   // или на другом экране пиксели указывают не туда.

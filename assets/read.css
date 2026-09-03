@@ -67,6 +67,30 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 }
 .reader-progress i { display: block; height: 100%; width: 0; background: var(--accent-read); }
 
+/* Единственная плавающая навигация текста: круг означает только «вверх».
+   Без подписи он не спорит с рассказом, а у цели остаётся честные 44 px. */
+.reader-back-to-top {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right, 0px));
+  bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid #53545a;
+  border-radius: 50%;
+  background: #17171a;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .3);
+  color: #f0efeb;
+  cursor: pointer;
+}
+.reader-back-to-top[hidden] { display: none; }
+.reader-back-to-top svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.reader-back-to-top:hover { border-color: var(--accent-read); color: var(--accent-read); }
+.reader-back-to-top:focus-visible { outline: 2px solid var(--accent-read); outline-offset: 3px; border-color: var(--accent-read); }
+
 .reader-top {
   display: flex; align-items: center; gap: 14px;
   max-width: var(--maxw); margin: 0 auto; padding: 20px 20px 8px;
