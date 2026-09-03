@@ -13,32 +13,28 @@ const build = () => {
   return read('index.html');
 };
 
-test('первый экран объясняет Gateway человеческим языком, а технику прячет', () => {
+test('первый экран показывает две рабочие системы, а не учебную игру', () => {
   const html = build();
-  assert.match(html, /Локальный ИИ без передачи данных/);
-  assert.match(html, /Рабочая программа получает помощь ИИ прямо на вашем компьютере/);
-  assert.match(html, /Живой прогон LLM — отдельное измерение/);
-  assert.match(html, /<details class="report-more">/);
-  assert.match(html, /Подробнее для специалистов/);
+  const lead = html.match(/<section class="work-lead"[\s\S]*?<\/section>/)?.[0] || '';
+  assert.match(lead, /Local Agent Gateway/);
+  assert.match(lead, /без передачи данных наружу/);
+  assert.match(lead, /Dharma AI · Anigma/);
+  assert.doesNotMatch(lead, /QA Quest/);
 });
 
-test('QA Quest идёт вторым, а практикумы остаются двумя отдельными вкладками', () => {
+test('практикумы показывают QA Quest главным и два компактных маршрута рядом', () => {
   const html = build();
-  const qa = html.indexOf('id="p-qa-quest"');
-  const compact = html.indexOf('data-practicum-switch');
-  assert.ok(qa >= 0, 'нет отдельной карточки QA Quest');
-  assert.ok(compact > qa, 'практикумы должны идти после QA Quest');
-  assert.match(html, /data-practicum-to="praktikum-testing"/);
-  assert.match(html, /data-practicum-to="ai-agent-service-lab"/);
+  const practicum = html.match(/<section class="block practicum-switch"[\s\S]*?<\/section>/)?.[0] || '';
+  assert.match(practicum, /class="practicum-quest"/);
+  assert.match(practicum, />QA Quest</);
+  assert.equal((practicum.match(/practicum-card--compact/g) || []).length, 2);
+  assert.doesNotMatch(practicum, /data-practicum-to=/);
 });
 
-test('форма партнёрства не раскрывает личный контакт и ведёт в защищённый API', () => {
+test('форма партнёрства не занимает витрину: связь переедет к помощнику', () => {
   const html = build();
-  const caddy = read('Caddyfile');
-  assert.match(html, /<form class="partner-form" data-contact-form/);
-  assert.match(html, /name="company" tabindex="-1" autocomplete="off"/);
-  assert.match(html, /action="\/api\/contact\/submit"/);
-  assert.match(caddy, /handle_path \/api\/contact\/\* \{\s*reverse_proxy contact:8080\s*\}/);
+  assert.doesNotMatch(html, /<form class="partner-form" data-contact-form/);
+  assert.doesNotMatch(html, /action="\/api\/contact\/submit"/);
 });
 
 test('Psy Admin показывает существующий кадр текущей демо-страницы', () => {

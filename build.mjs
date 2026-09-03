@@ -491,7 +491,14 @@ const skillsBlock = profile.skills
 // данных! это хронологически тупо». Помечаем такие записи в данных, а не
 // правим собранный index.html: он собирается заново, и ручная правка в нём
 // живёт до первой сборки — так уже потерялась одна.
-const строкаОпыта = (e) => `
+const строкаОпыта = (e) => e.compact
+  ? `<article class="job job--publication">
+      <p class="job-period">${esc(e.period)}</p>
+      <a class="job-publication-shot" href="/assets/shots/${esc(e.shot.full)}" target="_blank" rel="noopener" aria-label="Открыть полосу журнала целиком">
+        ${shotImg(e.shot)}<span>${esc(e.org)}</span>
+      </a>
+    </article>`
+  : `
           <article class="job${e.shot ? ' job--with-shot' : ''}">
             <p class="job-period">${esc(e.period)}${
               // Собственный проект помечается прямо в ленте: без пометки он
@@ -506,7 +513,7 @@ const строкаОпыта = (e) => `
                   )} <b>↗</b></a>`
                 : esc(e.org)
             }</h3>
-            <p class="job-role">${esc(e.role)}</p>${
+            ${e.role ? `<p class="job-role">${esc(e.role)}</p>` : ''}${
               e.points.length ? `<ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''
             }${
               // Скан кликается: показан он маркой в 160 пикселей, и журнальный
@@ -552,12 +559,18 @@ const otherGames = allPlay.filter((p) => !p.groups.includes('playable'));
 const leaderboards = db.projects.filter((p) => p.leaderboard);
 const projectById = (id) => db.projects.find((project) => project.id === id);
 const qaQuest = projectById('qa-quest');
+const dharmaAi = projectById('dharma-ai');
 const practicumProjects = ['praktikum-testing', 'ai-agent-service-lab'].map(projectById);
 const qaQuestDemo = qaQuest?.links.find((link) => link.type === 'demo');
 
-if (!qaQuest || !qaQuestDemo || practicumProjects.some((project) => !project)) {
-  throw new Error('не найдены QA Quest или один из двух практикумов');
+if (!qaQuest || !qaQuestDemo || !dharmaAi || practicumProjects.some((project) => !project)) {
+  throw new Error('не найдены QA Quest, Dharma AI или один из двух практикумов');
 }
+
+const practicumImage = (shot) => {
+  const { w, h } = imageSize(`assets/shots/${shot.file}`);
+  return `<img src="${shotSrc(shot.file)}" alt="${esc(shot.alt)}" width="${w}" height="${h}" decoding="async">`;
+};
 
 const practicumCard = (project, active) => `
           <article class="practicum-card" id="practicum-panel-${esc(project.id)}" role="tabpanel"
@@ -579,27 +592,29 @@ const practicumSwitch = `
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Два самостоятельных маршрута: сначала выбери, что хочешь научиться делать.</p>
+          <p>Проверка кода через игру — или два самостоятельных маршрута, где можно разобрать всё руками.</p>
         </div>
-        <div class="practicum-tabs" role="tablist" aria-label="Практикумы">
-          ${practicumProjects
-            .map(
-              (project, index) =>
-                `<button type="button" role="tab" id="practicum-tab-${esc(project.id)}"
-                  data-practicum-to="${esc(project.id)}" aria-controls="practicum-panel-${esc(project.id)}"
-                  aria-selected="${index === 0 ? 'true' : 'false'}">${esc(project.title.replace('Практикум: ', ''))}</button>`
-            )
-            .join('')}
-        </div>
-        <div class="practicum-panels">
-${practicumProjects.map((project, index) => practicumCard(project, index === 0)).join('')}
+        <div class="practicum-triptych">
+          <a class="practicum-quest" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>
+            <div>${practicumImage(qaQuest.shots[0])}</div>
+            <p class="kicker">Главный практикум · игра</p>
+            <h3>QA Quest</h3>
+            <p>${esc(qaQuest.tagline)}</p>
+            <span>Открыть игру <b>→</b></span>
+          </a>
+${practicumProjects.map((project) => `
+          <article class="practicum-card practicum-card--compact" id="p-${esc(project.id)}">
+            <p class="kicker">${esc(project.kicker)}</p>
+            <h3>${cardTitle(project)}</h3>
+            <p class="tagline">${esc(project.tagline)}</p>
+            ${metricChips(project)}
+            ${linkRow(project)}
+          </article>`).join('')}
         </div>
       </section>`;
 
-// Главная витрина работы — связанная пара, а не три конкурирующих продукта.
-// Gateway — сильная рабочая система, QA Quest — место, где на настоящем
-// Python видно, зачем такие системы нужно уметь проверять. ФотоДата и Dharma
-// остаются в своих обычных разделах ниже, не претендуя на главный тезис.
+// Первый экран отвечает не «чем я интересуюсь», а что уже собрал: приватный
+// AI-шлюз и магазин с агентами. Обучающая игра живёт в практикумах ниже.
 const leadImage = (file, alt) => {
   const { w, h } = imageSize(`assets/shots/${file}`);
   return `<img src="${shotSrc(file)}" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async">`;
@@ -613,7 +628,7 @@ const workLead = `
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
               <p>Программа подключает обычное приложение к локальной модели — без передачи данных наружу. У модели есть только нужные инструменты, а у результата — проверка.</p>
-              <p class="work-lead-fact"><b>66 проверок прошли.</b> API, браузер и живой LLM-прогон измеряются отдельно.</p>
+              <p class="work-lead-fact"><b data-metric="tests">66</b> проверок прошли. API, браузер и живой LLM-прогон измеряются отдельно.</p>
               <a class="work-gateway-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
@@ -621,19 +636,19 @@ const workLead = `
               <span>66 тестов · Allure ↗</span>
             </a>
           </article>
-          <a class="work-quest" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>
-            <div class="work-quest-shot">
-              ${leadImage(qaQuest.shots[0].file, qaQuest.shots[0].alt)}
+          <a class="work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
+            <div class="work-dharma-shot">
+              ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
             </div>
-            <div class="work-quest-copy">
-              <p class="kicker">02 / практика</p>
-              <h2>QA Quest</h2>
-              <p>Пишешь настоящий Python — и машина в истории отвечает: включает фары, открывает двери, двигает сюжет.</p>
-              <span>Открыть игру <b>→</b></span>
+            <div class="work-dharma-copy">
+              <p class="kicker">02 / продукт заказчика</p>
+              <h2>Dharma AI · Anigma</h2>
+              <p>Магазин, в котором ИИ-агенты отвечают покупателю и доводят путь от вопроса до оплаченного заказа.</p>
+              <span>Открыть сайт <b>↗</b></span>
             </div>
           </a>
         </div>
-        <p class="work-duet-note"><b>Один контур</b> ставит ИИ границы. <b>Второй</b> учит проверять его кодом.</p>
+        <p class="work-duet-note"><b>Один проект</b> оставляет данные на машине. <b>Другой</b> ведёт покупателя до заказа — оба сделаны до рабочего результата.</p>
       </section>`;
 
 // На главной показываем один вход в обучение. Второй маршрут остаётся
@@ -698,7 +713,7 @@ ${practicumSwitch.trim()}
           <h2 id="products-title">Продукты, которые остаются у людей</h2>
           <p>Автоматизация, в которой виден путь: что делает система, где её границы и чем подтверждён результат.</p>
         </div>
-        <div class="grid">${byGroup('client-products').map(card).join('')}
+        <div class="grid">${byGroup('client-products').filter((project) => project.id !== 'dharma-ai').map(card).join('')}
         </div>
       </section>
 
@@ -721,7 +736,6 @@ ${practicumSwitch.trim()}
 
       <section class="block" aria-labelledby="all-work-title">
         <div class="block-head">
-          <p class="kicker">Архив</p>
           <h2 id="all-work-title">Все проекты</h2>
         </div>
         <details class="project-index">
@@ -893,18 +907,19 @@ ${playBar}
 // а тот же экран, что работа и игры. Полное оглавление остаётся в читалке.
 const storiesPanel = `
       <section class="story-lead" aria-labelledby="stories-lead-title">
-        <div>
+        <div class="story-lead-copy">
           <p class="kicker">Рассказы Сергея Гостова</p>
-          <h1 id="stories-lead-title">${esc(storyList.length)} текстов, которые можно читать сразу</h1>
-          <p>Короткая проза, фантастика и истории про людей, машины и странные правила мира.</p>
+          <h1 id="stories-lead-title">Три сборника, ${esc(storyList.length)} рассказов</h1>
+          <p>Фантастика, люди, машины и странные правила мира. Нажми на обложку — откроется её список.</p>
         </div>
-        <a class="story-lead-book" href="/rasskazy/">
-          <img src="/assets/covers/book-solyanochka.jpg" alt="Сборник рассказов Сергея Гостова" width="600" height="900" loading="lazy">
-          <span>Открыть читалку <b>→</b></span>
-        </a>
-      </section>
-      <div class="story-bar" aria-label="Где читают рассказы">
-        <span><b>5</b> площадок</span><span><b>75 000+</b> обращений к текстам</span><a href="/rasskazy/">Все рассказы <b>→</b></a>
+        <a class="story-all-link" href="/rasskazy/">Все рассказы <b>↗</b></a>
+        <div class="story-shelves">
+${book.сборники.map((collection) => `
+          <a class="story-lead-book" href="/rasskazy/#${esc(collection.id)}">
+            <img src="/assets/covers/${esc(collection.cover)}" alt="Сборник «${esc(collection.title)}»" width="600" height="900" loading="lazy">
+            <span>${esc(collection.title)}</span>
+          </a>`).join('')}
+        </div>
       </div>`;
 
 // Тестовый пульт отделён от витрины: здесь не убеждают, а дают быстро открыть

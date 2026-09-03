@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — AI/LLM QA, автоматизация, браузерные игры">
     <meta name="twitter:description" content="Портфолио aka-gst: тестовые контуры для AI-агентов, практикумы, продукты и браузерные игры.">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=ce32d838">
+    <link rel="stylesheet" href="/assets/site.css?v=e3dbd3d2">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -88,7 +88,7 @@
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
               <p>Программа подключает обычное приложение к локальной модели — без передачи данных наружу. У модели есть только нужные инструменты, а у результата — проверка.</p>
-              <p class="work-lead-fact"><b>66 проверок прошли.</b> API, браузер и живой LLM-прогон измеряются отдельно.</p>
+              <p class="work-lead-fact"><b data-metric="tests">66</b> проверок прошли. API, браузер и живой LLM-прогон измеряются отдельно.</p>
               <a class="work-gateway-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
@@ -96,53 +96,45 @@
               <span>66 тестов · Allure ↗</span>
             </a>
           </article>
-          <a class="work-quest" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">
-            <div class="work-quest-shot">
-              <img src="/assets/shots/qa-quest-lesson.jpg?v=2be616e2" alt="Стенд QA Quest: машина с включёнными фарами и открытыми дверями, рядом консоль с командами ping, enable lights и unlock doors" width="1056" height="596" decoding="async">
+          <a class="work-dharma" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">
+            <div class="work-dharma-shot">
+              <img src="/assets/shots/anigma.jpg?v=828230f1" alt="Первый экран магазина ANIGMA: коллекция AFTERIMAGE PROTOCOL и артворк OBSERVER_01" width="1200" height="750" decoding="async">
             </div>
-            <div class="work-quest-copy">
-              <p class="kicker">02 / практика</p>
-              <h2>QA Quest</h2>
-              <p>Пишешь настоящий Python — и машина в истории отвечает: включает фары, открывает двери, двигает сюжет.</p>
-              <span>Открыть игру <b>→</b></span>
+            <div class="work-dharma-copy">
+              <p class="kicker">02 / продукт заказчика</p>
+              <h2>Dharma AI · Anigma</h2>
+              <p>Магазин, в котором ИИ-агенты отвечают покупателю и доводят путь от вопроса до оплаченного заказа.</p>
+              <span>Открыть сайт <b>↗</b></span>
             </div>
           </a>
         </div>
-        <p class="work-duet-note"><b>Один контур</b> ставит ИИ границы. <b>Второй</b> учит проверять его кодом.</p>
+        <p class="work-duet-note"><b>Один проект</b> оставляет данные на машине. <b>Другой</b> ведёт покупателя до заказа — оба сделаны до рабочего результата.</p>
       </section>
 
 <section class="block practicum-switch" aria-labelledby="practicums-title" data-practicum-switch>
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Два самостоятельных маршрута: сначала выбери, что хочешь научиться делать.</p>
+          <p>Проверка кода через игру — или два самостоятельных маршрута, где можно разобрать всё руками.</p>
         </div>
-        <div class="practicum-tabs" role="tablist" aria-label="Практикумы">
-          <button type="button" role="tab" id="practicum-tab-praktikum-testing"
-                  data-practicum-to="praktikum-testing" aria-controls="practicum-panel-praktikum-testing"
-                  aria-selected="true">тестирование локального AI-агента</button><button type="button" role="tab" id="practicum-tab-ai-agent-service-lab"
-                  data-practicum-to="ai-agent-service-lab" aria-controls="practicum-panel-ai-agent-service-lab"
-                  aria-selected="false">настройка LLM и агентов</button>
-        </div>
-        <div class="practicum-panels">
+        <div class="practicum-triptych">
+          <a class="practicum-quest" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">
+            <div><img src="/assets/shots/qa-quest-lesson.jpg?v=2be616e2" alt="Стенд QA Quest: машина с включёнными фарами и открытыми дверями, рядом консоль с командами ping, enable lights и unlock doors" width="1056" height="596" decoding="async"></div>
+            <p class="kicker">Главный практикум · игра</p>
+            <h3>QA Quest</h3>
+            <p>Учу программировать на Питоне через игру: пишешь настоящий код и этим открываешь историю дальше.</p>
+            <span>Открыть игру <b>→</b></span>
+          </a>
 
-          <article class="practicum-card" id="practicum-panel-praktikum-testing" role="tabpanel"
-            aria-labelledby="practicum-tab-praktikum-testing" data-practicum-panel="praktikum-testing">
-            <div class="card-head">
-              <p class="kicker">Практикум · веб + PDF</p>
-              <span class="status status-published">v3</span>
-            </div>
+          <article class="practicum-card practicum-card--compact" id="p-praktikum-testing">
+            <p class="kicker">Практикум · веб + PDF</p>
             <h3><a class="card-title" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></h3>
             <p class="tagline">Пошаговое руководство: как поднять нейросеть у себя на машине, подключить к ней программу и убедиться, что всё работает.</p>
             <ul class="chips"><li><b>19</b> <span>разделов</span></li><li><b>16</b> <span>экспериментов</span></li><li><b>~82 мин</b> <span>чтения</span></li></ul>
             <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
           </article>
-          <article class="practicum-card" id="practicum-panel-ai-agent-service-lab" role="tabpanel"
-            aria-labelledby="practicum-tab-ai-agent-service-lab" data-practicum-panel="ai-agent-service-lab" hidden>
-            <div class="card-head">
-              <p class="kicker">Практикум · веб + сервис</p>
-              <span class="status status-live">открыт</span>
-            </div>
+          <article class="practicum-card practicum-card--compact" id="p-ai-agent-service-lab">
+            <p class="kicker">Практикум · веб + сервис</p>
             <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
             <p class="tagline">Разбираю на живом примере, как устроен ИИ-агент: чем он пользуется, что помнит и как проверить, что он не выдумывает.</p>
             <ul class="chips"><li><b>16</b> <span>разделов</span></li><li><b>10</b> <span>лабораторных</span></li><li><b>~51 мин</b> <span>чтения</span></li></ul><ul class="chips"><li><b>76</b> <span>автотестов</span></li><li><b>6/6</b> <span>evaluation</span></li><li><b>100%</b> <span>retrieval hit</span></li></ul>
@@ -158,28 +150,6 @@
           <p>Автоматизация, в которой виден путь: что делает система, где её границы и чем подтверждён результат.</p>
         </div>
         <div class="grid">
-        <article class="card" id="p-dharma-ai">
-          <figure class="shot"><img src="/assets/shots/anigma.jpg?v=828230f1" alt="Первый экран магазина ANIGMA: коллекция AFTERIMAGE PROTOCOL и артворк OBSERVER_01"
-                width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low"></figure>
-          <div class="card-head">
-            <p class="kicker">Продукт заказчика</p>
-            <span class="card-marks"><span class="status status-live">валидатор запущен</span></span>
-          </div>
-          <h3><a class="card-title" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">Dharma AI</a></h3>
-          <p class="tagline">Собрал магазин, которым управляют ИИ-агенты: помощник доводит покупателя от вопроса до оплаченного заказа.</p>
-          <p class="card-links"><a class="link link-site" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">dharma-ai.io <b>↗</b></a></p>
-          <div class="card-more">
-            
-          <dl class="band" data-count="1">
-            <div title="доказательства, рассуждение, полномочия">
-              <dt>3</dt>
-              <dd>проверки</dd>
-            </div>
-          </dl>
-            <p class="summary">Основное направление — приложение с персональным AI-наставником, который отвечает на основе внешней базы знаний: связность диалога, голосовой и текстовый интерфейсы, фактическая точность ответов. Второй продукт, публично запущенный, — валидационный шлюз для агентных систем: перед действием или передачей управления проверяются доказательная база ответа, цепочка рассуждения и полномочия на этот шаг.</p>
-            
-          </div>
-        </article>
         <article class="card" id="p-psy-ai-admin">
           <figure class="shot"><img src="/assets/shots/psy-admin.jpg?v=87cf500e" alt="Форма помощника: выбор из 60 готовых вопросов, поле для своего, и ответ со ссылкой на страницу центра"
                 width="1200" height="676" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
@@ -312,24 +282,18 @@
             <p class="job-period">2010 — 2017</p>
             <h3>Новосибирский государственный технический университет, АВТФ</h3>
             <p class="job-role">Прикладная математика и информатика · квалификация «программист»</p>
-          </article>
-          <article class="job job--with-shot">
-            <p class="job-period">январь 2008</p>
-            <h3>PlayStation Magazine Russia</h3>
-            <p class="job-role">Первая публикация: «Твоё ревю» о Resistance: Fall of Man.</p><a class="shot-link" href="/assets/shots/psm-2008-polnyy.jpg" target="_blank" rel="noopener"
-                         aria-label="Открыть полосу журнала целиком">
-            <figure class="shot">
-              <img src="/assets/shots/psm-2008.jpg?v=f0e7b050" alt="Полоса журнала PSM Russia за январь 2008: рубрика «Твоё ревю», рецензия на Resistance: Fall of Man"
-                width="256" height="360" decoding="async" loading="lazy" fetchpriority="low">
-              <figcaption>PSM Russia, январь 2008. Фамилия в профиле читателя закрыта намеренно. Нажмите — откроется целиком.</figcaption>
-            </figure></a>
-          </article>
+          </article><article class="job job--publication">
+      <p class="job-period">январь 2008</p>
+      <a class="job-publication-shot" href="/assets/shots/psm-2008-polnyy.jpg" target="_blank" rel="noopener" aria-label="Открыть полосу журнала целиком">
+        <img src="/assets/shots/psm-2008.jpg?v=f0e7b050" alt="Полоса журнала PSM Russia за январь 2008: рубрика «Твоё ревю», рецензия на Resistance: Fall of Man"
+                width="256" height="360" decoding="async" loading="lazy" fetchpriority="low"><span>PlayStation Magazine Russia</span>
+      </a>
+    </article>
         </div>
       </section>
 
       <section class="block" aria-labelledby="all-work-title">
         <div class="block-head">
-          <p class="kicker">Архив</p>
           <h2 id="all-work-title">Все проекты</h2>
         </div>
         <details class="project-index">
@@ -531,18 +495,27 @@
       </div>
       <div class="panel" data-panel="stories">
       <section class="story-lead" aria-labelledby="stories-lead-title">
-        <div>
+        <div class="story-lead-copy">
           <p class="kicker">Рассказы Сергея Гостова</p>
-          <h1 id="stories-lead-title">23 текстов, которые можно читать сразу</h1>
-          <p>Короткая проза, фантастика и истории про людей, машины и странные правила мира.</p>
+          <h1 id="stories-lead-title">Три сборника, 23 рассказов</h1>
+          <p>Фантастика, люди, машины и странные правила мира. Нажми на обложку — откроется её список.</p>
         </div>
-        <a class="story-lead-book" href="/rasskazy/">
-          <img src="/assets/covers/book-solyanochka.jpg" alt="Сборник рассказов Сергея Гостова" width="600" height="900" loading="lazy">
-          <span>Открыть читалку <b>→</b></span>
-        </a>
-      </section>
-      <div class="story-bar" aria-label="Где читают рассказы">
-        <span><b>5</b> площадок</span><span><b>75 000+</b> обращений к текстам</span><a href="/rasskazy/">Все рассказы <b>→</b></a>
+        <a class="story-all-link" href="/rasskazy/">Все рассказы <b>↗</b></a>
+        <div class="story-shelves">
+
+          <a class="story-lead-book" href="/rasskazy/#solyanochka">
+            <img src="/assets/covers/book-solyanochka.jpg" alt="Сборник «Соляночка»" width="600" height="900" loading="lazy">
+            <span>Соляночка</span>
+          </a>
+          <a class="story-lead-book" href="/rasskazy/#tri-iznutri">
+            <img src="/assets/covers/book-tri-iznutri.jpg" alt="Сборник «Три изнутри»" width="600" height="900" loading="lazy">
+            <span>Три изнутри</span>
+          </a>
+          <a class="story-lead-book" href="/rasskazy/#a-potom">
+            <img src="/assets/covers/book-a-potom.jpg" alt="Сборник «А потом наступит счастье»" width="600" height="900" loading="lazy">
+            <span>А потом наступит счастье</span>
+          </a>
+        </div>
       </div>
       </div>
     </main>

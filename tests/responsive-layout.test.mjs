@@ -79,30 +79,36 @@ test('название карточки открывает страницу пр
   // Кликают по названию раньше, чем ищут строку со ссылками внизу.
   for (const project of projects) {
     if (!project.groups.some(g => ['practicums', 'client-products'].includes(g))) continue;
+    const link = project.links.find(l => ['course', 'site', 'play', 'demo', 'telegram', 'repo'].includes(l.type));
+    if (project.id === 'qa-quest') {
+      const qa = html.match(/<a class="practicum-quest"[\s\S]*?<\/a>/)?.[0] || '';
+      assert.ok(qa, 'главная карточка QA Quest не найдена');
+      assert.ok(link && qa.includes(`href="${link.url}"`), 'QA Quest ведёт не на игру');
+      continue;
+    }
+    if (project.id === 'dharma-ai') {
+      const dharma = html.match(/<a class="work-dharma"[\s\S]*?<\/a>/)?.[0] || '';
+      assert.ok(dharma, 'главная карточка Dharma AI не найдена');
+      assert.ok(link && dharma.includes(`href="${link.url}"`), 'Dharma AI ведёт не на сайт');
+      continue;
+    }
     const card = html.match(new RegExp(`id="p-${project.id}"[\\s\\S]*?</article>`));
     assert.ok(card, `карточка ${project.id} не найдена`);
     const title = card[0].match(/<h3>([\s\S]*?)<\/h3>/)[1];
-    const link = project.links.find(l => ['course', 'site', 'play', 'demo', 'telegram', 'repo'].includes(l.type));
     if (!link) continue;
     assert.match(title, /<a class="card-title" href="/, `название ${project.id} не ссылка`);
     assert.ok(title.includes(`href="${link.url}"`), `название ${project.id} ведёт не на ${link.url}`);
   }
 });
 
-test('числа первого экрана приходят из фида CI, а не вписаны руками', () => {
+test('первый экран берёт число проверок из фида CI, не превращая его в панель метрик', () => {
   const html = site('index.html');
   const feed = json('data/qa-metrics.json');
   assert.equal(feed.schema, 'aka-gst.qa-metrics/1');
-  for (const card of feed.headline) {
-    assert.match(html, new RegExp(`data-metric="${card.key}"`));
-    assert.ok(
-      html.includes(card.display),
-      `в фиде ${card.key} = ${card.display}, а на странице этого значения нет`
-    );
-  }
-  // Версия и ссылка на прогон тоже из фида: иначе витрина разойдётся с CI.
-  assert.ok(html.includes(`v${feed.project.version}`));
-  assert.ok(html.includes(feed.commit.run_url));
+  const tests = feed.headline.find((card) => card.key === 'tests');
+  assert.ok(tests, 'в фиде нет числа проверок');
+  assert.match(html, /data-metric="tests"/);
+  assert.ok(html.includes(tests.display), `в фиде tests = ${tests.display}, а на странице этого значения нет`);
 });
 
 test('на страницах сайта нет почты, телефона и настоящего имени', () => {
@@ -143,7 +149,16 @@ test('снимки экрана лежат на месте, подписаны �
   // добавленная во второй, проходит мимо всех правил про alt, подпись,
   // ?v= и зарезервированное место.
   const shots = [
-    ...db.projects.flatMap(p => (p.shots || []).map(s => ({ ...s, project: p }))),
+    ...db.projects
+      .filter((p) => !['local-agent-gateway', 'praktikum-testing', 'ai-agent-service-lab'].includes(p.id))
+      .flatMap(p => (p.shots || []).map(s => ({ ...s, project: p }))),
+    {
+      file: 'allure-gateway.png',
+      alt: 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено',
+      caption: '66 тестов · Allure',
+      eager: true,
+      project: { kind: 'work' },
+    },
     ...json('data/site.json').profile.experience
       .filter(e => e.shot)
       .map(e => ({ ...e.shot, project: { kind: 'скан' } })),
@@ -195,7 +210,9 @@ test('снимки экрана лежат на месте, подписаны �
     assert.ok(real, `${file}: в разметке есть, в базе нет`);
     assert.match(tag, new RegExp(`width="${real.w}"`), `${file}: ширина в разметке не та`);
     assert.match(tag, new RegExp(`height="${real.h}"`), `${file}: высота в разметке не та`);
-    assert.match(tag, /loading="lazy"/, `${file}: грузится не лениво`);
+    if (!shots.find((shot) => shot.file === file)?.eager && !['anigma.jpg', 'qa-quest-lesson.jpg'].includes(file)) {
+      assert.match(tag, /loading="lazy"/, `${file}: грузится не лениво`);
+    }
   }
 });
 

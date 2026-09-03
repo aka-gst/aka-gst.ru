@@ -162,12 +162,13 @@
         "show": true,
         "org": "PlayStation Magazine Russia",
         "period": "январь 2008",
-        "role": "Первая публикация: «Твоё ревю» о Resistance: Fall of Man.",
+        "role": "",
         "points": [],
+        "compact": true,
         "shot": {
           "file": "psm-2008.jpg",
           "alt": "Полоса журнала PSM Russia за январь 2008: рубрика «Твоё ревю», рецензия на Resistance: Fall of Man",
-          "caption": "PSM Russia, январь 2008. Фамилия в профиле читателя закрыта намеренно. Нажмите — откроется целиком.",
+          "caption": "PlayStation Magazine Russia",
           "full": "psm-2008-polnyy.jpg"
         },
         "после_учёбы": true
