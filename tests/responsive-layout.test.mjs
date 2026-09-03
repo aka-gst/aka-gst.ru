@@ -61,6 +61,15 @@ test('две оболочки переключаются одним атрибу
   assert.match(html, /localStorage\.getItem\('aka-gst:track'\)/);
 });
 
+test('шапка не расходует место на тестовый пульт и рекорды', () => {
+  const html = site('index.html');
+  const js = site('assets/app.js');
+  assert.doesNotMatch(html, /href="\/test\/"/);
+  assert.doesNotMatch(html, /class="rec(?:\s|")/);
+  assert.doesNotMatch(js, /api\/leaderboard\/scores/);
+  assert.match(html, /href="\/en\/"/);
+});
+
 test('каждый проект из базы попадает на страницу', () => {
   const html = site('index.html');
   const { projects } = json('data/projects.json');
@@ -492,10 +501,8 @@ test('Орёл-решка подключена к сайту, аналитике
   assert.match(game, /data-period="today"/);
   assert.match(game, /data-period="week"/);
   assert.match(game, /period=\$\{period\}&limit=9/);
-  // Рекорд дня переехал из блока внизу вкладки «Игры» в бегущую строку
-  // шапки. Проверяем то же самое по сути: сегодняшний счёт Деревни на
-  // главной есть, и заполнять его будет тот же слаг лидерборда.
-  assert.match(home, /class="rec-item" data-game="coin-flip"/);
+  // Рейтинг остаётся внутри игры, но не занимает шапку портфолио.
+  assert.doesNotMatch(home, /class="rec-item"/);
   assert.match(внутри('ops/leaderboard/server.py'), /period_cutoff/);
   assert.match(game, /max-height:520px[^}]+orientation:landscape/s);
   assert.match(внутри('ops/leaderboard/server.py'), /"coin-flip"/);

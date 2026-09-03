@@ -14,7 +14,6 @@ const db = read('projects.json');
 const qa = read('qa-metrics.json');
 const put = read('put.json');
 const utro = read('utro.json');
-const testRoutes = read('test-routes.json');
 
 // Версия ассета — от его содержимого. Раньше в ссылке стояло ?v=1 вручную:
 // Caddy отдаёт /assets/* с кэшем на неделю, поэтому вернувшийся посетитель
@@ -557,7 +556,6 @@ const allWork = db.projects.filter((p) => p.tracks.includes('work'));
 const allPlay = db.projects.filter((p) => p.tracks.includes('play') && p.kind === 'game');
 const playable = db.projects.filter((p) => p.groups.includes('playable'));
 const otherGames = allPlay.filter((p) => !p.groups.includes('playable'));
-const leaderboards = db.projects.filter((p) => p.leaderboard);
 const projectById = (id) => db.projects.find((project) => project.id === id);
 const qaQuest = projectById('qa-quest');
 const dharmaAi = projectById('dharma-ai');
@@ -799,31 +797,6 @@ const gameCard = (project) => {
         </${tag}>`;
 };
 
-// Рекорды переехали из блока внизу вкладки «Игры» в строку шапки: до
-// блока надо было пролистать все карточки, и он читался как ещё один
-// экран, хотя это сводка на один взгляд. Список выводится дважды — так
-// лента прокручивается по кругу без стыка на склейке.
-const recItems = [...leaderboards]
-  .sort((a, b) => (a.leaderboard === 'coin-flip' ? -1 : b.leaderboard === 'coin-flip' ? 1 : 0))
-  .map(
-    // Прочерка больше нет: игра без рекорда просто не выводится. Прочерк
-    // на первом экране — это элемент, задуманный показывать жизнь, который
-    // показывает её отсутствие, и это хуже, чем если бы его не было.
-    // Скрытым приходит всё: показывает скрипт, когда рекорд нашёлся.
-    (p) => `<span class="rec-item" data-game="${esc(p.leaderboard)}" hidden><i>${esc(
-      p.title
-    )}</i><b></b><em class="rec-per"></em></span>`
-  )
-  .join('');
-
-const recTicker = `
-      <div class="rec" aria-label="Рекорды: сегодня и за неделю" hidden>
-        <span class="rec-label">REC</span>
-        <span class="rec-view">
-          <span class="rec-run">${recItems}${recItems}</span>
-        </span>
-      </div>`;
-
 // Полоса над играми — ровня строке прогона на «Работе». Она держит верх
 // обеих вкладок на одном уровне и говорит то же самое по сути: из чего
 // собрано и в каком это состоянии. Числа считаются из базы, чтобы не
@@ -936,59 +909,6 @@ ${сборникиПоказ.map(storyCollectionPanel).join('\n')}
         <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
       </section>`;
 
-// Тестовый пульт отделён от витрины: здесь не убеждают, а дают быстро открыть
-// все доступные сборки. Обновляемые вещи не получают ссылку на старую версию.
-const testRows = testRoutes.groups
-  .map(
-    (group) => `
-      <section class="test-group" aria-labelledby="test-group-${esc(group.title).toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-')}">
-        <h2 id="test-group-${esc(group.title).toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-')}">${esc(group.title)}</h2>
-        <div class="test-list">
-${group.items
-  .map((item) => {
-    const available = item.available !== false;
-    const target = item.external ? ' target="_blank" rel="noopener"' : '';
-    return `          <article class="test-row${available ? '' : ' test-row--pending'}">
-            <div><h3>${esc(item.title)}</h3>${item.note ? `<p>${esc(item.note)}</p>` : ''}</div>
-            <p class="test-status">${esc(item.status)}</p>
-            ${available ? `<a class="test-open" href="${esc(item.url)}"${target}>Открыть <b>${item.external ? '↗' : '→'}</b></a>` : '<span class="test-wait">ждём сборку</span>'}
-            ${item.repo ? `<a class="test-repo" href="${esc(item.repo)}" target="_blank" rel="noopener">Исходники ↗</a>` : ''}
-          </article>`;
-  })
-  .join('\n')}
-        </div>
-      </section>`
-  )
-  .join('\n');
-
-const testPage = `<!doctype html>
-<html lang="ru">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex, nofollow">
-    <meta name="color-scheme" content="dark">
-    <meta name="theme-color" content="${esc(site.themeColor)}">
-    <title>${esc(testRoutes.title)} — ${esc(site.handle)}</title>
-    <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
-    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
-  </head>
-  <body class="test-page">
-    <a class="skip" href="#main">К списку сборок</a>
-    <header class="topbar">
-      ${brand('work')}
-      <a class="topbar-link" href="/">Работа</a>
-      <a class="topbar-link" href="/#games">Игры</a>
-      <a class="topbar-link" href="/rasskazy/">Рассказы</a>
-      <nav class="socials" aria-label="Профили">${socialLinks('test')}</nav>
-    </header>
-    <main id="main" class="test-main">
-      <header class="test-intro"><p class="kicker">пульт проверки</p><h1>${esc(testRoutes.title)}</h1><p>${esc(testRoutes.intro)}</p></header>
-${testRows}
-    </main>
-  </body>
-</html>`;
-
 // ── Сборка страницы ──────────────────────────────────────────────────
 const html = `<!doctype html>
 <html lang="ru" data-track="work">
@@ -1036,7 +956,6 @@ const html = `<!doctype html>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
       ${brand('work', { switchable: true })}
-${recTicker}
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
           'work'
@@ -1046,7 +965,6 @@ ${recTicker}
         )}<span>${esc(site.tracks.play.label)}</span></button>
         <button type="button" data-track-to="stories" data-umami-event="track-switch" data-umami-event-track="stories">${trackIcon('stories')}<span>Рассказы</span></button>
       </div>
-      <a class="topbar-link topbar-link--test" href="/test/">Тест</a>
       <a class="topbar-link" href="/en/" hreflang="en" lang="en" data-umami-event="en-open">EN</a>
       <nav class="socials" aria-label="Профили">
 ${socialLinks('header')}
@@ -1076,8 +994,6 @@ ${socialLinks('footer')}
 `;
 
 writeFileSync(join(root, 'index.html'), html);
-mkdirSync(join(root, 'test'), { recursive: true });
-writeFileSync(join(root, 'test', 'index.html'), testPage);
 
 // ── Индекс раздела практикумов ───────────────────────────────────────
 // Редирект /praktikum вёл в пустоту, пока этой страницы не было.

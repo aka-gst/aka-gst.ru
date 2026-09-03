@@ -271,28 +271,6 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
 .work-duet-note b { color: var(--text); }
 
-/* ── Тестовый пульт ───────────────────────────────────────────────── */
-/* Это не витрина: одна строка отвечает на три вопроса — что открыть,
-   в каком оно состоянии и откуда взялось. Поэтому здесь нет больших обложек. */
-.test-main { padding-top: 36px; max-width: 920px; }
-.test-intro { max-width: 660px; margin-bottom: 30px; }
-.test-intro h1 { margin: 8px 0 11px; font-size: clamp(34px, 5vw, 54px); }
-.test-intro > p:not(.kicker) { color: var(--muted); line-height: 1.5; }
-.test-group + .test-group { margin-top: 28px; }
-.test-group > h2 { margin-bottom: 10px; font-size: 20px; }
-.test-list { display: grid; gap: 7px; }
-.test-row {
-  display: grid; grid-template-columns: minmax(190px, 1fr) auto auto auto; align-items: center; gap: 12px;
-  min-height: 64px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
-}
-.test-row h3 { font-size: 15px; }
-.test-row p { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.35; }
-.test-status, .test-wait { margin: 0 !important; padding: 5px 8px; border-radius: 999px; background: var(--bg-soft); color: var(--muted) !important; font: 11px/1.2 var(--mono); white-space: nowrap; }
-.test-open, .test-repo { color: var(--accent); font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
-.test-repo { color: var(--muted); font-weight: 600; }
-.test-open:hover, .test-open:focus-visible, .test-repo:hover, .test-repo:focus-visible { color: var(--text); }
-.test-row--pending { opacity: .66; }
-.test-row--pending .test-wait { color: var(--warn) !important; }
 /* Короткий акцент, а не медленная декоративная полоса. */
 @media (prefers-reduced-motion: no-preference) {
   .work-lead::after {
@@ -1168,66 +1146,6 @@ article.gcard .launch { color: var(--dim); }
 .story-cross a:hover { text-decoration: underline; }
 .story-cross b { font-weight: 400; }
 
-/* ── Рекорды строкой в шапке ─────────────────────────────────────── */
-/* Раньше это был блок в самом низу вкладки «Игры»: чтобы его увидеть, надо
-   было пролистать все карточки, и он читался как ещё один экран. Здесь это
-   сводка на один взгляд. Лента едет только под курсором — сама по себе она
-   дёргала бы глаз на каждой странице. */
-/* Место под ленту занято на обеих вкладках, даже когда её не видно: иначе
-   переключатель «Работа/Игры» переезжал бы при каждой смене раздела. */
-.rec {
-  display: flex; align-items: center; gap: 10px;
-  flex: 1 1 200px; min-width: 0;
-}
-html[data-track="work"] .rec { visibility: hidden; }
-/* Период подписан у каждого числа: в ленте рядом могут стоять сегодняшний
-   и недельный рекорд, и один общий заголовок соврал бы про оба. */
-/* Скрытая лента должна исчезать, а не оставлять полосу. Собственный
-   display у .rec перебивает браузерное [hidden], и при пустом ответе
-   API оставалось шестнадцать пикселей пустоты — поймано отрицательным
-   контролем, а не глазами. Вес селектора нарочно выше, чем у правил
-   по треку. */
-html[data-track] .rec[hidden] { display: none; }
-
-.rec-per { font-style: normal; opacity: .55; margin-left: 6px; }
-
-.rec-label {
-  flex: none; font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--dim); white-space: nowrap;
-}
-/* Края растворяются, иначе строка обрывается на полуслове по границе. */
-.rec-view {
-  flex: 1 1 auto; min-width: 0; overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-}
-.rec-run {
-  display: flex; gap: 26px; width: max-content;
-  animation: rec-run 30s linear infinite; animation-play-state: paused;
-}
-.rec-item {
-  display: inline-flex; align-items: baseline; gap: 6px;
-  white-space: nowrap; font-size: 10.5px; color: var(--dim);
-}
-.rec-item i { font-style: normal; }
-/* Зелёный здесь — сигнальный цвет всего сайта, и в бегущей строке он кричал.
-   Счёт остаётся заметнее названия, но уже не спорит с карточками. */
-.rec-item b { font-family: var(--mono); color: var(--muted); font-weight: 500; }
-/* Список выведен дважды, поэтому сдвиг ровно на половину замыкает круг. */
-@keyframes rec-run { to { transform: translateX(-50%); } }
-
-@media (hover: hover) {
-  .rec:hover .rec-run, .rec:focus-within .rec-run { animation-play-state: running; }
-}
-@media (hover: none) {
-  /* На телефоне наводить нечем — лента едет сама. */
-  .rec-run { animation-play-state: running; }
-}
-/* Без движения строка обрезается по ширине, поэтому даём её пролистать. */
-@media (prefers-reduced-motion: reduce) {
-  .rec-view { overflow-x: auto; }
-}
-
 /* ── Подвал ───────────────────────────────────────────────────────── */
 
 /* Нижний отступ считает безопасную зону: на iPhone под страницей висит
@@ -1274,13 +1192,6 @@ html[data-track] .rec[hidden] { display: none; }
   .work-dharma-shot img { height:auto; min-height:0; aspect-ratio:16 / 8; }
   .work-dharma h2 { font-size: 22px; }
   .work-dharma p { font-size: 12px; }
-  .test-main { padding-top: 24px; }
-  .test-intro { margin-bottom: 24px; }
-  .test-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; min-height: 0; padding: 12px; }
-  .test-row > div { grid-column: 1 / -1; }
-  .test-status { grid-column: 1; justify-self: start; }
-  .test-open, .test-wait { grid-column: 2; grid-row: 2; }
-  .test-repo { grid-column: 1; grid-row: 3; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   /* На телефоне переключатель — главный элемент шапки: две крупные цели
      во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь
@@ -1292,18 +1203,9 @@ html[data-track] .rec[hidden] { display: none; }
   }
   .track-switch button svg { width: 19px; height: 19px; }
   .socials { margin-left: auto; }
-  /* Шапка липкая: третья строка съела бы пятую часть экрана. Лента встаёт
-     в первую строку между подписью и соцсетями, а ярлык прячем — «Деревня
-     vlkirr · 4» читается и без слова REC. */
   /* На телефоне значок встаёт под текстом слева, а не жмётся к правому краю. */
   .play-bar { gap: 8px 10px; padding: 10px 14px; }
   .play-bar .verdict { margin-left: 0; }
-  html[data-track="play"] .rec { flex: 1 1 70px; }
-  html[data-track="work"] .rec { display: none; }
-  /* Подпись на телефоне была спрятана — и на самом узком экране оставались
-     числа без объяснения, что это вообще такое. Лучше показать меньше игр,
-     но с подписью, чем больше без неё. */
-  .rec-label { display: inline; font-size: 9px; }
   .sitefoot { padding: 20px 16px calc(36px + env(safe-area-inset-bottom, 0px)); }
   .report-metrics { grid-template-columns: 1fr; }
   .report-brief { padding: 18px 18px 14px; }
