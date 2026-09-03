@@ -64,7 +64,8 @@ echo "== служебное наружу не отдаётся =="
 # исключили из выкладки. Проверяем, что не вернулись.
 for p in /.githooks/private-words.txt /.githooks/pre-commit /.gitignore /README.md \
          /build.mjs /deploy.sh /verify.sh /Caddyfile /sync-portfolio.sh \
-         /psy-admin/README.md /psy-admin/test.mjs /stories/solyanochka--letuny.txt; do
+         /psy-admin/README.md /psy-admin/test.mjs /psy-admin/tools/build-orion-demo.mjs \
+         /stories/solyanochka--letuny.txt; do
   expect "$p" 404
 done
 
