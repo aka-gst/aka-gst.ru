@@ -73,7 +73,7 @@ test('каждый проект из базы попадает на страни
   }
 });
 
-test('название карточки открывает страницу проекта', () => {
+test('рабочие карточки и вкладки практикумов ведут к своим проектам', () => {
   const html = site('index.html');
   const { projects } = json('data/projects.json');
   // Кликают по названию раньше, чем ищут строку со ссылками внизу.
@@ -81,18 +81,19 @@ test('название карточки открывает страницу пр
     if (!project.groups.some(g => ['practicums', 'client-products'].includes(g))) continue;
     const link = project.links.find(l => ['course', 'site', 'play', 'demo', 'telegram', 'repo'].includes(l.type));
     if (project.id === 'qa-quest') {
-      const qa = html.match(/<a class="practicum-quest"[\s\S]*?<\/a>/)?.[0] || '';
-      assert.ok(qa, 'главная карточка QA Quest не найдена');
-      assert.ok(link && qa.includes(`href="${link.url}"`), 'QA Quest ведёт не на игру');
+      const qa = html.match(/id="practicum-panel-qa-quest"[\s\S]*?<\/article>/)?.[0] || '';
+      assert.ok(qa, 'панель QA Quest не найдена');
+      assert.ok(link && qa.includes(`href="${link.url}"`), 'QA Quest ведёт не на квест');
       continue;
     }
     if (project.id === 'dharma-ai') {
-      const dharma = html.match(/<a class="work-dharma"[\s\S]*?<\/a>/)?.[0] || '';
+      const dharma = html.match(/<a class="work-system work-dharma"[\s\S]*?<\/a>/)?.[0] || '';
       assert.ok(dharma, 'главная карточка Dharma AI не найдена');
       assert.ok(link && dharma.includes(`href="${link.url}"`), 'Dharma AI ведёт не на сайт');
       continue;
     }
-    const card = html.match(new RegExp(`id="p-${project.id}"[\\s\\S]*?</article>`));
+    const card = html.match(new RegExp(`id="practicum-panel-${project.id}"[\\s\\S]*?</article>`))
+      || html.match(new RegExp(`id="p-${project.id}"[\\s\\S]*?</article>`));
     assert.ok(card, `карточка ${project.id} не найдена`);
     const title = card[0].match(/<h3>([\s\S]*?)<\/h3>/)[1];
     if (!link) continue;

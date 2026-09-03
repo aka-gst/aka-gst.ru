@@ -413,7 +413,7 @@
   document.querySelectorAll('[data-practicum-switch]').forEach((switcher) => {
     const buttons = [...switcher.querySelectorAll('[data-practicum-to]')];
     const panels = [...switcher.querySelectorAll('[data-practicum-panel]')];
-    if (buttons.length !== 2 || panels.length !== 2) return;
+    if (buttons.length < 2 || buttons.length !== panels.length) return;
 
     const show = (id, focus = false) => {
       buttons.forEach((button) => {
@@ -438,6 +438,47 @@
     });
 
     show(buttons.find((button) => button.getAttribute('aria-selected') === 'true')?.dataset.practicumTo || buttons[0].dataset.practicumTo);
+  });
+})();
+
+// ── Рассказы на главной: сборник и текст остаются в янтарной панели ──
+(() => {
+  const panel = document.querySelector('.story-lead');
+  if (!panel) return;
+  const covers = [...panel.querySelectorAll('[data-story-collection]')];
+  const collections = [...panel.querySelectorAll('[data-story-collection-panel]')];
+  const reader = panel.querySelector('[data-story-reader]');
+  const source = panel.querySelector('.story-source');
+  const all = panel.querySelector('[data-story-all]');
+  const closeReader = () => { if (reader) reader.hidden = true; };
+  const showCollection = (id) => {
+    closeReader();
+    covers.forEach((cover) => cover.setAttribute('aria-expanded', String(cover.dataset.storyCollection === id)));
+    collections.forEach((collection) => { collection.hidden = collection.dataset.storyCollectionPanel !== id; });
+  };
+  covers.forEach((cover) => cover.addEventListener('click', () => showCollection(cover.dataset.storyCollection)));
+  all?.addEventListener('click', () => {
+    closeReader();
+    const open = all.getAttribute('aria-expanded') !== 'true';
+    all.setAttribute('aria-expanded', String(open));
+    all.querySelector('b').textContent = open ? '↑' : '↓';
+    collections.forEach((collection) => { collection.hidden = !open; });
+    covers.forEach((cover) => cover.setAttribute('aria-expanded', String(open)));
+  });
+  panel.querySelectorAll('[data-story-open]').forEach((button) => button.addEventListener('click', () => {
+    const story = source?.querySelector(`[data-story-source="${CSS.escape(button.dataset.storyOpen)}"]`);
+    if (!story || !reader) return;
+    reader.querySelector('[data-story-reader-meta]').textContent = `Рассказ · ${story.dataset.storyBook}`;
+    reader.querySelector('[data-story-reader-title]').textContent = story.dataset.storyTitle;
+    reader.querySelector('[data-story-reader-copy]').innerHTML = story.innerHTML;
+    collections.forEach((collection) => { collection.hidden = true; });
+    reader.hidden = false;
+    reader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  panel.querySelector('[data-story-back]')?.addEventListener('click', () => {
+    closeReader();
+    collections.forEach((collection) => { collection.hidden = false; });
+    all?.setAttribute('aria-expanded', 'true');
   });
 })();
 
@@ -515,7 +556,16 @@
       кнопка.setAttribute('aria-expanded', String(открыт));
       кнопка.textContent = открыт ? 'свернуть' : 'подробнее';
     };
-    кнопка.addEventListener('click', () => показать(низ.hidden));
+    кнопка.addEventListener('click', () => {
+      const pair = к.closest('[data-shared-details]');
+      if (!pair) return показать(низ.hidden);
+      const open = [...pair.querySelectorAll('.card-more')].some((item) => item.hidden);
+      pair.querySelectorAll('.card-more').forEach((item) => { item.hidden = !open; });
+      pair.querySelectorAll('.card-more-btn').forEach((item) => {
+        item.setAttribute('aria-expanded', String(open));
+        item.textContent = open ? 'свернуть' : 'подробнее';
+      });
+    });
     низ.before(кнопка);
     показать(false);
   }

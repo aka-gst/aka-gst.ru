@@ -494,8 +494,9 @@ const skillsBlock = profile.skills
 const строкаОпыта = (e) => e.compact
   ? `<article class="job job--publication">
       <p class="job-period">${esc(e.period)}</p>
-      <a class="job-publication-shot" href="/assets/shots/${esc(e.shot.full)}" target="_blank" rel="noopener" aria-label="Открыть полосу журнала целиком">
-        ${shotImg(e.shot)}<span>${esc(e.org)}</span>
+      <p class="job-publication-copy"><b>${esc(e.org)}</b><span>${esc(e.role)}</span></p>
+      <a class="job-publication-shot shot-link" href="/assets/shots/${esc(e.shot.full)}" aria-label="Открыть полосу журнала целиком">
+        ${shotImg(e.shot)}
       </a>
     </article>`
   : `
@@ -572,7 +573,7 @@ const practicumImage = (shot) => {
   return `<img src="${shotSrc(shot.file)}" alt="${esc(shot.alt)}" width="${w}" height="${h}" decoding="async">`;
 };
 
-const practicumCard = (project, active) => `
+const practicumCard = (project, active, extra = '') => `
           <article class="practicum-card" id="practicum-panel-${esc(project.id)}" role="tabpanel"
             aria-labelledby="practicum-tab-${esc(project.id)}" data-practicum-panel="${esc(project.id)}"${
               active ? '' : ' hidden'
@@ -582,7 +583,7 @@ const practicumCard = (project, active) => `
               ${statusBadge(project)}
             </div>
             <h3>${cardTitle(project)}</h3>
-            <p class="tagline">${esc(project.tagline)}</p>
+            <p class="tagline">${extra || esc(project.tagline)}</p>
             ${metricChips(project)}
             ${linkRow(project)}
           </article>`;
@@ -592,24 +593,18 @@ const practicumSwitch = `
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Проверка кода через игру — или два самостоятельных маршрута, где можно разобрать всё руками.</p>
+          <p>Три маршрута: квест с машиной, проверка локальной модели и сборка собственного AI-агента.</p>
         </div>
-        <div class="practicum-triptych">
-          <a class="practicum-quest" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>
-            <div>${practicumImage(qaQuest.shots[0])}</div>
-            <p class="kicker">Главный практикум · игра</p>
-            <h3>QA Quest</h3>
-            <p>${esc(qaQuest.tagline)}</p>
-            <span>Открыть игру <b>→</b></span>
-          </a>
-${practicumProjects.map((project) => `
-          <article class="practicum-card practicum-card--compact" id="p-${esc(project.id)}">
-            <p class="kicker">${esc(project.kicker)}</p>
-            <h3>${cardTitle(project)}</h3>
-            <p class="tagline">${esc(project.tagline)}</p>
-            ${metricChips(project)}
-            ${linkRow(project)}
-          </article>`).join('')}
+        <div class="practicum-tabs" role="tablist" aria-label="Маршруты практикумов">
+          <button type="button" id="practicum-tab-qa-quest" role="tab" aria-selected="true" aria-controls="practicum-panel-qa-quest" data-practicum-to="qa-quest">QA Quest · квест</button>
+          ${practicumProjects.map((project) => `<button type="button" id="practicum-tab-${esc(project.id)}" role="tab" aria-selected="false" aria-controls="practicum-panel-${esc(project.id)}" data-practicum-to="${esc(project.id)}">${esc(project.title)}</button>`).join('')}
+        </div>
+        <div class="practicum-stage">
+          <article class="practicum-card practicum-card--quest" id="practicum-panel-qa-quest" role="tabpanel" aria-labelledby="practicum-tab-qa-quest" data-practicum-panel="qa-quest">
+            <div class="practicum-quest-shot">${practicumImage(qaQuest.shots[0])}</div>
+            <div class="practicum-quest-copy"><p class="kicker">Квест · Python</p><h3>QA Quest</h3><p class="tagline">Первый путь ко взлому тачек <s>и серверов</s>. На деле — к созданию и проверке собственного AI: машина отвечает на настоящий Python-код.</p><p class="practicum-note">Не курс «учу программировать»: это история, в которой команда проверяет, что код действительно управляет машиной.</p><p class="card-links"><a class="link" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>Открыть квест <b>→</b></a></p></div>
+          </article>
+${practicumProjects.map((project) => practicumCard(project, false)).join('')}
         </div>
       </section>`;
 
@@ -623,32 +618,31 @@ const leadImage = (file, alt) => {
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
         <div class="work-duet">
-          <article class="work-gateway">
+          <article class="work-system work-gateway">
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
-              <p>Программа подключает обычное приложение к локальной модели — без передачи данных наружу. У модели есть только нужные инструменты, а у результата — проверка.</p>
-              <p class="work-lead-fact"><b data-metric="tests">66</b> проверок прошли. API, браузер и живой LLM-прогон измеряются отдельно.</p>
-              <a class="work-gateway-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
+              <p>Локальный AI, которому можно поручить работу с приложением — и получить ответ, который система умеет перепроверить. Данные не уходят с машины.</p>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
-              <span>66 тестов · Allure ↗</span>
+              <span><b data-metric="tests">66</b> проверок · живой LLM и браузер ↗</span>
             </a>
+            <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
-          <a class="work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
+          <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
             </div>
             <div class="work-dharma-copy">
               <p class="kicker">02 / продукт заказчика</p>
               <h2>Dharma AI · Anigma</h2>
-              <p>Магазин, в котором ИИ-агенты отвечают покупателю и доводят путь от вопроса до оплаченного заказа.</p>
-              <span>Открыть сайт <b>↗</b></span>
+              <p>Магазин 2.0: AI-агенты встречают покупателя, помогают выбрать, оформляют заказ и передают его на отправку.</p>
             </div>
+            <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
         </div>
-        <p class="work-duet-note"><b>Один проект</b> оставляет данные на машине. <b>Другой</b> ведёт покупателя до заказа — оба сделаны до рабочего результата.</p>
+        <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>`;
 
 // На главной показываем один вход в обучение. Второй маршрут остаётся
@@ -713,7 +707,7 @@ ${practicumSwitch.trim()}
           <h2 id="products-title">Продукты, которые остаются у людей</h2>
           <p>Автоматизация, в которой виден путь: что делает система, где её границы и чем подтверждён результат.</p>
         </div>
-        <div class="grid">${byGroup('client-products').filter((project) => project.id !== 'dharma-ai').map(card).join('')}
+        <div class="grid" data-shared-details>${byGroup('client-products').filter((project) => project.id !== 'dharma-ai').map(card).join('')}
         </div>
       </section>
 
@@ -878,6 +872,12 @@ const storyList = book.сборники.flatMap((c) =>
   c.stories.map((st) => ({ ...st, book: c }))
 );
 
+const storyBodyInline = (slug) =>
+  readFileSync(join(root, 'stories', `${slug}.txt`), 'utf8')
+    .split('\n').map((p) => p.trim()).filter(Boolean)
+    .map((p) => /^\*\*\*$|^\*\s*\*\s*\*$/.test(p) ? '<hr class="story-break">' : `<p>${esc(p)}</p>`)
+    .join('\n');
+
 // Полки рассказов на вкладке «Игры» больше нет. Стояла с 30 августа как
 // перелинковка разделов: пришедший за играми не узнавал, что есть проза.
 // Владелец спросил «почему в играх рассказы?», довод выслушал и сказал
@@ -912,15 +912,23 @@ const storiesPanel = `
           <h1 id="stories-lead-title">Три сборника, ${esc(storyList.length)} рассказов</h1>
           <p>Фантастика, люди, машины и странные правила мира. Нажми на обложку — откроется её список.</p>
         </div>
-        <a class="story-all-link" href="/rasskazy/">Все рассказы <b>↗</b></a>
+        <button type="button" class="story-all-link" data-story-all aria-expanded="false">Все рассказы <b>↓</b></button>
         <div class="story-shelves">
-${book.сборники.map((collection) => `
-          <a class="story-lead-book" href="/rasskazy/#${esc(collection.id)}">
+${сборникиПоказ.map((collection) => `
+          <button type="button" class="story-lead-book" data-story-collection="${esc(collection.id)}" aria-expanded="false" aria-controls="story-collection-${esc(collection.id)}">
             <img src="/assets/covers/${esc(collection.cover)}" alt="Сборник «${esc(collection.title)}»" width="600" height="900" loading="lazy">
             <span>${esc(collection.title)}</span>
-          </a>`).join('')}
+          </button>`).join('')}
         </div>
-      </div>`;
+        <div class="story-collections">
+${сборникиПоказ.map((collection) => `          <section class="story-collection" id="story-collection-${esc(collection.id)}" data-story-collection-panel="${esc(collection.id)}" hidden>
+            <img src="/assets/covers/${esc(collection.cover)}" alt="" width="600" height="900" loading="lazy">
+            <div><p class="kicker">Сборник · ${esc(collection.year)}</p><h2>${esc(collection.title)}</h2><p>${esc(collection.stories.length)} рассказов. Выбери из оглавления — текст раскроется здесь же.</p><ol>${collection.stories.map((story) => `<li><button type="button" data-story-open="${esc(collection.id)}--${esc(story.slug)}">${esc(story.title)}</button></li>`).join('')}</ol></div>
+          </section>`).join('\n')}
+        </div>
+        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div></article>
+        <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
+      </section>`;
 
 // Тестовый пульт отделён от витрины: здесь не убеждают, а дают быстро открыть
 // все доступные сборки. Обновляемые вещи не получают ссылку на старую версию.
