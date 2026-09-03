@@ -634,7 +634,7 @@ const workLead = `
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
-              <p>Локальный AI, которому можно поручить работу с приложением — и получить ответ, который система умеет перепроверить. Данные не уходят с машины.</p>
+              <p>Связывает AI-модели и приложения — и гарантирует стабильную, защищённую работу.</p>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
