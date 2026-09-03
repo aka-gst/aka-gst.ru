@@ -221,6 +221,7 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .story-lead-book img { width:94px; height:116px; object-fit:cover; border:1px solid var(--line); border-radius:7px; box-shadow:0 10px 22px rgba(0,0,0,.3); }
 .story-collections { grid-column:1 / -1; }
 .story-collection { display:grid; grid-template-columns:150px minmax(0, 1fr); gap:22px; margin-top:4px; padding:18px; border:1px solid var(--line); border-radius:12px; background:rgba(6,5,14,.38); scroll-margin-top:calc(var(--shapka,71px) + 16px); }
+.story-collection[hidden], .story-reader-inline[hidden] { display:none; }
 .story-collection > img { width:150px; height:220px; object-fit:cover; border-radius:8px; box-shadow:0 12px 28px #0006; }
 .story-collection h2, .story-reader-inline h2 { margin:5px 0 8px; font-size:28px; }
 .story-collection p:not(.kicker) { color:var(--muted); }

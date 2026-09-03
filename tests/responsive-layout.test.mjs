@@ -307,6 +307,8 @@ test('на главной обложка раскрывает один сбор�
     'раскрытый сборник должен попасть в поле зрения');
   assert.match(js, /showCollection\(currentCollection\)/,
     'возврат из рассказа должен вести к его сборнику');
+  assert.match(css, /\.story-collection\[hidden\], \.story-reader-inline\[hidden\] \{ display:none; \}/,
+    'CSS не должен перебивать атрибут hidden и показывать всё сразу');
   assert.match(css, /\.story-to-top \{ position:fixed;/, 'кнопка наверх должна оставаться на экране');
 });
 
