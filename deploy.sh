@@ -38,6 +38,7 @@ done
 # часов. Не вписывать обратно.
 PAYLOAD="
 index.html
+en
 404.html
 503.html
 og.png
