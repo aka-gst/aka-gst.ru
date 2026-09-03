@@ -316,11 +316,16 @@ const cardClip = (project) => {
                   data-src="/assets/clips/${esc(файл)}?v=${assetVersion(`assets/clips/${файл}`)}"></video>`;
 };
 
-const cardShot = (project) =>
-  project.shots?.length
-    ? `
-          <figure class="shot">${shotImg(project.shots[0])}${cardClip(project)}</figure>`
-    : '';
+const cardShot = (project) => {
+  if (!project.shots?.length) return '';
+  const visual = `<figure class="shot">${shotImg(project.shots[0])}${cardClip(project)}</figure>`;
+  const link = primaryLink(project);
+  if (!link) return visual;
+  return `
+          <a class="card-shot-link" href="${esc(link.url)}"${
+            link.url.startsWith('http') ? ' target="_blank" rel="noopener"' : ''
+          }${analytics(project)} aria-label="Открыть: ${esc(project.title)}">${visual}</a>`;
+};
 
 // Карточка в два слоя. Сверху — что сделано, словами, понятными человеку,
 // который не знает слов «шлюз» и «покрытие». Ниже, под «подробнее», — вся
