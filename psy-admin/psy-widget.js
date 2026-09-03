@@ -1,8 +1,8 @@
-import { createWidgetState, demoHandoffOutcome, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260902-5";
+import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260903-15";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260902-5", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260903-15", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -13,13 +13,19 @@ mount.innerHTML = `
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
-        <div><b>AI-администратор</b><span>Только открытые источники</span></div>
+        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б или В.</span></div>
         <div class="psy-widget-head-actions">
           <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
         </div>
       </header>
-      <p class="psy-widget-boundary">Демо по открытым страницам центра. Не заменяет специалиста или экстренную помощь.</p>
+      <div class="psy-widget-voice-preview" aria-label="Предварительные варианты голоса">
+        <span>Голос:</span>
+        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-A.wav" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
+        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-B.wav" data-voice-volume="0.72">Б</button>
+        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-C.wav" data-voice-volume="0.72">В</button>
+        <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить пример голоса" title="Остановить голос: пробел">■ Стоп</button>
+      </div>
       <div class="psy-widget-evaluation">
         <label for="psy-widget-evaluation-select">60 проверочных вопросов</label>
         <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select" aria-describedby="psy-widget-evaluation-status">
@@ -28,27 +34,28 @@ mount.innerHTML = `
         <p class="psy-widget-evaluation-status" id="psy-widget-evaluation-status" aria-live="polite"></p>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
-      <div class="psy-widget-suggestions" aria-label="Примеры вопросов">
-        <button type="button" data-question="Какие мероприятия ближайшие?">Расписание</button>
-        <button type="button" data-question="Хочу консультацию онлайн">Консультация онлайн</button>
+      <div class="psy-widget-payment-area">
+        <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
+          <span>Оплатить услуги центра ↗</span>
+          <small>Откроется официальная страница оплаты</small>
+        </a>
       </div>
+      <section class="psy-widget-booking-area" aria-label="Запись в центр Орион-С">
+        <p><b>Запись в центр «Орион‑С»</b><span>Заявка уйдёт администратору на подтверждение.</span></p>
+        <div class="psy-widget-suggestions">
+          <a class="psy-widget-booking" href="/psy-admin/booking/?kind=specialist">Записаться к специалисту</a>
+          <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=seminar">Записаться на семинар</a>
+          <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=rental">Оставить заявку на аренду</a>
+        </div>
+      </section>
       <form class="psy-widget-form">
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
         <input id="psy-widget-question" maxlength="500" autocomplete="off" placeholder="Например: где посмотреть расписание?" required>
         <button class="psy-widget-mic" type="button" aria-label="Задать вопрос голосом" aria-pressed="false">🎙</button>
+        <button class="psy-widget-stop" type="button" aria-label="Остановить голос" title="Остановить голос: пробел">■ Стоп</button>
         <button type="submit">Спросить</button>
       </form>
       <p class="psy-widget-voice-status" aria-live="polite"></p>
-      <div class="psy-widget-handoff">
-        <button class="psy-widget-handoff-open" type="button">Оставить вопрос администратору</button>
-        <form class="psy-widget-handoff-form" hidden>
-          <p><b>Демо-передача</b><br>Тема и один способ связи нужны только для демонстрации формы. Ничего не отправляется.</p>
-          <label>Тема<select required><option value="">Выберите тему</option><option>Консультация</option><option>Мероприятие</option><option>Аренда</option></select></label>
-          <label>Как связаться<input maxlength="120" autocomplete="email" placeholder="Телефон или e-mail" required></label>
-          <button type="submit">Проверить передачу</button>
-          <p class="psy-widget-handoff-status" aria-live="polite"></p>
-        </form>
-      </div>
     </aside>
   </section>`;
 document.body.append(mount);
@@ -76,19 +83,27 @@ const messages = root.querySelector(".psy-widget-messages");
 const questionForm = root.querySelector(".psy-widget-form");
 const questionInput = root.querySelector("#psy-widget-question");
 const mic = root.querySelector(".psy-widget-mic");
+const stopVoiceButton = root.querySelector(".psy-widget-stop");
+const previewStopButton = root.querySelector("[data-voice-stop]");
 const voiceStatus = root.querySelector(".psy-widget-voice-status");
-const handoffOpen = root.querySelector(".psy-widget-handoff-open");
-const handoffForm = root.querySelector(".psy-widget-handoff-form");
-const handoffStatus = root.querySelector(".psy-widget-handoff-status");
 const evaluationSelect = root.querySelector(".psy-widget-evaluation-select");
 const evaluationStatus = root.querySelector(".psy-widget-evaluation-status");
+let previewAudio = null;
+let previewAudioContext = null;
+let recognition = null;
+let listening = false;
+let finalizedTranscript = "";
+let interimTranscript = "";
+let silenceTimer = null;
+let recognitionRestartTimer = null;
+const VOICE_QUIET_GAP_MS = 1400;
 let state = window.innerWidth > 620
   ? { open: true, panelVisible: true, fullScreen: false, returnFocusToTrigger: false }
   : createWidgetState();
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
-  speechAvailable: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
+  speechAvailable: false,
 };
 
 function appendMessage(role, answer) {
@@ -151,12 +166,82 @@ function setVoiceStatus(message) {
   voiceStatus.textContent = message;
 }
 
-function speak(spokenText) {
-  if (!voiceCapabilities.speechAvailable) return;
-  window.speechSynthesis.cancel();
-  const utterance = new window.SpeechSynthesisUtterance(spokenText);
-  utterance.lang = "ru-RU";
-  window.speechSynthesis.speak(utterance);
+function clearSilenceTimer() {
+  if (silenceTimer) window.clearTimeout(silenceTimer);
+  silenceTimer = null;
+}
+
+function clearRecognitionRestartTimer() {
+  if (recognitionRestartTimer) window.clearTimeout(recognitionRestartTimer);
+  recognitionRestartTimer = null;
+}
+
+function setListeningState(active) {
+  listening = active;
+  root.dataset.listening = String(active);
+  mic.setAttribute("aria-pressed", String(active));
+  mic.setAttribute("aria-label", active
+    ? "Слушаю. Нажмите ещё раз, чтобы остановить запись."
+    : "Задать вопрос голосом");
+}
+
+function stopListening() {
+  clearSilenceTimer();
+  clearRecognitionRestartTimer();
+  finalizedTranscript = "";
+  interimTranscript = "";
+  setListeningState(false);
+  if (recognition) {
+    try {
+      recognition.abort();
+    } catch {
+      // Браузер уже мог завершить распознавание сам.
+    }
+  }
+}
+
+function stopVoice({ announce = true } = {}) {
+  stopListening();
+  if (previewAudio) {
+    previewAudio.pause();
+    previewAudio.currentTime = 0;
+    previewAudio = null;
+  }
+  if (previewAudioContext) {
+    void previewAudioContext.close();
+    previewAudioContext = null;
+  }
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  root.dataset.voicePlaying = "false";
+  if (announce) setVoiceStatus("Голос остановлен.");
+}
+
+function voiceIsPlaying() {
+  return root.dataset.voicePlaying === "true" || Boolean(window.speechSynthesis?.speaking);
+}
+
+function voiceIsActive() {
+  return listening || voiceIsPlaying();
+}
+
+function softenPreviewTone(button) {
+  const gain = Number(button.dataset.voiceEqGain || 0);
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!previewAudio || !gain || !AudioContext) return;
+  try {
+    previewAudioContext = new AudioContext();
+    const source = previewAudioContext.createMediaElementSource(previewAudio);
+    const filter = previewAudioContext.createBiquadFilter();
+    filter.type = "peaking";
+    filter.frequency.value = 520;
+    filter.Q.value = 0.75;
+    filter.gain.value = gain;
+    source.connect(filter).connect(previewAudioContext.destination);
+    if (previewAudioContext.state === "suspended") void previewAudioContext.resume();
+  } catch {
+    // Браузер всё равно проиграет пример без эквалайзера.
+    previewAudioContext = null;
+  }
 }
 
 async function ask(question, askedByVoice = false) {
@@ -165,7 +250,7 @@ async function ask(question, askedByVoice = false) {
   appendMessage("user", { text: value });
   const result = routeWidgetQuestion(value);
   appendMessage("assistant", result);
-  if (widgetPresentation(window.innerWidth, voiceCapabilities, askedByVoice).voice.shouldSpeakReply && result.spokenText) speak(result.spokenText);
+  if (askedByVoice) setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities, true).voice.fallbackMessage);
   questionInput.value = "";
   questionInput.focus({ preventScroll: true });
 }
@@ -195,6 +280,11 @@ trigger.addEventListener("click", () => transition("trigger"));
 closeButton.addEventListener("click", () => transition("close"));
 fullScreenButton.addEventListener("click", () => transition("fullscreen"));
 document.addEventListener("keydown", (event) => {
+  if (event.code === "Space" && voiceIsActive()) {
+    event.preventDefault();
+    stopVoice();
+    return;
+  }
   if (event.key === "Escape" && state.open) transition("escape");
 });
 window.addEventListener("resize", render);
@@ -203,6 +293,22 @@ questionForm.addEventListener("submit", (event) => {
   void ask(questionInput.value, false);
 });
 root.querySelectorAll("[data-question]").forEach((button) => button.addEventListener("click", () => void ask(button.dataset.question)));
+root.querySelectorAll("[data-voice-preview]").forEach((button) => button.addEventListener("click", () => {
+  stopVoice({ announce: false });
+  previewAudio = new Audio(button.dataset.voicePreview);
+  previewAudio.volume = Number(button.dataset.voiceVolume || 1);
+  softenPreviewTone(button);
+  previewAudio.addEventListener("ended", () => {
+    root.dataset.voicePlaying = "false";
+  }, { once: true });
+  root.dataset.voicePlaying = "true";
+  previewAudio.play().then(() => setVoiceStatus(`Включён голос ${button.textContent}. Стоп — кнопкой или пробелом.`)).catch(() => {
+    root.dataset.voicePlaying = "false";
+    setVoiceStatus("Не удалось включить пример голоса. Проверьте звук в браузере.");
+  });
+}));
+stopVoiceButton.addEventListener("click", () => stopVoice());
+previewStopButton.addEventListener("click", () => stopVoice());
 evaluationSelect.addEventListener("change", () => {
   const option = evaluationSelect.selectedOptions[0];
   if (!option?.dataset.question) {
@@ -212,57 +318,79 @@ evaluationSelect.addEventListener("change", () => {
   evaluationStatus.textContent = `Ожидается: ${option.dataset.expected}.`;
   void ask(option.dataset.question);
 });
-handoffOpen.addEventListener("click", () => {
-  handoffOpen.hidden = true;
-  handoffForm.hidden = false;
-  handoffForm.querySelector("select").focus();
-});
-handoffForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  handoffStatus.textContent = demoHandoffOutcome().message;
-  handoffForm.reset();
-});
-
 if (!voiceCapabilities.recognitionAvailable) {
   mic.addEventListener("click", () => setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities).voice.fallbackMessage));
 } else {
-  const recognition = new Recognition();
+  recognition = new Recognition();
   recognition.lang = "ru-RU";
-  recognition.interimResults = false;
-  let listening = false;
-  const stopListening = () => {
-    listening = false;
-    mic.setAttribute("aria-pressed", "false");
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  const fullTranscript = () => `${finalizedTranscript} ${interimTranscript}`.replace(/\s+/g, " ").trim();
+  const submitAfterPause = () => {
+    clearSilenceTimer();
+    const question = fullTranscript();
+    if (!question) return;
+    silenceTimer = window.setTimeout(() => {
+      const completedQuestion = fullTranscript();
+      stopListening();
+      if (completedQuestion) void ask(completedQuestion, true);
+    }, VOICE_QUIET_GAP_MS);
+  };
+
+  const restartRecognition = () => {
+    if (!listening || !recognition) return;
+    try {
+      recognition.start();
+    } catch (error) {
+      if (error?.name !== "InvalidStateError") {
+        stopListening();
+        setVoiceStatus("Не удалось продолжить запись. Попробуйте ещё раз или напишите вопрос текстом.");
+      }
+    }
   };
 
   recognition.addEventListener("result", (event) => {
-    const heard = event.results[0][0].transcript.trim();
-    if (heard) {
-      setVoiceStatus(voiceCapabilities.speechAvailable ? "" : "Голосовой ответ недоступен в этом браузере. Ответ останется текстовым.");
-      void ask(heard, true);
+    if (!listening) return;
+    interimTranscript = "";
+    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      const result = event.results[index];
+      const fragment = result[0]?.transcript?.trim();
+      if (!fragment) continue;
+      if (result.isFinal) finalizedTranscript += `${fragment} `;
+      else interimTranscript += `${fragment} `;
     }
+    if (!fullTranscript()) return;
+    setVoiceStatus("Слушаю… Можете делать паузы: отправлю вопрос, когда вы закончите фразу.");
+    submitAfterPause();
   });
   recognition.addEventListener("error", (event) => {
+    const wasListening = listening;
     stopListening();
+    if (!wasListening || event.error === "aborted") return;
     setVoiceStatus(event.error === "not-allowed"
       ? "Доступ к микрофону не разрешён. Напишите вопрос текстом."
       : "Не удалось распознать голос. Напишите вопрос текстом.");
   });
-  recognition.addEventListener("end", stopListening);
+  recognition.addEventListener("end", () => {
+    if (!listening) return;
+    // Web Speech иногда сам закрывает короткую паузу. Сохраняем индикатор и
+    // поднимаем следующий отрезок, пока пользователь не завершил мысль.
+    clearRecognitionRestartTimer();
+    recognitionRestartTimer = window.setTimeout(restartRecognition, 120);
+  });
   mic.addEventListener("click", () => {
     if (listening) {
-      recognition.stop();
-      stopListening();
+      stopVoice();
       return;
     }
-    if (voiceCapabilities.speechAvailable) window.speechSynthesis.cancel();
-    setVoiceStatus("Слушаю…");
-    listening = true;
-    mic.setAttribute("aria-pressed", "true");
-    recognition.start();
+    stopVoice({ announce: false });
+    setListeningState(true);
+    setVoiceStatus("Слушаю… Можете говорить спокойно: длинные паузы допустимы.");
+    restartRecognition();
   });
 }
 
 renderPreparedQuestions();
-appendMessage("assistant", { text: "Здравствуйте. Помогу с расписанием, консультациями, программами и психологическим клубом." });
+appendMessage("assistant", { text: "Здравствуйте. Чем помочь?" });
 render();
