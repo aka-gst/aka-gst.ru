@@ -634,7 +634,7 @@ const workLead = `
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
-              <p>Связывает AI-модели и приложения — и гарантирует стабильную, защищённую работу.</p>
+              <p>Связывает AI-агентов с приложениями, держит работу стабильной и защищает данные — без передачи наружу.</p>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
@@ -1108,10 +1108,10 @@ const enPage = `<!doctype html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="QA engineer for AI and LLM products. Test suites, safety boundaries and evidence you can open and check.">
+    <meta name="description" content="Hands-on AI Product &amp; Agentic Systems Architect. I build AI products end to end — from scenario and model to secure remote delivery and verification.">
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="${esc(site.themeColor)}">
-    <title>${esc(site.handle)} — QA for AI and LLM products</title>
+    <title>${esc(site.handle)} — Hands-on AI Product &amp; Agentic Systems Architect</title>
     <link rel="canonical" href="${esc(site.url)}/en/">
     <link rel="alternate" hreflang="ru" href="${esc(site.url)}/">
     <link rel="alternate" hreflang="en" href="${esc(site.url)}/en/">
@@ -1128,11 +1128,11 @@ const enPage = `<!doctype html>
     <main id="main">
       <section class="block" style="margin-top:34px">
         <div class="block-head">
-          <p class="kicker">QA · AI and LLM products</p>
-          <h1>I test what language models actually do</h1>
-          <p>Not whether the code runs — whether the answer is true, whether the
-             model refuses what it must refuse, and whether anything private
-             leaves the machine. Every claim below opens in one click.</p>
+          <p class="kicker">Hands-on AI Product &amp; Agentic Systems Architect</p>
+          <h1>I build AI products end to end — from scenario and model to secure remote delivery and verification.</h1>
+          <p>I define safe boundaries for agent actions and prove the result with
+             scenarios, evaluations and automated checks.
+             Every claim below opens in one click.</p>
           <p class="muted">Saint Petersburg, Russia · UTC+3 · remote · Russian native, English working</p>
         </div>
       </section>
