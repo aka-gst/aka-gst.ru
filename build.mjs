@@ -493,7 +493,8 @@ const skillsBlock = profile.skills
 const строкаОпыта = (e) => e.compact
   ? `<article class="job job--publication">
       <p class="job-period">${esc(e.period)}</p>
-      <p class="job-publication-copy"><b>${esc(e.org)}</b><span>${esc(e.role)}</span></p>
+      <h3>${esc(e.org)}</h3>
+      <p class="job-role">${esc(e.role)}</p>
       <a class="job-publication-shot shot-link" href="/assets/shots/${esc(e.shot.full)}" aria-label="Открыть полосу журнала целиком">
         ${shotImg(e.shot)}
       </a>
@@ -571,19 +572,27 @@ const practicumImage = (shot) => {
   return `<img src="${shotSrc(shot.file)}" alt="${esc(shot.alt)}" width="${w}" height="${h}" decoding="async">`;
 };
 
+const practicumRouteIntro = {
+  'praktikum-testing': 'Поднимаешь локальную модель, подключаешь к приложению и проверяешь ответ, границы, устойчивость и приватность.',
+  'ai-agent-service-lab': 'Собираешь агента с памятью и инструментами, а потом ловишь его ошибки: схема ответа, allowlist и источники.',
+};
+
 const practicumCard = (project, active, extra = '') => `
-          <article class="practicum-card" id="practicum-panel-${esc(project.id)}" role="tabpanel"
+          <article class="practicum-card practicum-card--route" id="practicum-panel-${esc(project.id)}" role="tabpanel"
             aria-labelledby="practicum-tab-${esc(project.id)}" data-practicum-panel="${esc(project.id)}"${
               active ? '' : ' hidden'
             }>
-            <div class="card-head">
-              <p class="kicker">${esc(project.kicker)}</p>
-              ${statusBadge(project)}
+            <div class="practicum-route-shot">${practicumImage(project.shots[0])}</div>
+            <div class="practicum-route-copy">
+              <div class="card-head">
+                <p class="kicker">${esc(project.kicker)}</p>
+                ${statusBadge(project)}
+              </div>
+              <h3>${cardTitle(project)}</h3>
+              <p class="tagline">${extra || esc(practicumRouteIntro[project.id] || project.tagline)}</p>
+              ${metricChips(project)}
+              ${linkRow(project)}
             </div>
-            <h3>${cardTitle(project)}</h3>
-            <p class="tagline">${extra || esc(project.tagline)}</p>
-            ${metricChips(project)}
-            ${linkRow(project)}
           </article>`;
 
 const practicumSwitch = `
@@ -599,8 +608,8 @@ const practicumSwitch = `
         </div>
         <div class="practicum-stage">
           <article class="practicum-card practicum-card--quest" id="practicum-panel-qa-quest" role="tabpanel" aria-labelledby="practicum-tab-qa-quest" data-practicum-panel="qa-quest">
-            <div class="practicum-quest-shot">${practicumImage(qaQuest.shots[0])}</div>
-            <div class="practicum-quest-copy"><p class="kicker">Квест · Python</p><h3>QA Quest</h3><p class="tagline">Первый путь ко взлому тачек <s>и серверов</s>. На деле — к созданию и проверке собственного AI: машина отвечает на настоящий Python-код.</p><p class="practicum-note">Не курс «учу программировать»: это история, в которой команда проверяет, что код действительно управляет машиной.</p><p class="card-links"><a class="link" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>Открыть квест <b>→</b></a></p></div>
+            <div class="practicum-quest-mark"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QA Quest: защищённое серверное ядро и диагностический импульс" width="512" height="512" decoding="async"></div>
+            <div class="practicum-quest-copy"><p class="kicker">Квест · Python</p><h3>QA Quest</h3><p class="tagline">Первый путь к <s>взлому тачек</s> и <s>серверов-резидентов</s>. На деле — к созданию и проверке собственного AI: машина отвечает на настоящий Python-код.</p><p class="practicum-note">Не курс «учу программировать»: это история, в которой команда проверяет, что код действительно управляет машиной.</p><p class="card-links"><a class="link" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>Открыть квест <b>→</b></a></p></div>
           </article>
 ${practicumProjects.map((project) => practicumCard(project, false)).join('')}
         </div>

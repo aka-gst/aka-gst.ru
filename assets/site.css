@@ -650,20 +650,28 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .practicum-card .card-head { padding-top: 0; }
 .practicum-card h3 { font-size: 20px; }
 .practicum-card .tagline { color: var(--text); font-size: 14px; }
+.practicum-card--route { width: min(100%, 620px); grid-template-columns:120px minmax(0,1fr); align-items:center; }
+.practicum-route-shot { aspect-ratio:1/1; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+.practicum-route-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:top center; }
+.practicum-route-copy { display:grid; gap:8px; }
+.practicum-route-copy .card-links { margin-top:0; }
 
 .practicum-teaser .practicum-card { max-width: 760px; }
 
-.practicum-stage { min-height:min(520px,calc(100vh - var(--shapka) - 110px)); }
-.practicum-stage > .practicum-card { min-height:inherit; }
+.practicum-stage { min-height:min(480px,calc(100vh - var(--shapka) - 130px)); }
+.practicum-stage > .practicum-card--quest { min-height:inherit; }
+/* Полный экран нужен только квесту. Два маршрута с мини-снимком не должны
+   оставлять под собой пустую «сцену» после переключения. */
+.practicum-stage:has(.practicum-card--route:not([hidden])) { min-height:0; }
 .practicum-card--quest { grid-template-columns:minmax(280px, .95fr) minmax(0, 1fr); grid-template-rows:1fr; align-items:stretch; gap:22px; overflow:hidden; background:linear-gradient(135deg,var(--accent-dim),var(--panel)); }
-.practicum-quest-shot { overflow:hidden; border:1px solid var(--line); border-radius:9px; background:var(--bg); }
-.practicum-quest-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:center; }
+.practicum-quest-mark { display:grid; place-items:center; min-height:280px; overflow:hidden; border:1px solid var(--line); border-radius:9px; background:radial-gradient(circle at 50% 45%,#211542 0, var(--bg) 64%); }
+.practicum-quest-mark img { display:block; width:min(82%,360px); height:auto; filter:drop-shadow(0 0 24px #7656ff55); }
 .practicum-quest-copy { display:grid; align-content:center; gap:11px; }
 .practicum-quest-copy h3 { margin:0; font-size:clamp(28px,4vw,42px); }
 .practicum-quest-copy .tagline { font-size:17px; line-height:1.48; }
-.practicum-quest-copy s { color:var(--muted); text-decoration-color:var(--accent); }
+.practicum-quest-copy s { color:#c6b7ee; text-decoration-color:#9b68ff; text-decoration-thickness:2px; }
 .practicum-note { margin:0; color:var(--muted); font-size:13px; line-height:1.45; }
-@media (max-width:640px) { .practicum-tabs { overflow-x:auto; }.practicum-tabs button { min-width:155px; }.practicum-stage { min-height:0; }.practicum-card--quest { grid-template-columns:1fr; }.practicum-quest-shot img { aspect-ratio:16/9; height:auto; }.practicum-quest-copy .tagline { font-size:15px; } }
+@media (max-width:640px) { .practicum-tabs { overflow-x:auto; }.practicum-tabs button { min-width:155px; }.practicum-stage { min-height:0; }.practicum-card--quest { grid-template-columns:1fr; }.practicum-card--route { grid-template-columns:88px minmax(0,1fr); width:100%; padding:16px; }.practicum-quest-mark { min-height:220px; }.practicum-quest-mark img { width:min(72%,280px); }.practicum-quest-copy .tagline { font-size:15px; } }
 
 /* ── Заявка о партнёрстве ─────────────────────────────────────────── */
 .partner-form {
@@ -796,9 +804,9 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .job--with-shot { grid-template-columns: 170px minmax(0, 1fr) 56px; }
 .job--with-shot .shot { grid-column: 3; grid-row: 1 / span 3; align-self: center; margin: 0; }
 .job--with-shot .shot img { width: 48px; max-height: 64px; object-fit: cover; object-position: top; }
-.job--publication { grid-template-columns:170px minmax(0, 1fr); min-height:0; padding:12px 22px; align-items:center; }
-.job--publication .job-period { grid-row:auto; }
-.job-publication-shot { display:grid; justify-items:center; gap:4px; justify-self:end; color:var(--muted); font:11px/1.2 var(--mono); text-align:center; text-decoration:none; }
+.job--publication { grid-template-columns:170px minmax(0, 1fr) 56px; min-height:0; padding:20px 22px; align-items:center; }
+.job--publication .job-period { grid-row:span 2; }
+.job-publication-shot { grid-column:3; grid-row:1 / span 2; justify-self:end; text-decoration:none; }
 .job-publication-shot img { width:46px; height:64px; object-fit:cover; object-position:top; border-radius:5px; }
 .job-publication-shot:hover img, .job-publication-shot:focus-visible img { transform:scale(1.04); box-shadow:0 8px 20px -6px #000a; }
 /* Потолок по ВЫСОТЕ, а не по ширине: Глаза мерили высоты всех шести пунктов
