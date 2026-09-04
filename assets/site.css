@@ -730,6 +730,15 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .practicum-detail[hidden] { display:none; }
 .practicum-detail-shot { align-self:start; aspect-ratio:1/1; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
 .practicum-detail-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:top center; }
+/* На узких экранах кадр в карточке практикума — квадрат 76 px, в котором
+   ничего не разглядеть, а текст ужимается до 245 px и идёт по 28 символов в
+   строке при читаемых 45–75. Ставим кадр НАД текстом и меняем пропорцию на
+   16:9: он становится настоящей картинкой, а строка получает полную ширину.
+   Замерено 4 сентября на 390 px. */
+@media (max-width:640px) {
+  .practicum-detail { grid-template-columns:1fr; }
+  .practicum-detail-shot { aspect-ratio:16/9; }
+}
 .practicum-detail-copy { display:grid; align-content:start; gap:8px; min-width:0; }
 .practicum-detail-copy .card-head { display:block; padding:0; }
 .practicum-detail-copy .status { display:none; }
