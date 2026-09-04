@@ -1,8 +1,8 @@
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260903-15";
+import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260904-16";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260903-15", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260904-16", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -97,9 +97,9 @@ let interimTranscript = "";
 let silenceTimer = null;
 let recognitionRestartTimer = null;
 const VOICE_QUIET_GAP_MS = 1400;
-let state = window.innerWidth > 620
-  ? { open: true, panelVisible: true, fullScreen: false, returnFocusToTrigger: false }
-  : createWidgetState();
+// Помощник не закрывает человеку страницу сам: на любой ширине он появляется
+// только после явного нажатия на плавающую кнопку. На панели остаётся крестик.
+let state = createWidgetState();
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
