@@ -260,8 +260,13 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-gateway-proof { position:relative; align-self:stretch; display:block; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); text-decoration:none; }
 .work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform .35s ease,filter .35s ease; }
 .work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
-.work-dharma-shot { overflow:hidden; border:1px solid var(--line); border-radius:10px; }
+.work-dharma-shot { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
 .work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:center; transition:transform .35s ease,filter .35s ease; }
+.dharma-journey { position:absolute; right:10px; bottom:10px; z-index:1; display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid #65e5b55c; border-radius:999px; background:#07120edd; color:#c8ffe9; font:600 9px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase; opacity:.78; }
+.dharma-journey i { display:block; width:12px; height:1px; background:linear-gradient(90deg,#65e5b5,#d3fff0); transform-origin:left center; }
+.work-dharma:hover .dharma-journey, .work-dharma:focus-visible .dharma-journey { opacity:1; border-color:#65e5b5; box-shadow:0 0 18px #46dca34d; }
+@media (prefers-reduced-motion:no-preference) { .work-dharma:hover .dharma-journey i, .work-dharma:focus-visible .dharma-journey i { animation:dharma-route .8s ease-in-out both; }.work-dharma:hover .dharma-journey i:nth-of-type(2), .work-dharma:focus-visible .dharma-journey i:nth-of-type(2) { animation-delay:.38s; } }
+@keyframes dharma-route { from { transform:scaleX(.1); opacity:.2; } to { transform:scaleX(1); opacity:1; } }
 .work-dharma-copy { display:grid; align-content:start; gap:9px; }
 .work-dharma h2 { margin: 0; font-size: 25px; line-height: 1; }
 .work-dharma p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
@@ -271,15 +276,15 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
 .work-duet-note b { color: var(--text); }
 
-/* Короткий акцент, а не медленная декоративная полоса. */
+/* Сигнал возвращается с прежней частотой, но не «режет» блок мгновенным взмахом. */
 @media (prefers-reduced-motion: no-preference) {
   .work-lead::after {
     content: ""; position: absolute; right: -22%; bottom: 0; width: 42%; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), #9b58ff, transparent);
+    background: linear-gradient(90deg, transparent, #7356d9, #b68bff, transparent);
     animation: work-scan 3.8s cubic-bezier(.2,.7,.2,1) infinite;
   }
 }
-@keyframes work-scan { 0%, 70% { transform: translateX(145%); opacity: 0; } 73% { opacity: 1; } 86%, 100% { transform: translateX(-330%); opacity: 0; } }
+@keyframes work-scan { 0%, 69% { transform: translateX(145%); opacity: 0; } 72% { opacity: 1; } 94%, 100% { transform: translateX(-330%); opacity: 0; } }
 
 .kicker {
   font-family: var(--mono); font-size: 11px; font-weight: 600;
@@ -674,6 +679,44 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .practicum-quest-copy s { color:#c6b7ee; text-decoration-color:#9b68ff; text-decoration-thickness:2px; }
 .practicum-note { margin:0; color:var(--muted); font-size:13px; line-height:1.45; }
 @media (max-width:640px) { .practicum-tabs { overflow-x:auto; }.practicum-tabs button { min-width:155px; }.practicum-stage { min-height:0; }.practicum-card--quest { grid-template-columns:1fr; }.practicum-card--route { grid-template-columns:88px minmax(0,1fr); width:100%; padding:16px; }.practicum-quest-mark { min-height:220px; }.practicum-quest-mark img { width:min(72%,280px); }.practicum-quest-copy .tagline { font-size:15px; } }
+
+/* Один главный квест, а не три одинаково тяжёлые карточки. Два практикума
+   остаются рядом как инструменты, не перенося и не выдавливая QueQuest. */
+.practicum-switch .practicum-pilot-grid { display:grid; grid-template-columns:minmax(0, 2fr) minmax(280px, 1fr); gap:14px; align-items:stretch; }
+.quequest-card { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--accent) 48%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, color-mix(in srgb, var(--accent-dim) 78%, #140d2a), var(--panel) 64%); }
+.quequest-visual { position:relative; display:block; min-height:0; overflow:hidden; border:0; border-right:1px solid var(--line); padding:0; background:#080a0f; cursor:pointer; text-align:left; }
+.quequest-poster, .quequest-video { display:block; width:100%; height:100%; min-height:390px; object-fit:cover; object-position:center; }
+.quequest-video { position:absolute; inset:0; opacity:0; transition:opacity .22s ease; }
+.quequest-visual.is-playing .quequest-video, .quequest-visual.is-finished .quequest-video { opacity:1; }
+.quequest-play-label { position:absolute; left:14px; bottom:14px; z-index:2; display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid #cbb9ff66; border-radius:999px; background:#0d0a1cdd; color:#f1edff; font:600 11px/1 var(--mono); letter-spacing:.04em; }
+.quequest-visual:hover .quequest-play-label, .quequest-visual:focus-visible .quequest-play-label { border-color:#cbb9ff; box-shadow:0 0 18px #8063e955; }
+.quequest-copy { display:grid; align-content:center; gap:12px; padding:26px; }
+.quequest-heading { display:flex; align-items:center; gap:9px; }
+.quequest-heading img { width:34px; height:34px; object-fit:contain; filter:drop-shadow(0 0 12px #8d6cff88); }
+.quequest-heading .kicker { margin:0; }
+.quequest-copy h3 { margin:0; font-size:clamp(31px, 4vw, 48px); line-height:1; }
+.quequest-copy .tagline { margin:0; color:var(--text); font-size:16px; line-height:1.48; }
+.quequest-copy .practicum-note { margin:0; }
+.practicum-side { display:grid; grid-template-rows:auto minmax(0,1fr); min-width:0; }
+.practicum-switch .practicum-tabs { display:grid; grid-template-columns:1fr; gap:7px; margin:0 0 10px; overflow:visible; }
+.practicum-switch .practicum-tabs button { min-width:0; min-height:52px; padding:9px 11px; text-align:left; }
+.practicum-detail-stage { min-height:0; }
+.practicum-detail { display:grid; grid-template-columns:76px minmax(0,1fr); gap:13px; height:100%; min-height:278px; padding:16px; border:1px solid var(--line); border-radius:var(--r); background:var(--panel); }
+.practicum-detail[hidden] { display:none; }
+.practicum-detail-shot { align-self:start; aspect-ratio:1/1; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+.practicum-detail-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:top center; }
+.practicum-detail-copy { display:grid; align-content:start; gap:8px; min-width:0; }
+.practicum-detail-copy .card-head { display:block; padding:0; }
+.practicum-detail-copy .status { display:none; }
+.practicum-detail-copy h3 { margin:0; font-size:18px; line-height:1.16; }
+.practicum-detail-copy .tagline { margin:0; font-size:13px; line-height:1.43; }
+.practicum-detail-copy .metric-chips { gap:5px; }
+.practicum-detail-copy .metric-chip { padding:4px 6px; font-size:10px; }
+.practicum-detail-copy .card-links { margin-top:2px; }
+@media (min-width:901px) { .quequest-card { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:570px; min-height:0; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { align-content:center; gap:8px; padding:16px 20px; }.quequest-copy .tagline { font-size:15px; line-height:1.4; }.practicum-side { height:570px; }.practicum-detail-stage { height:456px; }.practicum-detail { overflow:auto; } }
+@media (max-width:900px) { .practicum-switch .practicum-pilot-grid { grid-template-columns:1fr; }.practicum-side { grid-template-columns:minmax(180px, .72fr) minmax(0, 1.28fr); gap:10px; }.practicum-switch .practicum-tabs { margin:0; }.practicum-detail { min-height:0; }.quequest-card { min-height:0; } }
+@media (max-width:640px) { .quequest-card { grid-template-columns:1fr; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { padding:18px; }.quequest-copy .tagline { font-size:14px; }.practicum-side { grid-template-columns:1fr; }.practicum-switch .practicum-tabs { grid-template-columns:1fr 1fr; }.practicum-switch .practicum-tabs button { min-height:50px; font-size:11px; }.practicum-detail { grid-template-columns:66px minmax(0,1fr); min-height:0; }.practicum-detail-copy .metric-chips { display:none; }.quequest-play-label { left:10px; bottom:10px; } }
+@media (prefers-reduced-motion:reduce) { .quequest-video { display:none; }.quequest-play-label::before { content:"Кадр"; }.quequest-play-label { cursor:default; } }
 
 /* ── Заявка о партнёрстве ─────────────────────────────────────────── */
 .partner-form {

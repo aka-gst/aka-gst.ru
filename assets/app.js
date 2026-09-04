@@ -396,6 +396,43 @@
   });
 })();
 
+// ── QueQuest: один честный переход, не декоративная вечная петля ──────
+(() => {
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  document.querySelectorAll('[data-quequest-play]').forEach((trigger) => {
+    const video = trigger.querySelector('.quequest-video');
+    if (!video) return;
+    let loading = null;
+
+    const play = () => {
+      if (reduced?.matches || trigger.classList.contains('is-playing')) return;
+      if (!video.src) {
+        video.src = video.dataset.src || '';
+        loading = new Promise((resolve) => video.addEventListener('canplay', resolve, { once:true }));
+        // preload="none" бережёт мобильную сеть, но после явного тапа
+        // браузеру всё равно надо сообщить, что ресурс теперь нужен.
+        video.load();
+      }
+      trigger.classList.remove('is-finished');
+      trigger.classList.add('is-playing');
+      const start = () => {
+        video.currentTime = 0;
+        video.play().catch(() => trigger.classList.remove('is-playing'));
+      };
+      loading ? loading.then(start) : start();
+    };
+
+    trigger.addEventListener('click', play);
+    trigger.addEventListener('mouseenter', () => {
+      if (window.matchMedia?.('(hover: hover)').matches) play();
+    });
+    trigger.addEventListener('focusin', play);
+    video.addEventListener('ended', () => {
+      trigger.classList.remove('is-playing');
+      trigger.classList.add('is-finished');
+    });
+  });
+})();
 // ── Рассказы на главной: обложка → сборник → текст в одной панели ──
 (() => {
   const panel = document.querySelector('.story-lead');

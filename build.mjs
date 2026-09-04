@@ -566,10 +566,9 @@ const projectById = (id) => db.projects.find((project) => project.id === id);
 const qaQuest = projectById('qa-quest');
 const dharmaAi = projectById('dharma-ai');
 const practicumProjects = ['praktikum-testing', 'ai-agent-service-lab'].map(projectById);
-const qaQuestDemo = qaQuest?.links.find((link) => link.type === 'demo');
 
-if (!qaQuest || !qaQuestDemo || !dharmaAi || practicumProjects.some((project) => !project)) {
-  throw new Error('не найдены QA Quest, Dharma AI или один из двух практикумов');
+if (!qaQuest || !dharmaAi || practicumProjects.some((project) => !project)) {
+  throw new Error('не найдены QueQuest, Dharma AI или один из двух практикумов');
 }
 
 const practicumImage = (shot) => {
@@ -583,12 +582,12 @@ const practicumRouteIntro = {
 };
 
 const practicumCard = (project, active, extra = '') => `
-          <article class="practicum-card practicum-card--route" id="practicum-panel-${esc(project.id)}" role="tabpanel"
+          <article class="practicum-detail" id="practicum-panel-${esc(project.id)}" role="tabpanel"
             aria-labelledby="practicum-tab-${esc(project.id)}" data-practicum-panel="${esc(project.id)}"${
               active ? '' : ' hidden'
             }>
-            <div class="practicum-route-shot">${practicumImage(project.shots[0])}</div>
-            <div class="practicum-route-copy">
+            <div class="practicum-detail-shot">${practicumImage(project.shots[0])}</div>
+            <div class="practicum-detail-copy">
               <div class="card-head">
                 <p class="kicker">${esc(project.kicker)}</p>
                 ${statusBadge(project)}
@@ -605,18 +604,29 @@ const practicumSwitch = `
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Три маршрута: квест с машиной, проверка локальной модели и сборка собственного AI-агента.</p>
+          <p>Главный маршрут — QueQuest. Два следующих помогают проверить локальную модель и собрать агента.</p>
         </div>
-        <div class="practicum-tabs" role="tablist" aria-label="Маршруты практикумов">
-          <button type="button" id="practicum-tab-qa-quest" role="tab" aria-selected="true" aria-controls="practicum-panel-qa-quest" data-practicum-to="qa-quest">QA Quest · квест</button>
-          ${practicumProjects.map((project) => `<button type="button" id="practicum-tab-${esc(project.id)}" role="tab" aria-selected="false" aria-controls="practicum-panel-${esc(project.id)}" data-practicum-to="${esc(project.id)}">${esc(project.title)}</button>`).join('')}
-        </div>
-        <div class="practicum-stage">
-          <article class="practicum-card practicum-card--quest" id="practicum-panel-qa-quest" role="tabpanel" aria-labelledby="practicum-tab-qa-quest" data-practicum-panel="qa-quest">
-            <div class="practicum-quest-mark"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QA Quest: защищённое серверное ядро и диагностический импульс" width="512" height="512" decoding="async"></div>
-            <div class="practicum-quest-copy"><p class="kicker">Квест · Python</p><h3>QA Quest</h3><p class="tagline">Первый путь к <s>взлому тачек</s> и <s>серверов-резидентов</s>. На деле — к созданию и проверке собственного AI: машина отвечает на настоящий Python-код.</p><p class="practicum-note">Не курс «учу программировать»: это история, в которой команда проверяет, что код действительно управляет машиной.</p><p class="card-links"><a class="link" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>Открыть квест <b>→</b></a></p></div>
+        <div class="practicum-pilot-grid">
+          <article class="quequest-card" aria-labelledby="quequest-title">
+            <button class="quequest-visual" type="button" data-quequest-play aria-label="Показать путь QueQuest: от ручной работы к автоматике">
+              <img class="quequest-poster" src="/assets/shots/quequest-automation.jpg?v=${assetVersion('assets/shots/quequest-automation.jpg')}" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
+              <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=${assetVersion('assets/clips/clip-quequest-manual-to-ai.webm')}" aria-hidden="true"></video>
+              <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
+            </button>
+            <div class="quequest-copy">
+              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="512" height="512" decoding="async"><p class="kicker">Квест · Python</p></div>
+              <h3 id="quequest-title">QueQuest</h3>
+              <p class="tagline">Сначала герой тащит груз сам. Потом пишет настоящее Python-правило — и механическая рука продолжает разрешённую работу.</p>
+            </div>
           </article>
-${practicumProjects.map((project) => practicumCard(project, false)).join('')}
+          <aside class="practicum-side" aria-label="Дополнительные практикумы">
+            <div class="practicum-tabs" role="tablist" aria-label="Дополнительные практикумы">
+              ${practicumProjects.map((project, index) => `<button type="button" id="practicum-tab-${esc(project.id)}" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" aria-controls="practicum-panel-${esc(project.id)}" data-practicum-to="${esc(project.id)}">${esc(project.title.replace('Практикум: ', ''))}</button>`).join('')}
+            </div>
+            <div class="practicum-detail-stage">
+              ${practicumProjects.map((project, index) => practicumCard(project, index === 0)).join('').trim()}
+            </div>
+          </aside>
         </div>
       </section>`;
 
@@ -645,6 +655,7 @@ const workLead = `
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
+              <span class="dharma-journey" aria-hidden="true"><b>выбор</b><i></i><b>агент</b><i></i><b>заказ</b></span>
             </div>
             <div class="work-dharma-copy">
               <p class="kicker">02 / продукт заказчика</p>
