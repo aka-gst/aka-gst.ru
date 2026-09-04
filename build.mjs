@@ -614,7 +614,7 @@ const practicumSwitch = `
         <div class="practicum-stage">
           <article class="practicum-card practicum-card--quest" id="practicum-panel-qa-quest" role="tabpanel" aria-labelledby="practicum-tab-qa-quest" data-practicum-panel="qa-quest">
             <div class="practicum-quest-mark"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QA Quest: защищённое серверное ядро и диагностический импульс" width="512" height="512" decoding="async"></div>
-            <div class="practicum-quest-copy"><p class="kicker">Квест · Python</p><h3>QA Quest</h3><p class="tagline">Первый путь к <s>взлому тачек</s> и <s>серверов-резидентов</s>. На деле — к созданию и проверке собственного AI: машина отвечает на настоящий Python-код.</p><p class="practicum-note">Не курс «учу программировать»: это история, в которой команда проверяет, что код действительно управляет машиной.</p><p class="card-links"><a class="link" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>Открыть квест <b>→</b></a></p></div>
+            <div class="practicum-quest-copy"><p class="kicker">Квест · Python</p><h3>QA Quest</h3><p class="tagline">Квест, где <code>print("WAKE")</code> будит систему и код меняет живой стенд.</p><p class="practicum-note">Не курс «учу программировать»: это история, в которой команда проверяет, что код действительно управляет машиной.</p><p class="card-links"><a class="link" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>Открыть квест <b>→</b></a></p></div>
           </article>
 ${practicumProjects.map((project) => practicumCard(project, false)).join('')}
         </div>
@@ -629,32 +629,35 @@ const leadImage = (file, alt) => {
 
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
-        <div class="work-duet">
-          <article class="work-system work-gateway">
-            <div class="work-gateway-copy">
-              <p class="kicker">01 / рабочая система</p>
-              <h1 id="work-lead-title">Local Agent Gateway</h1>
-              <p>Связывает AI-агентов с приложениями, держит работу стабильной и защищает данные — без передачи наружу.</p>
-            </div>
+        <div class="work-lead-copy">
+          <p class="kicker">AI-продукты · игры · проверка</p>
+          <h1 id="work-lead-title">Собираю AI-продукты, которыми можно управлять</h1>
+          <p>Не концепты: рабочие системы, живые стенды и игры, где действие человека меняет результат.</p>
+          <nav class="work-lead-actions" aria-label="Главные действия">
+            <a class="work-lead-primary" href="https://t.me/gostinka27" target="_blank" rel="noopener">Обсудить продукт <b>↗</b></a>
+            <a class="work-lead-secondary" href="#games">Открыть игры <b>→</b></a>
+          </nav>
+        </div>
+        <div class="work-evidence" aria-label="Два главных доказательства">
+          <article class="work-proof work-gateway">
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
-              <span><b data-metric="tests">66</b> проверок · живой LLM и браузер ↗</span>
             </a>
-            <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
+            <div class="work-proof-copy">
+              <p class="kicker">01 / AI-система</p>
+              <h2>Local Agent Gateway</h2>
+              <p><b data-metric="tests">66</b> проверок · живой LLM и браузер</p>
+            </div>
           </article>
-          <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
-            <div class="work-dharma-shot">
-              ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
-            </div>
-            <div class="work-dharma-copy">
-              <p class="kicker">02 / продукт заказчика</p>
-              <h2>Dharma AI · Anigma</h2>
-              <p>Магазин 2.0: AI-агенты встречают покупателя, помогают выбрать, оформляют заказ и передают его на отправку.</p>
-            </div>
-            <span class="work-system-link">Открыть сайт <b>↗</b></span>
+          <a class="work-proof work-qaquest" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">
+            <span class="work-qaquest-core" aria-hidden="true"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="" width="512" height="512" decoding="async"></span>
+            <span class="work-proof-copy">
+              <span class="kicker">02 / квест · Python</span>
+              <strong>QA Quest</strong>
+              <span><code>print("WAKE")</code> будит систему, а код меняет живой стенд.</span>
+            </span>
           </a>
         </div>
-        <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>`;
 
 // На главной показываем один вход в обучение. Второй маршрут остаётся
@@ -719,7 +722,7 @@ ${practicumSwitch.trim()}
           <h2 id="products-title">Продукты, которые остаются у людей</h2>
           <p>Автоматизация, в которой виден путь: что делает система, где её границы и чем подтверждён результат.</p>
         </div>
-        <div class="grid" data-shared-details>${byGroup('client-products').filter((project) => project.id !== 'dharma-ai').map(card).join('')}
+        <div class="grid" data-shared-details>${byGroup('client-products').map(card).join('')}
         </div>
       </section>
 

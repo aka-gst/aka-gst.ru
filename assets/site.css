@@ -244,32 +244,38 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 @media (max-width:640px){.story-lead{grid-template-columns:1fr; padding:20px;}.story-all-link{justify-self:start;}.story-shelves{grid-template-columns:1fr;}.story-lead-book{grid-template-columns:76px 1fr;min-height:104px;}.story-lead-book img{width:76px;height:94px;}.story-collection{grid-template-columns:86px 1fr;gap:14px;padding:14px;}.story-collection > img{width:86px;height:128px;}.story-collection ol{columns:1;margin-top:14px;}.story-reader-inline{padding:18px;}.story-reader-copy{font-size:16px;}.story-to-top span{display:none;}.story-to-top{width:44px;justify-content:center;padding:0;}.story-bar a{margin-left:0;}}
 
 /* ── Первый экран работы ──────────────────────────────────────────── */
-/* На первом экране две реальные системы: приватный AI-шлюз и продукт с
-   агентами. Практика не притворяется частью этой пары и живёт ниже. */
+/* Сначала обещание, затем два доказательства рядом. На телефоне оба должны
+   оставаться в первом экране: второе доказательство, спрятанное ниже фолда,
+   для нового человека не существует. */
 .work-lead {
-  position: relative; overflow: hidden; margin-top: 26px; padding: 28px;
+  position: relative; overflow: hidden; margin-top: 26px; padding: 30px;
   border: 1px solid var(--line); border-radius: 16px; background: var(--panel);
 }
-.work-duet { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; align-items:stretch; }
-.work-system { display:grid; grid-template-rows:auto 1fr auto; gap:16px; min-width:0; min-height:420px; padding:24px; border:1px solid var(--line); border-radius:12px; background:linear-gradient(135deg,var(--bg-soft),var(--panel)); color:var(--text); text-decoration:none; }
-.work-gateway-copy, .work-dharma-copy { align-self:start; }
-.work-lead h1 { margin: 8px 0 12px; max-width: 500px; font-size: clamp(30px, 4vw, 47px); line-height: 1.03; }
-.work-gateway-copy > p:not(.kicker) { max-width: 500px; color: var(--muted); font-size: 15px; line-height: 1.5; }
-.work-lead-fact { margin-top: 12px; color: var(--text) !important; font-size: 13px !important; }
-.work-lead-fact b { color: var(--accent); }
-.work-gateway-proof { position:relative; align-self:stretch; display:block; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); text-decoration:none; }
-.work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform .35s ease,filter .35s ease; }
-.work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
-.work-dharma-shot { overflow:hidden; border:1px solid var(--line); border-radius:10px; }
-.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:center; transition:transform .35s ease,filter .35s ease; }
-.work-dharma-copy { display:grid; align-content:start; gap:9px; }
-.work-dharma h2 { margin: 0; font-size: 25px; line-height: 1; }
-.work-dharma p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
-.work-system-link { align-self:end; color:var(--accent); font-size:13px; font-weight:700; text-decoration:none; }
-.work-gateway-proof:hover, .work-gateway-proof:focus-visible, .work-dharma:hover, .work-dharma:focus-visible { border-color: var(--accent); outline: 0; }
-.work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-dharma:hover img, .work-dharma:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
-.work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
-.work-duet-note b { color: var(--text); }
+.work-lead-copy { max-width: 790px; }
+.work-lead h1 { margin: 8px 0 12px; max-width: 720px; font-size: clamp(32px, 4.3vw, 52px); line-height: 1.02; text-wrap: balance; }
+.work-lead-copy > p:not(.kicker) { max-width: 620px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.48; }
+.work-lead-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.work-lead-actions a { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:10px 14px; border:1px solid var(--line); border-radius:8px; color:var(--text); font-size:13px; font-weight:700; text-decoration:none; }
+.work-lead-actions b { margin-left:7px; font-weight:400; }
+.work-lead-primary { border-color:var(--accent) !important; background:var(--accent); color:#092013 !important; }
+.work-lead-secondary:hover, .work-lead-secondary:focus-visible { border-color:var(--accent); background:var(--accent-dim); outline:0; }
+.work-evidence { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:24px; }
+.work-proof { position:relative; display:grid; min-width:0; min-height:230px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:linear-gradient(135deg,var(--bg-soft),var(--panel)); color:var(--text); text-decoration:none; }
+.work-gateway { grid-template-rows:minmax(0,1fr) auto; }
+.work-gateway-proof { display:block; min-height:136px; overflow:hidden; background:var(--bg); border-bottom:1px solid var(--line); }
+.work-gateway-proof img { display:block; width:100%; height:100%; min-height:136px; object-fit:cover; object-position:left top; filter:brightness(1.12) contrast(1.14) saturate(1.12); transition:transform .35s ease,filter .35s ease; }
+.work-proof-copy { display:grid; align-content:start; gap:5px; padding:14px 16px 15px; }
+.work-proof-copy h2, .work-proof-copy strong { margin:0; color:var(--text); font-size:22px; line-height:1.05; }
+.work-proof-copy p, .work-proof-copy > span:last-child { margin:0; color:var(--muted); font-size:12px; line-height:1.42; }
+.work-proof-copy p b { color:var(--accent); font-family:var(--mono); }
+.work-qaquest { align-items:end; isolation:isolate; background:radial-gradient(circle at 67% 38%,#44278c 0,rgba(68,39,140,.28) 18%,transparent 43%),linear-gradient(135deg,#0b1717,#141025 65%,#0d1017); }
+.work-qaquest::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(4,8,11,.28),rgba(6,9,15,.82)); }
+.work-qaquest-core { position:absolute; right:-18px; top:-39px; width:220px; height:220px; opacity:.98; pointer-events:none; }
+.work-qaquest-core img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 20px #73ff3155); }
+.work-qaquest .work-proof-copy { max-width:66%; }
+.work-qaquest code { color:#baff8f; font:700 11px var(--mono); }
+.work-proof:hover, .work-proof:focus-visible { border-color:var(--accent); outline:0; }
+.work-gateway-proof:hover img, .work-gateway-proof:focus-visible img { transform:scale(1.035); filter:brightness(1.18) contrast(1.18) saturate(1.2); }
 
 /* Короткий акцент, а не медленная декоративная полоса. */
 @media (prefers-reduced-motion: no-preference) {
@@ -1194,14 +1200,20 @@ article.gcard .launch { color: var(--dim); }
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
   .work-lead { margin-top: 18px; padding: 18px; }
-  .work-duet { grid-template-columns: 1fr; gap: 12px; }
-  .work-system { min-height:0; padding:18px; }
   .work-lead h1 { font-size: 31px; }
-  .work-gateway-copy > p:not(.kicker) { font-size: 13px; line-height: 1.45; }
-  .work-gateway-proof img { height:auto; min-height:0; aspect-ratio:16 / 8; }
-  .work-dharma-shot img { height:auto; min-height:0; aspect-ratio:16 / 8; }
-  .work-dharma h2 { font-size: 22px; }
-  .work-dharma p { font-size: 12px; }
+  .work-lead-copy > p:not(.kicker) { font-size:13px; line-height:1.42; }
+  .work-lead-actions { margin-top:14px; gap:8px; }
+  .work-lead-actions a { flex:1 1 145px; min-height:44px; padding:9px 10px; font-size:12px; }
+  .work-evidence { gap:8px; margin-top:16px; }
+  .work-proof { min-height:166px; border-radius:9px; }
+  .work-gateway-proof, .work-gateway-proof img { min-height:76px; }
+  .work-proof-copy { gap:3px; padding:9px 10px 10px; }
+  .work-proof-copy .kicker { font-size:8px; letter-spacing:.08em; }
+  .work-proof-copy h2, .work-proof-copy strong { font-size:15px; }
+  .work-proof-copy p, .work-proof-copy > span:last-child { font-size:10px; line-height:1.28; }
+  .work-qaquest-core { right:-20px; top:-20px; width:142px; height:142px; }
+  .work-qaquest .work-proof-copy { max-width:72%; }
+  .work-qaquest code { font-size:9px; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   /* На телефоне переключатель — главный элемент шапки: две крупные цели
      во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь

@@ -13,22 +13,26 @@ const build = () => {
   return read('index.html');
 };
 
-test('первый экран показывает две рабочие системы, а не учебную игру', () => {
+test('первый экран держит Gateway и QA Quest двумя доступными доказательствами', () => {
   const html = build();
   const lead = html.match(/<section class="work-lead"[\s\S]*?<\/section>/)?.[0] || '';
+  assert.match(lead, /Собираю AI-продукты, которыми можно управлять/);
+  assert.match(lead, /Обсудить продукт/);
+  assert.match(lead, /Открыть игры/);
   assert.match(lead, /Local Agent Gateway/);
-  assert.match(lead, /без передачи данных наружу/);
-  assert.match(lead, /Dharma AI · Anigma/);
-  assert.doesNotMatch(lead, /QA Quest/);
+  assert.match(lead, /QA Quest/);
+  assert.match(lead, /print\("WAKE"\)/);
+  assert.doesNotMatch(lead, /Dharma AI · Anigma/);
 });
 
-test('практикумы показывают QA Quest главным и два компактных маршрута рядом', () => {
+test('практикумы не называют QA Quest путём ко взлому', () => {
   const html = build();
   const practicum = html.match(/<section class="block practicum-switch"[\s\S]*?<\/section>/)?.[0] || '';
-  assert.match(practicum, /class="practicum-quest"/);
+  assert.match(practicum, /practicum-card--quest/);
   assert.match(practicum, />QA Quest</);
-  assert.equal((practicum.match(/practicum-card--compact/g) || []).length, 2);
-  assert.doesNotMatch(practicum, /data-practicum-to=/);
+  assert.match(practicum, /print\("WAKE"\)/);
+  assert.doesNotMatch(practicum, /взлому/);
+  assert.equal((practicum.match(/data-practicum-to=/g) || []).length, 3);
 });
 
 test('форма партнёрства не занимает витрину: связь переедет к помощнику', () => {
