@@ -1,8 +1,8 @@
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260903-15";
+import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260905-01";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260903-15", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260905-01", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -13,7 +13,7 @@ mount.innerHTML = `
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
-        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б или В.</span></div>
+        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б, В или Г.</span></div>
         <div class="psy-widget-head-actions">
           <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
@@ -24,35 +24,36 @@ mount.innerHTML = `
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-A.wav" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-B.wav" data-voice-volume="0.72">Б</button>
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-C.wav" data-voice-volume="0.72">В</button>
+        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-D.ogg" data-voice-volume="0.72">Г</button>
         <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить пример голоса" title="Остановить голос: пробел">■ Стоп</button>
       </div>
       <div class="psy-widget-evaluation">
+        <button class="psy-widget-evaluation-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-evaluation-content">Проверить помощника</button>
+        <div id="psy-widget-evaluation-content" hidden>
         <label for="psy-widget-evaluation-select">60 проверочных вопросов</label>
         <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select" aria-describedby="psy-widget-evaluation-status">
           <option value="">Выбери вопрос для проверки</option>
         </select>
         <p class="psy-widget-evaluation-status" id="psy-widget-evaluation-status" aria-live="polite"></p>
+        </div>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
-      <div class="psy-widget-payment-area">
-        <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
-          <span>Оплатить услуги центра ↗</span>
-          <small>Откроется официальная страница оплаты</small>
-        </a>
-      </div>
       <section class="psy-widget-booking-area" aria-label="Запись в центр Орион-С">
         <p><b>Запись в центр «Орион‑С»</b><span>Заявка уйдёт администратору на подтверждение.</span></p>
-        <div class="psy-widget-suggestions">
+        <div class="psy-widget-actions">
           <a class="psy-widget-booking" href="/psy-admin/booking/?kind=specialist">Записаться к специалисту</a>
           <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=seminar">Записаться на семинар</a>
           <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=rental">Оставить заявку на аренду</a>
+          <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
+            <span>Оплатить ↗</span>
+            <small>Официальный сайт</small>
+          </a>
         </div>
       </section>
       <form class="psy-widget-form">
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
         <input id="psy-widget-question" maxlength="500" autocomplete="off" placeholder="Например: где посмотреть расписание?" required>
         <button class="psy-widget-mic" type="button" aria-label="Задать вопрос голосом" aria-pressed="false">🎙</button>
-        <button class="psy-widget-stop" type="button" aria-label="Остановить голос" title="Остановить голос: пробел">■ Стоп</button>
         <button type="submit">Спросить</button>
       </form>
       <p class="psy-widget-voice-status" aria-live="polite"></p>
@@ -83,11 +84,12 @@ const messages = root.querySelector(".psy-widget-messages");
 const questionForm = root.querySelector(".psy-widget-form");
 const questionInput = root.querySelector("#psy-widget-question");
 const mic = root.querySelector(".psy-widget-mic");
-const stopVoiceButton = root.querySelector(".psy-widget-stop");
 const previewStopButton = root.querySelector("[data-voice-stop]");
 const voiceStatus = root.querySelector(".psy-widget-voice-status");
 const evaluationSelect = root.querySelector(".psy-widget-evaluation-select");
 const evaluationStatus = root.querySelector(".psy-widget-evaluation-status");
+const evaluationToggle = root.querySelector(".psy-widget-evaluation-toggle");
+const evaluationContent = root.querySelector("#psy-widget-evaluation-content");
 let previewAudio = null;
 let previewAudioContext = null;
 let recognition = null;
@@ -97,9 +99,9 @@ let interimTranscript = "";
 let silenceTimer = null;
 let recognitionRestartTimer = null;
 const VOICE_QUIET_GAP_MS = 1400;
-let state = window.innerWidth > 620
-  ? { open: true, panelVisible: true, fullScreen: false, returnFocusToTrigger: false }
-  : createWidgetState();
+// Помощник не закрывает человеку страницу сам: на любой ширине он появляется
+// только после явного нажатия на плавающую кнопку. На панели остаётся крестик.
+let state = createWidgetState();
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
@@ -179,10 +181,23 @@ function clearRecognitionRestartTimer() {
 function setListeningState(active) {
   listening = active;
   root.dataset.listening = String(active);
-  mic.setAttribute("aria-pressed", String(active));
-  mic.setAttribute("aria-label", active
-    ? "Слушаю. Нажмите ещё раз, чтобы остановить запись."
-    : "Задать вопрос голосом");
+  renderVoiceControl();
+}
+
+function renderVoiceControl() {
+  const playing = voiceIsPlaying();
+  mic.dataset.mode = playing ? "mute" : "mic";
+  mic.textContent = playing ? "🔇" : "🎙";
+  mic.setAttribute("aria-pressed", String(!playing && listening));
+  mic.setAttribute("aria-label", playing
+    ? "Выключить звук"
+    : (listening ? "Слушаю. Нажмите ещё раз, чтобы остановить запись." : "Задать вопрос голосом"));
+  mic.title = playing ? "Выключить звук" : "Задать вопрос голосом";
+}
+
+function setVoicePlaying(active) {
+  root.dataset.voicePlaying = String(active);
+  renderVoiceControl();
 }
 
 function stopListening() {
@@ -212,7 +227,7 @@ function stopVoice({ announce = true } = {}) {
     previewAudioContext = null;
   }
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  root.dataset.voicePlaying = "false";
+  setVoicePlaying(false);
   if (announce) setVoiceStatus("Голос остановлен.");
 }
 
@@ -299,16 +314,21 @@ root.querySelectorAll("[data-voice-preview]").forEach((button) => button.addEven
   previewAudio.volume = Number(button.dataset.voiceVolume || 1);
   softenPreviewTone(button);
   previewAudio.addEventListener("ended", () => {
-    root.dataset.voicePlaying = "false";
+    setVoicePlaying(false);
   }, { once: true });
-  root.dataset.voicePlaying = "true";
+  setVoicePlaying(true);
   previewAudio.play().then(() => setVoiceStatus(`Включён голос ${button.textContent}. Стоп — кнопкой или пробелом.`)).catch(() => {
-    root.dataset.voicePlaying = "false";
+    setVoicePlaying(false);
     setVoiceStatus("Не удалось включить пример голоса. Проверьте звук в браузере.");
   });
 }));
-stopVoiceButton.addEventListener("click", () => stopVoice());
 previewStopButton.addEventListener("click", () => stopVoice());
+evaluationToggle.addEventListener("click", () => {
+  const expanded = evaluationToggle.getAttribute("aria-expanded") !== "true";
+  evaluationToggle.setAttribute("aria-expanded", String(expanded));
+  evaluationContent.hidden = !expanded;
+  evaluationToggle.textContent = expanded ? "Скрыть проверочные вопросы" : "Проверить помощника";
+});
 evaluationSelect.addEventListener("change", () => {
   const option = evaluationSelect.selectedOptions[0];
   if (!option?.dataset.question) {
@@ -319,7 +339,13 @@ evaluationSelect.addEventListener("change", () => {
   void ask(option.dataset.question);
 });
 if (!voiceCapabilities.recognitionAvailable) {
-  mic.addEventListener("click", () => setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities).voice.fallbackMessage));
+  mic.addEventListener("click", () => {
+    if (voiceIsPlaying()) {
+      stopVoice();
+      return;
+    }
+    setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities).voice.fallbackMessage);
+  });
 } else {
   recognition = new Recognition();
   recognition.lang = "ru-RU";
@@ -380,7 +406,7 @@ if (!voiceCapabilities.recognitionAvailable) {
     recognitionRestartTimer = window.setTimeout(restartRecognition, 120);
   });
   mic.addEventListener("click", () => {
-    if (listening) {
+    if (voiceIsPlaying() || listening) {
       stopVoice();
       return;
     }
