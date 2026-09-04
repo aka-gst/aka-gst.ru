@@ -41,6 +41,19 @@ aka-gst.ru, www.aka-gst.ru {
     # Камера и микрофон разрешены СВОЕМУ origin — на нём живут звонки,
     # глухой запрет сломал бы /meet/. Геолокация не нужна никому.
     Permissions-Policy "camera=(self), microphone=(self), geolocation=()"
+    # Первый приём CSP: только то, что не может ничего сломать. Ни
+    # default-src, ни script-src, ни form-action — скрипты, стили, шрифты,
+    # картинки и рамки не ограничиваются вовсе.
+    #
+    # Замерено 4 сентября по двадцати страницам: встроенные скрипты почти
+    # везде (Тетколор 17, ФотоДата 11), у psy-admin 65 блоков стилей и 13
+    # on*-атрибутов — снимок Тильды. Строгая политика погасила бы их МОЛЧА:
+    # CSP не даёт ни 404, ни ошибки у человека.
+    #
+    # Эти три при этом закрывают настоящее: подмену <base> (усилитель XSS),
+    # плагины-объекты и кликджекинг. script-src добавляется отдельным шагом,
+    # с проверкой каждой игры в браузере.
+    Content-Security-Policy "object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
     # Не сообщаем, какой сервер и какой версии тут стоит.
     -Server
   }
@@ -76,6 +89,13 @@ aka-gst.ru, www.aka-gst.ru {
   redir @udar_q /hotline-abakan/?{query} 308
   redir /udar /hotline-abakan/ 308
   redir /udar/* /hotline-abakan/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_hotline_abakan_q {
+    path /hotline-abakan
+    expression {query} != ""
+  }
+  redir @slash_hotline_abakan_q /hotline-abakan/?{query} 308
   redir /hotline-abakan /hotline-abakan/ 308
 
   @worm_zapros {
@@ -92,6 +112,13 @@ aka-gst.ru, www.aka-gst.ru {
   redir /worm/* /naotmash/ 308
   # Без косой черты handle_path не срабатывает, и адрес, набранный руками,
   # отдавал 404. Человек пишет «aka-gst.ru/naotmash», а не «…/naotmash/».
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_naotmash_q {
+    path /naotmash
+    expression {query} != ""
+  }
+  redir @slash_naotmash_q /naotmash/?{query} 308
   redir /naotmash /naotmash/ 308
 
   # Имя, которым игру называют люди, и имя папки — разные вещи, и
@@ -219,12 +246,61 @@ aka-gst.ru, www.aka-gst.ru {
   redir @tetris_q /tetcolor/?{query} 308
   redir /tetris /tetcolor/ 308
   redir /tetris/* /tetcolor/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_tetcolor_q {
+    path /tetcolor
+    expression {query} != ""
+  }
+  redir @slash_tetcolor_q /tetcolor/?{query} 308
   redir /tetcolor /tetcolor/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_psy_admin_q {
+    path /psy-admin
+    expression {query} != ""
+  }
+  redir @slash_psy_admin_q /psy-admin/?{query} 308
   redir /psy-admin /psy-admin/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_photodata_q {
+    path /photodata
+    expression {query} != ""
+  }
+  redir @slash_photodata_q /photodata/?{query} 308
   redir /photodata /photodata/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_acid_q {
+    path /acid
+    expression {query} != ""
+  }
+  redir @slash_acid_q /acid/?{query} 308
   redir /acid /acid/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_qa_quest_q {
+    path /qa-quest
+    expression {query} != ""
+  }
+  redir @slash_qa_quest_q /qa-quest/?{query} 308
   redir /qa-quest /qa-quest/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_praktikum_q {
+    path /praktikum
+    expression {query} != ""
+  }
+  redir @slash_praktikum_q /praktikum/?{query} 308
   redir /praktikum /praktikum/ 308
+  # Строку запроса надо переносить руками: явный redir её выбрасывает,
+  # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  @slash_meet_q {
+    path /meet
+    expression {query} != ""
+  }
+  redir @slash_meet_q /meet/?{query} 308
   redir /meet /meet/ 308
 
   # Всё под /assets/ подписано хешем в строке запроса (?v=), поэтому старый
@@ -318,11 +394,48 @@ aka-gst.ru, www.aka-gst.ru {
     }
   }
 
+  # Booking is a separate service, not static content: the prefix is stripped
+  # so V2 can keep its own small application routes and SQLite data volume.
+  redir /psy-admin/booking /psy-admin/booking/ 308
+  handle_path /psy-admin/booking/* {
+    reverse_proxy psy-admin-booking:4180 {
+      header_up Host {host}
+      header_up X-Forwarded-Proto {scheme}
+    }
+  }
+
+  redir /psy-admin/admin /psy-admin/admin/ 308
+  handle_path /psy-admin/admin/ {
+    rewrite * /admin
+    reverse_proxy psy-admin-booking:4180 {
+      header_up Host {host}
+      header_up X-Forwarded-Proto {scheme}
+    }
+  }
+  handle_path /psy-admin/admin/* {
+    reverse_proxy psy-admin-booking:4180 {
+      header_up Host {host}
+      header_up X-Forwarded-Proto {scheme}
+    }
+  }
+
   root * /srv
   file_server
 
   # Свой 404 вместо пустой страницы: с ссылками обратно в разделы.
   handle_errors {
+    # Обработчик ошибок — ОТДЕЛЬНАЯ цепочка, и header-блок сайта до неё не
+    # доходит. Замер 4 сентября: на 404 не было НИ ОДНОГО заголовка
+    # безопасности и светился Server, при том что на 200 и на 308 всё стояло.
+    # Аудит увидел только утечку Server; отсутствие остальных хуже.
+    header {
+      Strict-Transport-Security "max-age=31536000; includeSubDomains"
+      X-Content-Type-Options "nosniff"
+      Referrer-Policy "strict-origin-when-cross-origin"
+      X-Frame-Options "SAMEORIGIN"
+      Content-Security-Policy "object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+      -Server
+    }
     @notfound expression {err.status_code} == 404
     handle @notfound {
       rewrite * /404.html
