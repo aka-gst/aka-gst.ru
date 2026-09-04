@@ -15,6 +15,10 @@ const pages = {
   "programs/index.html": "programs.html",
 };
 const internal = new Set(["schedule", "psycluborion", "pweducation", "consultation", "services", "programs"]);
+// Оставляем без домена намеренно: куда должен вести /contacts — решает
+// владелец, вопрос у него с 4 сентября 2026. До ответа не трогаем, иначе
+// уведём людей туда, куда никто не договаривался. Встречается 12 раз.
+const bezDomena = new Set(["contacts"]);
 
 function localHref(raw = "") {
   const decoded = raw.replace(/&amp;/g, "&");
@@ -24,7 +28,17 @@ function localHref(raw = "") {
   const suffix = found ? found[2] : "";
   if (!path || path === "index.html") return `/psy-admin/${suffix}`;
   if (internal.has(path)) return `/psy-admin/${path}/${suffix}`;
-  return /members\/login|payment|pay|cart|order/i.test(decoded) ? "#psy-demo-notice" : raw;
+  if (/members\/login|payment|pay|cart|order/i.test(decoded)) return "#psy-demo-notice";
+  // Внешняя ссылка БЕЗ домена. Снимок Тильды хранит соседние страницы
+  // заказчицы относительными («/alteredstates-online»), а на нашем адресе
+  // такой путь ведёт в никуда: aka-gst.ru отдаёт 404. Раньше сюда попадал
+  // `raw`, то есть ссылка оставалась битой — семь штук на pweducation.
+  // Абсолютные ссылки на orion-center.ru этой ветки не достигают: их
+  // разбирает `found` выше и возвращает как есть.
+  if (!found && decoded.startsWith("/") && !bezDomena.has(path)) {
+    return `https://orion-center.ru/${path}${suffix}`;
+  }
+  return raw;
 }
 
 function sanitise(html, widgetPath) {
