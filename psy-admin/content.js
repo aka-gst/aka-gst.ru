@@ -1,5 +1,15 @@
 export const CENTER_URL = "https://orion-center.ru/";
 
+// Снимок актуальной афиши: пересверен с /schedule 3 сентября 2026.
+// Его обновляют вместе с очередной выгрузкой, а не угадывают на лету.
+export const nextPublishedEvent = {
+  title: "Теория и практика работы с измененными и экстремальными состояниями сознания",
+  startsAt: "14 сентября 2026",
+  duration: "11 занятий",
+  url: "https://orion-center.ru/alteredstates-online",
+  checkedAt: "2026-09-03"
+};
+
 // Единственное место, где помощник вправе назвать цену.
 // Каждая запись сверена с открытой страницей центра в checkedAt.
 export const approvedOfferings = [

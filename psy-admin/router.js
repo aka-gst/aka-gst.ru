@@ -1,4 +1,4 @@
-import { approvedOfferings, catalog, CENTER_URL } from "./content.js";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js";
 import { intents, safetyIntents } from "./intents.js";
 
 const normalize = (value) => value
@@ -104,6 +104,17 @@ export function answerQuestion(rawQuestion) {
       text: "Не сообщайте в чате пароли, данные банковской карты или документы. Для личного обращения используйте официальные контакты центра.",
       url: "https://orion-center.ru/contacts",
       linkText: "Открыть контакты центра"
+    };
+  }
+
+  if (/(ближайш|следующ).*(семинар|мероприят|программ)|(семинар|мероприят|программ).*(ближайш|следующ)/i.test(query)) {
+    return {
+      kind: "offer",
+      title: "Ближайшее опубликованное мероприятие",
+      text: `Ближайшее опубликованное мероприятие — «${nextPublishedEvent.title}». Старт ${nextPublishedEvent.startsAt}, ${nextPublishedEvent.duration}.`,
+      url: nextPublishedEvent.url,
+      linkText: "Открыть программу и подробности",
+      action: { label: "Оставить заявку на мероприятие", url: "/psy-admin/booking/?kind=seminar" }
     };
   }
 

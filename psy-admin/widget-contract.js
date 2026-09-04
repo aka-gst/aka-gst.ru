@@ -1,5 +1,5 @@
 import { quickQuestions } from "./content.js";
-import { answerQuestion } from "./router.js?v=psy-widget-20260902-5";
+import { answerQuestion } from "./router.js?v=psy-widget-20260903-15";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",
@@ -29,16 +29,18 @@ export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoic
   if (!voiceCapabilities) return presentation;
 
   const inputAvailable = Boolean(voiceCapabilities.recognitionAvailable);
-  const outputAvailable = Boolean(voiceCapabilities.speechAvailable);
+  // Пока Qwen3-TTS не поднят отдельным сервисом, не подменяем обещанный
+  // естественный голос системной браузерной озвучкой.
+  const outputAvailable = false;
   return {
     ...presentation,
     voice: {
       inputAvailable,
       outputAvailable,
       fallbackMessage: inputAvailable
-        ? (outputAvailable ? "" : "Голосовой ответ недоступен в этом браузере. Ответ останется текстовым.")
+        ? (outputAvailable ? "" : "Ответ пока придёт коротким текстом: выбираем естественный голос A, Б или В.")
         : "Голосовой ввод недоступен в этом браузере. Напишите вопрос текстом.",
-      shouldSpeakReply: Boolean(askedByVoice && outputAvailable),
+      shouldSpeakReply: false,
     },
   };
 }
@@ -75,8 +77,8 @@ export function demoHandoffOutcome() {
   };
 }
 
-// Последний барьер перед browser SpeechSynthesis: это временный локальный
-// fallback, а не финальный голос. Вопрос пользователя никуда не отправляется.
+// Последний барьер перед будущим TTS: ответ должен остаться кратким.
+// Вопрос пользователя никуда не отправляется.
 export function sanitizeSpokenText(rawText, linkLabels = []) {
   let text = String(rawText || "");
   for (const label of linkLabels) {
@@ -91,7 +93,7 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
     .trim();
 
   const sentences = text.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) || [];
-  return sentences.slice(0, 2).join(" ").trim().slice(0, 280);
+  return (sentences[0] || text).trim().slice(0, 160);
 }
 
 export function routeWidgetQuestion(question) {
