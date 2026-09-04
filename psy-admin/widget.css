@@ -62,7 +62,7 @@
 .psy-widget-mic[data-mode="mute"] { background: #4b397c !important; border-color: #4b397c !important; color: #fff !important; }
 @keyframes psy-widget-listening { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @media (prefers-reduced-motion: reduce) { .psy-widget-mic[aria-pressed="true"] { animation: none; } }
-.psy-widget-voice-status { min-height: 0; margin: -6px 16px 14px; color: #5d526e; font-size: .82rem; line-height: 1.35; }
+.psy-widget-voice-status { min-height: 1.35em; margin: -6px 16px 14px; overflow: hidden; color: #5d526e; font-size: .82rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .psy-widget-handoff { padding: 0 16px 16px; }
 .psy-widget-handoff-open { width: 100%; background: #fff !important; border: 1px solid #d3cae8 !important; color: #4b397c !important; }
 .psy-widget-handoff-form { display: grid; gap: 10px; margin-top: 10px; padding: 12px; border-radius: 12px; background: #f7f4fb; }
