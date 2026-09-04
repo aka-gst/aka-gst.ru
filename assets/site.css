@@ -250,24 +250,34 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
   position: relative; overflow: hidden; margin-top: 26px; padding: 28px;
   border: 1px solid var(--line); border-radius: 16px; background: var(--panel);
 }
+.work-lead-intro { max-width:800px; margin:0 0 24px; }
+.work-lead-intro h1 { margin:8px 0 10px; max-width:680px; font-size:clamp(32px,4.1vw,52px); line-height:1.02; letter-spacing:-.035em; }
+.work-lead-intro > p:not(.kicker) { max-width:650px; margin:0; color:var(--muted); font-size:16px; line-height:1.5; }
+.work-lead-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.work-lead-action { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 14px; border:1px solid var(--line); border-radius:999px; color:var(--text); font-size:13px; font-weight:700; text-decoration:none; transition:border-color .2s ease, background .2s ease, color .2s ease; }
+.work-lead-action:hover, .work-lead-action:focus-visible { border-color:var(--accent); color:var(--accent); outline:0; }
+.work-lead-action--primary { border-color:var(--accent); background:var(--accent-dim); color:var(--accent); }
 .work-duet { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; align-items:stretch; }
 .work-system { display:grid; grid-template-rows:auto 1fr auto; gap:16px; min-width:0; min-height:420px; padding:24px; border:1px solid var(--line); border-radius:12px; background:linear-gradient(135deg,var(--bg-soft),var(--panel)); color:var(--text); text-decoration:none; }
-.work-gateway-copy, .work-dharma-copy { align-self:start; }
-.work-lead h1 { margin: 8px 0 12px; max-width: 500px; font-size: clamp(30px, 4vw, 47px); line-height: 1.03; }
+.work-gateway-copy, .work-quest-copy { align-self:start; }
+.work-lead h2 { margin: 8px 0 12px; max-width: 500px; font-size: clamp(30px, 4vw, 47px); line-height: 1.03; }
 .work-gateway-copy > p:not(.kicker) { max-width: 500px; color: var(--muted); font-size: 15px; line-height: 1.5; }
 .work-lead-fact { margin-top: 12px; color: var(--text) !important; font-size: 13px !important; }
 .work-lead-fact b { color: var(--accent); }
 .work-gateway-proof { position:relative; align-self:stretch; display:block; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); text-decoration:none; }
 .work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform .35s ease,filter .35s ease; }
 .work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
-.work-dharma-shot { overflow:hidden; border:1px solid var(--line); border-radius:10px; }
-.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:center; transition:transform .35s ease,filter .35s ease; }
-.work-dharma-copy { display:grid; align-content:start; gap:9px; }
-.work-dharma h2 { margin: 0; font-size: 25px; line-height: 1; }
-.work-dharma p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.work-quest-shot { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
+.work-quest-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:center; transition:transform .35s ease,filter .35s ease; }
+.quest-wake { position:absolute; right:8px; bottom:8px; display:flex; align-items:center; gap:5px; padding:6px 8px; border:1px solid color-mix(in srgb, var(--accent) 55%, transparent); border-radius:999px; background:color-mix(in srgb, var(--bg) 82%, transparent); color:var(--text); font:10px/1 var(--mono); backdrop-filter:blur(8px); }
+.quest-wake b:last-child { color:var(--accent); }.quest-wake i { color:var(--dim); font-style:normal; }
+.work-quest-copy { display:grid; align-content:start; gap:9px; }
+.work-quest h2 { margin:0; font-size:25px; line-height:1; }
+.work-quest p { margin:0; color:var(--muted); font-size:13px; line-height:1.45; }
+.work-quest code { color:var(--text); font:inherit; }
 .work-system-link { align-self:end; color:var(--accent); font-size:13px; font-weight:700; text-decoration:none; }
-.work-gateway-proof:hover, .work-gateway-proof:focus-visible, .work-dharma:hover, .work-dharma:focus-visible { border-color: var(--accent); outline: 0; }
-.work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-dharma:hover img, .work-dharma:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
+.work-gateway-proof:hover, .work-gateway-proof:focus-visible, .work-quest:hover, .work-quest:focus-visible { border-color: var(--accent); outline: 0; }
+.work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-quest:hover img, .work-quest:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
 .work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
 .work-duet-note b { color: var(--text); }
 
@@ -1194,14 +1204,19 @@ article.gcard .launch { color: var(--dim); }
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
   .work-lead { margin-top: 18px; padding: 18px; }
+  .work-lead-intro { margin-bottom:18px; }
+  .work-lead-intro h1 { font-size:31px; }
+  .work-lead-intro > p:not(.kicker) { font-size:14px; line-height:1.45; }
+  .work-lead-actions { margin-top:14px; }
+  .work-lead-action { flex:1 1 150px; }
   .work-duet { grid-template-columns: 1fr; gap: 12px; }
   .work-system { min-height:0; padding:18px; }
-  .work-lead h1 { font-size: 31px; }
+  .work-lead h2 { font-size:31px; }
   .work-gateway-copy > p:not(.kicker) { font-size: 13px; line-height: 1.45; }
   .work-gateway-proof img { height:auto; min-height:0; aspect-ratio:16 / 8; }
-  .work-dharma-shot img { height:auto; min-height:0; aspect-ratio:16 / 8; }
-  .work-dharma h2 { font-size: 22px; }
-  .work-dharma p { font-size: 12px; }
+  .work-quest-shot img { height:auto; min-height:0; aspect-ratio:16 / 8; }
+  .work-quest h2 { font-size: 22px; }
+  .work-quest p { font-size: 12px; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   /* На телефоне переключатель — главный элемент шапки: две крупные цели
      во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь

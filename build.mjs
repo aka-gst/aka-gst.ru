@@ -620,8 +620,8 @@ ${practicumProjects.map((project) => practicumCard(project, false)).join('')}
         </div>
       </section>`;
 
-// Первый экран отвечает не «чем я интересуюсь», а что уже собрал: приватный
-// AI-шлюз и магазин с агентами. Обучающая игра живёт в практикумах ниже.
+// Первый экран отвечает не «чем я интересуюсь», а какую рабочую систему можно
+// получить: приватный AI-шлюз и квест, где код меняет живой стенд.
 const leadImage = (file, alt) => {
   const { w, h } = imageSize(`assets/shots/${file}`);
   return `<img src="${shotSrc(file)}" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async">`;
@@ -629,11 +629,20 @@ const leadImage = (file, alt) => {
 
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
+        <div class="work-lead-intro">
+          <p class="kicker">AI-продукты / от сценария до запуска</p>
+          <h1 id="work-lead-title">Собираю AI-продукты, которыми можно управлять.</h1>
+          <p>Сценарий, агенты, границы доступа, проверка и релиз — в одной работающей системе.</p>
+          <nav class="work-lead-actions" aria-label="Действия">
+            <a class="work-lead-action work-lead-action--primary" href="https://t.me/gostinka27" target="_blank" rel="noopener me" data-umami-event="contact-open" data-umami-event-network="telegram">Обсудить продукт <b>↗</b></a>
+            <a class="work-lead-action" href="#games">Открыть игры <b>↓</b></a>
+          </nav>
+        </div>
         <div class="work-duet">
           <article class="work-system work-gateway">
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
-              <h1 id="work-lead-title">Local Agent Gateway</h1>
+              <h2>Local Agent Gateway</h2>
               <p>Связывает AI-агентов с приложениями, держит работу стабильной и защищает данные — без передачи наружу.</p>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
@@ -642,19 +651,20 @@ const workLead = `
             </a>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
-          <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
-            <div class="work-dharma-shot">
-              ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
+          <a class="work-system work-quest" href="${esc(qaQuestDemo.url)}"${analytics(qaQuest)}>
+            <div class="work-quest-shot">
+              ${leadImage(qaQuest.shots[0].file, qaQuest.shots[0].alt)}
+              <span class="quest-wake" aria-hidden="true"><b>sleeping</b><i>→</i><b>waking</b><i>→</i><b>awake</b></span>
             </div>
-            <div class="work-dharma-copy">
-              <p class="kicker">02 / продукт заказчика</p>
-              <h2>Dharma AI · Anigma</h2>
-              <p>Магазин 2.0: AI-агенты встречают покупателя, помогают выбрать, оформляют заказ и передают его на отправку.</p>
+            <div class="work-quest-copy">
+              <p class="kicker">02 / рабочий квест</p>
+              <h2>QA Quest</h2>
+              <p><code>print(&quot;WAKE&quot;)</code> будит машину: sleeping → waking → awake. Код меняет стенд, а не слайды.</p>
             </div>
-            <span class="work-system-link">Открыть сайт <b>↗</b></span>
+            <span class="work-system-link">Открыть квест <b>→</b></span>
           </a>
         </div>
-        <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
+        <p class="work-duet-note"><b>Один AI работает с приложением локально.</b> Второй проект превращает настоящий код в видимое действие. Оба можно открыть прямо сейчас.</p>
       </section>`;
 
 // На главной показываем один вход в обучение. Второй маршрут остаётся
