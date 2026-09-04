@@ -122,16 +122,20 @@ printf "  хост %s / контейнер %s — %s\n" "$ih" "$ik" "$([ "$ih" =
 
 echo
 echo "== отрицательный контроль: правка ДВУМЯ способами обязана доезжать =="
+# ВНИМАНИЕ на счёт: `grep -c` печатает «0» И выходит с кодом 1, поэтому
+# «|| echo 0» дописывает ВТОРОЙ ноль и сравнение падает на «0\n0». Я на этом
+# наступил ровно здесь, в живом прогоне 4 сентября: правки доехали обе, а
+# скрипт объявил провал и не дошёл до остальных проверок. Считаем wc -l.
 # Способ 1 — запись поверх (inode сохраняется). Способ 2 — ЗАМЕНА через mv,
 # та самая, что ломала одиночный файл. Проверяем оба, иначе починим ровно
 # тот случай, который проверяли.
 ssh "$HOST" "cp $PAPKA/Caddyfile $PAPKA/.proba-vozvrat"
 ssh "$HOST" "printf '# proba-zapis-poverh\n' >> $PAPKA/Caddyfile"
-v1=$(ssh "$HOST" 'docker exec caddy grep -c proba-zapis-poverh /etc/caddy/Caddyfile' 2>/dev/null || echo 0)
+v1=$(ssh "$HOST" 'docker exec caddy grep proba-zapis-poverh /etc/caddy/Caddyfile' 2>/dev/null | wc -l | tr -d ' ')
 ssh "$HOST" "cp $PAPKA/Caddyfile $PAPKA/.proba-novyy && printf '# proba-zamena-mv\n' >> $PAPKA/.proba-novyy && mv $PAPKA/.proba-novyy $PAPKA/Caddyfile"
-v2=$(ssh "$HOST" 'docker exec caddy grep -c proba-zamena-mv /etc/caddy/Caddyfile' 2>/dev/null || echo 0)
+v2=$(ssh "$HOST" 'docker exec caddy grep proba-zamena-mv /etc/caddy/Caddyfile' 2>/dev/null | wc -l | tr -d ' ')
 ssh "$HOST" "mv $PAPKA/.proba-vozvrat $PAPKA/Caddyfile"
-v3=$(ssh "$HOST" 'docker exec caddy grep -c proba-zamena-mv /etc/caddy/Caddyfile' 2>/dev/null || echo 0)
+v3=$(ssh "$HOST" 'docker exec caddy grep proba-zamena-mv /etc/caddy/Caddyfile' 2>/dev/null | wc -l | tr -d ' ')
 printf "  запись поверх доехала: %s (надо 1)\n" "$v1"
 printf "  замена через mv доехала: %s (надо 1)\n" "$v2"
 printf "  возврат доехал (пробы больше нет): %s (надо 0)\n" "$v3"
