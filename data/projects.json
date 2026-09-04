@@ -330,6 +330,11 @@
       ],
       "links": [
         {
+          "type": "demo",
+          "label": "Открыть квест",
+          "url": "/qa-quest/"
+        },
+        {
           "type": "repo",
           "label": "Исходный код",
           "url": "https://github.com/aka-gst/qa-quest"
