@@ -13,7 +13,7 @@ mount.innerHTML = `
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
-        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б или В.</span></div>
+        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б, В или Г.</span></div>
         <div class="psy-widget-head-actions">
           <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
@@ -24,6 +24,7 @@ mount.innerHTML = `
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-A.wav" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-B.wav" data-voice-volume="0.72">Б</button>
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-C.wav" data-voice-volume="0.72">В</button>
+        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-D.ogg" data-voice-volume="0.72">Г</button>
         <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить пример голоса" title="Остановить голос: пробел">■ Стоп</button>
       </div>
       <div class="psy-widget-evaluation">
@@ -41,8 +42,8 @@ mount.innerHTML = `
           <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=seminar">Записаться на семинар</a>
           <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=rental">Оставить заявку на аренду</a>
           <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
-            <span>Оплатить услуги центра ↗</span>
-            <small>Официальная страница оплаты</small>
+            <span>Оплатить ↗</span>
+            <small>Официальный сайт</small>
           </a>
         </div>
       </section>
@@ -50,7 +51,6 @@ mount.innerHTML = `
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
         <input id="psy-widget-question" maxlength="500" autocomplete="off" placeholder="Например: где посмотреть расписание?" required>
         <button class="psy-widget-mic" type="button" aria-label="Задать вопрос голосом" aria-pressed="false">🎙</button>
-        <button class="psy-widget-stop" type="button" aria-label="Остановить голос" title="Остановить голос: пробел">■ Стоп</button>
         <button type="submit">Спросить</button>
       </form>
       <p class="psy-widget-voice-status" aria-live="polite"></p>
@@ -81,7 +81,6 @@ const messages = root.querySelector(".psy-widget-messages");
 const questionForm = root.querySelector(".psy-widget-form");
 const questionInput = root.querySelector("#psy-widget-question");
 const mic = root.querySelector(".psy-widget-mic");
-const stopVoiceButton = root.querySelector(".psy-widget-stop");
 const previewStopButton = root.querySelector("[data-voice-stop]");
 const voiceStatus = root.querySelector(".psy-widget-voice-status");
 const evaluationSelect = root.querySelector(".psy-widget-evaluation-select");
@@ -177,10 +176,23 @@ function clearRecognitionRestartTimer() {
 function setListeningState(active) {
   listening = active;
   root.dataset.listening = String(active);
-  mic.setAttribute("aria-pressed", String(active));
-  mic.setAttribute("aria-label", active
-    ? "Слушаю. Нажмите ещё раз, чтобы остановить запись."
-    : "Задать вопрос голосом");
+  renderVoiceControl();
+}
+
+function renderVoiceControl() {
+  const playing = voiceIsPlaying();
+  mic.dataset.mode = playing ? "mute" : "mic";
+  mic.textContent = playing ? "🔇" : "🎙";
+  mic.setAttribute("aria-pressed", String(!playing && listening));
+  mic.setAttribute("aria-label", playing
+    ? "Выключить звук"
+    : (listening ? "Слушаю. Нажмите ещё раз, чтобы остановить запись." : "Задать вопрос голосом"));
+  mic.title = playing ? "Выключить звук" : "Задать вопрос голосом";
+}
+
+function setVoicePlaying(active) {
+  root.dataset.voicePlaying = String(active);
+  renderVoiceControl();
 }
 
 function stopListening() {
@@ -210,7 +222,7 @@ function stopVoice({ announce = true } = {}) {
     previewAudioContext = null;
   }
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  root.dataset.voicePlaying = "false";
+  setVoicePlaying(false);
   if (announce) setVoiceStatus("Голос остановлен.");
 }
 
@@ -297,15 +309,14 @@ root.querySelectorAll("[data-voice-preview]").forEach((button) => button.addEven
   previewAudio.volume = Number(button.dataset.voiceVolume || 1);
   softenPreviewTone(button);
   previewAudio.addEventListener("ended", () => {
-    root.dataset.voicePlaying = "false";
+    setVoicePlaying(false);
   }, { once: true });
-  root.dataset.voicePlaying = "true";
+  setVoicePlaying(true);
   previewAudio.play().then(() => setVoiceStatus(`Включён голос ${button.textContent}. Стоп — кнопкой или пробелом.`)).catch(() => {
-    root.dataset.voicePlaying = "false";
+    setVoicePlaying(false);
     setVoiceStatus("Не удалось включить пример голоса. Проверьте звук в браузере.");
   });
 }));
-stopVoiceButton.addEventListener("click", () => stopVoice());
 previewStopButton.addEventListener("click", () => stopVoice());
 evaluationSelect.addEventListener("change", () => {
   const option = evaluationSelect.selectedOptions[0];
@@ -317,7 +328,13 @@ evaluationSelect.addEventListener("change", () => {
   void ask(option.dataset.question);
 });
 if (!voiceCapabilities.recognitionAvailable) {
-  mic.addEventListener("click", () => setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities).voice.fallbackMessage));
+  mic.addEventListener("click", () => {
+    if (voiceIsPlaying()) {
+      stopVoice();
+      return;
+    }
+    setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities).voice.fallbackMessage);
+  });
 } else {
   recognition = new Recognition();
   recognition.lang = "ru-RU";
@@ -378,7 +395,7 @@ if (!voiceCapabilities.recognitionAvailable) {
     recognitionRestartTimer = window.setTimeout(restartRecognition, 120);
   });
   mic.addEventListener("click", () => {
-    if (listening) {
+    if (voiceIsPlaying() || listening) {
       stopVoice();
       return;
     }
