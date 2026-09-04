@@ -311,8 +311,15 @@ for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js; do
   # отличить одно от другого по тексту невозможно, а умолчание должно быть
   # запретом: нет пометки — красный.
   RUKA='по руке человека'
-  vsego=$(printf '%s' "$body" | grep -c 'smooth' 2>/dev/null || true); vsego=${vsego:-0}
-  s_pometkoy=$(printf '%s' "$body" | grep 'smooth' | grep -c -- "$RUKA" 2>/dev/null || true); s_pometkoy=${s_pometkoy:-0}
+  # Ищем плавность В КОНТЕКСТЕ ПРОКРУТКИ, а не слово «smooth» вообще.
+  # Сперва я искал слово — и сторож покраснел на -webkit-font-smoothing,
+  # сглаживании шрифта. Границы слова тоже мало: под неё попадает
+  # font-smooth. Оба омонима поймал отрицательный контроль, ни один не
+  # имеет к прокрутке отношения. Поэтому шаблон узкий: значение в кавычках
+  # либо css-свойство scroll-behavior.
+  PLAVNO="'smooth'|\"smooth\"|scroll-behavior[[:space:]]*:[[:space:]]*smooth"
+  vsego=$(printf '%s' "$body" | grep -cE "$PLAVNO" 2>/dev/null || true); vsego=${vsego:-0}
+  s_pometkoy=$(printf '%s' "$body" | grep -E "$PLAVNO" | grep -c -- "$RUKA" 2>/dev/null || true); s_pometkoy=${s_pometkoy:-0}
   samovolnyh=$((vsego - s_pometkoy))
   if [ "$samovolnyh" -eq 0 ]; then
     say_ok "$f без самовольной плавной прокрутки (по руке разрешено: $s_pometkoy)"
