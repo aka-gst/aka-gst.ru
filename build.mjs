@@ -1038,6 +1038,11 @@ const courseRows = courses
             <li><b>${esc(t.experiments ?? '—')}</b> <span>практических работ</span></li>
             <li><b>~${esc(t.estimate_minutes ?? '—')} мин</b> <span>чтения</span></li>
           </ul>
+          ${
+            Array.isArray(project.stack) && project.stack.length
+              ? `<p class="course-stack">${project.stack.map((t) => esc(t)).join(' · ')}</p>`
+              : ''
+          }
           <span class="link">Открыть <b>→</b></span>
         </a>`;
   })
@@ -1058,7 +1063,7 @@ const praktikumPage = `<!doctype html>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
   </head>
-  <body>
+  <body class="page-short">
     <header class="topbar">
       ${brand()}
     </header>
