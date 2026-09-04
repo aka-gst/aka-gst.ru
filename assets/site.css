@@ -691,7 +691,20 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 
 /* Один главный квест, а не три одинаково тяжёлые карточки. Два практикума
    остаются рядом как инструменты, не перенося и не выдавливая QueQuest. */
-.practicum-switch .practicum-pilot-grid { display:grid; grid-template-columns:minmax(0, 2fr) minmax(280px, 1fr); gap:14px; align-items:stretch; }
+/* Кадр QueQuest — во всю ширину НАД практикумами, практикумы в ряд под ним.
+   Решение Сергея 4 сентября, вариант «2». Число за жалобой: строка в правой
+   колонке шла по 29 символов при читаемых 45–75, потому что колонке
+   оставалось 250 px. Колонки были 745 : 373, ровно два к одному.
+   После перестановки строка стала 50 символов — в полосе.
+   Кадр НЕ обрезаем: исходник 1280x720, то есть ровно 16:9, и при aspect-ratio
+   16/9 не теряется ничего. Пробовали срезать до 1130x380 — у слогана «ТЫ
+   БОЛЬШЕ НЕ НУЖЕН ЭТОЙ РАБОТЕ» отрезало верхнюю строку, пропадали шапка игры
+   и подпись PALLET. Смотреть надо картинку, а не долю экрана. */
+.practicum-switch .practicum-pilot-grid { display:grid; grid-template-columns:1fr; gap:18px; align-items:stretch; }
+.practicum-switch .practicum-side { display:block; }
+.practicum-switch .practicum-detail-stage { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+@media (max-width:760px) { .practicum-switch .practicum-detail-stage { grid-template-columns:1fr; } }
+
 .quequest-card { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--accent) 48%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, color-mix(in srgb, var(--accent-dim) 78%, #140d2a), var(--panel) 64%); }
 .quequest-visual { position:relative; display:block; min-height:0; overflow:hidden; border:0; border-right:1px solid var(--line); padding:0; background:#080a0f; cursor:pointer; text-align:left; }
 .quequest-poster, .quequest-video { display:block; width:100%; height:100%; min-height:390px; object-fit:cover; object-position:center; }
@@ -722,7 +735,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .practicum-detail-copy .metric-chips { gap:5px; }
 .practicum-detail-copy .metric-chip { padding:4px 6px; font-size:10px; }
 .practicum-detail-copy .card-links { margin-top:2px; }
-@media (min-width:901px) { .quequest-card { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:570px; min-height:0; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { align-content:center; gap:8px; padding:16px 20px; }.quequest-copy .tagline { font-size:15px; line-height:1.4; }.practicum-side { height:570px; }.practicum-detail-stage { height:456px; }.practicum-detail { overflow:auto; } }
+@media (min-width:901px) { .quequest-card { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:auto; min-height:0; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { align-content:center; gap:8px; padding:16px 20px; }.quequest-copy .tagline { font-size:15px; line-height:1.4; }.practicum-side { height:570px; }.practicum-detail-stage { height:456px; }.practicum-detail { overflow:auto; } }
 @media (max-width:900px) { .practicum-switch .practicum-pilot-grid { grid-template-columns:1fr; }.practicum-side { grid-template-columns:minmax(180px, .72fr) minmax(0, 1.28fr); gap:10px; }.practicum-switch .practicum-tabs { margin:0; }.practicum-detail { min-height:0; }.quequest-card { min-height:0; } }
 @media (max-width:640px) { .quequest-card { grid-template-columns:1fr; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { padding:18px; }.quequest-copy .tagline { font-size:14px; }.practicum-side { grid-template-columns:1fr; }.practicum-switch .practicum-tabs { grid-template-columns:1fr 1fr; }.practicum-switch .practicum-tabs button { min-height:50px; font-size:11px; }.practicum-detail { grid-template-columns:66px minmax(0,1fr); min-height:0; }.practicum-detail-copy .metric-chips { display:none; }.quequest-play-label { left:10px; bottom:10px; } }
 @media (prefers-reduced-motion:reduce) { .quequest-video { display:none; }.quequest-play-label::before { content:"Кадр"; }.quequest-play-label { cursor:default; } }

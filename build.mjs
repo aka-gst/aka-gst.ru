@@ -582,10 +582,8 @@ const practicumRouteIntro = {
 };
 
 const practicumCard = (project, active, extra = '') => `
-          <article class="practicum-detail" id="practicum-panel-${esc(project.id)}" role="tabpanel"
-            aria-labelledby="practicum-tab-${esc(project.id)}" data-practicum-panel="${esc(project.id)}"${
-              active ? '' : ' hidden'
-            }>
+          <article class="practicum-detail" id="practicum-panel-${esc(project.id)}"
+            data-practicum-panel="${esc(project.id)}">
             <div class="practicum-detail-shot">${practicumImage(project.shots[0])}</div>
             <div class="practicum-detail-copy">
               <div class="card-head">
@@ -600,7 +598,7 @@ const practicumCard = (project, active, extra = '') => `
           </article>`;
 
 const practicumSwitch = `
-      <section class="block practicum-switch" aria-labelledby="practicums-title" data-practicum-switch>
+      <section class="block practicum-switch" aria-labelledby="practicums-title">
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
@@ -620,11 +618,9 @@ const practicumSwitch = `
             </div>
           </article>
           <aside class="practicum-side" aria-label="Дополнительные практикумы">
-            <div class="practicum-tabs" role="tablist" aria-label="Дополнительные практикумы">
-              ${practicumProjects.map((project, index) => `<button type="button" id="practicum-tab-${esc(project.id)}" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" aria-controls="practicum-panel-${esc(project.id)}" data-practicum-to="${esc(project.id)}">${esc(project.title.replace('Практикум: ', ''))}</button>`).join('')}
-            </div>
+            
             <div class="practicum-detail-stage">
-              ${practicumProjects.map((project, index) => practicumCard(project, index === 0)).join('').trim()}
+              ${practicumProjects.map((project) => practicumCard(project, true)).join('').trim()}
             </div>
           </aside>
         </div>
