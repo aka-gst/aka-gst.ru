@@ -23,7 +23,7 @@
 .psy-widget-fullscreen { font-size: 1.1rem; }
 .psy-widget[data-fullscreen="true"] .psy-widget-panel { inset: 0; width: auto; max-width: none; max-height: none; margin: 0; border-radius: 0; }
 .psy-widget[data-fullscreen="true"] .psy-widget-messages,
-.psy-widget[data-fullscreen="true"] .psy-widget-suggestions,
+.psy-widget[data-fullscreen="true"] .psy-widget-actions,
 .psy-widget[data-fullscreen="true"] .psy-widget-form,
 .psy-widget[data-fullscreen="true"] .psy-widget-handoff,
 .psy-widget[data-fullscreen="true"] .psy-widget-voice-status { width: min(960px, 100%); margin-left: auto; margin-right: auto; }
@@ -41,16 +41,15 @@
 .psy-widget-links { display: grid; gap: 7px; margin-top: 10px; }
 .psy-widget-links a { color: #4c3682; font-size: .86rem; font-weight: 700; }
 .psy-widget-links .psy-widget-action { display: inline-flex; align-items: center; min-height: 38px; width: fit-content; padding: 0 11px; border-radius: 9px; background: #2d5a4c; color: #fff; text-decoration: none; }
-.psy-widget-payment-area { padding: 4px 18px 6px; }
-.psy-widget-payment { display: grid; gap: 2px; min-height: 52px; padding: 9px 12px; border: 1px solid #bdb0dd; border-radius: 12px; background: #f4f0ff; color: #3f2b73; text-decoration: none; box-shadow: 0 3px 10px #30204b12; }
-.psy-widget-payment span { font-size: .84rem; font-weight: 850; line-height: 1.2; }
-.psy-widget-payment small { color: #665b7d; font-size: .7rem; line-height: 1.2; }
+.psy-widget-payment { display: grid; align-content: center; gap: 2px; min-height: 58px; padding: 9px 12px; border: 1px solid #bdb0dd; border-radius: 12px; background: #f4f0ff; color: #3f2b73; text-decoration: none; box-shadow: 0 3px 10px #30204b12; }
+.psy-widget-payment span { font-size: .8rem; font-weight: 850; line-height: 1.2; }
+.psy-widget-payment small { color: #665b7d; font-size: .68rem; line-height: 1.2; }
 .psy-widget-payment:hover, .psy-widget-payment:focus-visible { border-color: #6955a4; background: #ebe4ff; outline: 3px solid #d9cff5; outline-offset: 3px; }
-.psy-widget-booking-area { padding: 4px 18px 14px; }
+.psy-widget-booking-area { padding: 8px 18px 14px; }
 .psy-widget-booking-area p { display: grid; gap: 1px; margin: 0 0 7px; color: #4b397c; font-size: .78rem; line-height: 1.25; }
 .psy-widget-booking-area p span { color: #6a6378; font-size: .7rem; }
-.psy-widget-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
-.psy-widget-booking { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 8px 12px; border-radius: 999px; background: #6955a4; color: #fff; font-size: .8rem; font-weight: 800; text-decoration: none; box-shadow: 0 4px 10px #30204b22; }
+.psy-widget-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.psy-widget-booking { display: inline-flex; align-items: center; justify-content: center; min-height: 58px; padding: 8px 12px; border-radius: 12px; background: #6955a4; color: #fff; font-size: .78rem; font-weight: 800; line-height: 1.2; text-align: center; text-decoration: none; box-shadow: 0 4px 10px #30204b22; }
 .psy-widget-booking:hover, .psy-widget-booking:focus-visible { background: #58458e; outline: 3px solid #d9cff5; outline-offset: 3px; }
 .psy-widget-booking-secondary { border: 1px solid #d3cae8; background: #fff; color: #4b397c; box-shadow: none; }
 .psy-widget-booking-secondary:hover, .psy-widget-booking-secondary:focus-visible { background: #f3effb; color: #4b397c; }
@@ -81,8 +80,7 @@
   .psy-widget-voice-preview { padding: 7px 16px; }
   .psy-widget-messages { padding: 12px 16px 10px; }
   .psy-widget-message { max-width: 92%; padding: 10px 12px; }
-  .psy-widget-payment-area { padding: 4px 16px 6px; }
-  .psy-widget-booking-area { padding: 4px 16px 14px; }
+  .psy-widget-booking-area { padding: 8px 16px 14px; }
   .psy-widget-form { grid-template-columns: minmax(0, 1fr) var(--psy-widget-touch-target) auto; }
   .psy-widget-form > button[type="submit"] { grid-column: 1 / -1; }
 }

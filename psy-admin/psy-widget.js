@@ -34,18 +34,16 @@ mount.innerHTML = `
         <p class="psy-widget-evaluation-status" id="psy-widget-evaluation-status" aria-live="polite"></p>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
-      <div class="psy-widget-payment-area">
-        <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
-          <span>Оплатить услуги центра ↗</span>
-          <small>Откроется официальная страница оплаты</small>
-        </a>
-      </div>
       <section class="psy-widget-booking-area" aria-label="Запись в центр Орион-С">
         <p><b>Запись в центр «Орион‑С»</b><span>Заявка уйдёт администратору на подтверждение.</span></p>
-        <div class="psy-widget-suggestions">
+        <div class="psy-widget-actions">
           <a class="psy-widget-booking" href="/psy-admin/booking/?kind=specialist">Записаться к специалисту</a>
           <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=seminar">Записаться на семинар</a>
           <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=rental">Оставить заявку на аренду</a>
+          <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
+            <span>Оплатить услуги центра ↗</span>
+            <small>Официальная страница оплаты</small>
+          </a>
         </div>
       </section>
       <form class="psy-widget-form">
