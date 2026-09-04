@@ -1020,12 +1020,29 @@ writeFileSync(join(root, 'index.html'), html);
 // Редирект /praktikum вёл в пустоту, пока этой страницы не было.
 const courses = db.projects.filter((p) => p.courseFeed);
 
+// Кадр для карточки практикума. Снят «Глазами» под ширину 353 — ровно ту, в
+// которой карточка живёт на обеих ширинах экрана (353 на десктопе, 358 на
+// телефоне). Показывает СОДЕРЖАНИЕ, а не верх страницы: заголовок, метки и
+// кнопка на карточке уже есть, и снимок обложки повторил бы их слово в слово.
+// Соответствие сверено по описанию проекта, а не по имени файла.
+const kadrPraktikuma = {
+  'praktikum-testing': 'praktikum-marshruty.png',
+  'ai-agent-service-lab': 'praktikum-chto-rabotaet.png',
+};
+
 const courseRows = courses
   .map((project) => {
     const course = readCourse(project.courseFeed.path);
     const t = course?.totals || {};
     return `
         <a class="card" href="${esc(project.courseFeed.mount)}">
+          ${
+            kadrPraktikuma[project.id]
+              ? `<img class="course-shot" src="/assets/shots/${kadrPraktikuma[project.id]}?v=${assetVersion(
+                  `assets/shots/${kadrPraktikuma[project.id]}`
+                )}" alt="" width="353" height="122" decoding="async" loading="lazy">`
+              : ''
+          }
           <p class="kicker">${esc(project.kicker)}</p>
           <h3>${esc(course?.title || project.title)}</h3>
           <p class="tagline">${esc(course?.subtitle || project.tagline)}</p>

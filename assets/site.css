@@ -244,6 +244,9 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
    вообще: у главной своя раскладка с панелями, и трогать её незачем. */
 .page-short { display: flex; flex-direction: column; min-height: 100dvh; }
 .page-short > main { flex: 1 0 auto; }
+/* Кадр практикума: показывает содержание курса, а не обложку. Снят под
+   353 — ширину карточки на обеих ширинах экрана. */
+.course-shot { display:block; width:100%; height:auto; margin:0 0 12px; border:1px solid var(--line); border-radius:8px; }
 .course-stack { margin: 10px 0 0; color: var(--muted, #97968f); font-size: 12px; line-height: 1.5; }
 
 .story-to-top { position:fixed; right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); z-index:30; display:flex; align-items:center; gap:7px; min-height:44px; padding:10px 14px; border:1px solid var(--accent); border-radius:999px; background:rgba(15,12,25,.92); box-shadow:0 10px 34px #0009; color:var(--text); font:700 12px var(--sans); cursor:pointer; backdrop-filter:blur(10px); }
