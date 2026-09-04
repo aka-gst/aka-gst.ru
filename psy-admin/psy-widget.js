@@ -1,8 +1,8 @@
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260904-17";
+import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260905-01";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260904-17", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260905-01", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -28,11 +28,14 @@ mount.innerHTML = `
         <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить пример голоса" title="Остановить голос: пробел">■ Стоп</button>
       </div>
       <div class="psy-widget-evaluation">
+        <button class="psy-widget-evaluation-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-evaluation-content">Проверить помощника</button>
+        <div id="psy-widget-evaluation-content" hidden>
         <label for="psy-widget-evaluation-select">60 проверочных вопросов</label>
         <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select" aria-describedby="psy-widget-evaluation-status">
           <option value="">Выбери вопрос для проверки</option>
         </select>
         <p class="psy-widget-evaluation-status" id="psy-widget-evaluation-status" aria-live="polite"></p>
+        </div>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
       <section class="psy-widget-booking-area" aria-label="Запись в центр Орион-С">
@@ -85,6 +88,8 @@ const previewStopButton = root.querySelector("[data-voice-stop]");
 const voiceStatus = root.querySelector(".psy-widget-voice-status");
 const evaluationSelect = root.querySelector(".psy-widget-evaluation-select");
 const evaluationStatus = root.querySelector(".psy-widget-evaluation-status");
+const evaluationToggle = root.querySelector(".psy-widget-evaluation-toggle");
+const evaluationContent = root.querySelector("#psy-widget-evaluation-content");
 let previewAudio = null;
 let previewAudioContext = null;
 let recognition = null;
@@ -318,6 +323,12 @@ root.querySelectorAll("[data-voice-preview]").forEach((button) => button.addEven
   });
 }));
 previewStopButton.addEventListener("click", () => stopVoice());
+evaluationToggle.addEventListener("click", () => {
+  const expanded = evaluationToggle.getAttribute("aria-expanded") !== "true";
+  evaluationToggle.setAttribute("aria-expanded", String(expanded));
+  evaluationContent.hidden = !expanded;
+  evaluationToggle.textContent = expanded ? "Скрыть проверочные вопросы" : "Проверить помощника";
+});
 evaluationSelect.addEventListener("change", () => {
   const option = evaluationSelect.selectedOptions[0];
   if (!option?.dataset.question) {

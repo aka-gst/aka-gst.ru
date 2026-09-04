@@ -28,6 +28,9 @@
 .psy-widget[data-fullscreen="true"] .psy-widget-handoff,
 .psy-widget[data-fullscreen="true"] .psy-widget-voice-status { width: min(960px, 100%); margin-left: auto; margin-right: auto; }
 .psy-widget-evaluation { padding: 9px 16px; border-bottom: 1px solid #eeeaf5; background: #fcfbff; }
+.psy-widget-evaluation-toggle { display: block; width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #d3cae8; border-radius: 8px; background: #fff; color: #4b397c; text-align: left; cursor: pointer; }
+.psy-widget-evaluation-toggle:focus-visible { outline: 3px solid #d9cff5; outline-offset: 2px; }
+#psy-widget-evaluation-content { padding-top: 10px; }
 .psy-widget-evaluation label { display: block; margin-bottom: 5px; color: #4b397c; font-size: .78rem; font-weight: 750; }
 .psy-widget-evaluation-select { width: 100%; min-height: 40px; padding: 7px 9px; border: 1px solid #d3cae8; border-radius: 8px; background: #fff; color: #382b62; font: inherit; }
 .psy-widget-evaluation-status { min-height: 1.2em; margin: 5px 0 0; color: #6a6378; font-size: .72rem; }
@@ -77,6 +80,8 @@
   .psy-widget-fullscreen { display: none; }
   .psy-widget-evaluation { padding: 9px 16px; }
   .psy-widget-voice-preview { padding: 7px 16px; }
+  .psy-widget-voice-preview { flex-wrap: wrap; }
+  .psy-widget-voice-preview button { min-width: 44px; min-height: 44px; }
   .psy-widget-messages { padding: 12px 16px 10px; }
   .psy-widget-message { max-width: 92%; padding: 10px 12px; }
   .psy-widget-booking-area { padding: 8px 16px 12px; }

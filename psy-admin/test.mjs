@@ -4,7 +4,7 @@ import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
 import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260904-17";
+const widgetVersion = "psy-widget-20260905-01";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -31,6 +31,8 @@ assert.equal(preparedQuestionCases().filter(({ expected }) => !expected).length,
 assert.match(widgetSource, /<select class="psy-widget-evaluation-select"/);
 assert.match(widgetSource, /Выбери вопрос для проверки/);
 assert.doesNotMatch(widgetSource, /psy-widget-evaluation-open/);
+assert.match(widgetSource, /class="psy-widget-evaluation-toggle"[^>]*aria-expanded="false"/);
+assert.match(widgetSource, /id="psy-widget-evaluation-content" hidden/);
 assert.match(widgetSource, /preparedQuestionCases/);
 assert.doesNotMatch(widgetSource, /Только открытые источники|Демо по открытым страницам|Демо-передача/);
 assert.match(widgetSource, /Запись в центр «Орион‑С»/);

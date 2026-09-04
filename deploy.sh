@@ -59,6 +59,8 @@ photodata
 "
 
 echo "== сборка =="
+echo "== PsyAdmin: защита от старой выкладки =="
+node psy-admin/tools/release-guard.mjs --live-base "${PSY_ADMIN_LIVE_BASE:-https://aka-gst.ru}"
 node build.mjs
 
 missing=""
