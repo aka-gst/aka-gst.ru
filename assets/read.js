@@ -65,7 +65,6 @@
   наверх.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 14 5-5 5 5"/></svg>';
   document.body.append(наверх);
 
-  const меньшеДвижения = matchMedia('(prefers-reduced-motion: reduce)');
   const высотаОкна = () => Math.max(1, window.visualViewport?.height || innerHeight);
   const обновитьНаверх = () => {
     const высота = высотаОкна();
@@ -73,7 +72,7 @@
     наверх.hidden = !(длинныйТекст && scrollY >= высота);
   };
   наверх.addEventListener('click', () => {
-    scrollTo({ top: 0, behavior: меньшеДвижения.matches ? 'auto' : 'smooth' });
+    scrollTo(0, 0); // мгновенно: плавность запрещена вообще отовсюду
     // При reduced motion браузер прыгает сразу; не ждём следующего scroll,
     // чтобы круг не висел на верхнем экране лишний кадр.
     requestAnimationFrame(обновитьНаверх);

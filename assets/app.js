@@ -407,6 +407,18 @@
   const all = panel.querySelector('[data-story-all]');
   let currentCollection = null;
   const closeReader = () => { if (reader) reader.hidden = true; };
+  // Мгновенный перенос к элементу. Плавную прокрутку сюда возвращать нельзя:
+  // владелец 31 августа 2026 — «уберите его вообще отовсюду и чтоб он больше
+  // не появлялся!!». Убрано именно ощущение самовольного скольжения, а не сам
+  // перенос: без переноса нажатие на телефоне выглядит как ничего — заголовок
+  // читалки встаёт на 870-й пиксель при окне 844.
+  // scroll-padding-top учитываем руками, потому что его знает scrollIntoView,
+  // а им пользоваться нельзя — он под запретом проверки.
+  const кПередвижению = (el) => {
+    if (!el) return;
+    const отступ = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+    scrollTo(0, Math.max(0, el.getBoundingClientRect().top + scrollY - отступ));
+  };
   const showCollection = (id) => {
     currentCollection = id;
     closeReader();
@@ -415,7 +427,7 @@
     all?.setAttribute('aria-expanded', 'false');
     if (all?.querySelector('b')) all.querySelector('b').textContent = '↓';
     const current = collections.find((collection) => collection.dataset.storyCollectionPanel === id);
-    requestAnimationFrame(() => current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    requestAnimationFrame(() => кПередвижению(current));
   };
   covers.forEach((cover) => cover.addEventListener('click', () => showCollection(cover.dataset.storyCollection)));
   all?.addEventListener('click', () => {
@@ -436,13 +448,13 @@
     reader.querySelector('[data-story-reader-copy]').innerHTML = story.innerHTML;
     collections.forEach((collection) => { collection.hidden = true; });
     reader.hidden = false;
-    reader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    кПередвижению(reader);
   }));
   panel.querySelector('[data-story-back]')?.addEventListener('click', () => {
     if (currentCollection) showCollection(currentCollection);
     else closeReader();
   });
-  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }));
+  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo(0, 0));
 })();
 
 // ── Заявка о партнёрстве ────────────────────────────────────────────
