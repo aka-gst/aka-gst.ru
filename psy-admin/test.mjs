@@ -46,6 +46,7 @@ assert.match(widgetCss, /\.psy-widget\[data-fullscreen="true"\] \.psy-widget-act
 assert.match(widgetCss, /\.psy-widget-panel \{[^}]*width: min\(520px, calc\(100vw - 32px\)\);/);
 assert.match(widgetCss, /\.psy-widget-payment \{[^}]*min-height: 54px;/);
 assert.match(widgetCss, /\.psy-widget-booking \{[^}]*min-height: 54px;/);
+assert.match(widgetCss, /\.psy-widget-voice-status \{[^}]*min-height: 1\.35em;[^}]*white-space: nowrap;/);
 assert.doesNotMatch(widgetSource, /\/psy-admin\/payment/);
 assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=specialist">Записаться к специалисту<\/a>/);
 assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=seminar">Записаться на семинар<\/a>/);
