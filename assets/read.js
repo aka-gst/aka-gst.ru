@@ -72,8 +72,7 @@
     наверх.hidden = !(длинныйТекст && scrollY >= высота);
   };
   наверх.addEventListener('click', () => {
-    const меньшеДвижения = matchMedia('(prefers-reduced-motion: reduce)');
-    scrollTo({ top: 0, behavior: меньшеДвижения.matches ? 'auto' : 'smooth' }); // по руке человека
+    scrollTo(0, 0); // мгновенно: плавности нет вообще отовсюду
     // При reduced motion браузер прыгает сразу; не ждём следующего scroll,
     // чтобы круг не висел на верхнем экране лишний кадр.
     requestAnimationFrame(обновитьНаверх);
