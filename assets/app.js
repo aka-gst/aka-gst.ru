@@ -454,7 +454,8 @@
     if (currentCollection) showCollection(currentCollection);
     else closeReader();
   });
-  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo(0, 0));
+  // Плавность тут разрешена: человек жмёт кнопку сам, это не притягивание.
+  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' })); // по руке человека
 })();
 
 // ── Заявка о партнёрстве ────────────────────────────────────────────

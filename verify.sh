@@ -293,12 +293,32 @@ for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js; do
     say_bad "$f не доехал или не тот файл — приметы «$primeta» в нём нет, искать в нём нечего"
     continue
   fi
-  for bad_word in 'scroll-snap-type' 'scroll-behavior:' '.scrollIntoView(' "behavior: 'smooth'" 'behavior:"smooth"'; do
+  for bad_word in 'scroll-snap-type' 'scroll-behavior:' '.scrollIntoView('; do
     n=$(printf '%s' "$body" | grep -c -- "$bad_word" 2>/dev/null || true)
     n=${n:-0}
     if [ "$n" -eq 0 ]; then say_ok "$f без $bad_word"
     else say_bad "$f: $bad_word вернулся ($n)"; fi
   done
+  # Плавность ловим ПО СМЫСЛУ, а не по написанию. Прежняя проверка искала две
+  # точные строки — и пропускала третью: в read.js та же плавная прокрутка
+  # записана как `меньшеДвижения.matches ? 'auto' : 'smooth'`, и сторож видел
+  # её насквозь. Отрицательный контроль это показал за минуту: файл с двумя
+  # настоящими прокрутками в разных написаниях ловился наполовину.
+  #
+  # Разрешение даётся ТОЛЬКО явной пометкой на той же строке. Решение Мозга
+  # 4 сентября 2026: движение по руке человека (кнопка «наверх») притягиванием
+  # не считается, самовольное — считается. Пометка обязательна, потому что
+  # отличить одно от другого по тексту невозможно, а умолчание должно быть
+  # запретом: нет пометки — красный.
+  RUKA='по руке человека'
+  vsego=$(printf '%s' "$body" | grep -c 'smooth' 2>/dev/null || true); vsego=${vsego:-0}
+  s_pometkoy=$(printf '%s' "$body" | grep 'smooth' | grep -c -- "$RUKA" 2>/dev/null || true); s_pometkoy=${s_pometkoy:-0}
+  samovolnyh=$((vsego - s_pometkoy))
+  if [ "$samovolnyh" -eq 0 ]; then
+    say_ok "$f без самовольной плавной прокрутки (по руке разрешено: $s_pometkoy)"
+  else
+    say_bad "$f: плавная прокрутка без пометки «$RUKA» ($samovolnyh)"
+  fi
 done
 
 echo
