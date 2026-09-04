@@ -454,7 +454,17 @@
     if (currentCollection) showCollection(currentCollection);
     else closeReader();
   });
-  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo(0, 0));
+  const storyTop = panel.querySelector('[data-story-top]');
+  const updateStoryTop = () => {
+    if (storyTop) storyTop.hidden = scrollY < innerHeight;
+  };
+  if (storyTop) {
+    storyTop.title = 'Перейти наверх';
+    updateStoryTop();
+    addEventListener('scroll', updateStoryTop, { passive:true });
+    addEventListener('resize', updateStoryTop);
+    storyTop.addEventListener('click', () => scrollTo(0, 0));
+  }
 })();
 
 // ── Заявка о партнёрстве ────────────────────────────────────────────
