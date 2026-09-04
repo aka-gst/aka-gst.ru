@@ -182,7 +182,7 @@ echo "         выкладываются своими сессиями, сод�
 
 echo
 echo "== содержимое, а не только код ответа =="
-for needle in 'og:image' '66 проверок прошли' 'data-panel="play"' 'class="social"' \
+for needle in 'og:image' '66 автотестов' 'data-panel="play"' 'class="social"' \
               'class="shot"' 'assets/shots/allure-gateway.png'; do
   if printf '%s' "$page" | grep -q "$needle"; then say_ok "на странице есть $needle"
   else say_bad "на странице НЕТ $needle"; fi
