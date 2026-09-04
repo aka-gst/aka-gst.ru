@@ -1,8 +1,8 @@
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260904-16";
+import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260904-17";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260904-16", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260904-17", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");

@@ -4,7 +4,7 @@ import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
 import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260904-16";
+const widgetVersion = "psy-widget-20260904-17";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
