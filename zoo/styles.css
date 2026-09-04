@@ -1,0 +1,93 @@
+/* Заражённый мир — сырость и холод. Очищенный — тепло и шерсть.
+   Палитра здесь не украшение: спокойный вид это то, к чему игрок идёт. */
+/* Палитра снята с самих картинок, а не придумана. Неона в игре нет:
+   заражение — это холод и пустота, очищение — тепло и жизнь. Кислотное
+   свечение по вязаной фактуре читалось как фильтр поверх мира, а не как
+   его свойство. */
+:root{
+  --bg:#141c1a; --card:#1d2724; --text:#d7e0dc; --line:#2b3936; --muted:#7d8c88;
+  --accent:#f2c98d;            /* тёплый свет — единственное живое в мёртвом месте */
+  --alarm:#b8543f; --cold:#8fa5a0;
+  --moss:#5a7a5f; --gold:#d39a3c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif;transition:background .6s,color .6s}
+.shell{width:min(1240px,calc(100% - 24px));margin:0 auto;padding:16px 0 40px}
+.head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.head h1{font:700 28px/1 "Playfair Display",serif;margin:0;color:var(--accent);letter-spacing:.02em}
+.counters{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.counters b{color:var(--text);font:700 13px "DM Mono",monospace;margin-left:4px}
+.who{color:var(--accent)}
+.say{margin:12px 0 14px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0;font-size:13px;line-height:1.55}
+.layout{display:grid;grid-template-columns:minmax(320px,1fr) 300px 260px;gap:14px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.place-head{display:flex;align-items:baseline;gap:10px}
+.place-head h2{font:600 20px "Playfair Display",serif;margin:0}
+.place-state{margin-left:auto;font:600 10px "DM Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--alarm)}
+.place-state.ok{color:var(--moss)}
+.place-text{font-size:13px;line-height:1.6;color:var(--muted);margin:6px 0 12px}
+.row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.row p{margin:3px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
+.row b{font-size:14px}
+.act{margin-left:auto;flex:0 0 auto;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:transparent;color:var(--text);font:600 12px Manrope,sans-serif;cursor:pointer}
+.act:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.act.danger:hover{border-color:var(--alarm);color:var(--alarm)}
+.act:disabled{opacity:.45;cursor:default}
+.empty{color:var(--muted);font-size:12px;padding:10px 0}
+.el{font:600 10px "DM Mono",monospace;padding:2px 6px;border-radius:6px;border:1px solid currentColor}
+.el-water{color:#4fb3d9}.el-wind{color:#9ad1c0}.el-fire{color:var(--coral)}
+.fight{margin-top:14px;padding-top:12px;border-top:2px solid var(--alarm)}
+.foe b{font-size:15px}
+.intent{margin:6px 0 10px;font-size:13px;color:var(--text)}
+.intent span{color:var(--alarm);font-weight:600}
+.bars{display:grid;gap:6px;margin-bottom:8px}
+.bar{display:grid;grid-template-columns:52px 1fr;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.bar i{display:block;height:9px;background:#0006;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.bar b{display:block;height:100%;background:var(--alarm);transition:width .3s}
+.bar.calm b{background:var(--moss)}
+.resolve{font-size:12px;color:var(--muted);margin:0 0 10px}
+.moves{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.move{border:1px solid var(--line);border-radius:11px;padding:11px 8px;background:transparent;color:var(--text);font:600 13px Manrope,sans-serif;cursor:pointer;display:grid;gap:3px}
+.move span{font:400 10px Manrope,sans-serif;color:var(--muted)}
+.move:hover{border-color:var(--accent);color:var(--accent)}
+.fight-log{list-style:none;padding:0;margin:10px 0 0;font-size:11px;color:var(--muted)}
+.fight-log li{padding:3px 0;border-bottom:1px dotted var(--line)}
+.map{display:grid;gap:4px}
+.tile{aspect-ratio:1/1;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text);cursor:pointer;padding:6px;display:grid;align-content:start;gap:2px;text-align:left}
+.tile-n{font:10px "DM Mono",monospace;color:var(--muted)}
+.tile-name{font:600 11px/1.1 "Playfair Display",serif}
+.tile-tag{margin-top:auto;font:600 9px "DM Mono",monospace;color:var(--alarm)}
+.tile-tag.ok{color:var(--moss)}.tile-tag.cost{color:var(--gold)}
+.tile.fog{opacity:.3;cursor:not-allowed}
+.tile.near{border-style:dashed;border-color:var(--gold)}
+.tile.infected{border-color:var(--alarm);box-shadow:inset 0 0 18px #ff3d8122}
+.tile.clean{background:#f5f0e610;border-color:var(--moss)}
+.tile.here{outline:2px solid var(--accent);outline-offset:-1px}
+.side h3{font:600 13px Manrope,sans-serif;margin:0 0 8px;color:var(--muted)}
+.journal,.bag{list-style:none;padding:0;margin:0 0 14px;font-size:12px}
+.journal li{padding:8px 0;border-bottom:1px solid var(--line);display:grid;gap:3px}
+.journal span{color:var(--muted);line-height:1.45}
+.journal i{font:600 10px "DM Mono",monospace;font-style:normal;color:var(--gold)}
+.bag li{padding:5px 0;border-bottom:1px dotted var(--line)}
+.small{font-size:11px;color:var(--muted);line-height:1.5;margin:10px 0 0}
+.small a{color:var(--accent)}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.map-panel{order:-1}}
+
+/* Вид места. Картинки может не быть — тогда блок просто не показывается,
+   и игра работает как прежде. */
+.place-art{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;margin:0 0 12px;
+  border:1px solid var(--line);filter:saturate(.9)}
+.place-art[hidden]{display:none}
+.place.clean-here .place-art{filter:none}
+
+/* Существо в списке места: маленькое, чтобы читался текст, а не картинка. */
+.beast-thumb {
+  width: 64px; height: 64px; flex: 0 0 64px;
+  object-fit: contain;
+}
+/* Портрет в бою. Существо смотрит на игрока — оно здесь главное. */
+.foe-art {
+  display: block; width: 100%; max-width: 260px; margin: 0 auto 8px;
+  aspect-ratio: 1 / 1; object-fit: contain;
+}
+.foe-art[hidden], .beast-thumb[hidden] { display: none; }

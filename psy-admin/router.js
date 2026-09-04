@@ -1,4 +1,4 @@
-import { catalog, CENTER_URL } from "./content.js";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js";
 import { intents, safetyIntents } from "./intents.js";
 
 const normalize = (value) => value
@@ -8,7 +8,7 @@ const normalize = (value) => value
   .replace(/\s+/g, " ")
   .trim();
 
-const crisisPattern = /(самоубий|суицид|убить себя|покончить с собой|не хочу жить|причинить себе вред|навредить себе)/i;
+const crisisPattern = /(самоубий|суицид|убить себя|покончить с собой|не хочу жить|причинить себе вред|навредить себе|кризис)/i;
 const diagnosisPattern = /(диагноз|диагностируй|назначь лечение|какие таблетки|антидепрессант|паническ|тревог|травм|упражнен|что мне лечить|проведи терапию|лечи меня)/i;
 const sensitivePattern = /(номер карты|данные карты|картой|карту|оплатить в чате|cvv|cvc|парол|паспорт|снилс)/i;
 const currentFactPattern = /(сколько стоит|цена|стоимость|когда|дата|места|свободн|сегодня|завтра|сейчас проходит)/i;
@@ -50,6 +50,15 @@ function scoreIntent(query, intent) {
 function bestIntentMatch(query, candidates) {
   return candidates
     .map((intent) => ({ intent, score: scoreIntent(query, intent) }))
+    .sort((a, b) => b.score - a.score)[0];
+}
+
+function findApprovedOffering(query) {
+  return approvedOfferings
+    .map((offering) => ({
+      offering,
+      score: offering.keywords.reduce((best, keyword) => Math.max(best, query.includes(normalize(keyword)) ? normalize(keyword).length : 0), 0)
+    }))
     .sort((a, b) => b.score - a.score)[0];
 }
 
@@ -98,7 +107,65 @@ export function answerQuestion(rawQuestion) {
     };
   }
 
+  if (/(ближайш|следующ).*(семинар|мероприят|программ)|(семинар|мероприят|программ).*(ближайш|следующ)/i.test(query)) {
+    return {
+      kind: "offer",
+      title: "Ближайшее опубликованное мероприятие",
+      text: `Ближайшее опубликованное мероприятие — «${nextPublishedEvent.title}». Старт ${nextPublishedEvent.startsAt}, ${nextPublishedEvent.duration}.`,
+      url: nextPublishedEvent.url,
+      linkText: "Открыть программу и подробности",
+      action: { label: "Оставить заявку на мероприятие", url: "/psy-admin/booking/?kind=seminar" }
+    };
+  }
+
+  const approvedOffering = findApprovedOffering(query);
+  if (approvedOffering?.score > 0) {
+    const offering = approvedOffering.offering;
+    return {
+      kind: "offer",
+      title: offering.title,
+      text: `${offering.text} Сверено: ${offering.checkedAt}.`,
+      url: offering.sourceUrl,
+      linkText: "Открыть официальный источник",
+      action: { label: offering.actionLabel, url: offering.registrationUrl }
+    };
+  }
+
+  if (/(психосомат)/i.test(query) && currentFactPattern.test(query)) {
+    return {
+      kind: "unconfirmed",
+      title: "Цена психосоматики сейчас не подтверждена",
+      text: "В открытых материалах центра есть противоречащие друг другу даты набора, поэтому я не буду называть стоимость. Уточните актуальную цену и возможность предзаписи у администратора центра.",
+      url: "https://orion-center.ru/contacts",
+      linkText: "Открыть официальные контакты",
+      action: { label: "Уточнить цену у администратора", url: "https://orion-center.ru/contacts" }
+    };
+  }
+
   const mentionsSpecificProgram = /(психосомат|пилот.*волн|скрыт.*сокров)/i.test(query);
+
+  // Короткие организационные вопросы часто приходят с переставленными буквами.
+  // Расписание центра не должно случайно превращаться в расписание клуба.
+  if (/(распис|распс|афиш)/i.test(query) && !/клуб/i.test(query)) {
+    return {
+      kind: "curated",
+      title: "Ближайшие мероприятия",
+      text: "В расписании собраны актуальные семинары, курсы и встречи центра. У каждого события есть собственный анонс с темой, ведущими, форматом и способом регистрации.",
+      url: "https://orion-center.ru/schedule#actual",
+      linkText: "Открыть актуальную афишу"
+    };
+  }
+
+  if (/как(ого|ой).*цвет|цвет.*(кабинет|зал|стен)/i.test(query)) {
+    return {
+      kind: "fallback",
+      title: "Этого нет в подтверждённых данных",
+      text: "Я не буду угадывать внешний вид помещений. Посмотрите фотографии на странице аренды или уточните детали у администратора центра.",
+      url: "https://orion-center.ru/services",
+      linkText: "Посмотреть помещения"
+    };
+  }
+
   const intentMatch = mentionsSpecificProgram ? null : bestIntentMatch(query, intents);
 
   if (intentMatch?.score >= 32) {

@@ -7,6 +7,7 @@
  */
 
 import { CAMPAIGN } from './levels.js';
+import { systemicLabel } from './systemic-room.js';
 import { decode, encode } from './level.js';
 import { createWorld, update } from './world.js';
 import { AIM_CONE, assistAim, closeThreat, hasTargetUnderAim, lockTarget, keepPicked, cycleTarget, targetNear } from './aim.js';
@@ -49,6 +50,8 @@ const ui = {
   scoreTotal: $('scoreTotal'),
   scoreBest: $('scoreBest'),
   score: $('score'),
+  systemic: $('systemic'),
+  systemicActions: $('systemicActions'),
   combo: $('combo'),
   target: $('target'),
   targetTime: $('targetTime'),
@@ -672,6 +675,19 @@ const JABS = {
     'ГЕНИАЛЬНО. ТЕПЕРЬ ЕЩЁ РАЗ, НО В СТОРОНЕ',
     'ВОДА ПРОВОДИТ. ДАЖЕ ТЕБЯ',
   ],
+  sleep: [
+    'ДЫШИТ. ЗАПОМНИ, ГДЕ ЛЁГ',
+    'МИЛОСЕРДИЕ С ТАЙМЕРОМ',
+    'ЖИВОЙ. ЭТО БЫЛ ТВОЙ ВЫБОР',
+    'ОДНА СТИХИЯ — ОДИН ОБМОРОК',
+    'СПИТ. НЕ ВЕЧНО',
+  ],
+  wake: [
+    'ОТОСПАЛСЯ',
+    'ПОДНЯЛСЯ. И НЕ В ДУХЕ',
+    'ВСПОМНИЛ ТВОЁ ЛИЦО',
+    'ВОТ И ОН',
+  ],
   held: [
     'НЕ ВПЕЧАТЛИЛО',
     'ОН ТАКОЕ НА ЗАВТРАК ЕСТ',
@@ -937,6 +953,13 @@ function updateHud(force) {
 
   ui.score.textContent = score.state.score;
 
+  if (world.systemic) {
+    ui.systemic.hidden = false;
+    ui.systemicActions.textContent = world.systemic.actions;
+  } else {
+    ui.systemic.hidden = true;
+  }
+
   const combo = score.state.combo;
   if (combo > 1) {
     if (ui.combo.hidden || ui.combo.dataset.value !== String(combo)) {
@@ -1004,6 +1027,21 @@ function drainEvents() {
       /* Новый глагол, и о нём надо сказать: врагами можно бросаться. */
       setToast(jab('fling', 'ТЕЛО ТОЖЕ СНАРЯД'), 1.8);
       vibrate([10, 20]);
+    } else if (event.type === 'sleep') {
+      /*
+       * Новый исход, которого игрок раньше не видел: он ударил, враг не
+       * умер и при этом не отбился. Без слов это читается как промах,
+       * а не как милосердие. Поэтому первая строка несёт факт, а не
+       * шутку: не убит, и он встанет.
+       */
+      setToast(jab('sleep', 'НЕ УБИТ — В ОТКЛЮЧКЕ. ЧЕРЕЗ ВРЕМЯ ВСТАНЕТ'), 2.4);
+      vibrate(10);
+    } else if (event.type === 'wake' && event.subdued) {
+      /* Сбитого с ног в ближнем бою не объявляем — он встаёт каждые две
+         секунды, и экран превратился бы в ленту. Объявляем только того,
+         кого игрок сознательно оставил в живых. */
+      setToast(jab('wake', 'ТОТ САМЫЙ. ПОДНЯЛСЯ'), 2);
+      vibrate([8, 14]);
     } else if (event.type === 'held') {
       /* Промаха не было — был неподходящий удар, и сказать это надо
          сразу, иначе игрок решит, что игра его обманула. */
@@ -1028,6 +1066,9 @@ function drainEvents() {
          сделал что-то большее, чем обычный выстрел. */
       setToast(`ЦЕПЬ ×${event.size}`, 1.8);
       vibrate([15, 25, 15]);
+    } else if (event.type === 'consequence') {
+      setToast(`СВЯЗЬ ${event.actions} · ${systemicLabel(event.kind)}`, 1.8);
+      vibrate(12);
     } else if (event.type === 'barrel') {
       /* Про воду больше не пишем: она теперь растекается на глазах, и
          подпись успевала объявить её раньше, чем она появлялась. */
@@ -1412,6 +1453,22 @@ window.technomagic = {
      не крутится, а спросить напрямую можно всегда. */
   get input() { return input; },
   get renderer() { return renderer; },
+
+  /*
+   * ЗВУК НАРУЖУ
+   * ---------------------------------------------------------
+   * Про звук спорят дольше всего именно потому, что его нельзя
+   * предъявить: один говорит «молчит», другой «играет», и оба правы в
+   * своём окне. Ручка превращает спор в команду — `technomagic.audio()`
+   * отдаёт живой узел, а `.sfx(имя)` роняет в него один звук, и дальше
+   * меряется выход, а не намерение.
+   *
+   * Заведена по просьбе соседней сессии, которая замером на бою нашла у
+   * нас неработающий немой флаг. Их довод простой: у ПЕРИМЕТРА такая
+   * ручка есть, и она превратила двухчасовой спор двух измерителей в
+   * одну строчку.
+   */
+  audio() { return audio; },
   get view() { return lastView; },
   get picked() { return picked; },
 
@@ -1503,6 +1560,35 @@ const fromHash = levelFromHash();
 if (fromHash) { level = fromHash; custom = true; }
 
 loadArt();
+
+/*
+ * ВЫХОД С НАЧАТОЙ ПАРТИИ СПРАШИВАЕТ
+ * =========================================================
+ * Кнопка «НА САЙТ» висит поверх игрового поля, то есть под большим
+ * пальцем, и уводит со страницы одним касанием. Владелец так уже потерял
+ * партию в другой нашей игре — вышел мимоходом, и прогресс исчез молча.
+ *
+ * Спрашиваем только при идущей партии: на заставке, после смерти и на
+ * зачищенном этаже терять нечего, и лишний вопрос там — помеха.
+ *
+ * Оба исхода обязаны работать: «отмена» удерживает адрес (для этого
+ * `preventDefault` стоит ДО вопроса, а не после), «выйти» уводит. Проверка,
+ * знающая только один исход, зелёная на сломанном.
+ */
+function партияИдёт() {
+  return (scene === 'play' || scene === 'pause') && world && world.state === 'play';
+}
+
+const выход = document.querySelector('.game-home-menu');
+if (выход) {
+  выход.addEventListener('click', (event) => {
+    if (!партияИдёт()) return;
+    event.preventDefault();
+    if (window.confirm('Точно выйти? Партия и прогресс потеряются.')) {
+      window.location.href = выход.href;
+    }
+  });
+}
 
 resize();
 levelCode = encode(level);

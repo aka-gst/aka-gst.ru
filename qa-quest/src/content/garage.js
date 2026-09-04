@@ -43,7 +43,7 @@ export const garageLessons = [
         id: 'a', xp: 20, file: 'link.py',
         brief: 'Выведи в терминал строку <code>ECU online</code> — это первое, что ты хочешь увидеть от блока.',
         starter: '# Напиши команду ниже\n',
-        hint: 'print("ECU online")',
+        hint: 'Вызови print(...), а текст ECU online возьми в кавычки.',
         solution: 'print("ECU online")',
         checks: [
           { label: 'В терминале появилось «ECU online»', kind: 'stdout', mode: 'equals', value: 'ECU online' },

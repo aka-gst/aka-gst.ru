@@ -22,11 +22,10 @@ function daysBetween(from, to) {
 function blank() {
   return {
     version: 2,
-    mode: 'sprint',
-    // Спрашивали ли уже, какой курс проходим. Переключатель наверху сам по
-    // себе ничего не объясняет: человек видит две кнопки и не понимает, что
-    // изменится. Прямой вопрос на первом уроке объясняет за него.
-    modePicked: false,
+    // Полный курс — единственный маршрут, пока его доводим до конца.
+    // Поля оставлены ради уже сохранённого прогресса прошлой версии.
+    mode: 'deep',
+    modePicked: true,
     tasks: {},
     code: {},
     checks: {},
@@ -99,6 +98,9 @@ export function loadStore() {
     saved = JSON.parse(localStorage.getItem(KEY) || 'null');
   } catch (_) { saved = null; }
   store.state = saved && saved.version === 2 ? { ...blank(), ...saved } : importLegacy(blank());
+  // Старое «Коротко» не должно обрезать урок для вернувшегося человека.
+  store.state.mode = 'deep';
+  store.state.modePicked = true;
   store.state.checks = store.state.checks || {};
   store.state.unlocked = { ...blank().unlocked, ...(store.state.unlocked || {}) };
   refreshUnlocks();
@@ -114,9 +116,9 @@ export function isTaskDone(lessonId, taskId) {
   return Boolean(store.state.tasks[taskKey(lessonId, taskId)]?.done);
 }
 
-/** В режиме «пробежать» урок закрывает первая задача, в «разобрать» — все. */
-export function requiredTasks(lesson, mode = store.state.mode) {
-  return mode === 'deep' ? lesson.tasks : lesson.tasks.slice(0, 1);
+/** Пока делаем один полный маршрут: урок закрывают все его задачи. */
+export function requiredTasks(lesson) {
+  return lesson.tasks;
 }
 
 export function lessonState(lesson) {
@@ -126,9 +128,7 @@ export function lessonState(lesson) {
   return {
     doneCount: done.length,
     total: lesson.tasks.length,
-    // Сколько нужно именно в текущем режиме: в «пробежать» это одна задача,
-    // в «разобрать» — все. Интерфейс показывает это число, поэтому
-    // переключатель режима сразу видно на карте, а не только внутри урока.
+    // Полный маршрут закрывается только всеми задачами урока.
     requiredDone: doneRequired.length,
     requiredTotal: required.length,
     complete: doneRequired.length === required.length,
@@ -185,20 +185,6 @@ export function nextLesson() {
 }
 
 /* ---------- изменение прогресса ---------- */
-
-export function pickMode(mode) {
-  store.state.mode = mode;
-  store.state.modePicked = true;
-  refreshUnlocks();
-  persist();
-}
-
-export function setMode(mode) {
-  if (store.state.mode === mode) return;
-  store.state.mode = mode;
-  refreshUnlocks();
-  persist();
-}
 
 export function saveCode(lessonId, taskId, code) {
   store.state.code[taskKey(lessonId, taskId)] = code;

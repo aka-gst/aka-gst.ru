@@ -5,21 +5,26 @@
   const root = document.documentElement;
   const STORE = 'aka-gst:track';
 
-  // ── Переключатель «Работа / Игры» ─────────────────────────────────
+  // ── Переключатель «Работа / Игры / Рассказы» ──────────────────────
   const titles = {
-    work: 'aka-gst — AI/LLM QA и автоматизация',
+    work: 'aka-gst — Архитектор AI-продуктов и агентных систем',
     play: 'aka-gst — игры в браузере',
+    stories: 'aka-gst — рассказы Сергея Гостова',
   };
 
   const setTrack = (track, { push = true } = {}) => {
-    if (track !== 'work' && track !== 'play') return;
+    if (!['work', 'play', 'stories'].includes(track)) return;
     root.dataset.track = track;
     document.title = titles[track];
+    const markKey = track === 'play' ? 'markPlay' : track === 'stories' ? 'markStories' : 'markWork';
+    document.querySelectorAll('[data-brand-mark]').forEach((mark) => {
+      if (mark.dataset[markKey]) mark.src = mark.dataset[markKey];
+    });
     try {
       localStorage.setItem(STORE, track);
     } catch (e) {}
     if (push) {
-      const hash = track === 'play' ? '#games' : '#work';
+      const hash = track === 'play' ? '#games' : track === 'stories' ? '#stories' : '#work';
       if (location.hash !== hash) history.replaceState(null, '', hash);
     }
     document.querySelectorAll('[data-track-to]').forEach((button) => {
@@ -30,7 +35,7 @@
   document.querySelectorAll('[data-track-to]').forEach((button) => {
     button.addEventListener('click', () => {
       setTrack(button.dataset.trackTo);
-      scrollTo({ top: 0, behavior: 'smooth' });
+      scrollTo({ top: 0 });
     });
   });
 
@@ -38,6 +43,7 @@
   addEventListener('hashchange', () => {
     if (location.hash === '#games') setTrack('play', { push: false });
     if (location.hash === '#work') setTrack('work', { push: false });
+    if (location.hash === '#stories') setTrack('stories', { push: false });
   });
 
   // ── Живые метрики прогона ─────────────────────────────────────────
@@ -98,36 +104,34 @@
   // ── Прокрутка по блокам и проявление ─────────────────────────────
   const секции = [...document.querySelectorAll('.report, .block')];
 
-  // Раздел выше экрана привязывать нельзя: прокрутка внутри него должна
-  // оставаться свободной. Меряем, а не угадываем по числу карточек.
-  const пометитьВысокие = () => {
-    // Порог — не вся высота окна, а та, что реально остаётся под липкой
-    // шапкой. Раньше считали по всему окну, и раздел на 853px при экране
-    // 900 проходил как помещающийся, хотя под шапкой ему доступно 829: он
-    // приезжал по привязке всегда обрезанным снизу, и следующий заголовок
-    // подглядывал из-за края. Это и выглядело как «прилипает криво».
-    // Нижняя граница на случай, если высота окна ещё не определена: без неё
-    // порог схлопывается в ноль и высокими становятся все разделы подряд.
+  // Высота прилипшей шапки — в переменную, чтобы отступ прыжка по якорю
+  // считался от неё, а не от вписанного числа. На телефоне шапка
+  // переносится и вырастает с 71 до 128, и константа промахивалась ровно
+  // на разницу: заголовок уезжал под шапку целиком.
+  const мерятьШапку = () => {
     const шапка = document.querySelector('.topbar');
-    const подШапкой = innerHeight - (шапка ? шапка.offsetHeight : 0);
-    const порог = Math.max(подШапкой, 480);
-    секции.forEach((s) => s.classList.toggle('is-tall', s.offsetHeight > порог));
+    if (!шапка) return;
+    const h = Math.round(шапка.getBoundingClientRect().height);
+    if (h > 0) document.documentElement.style.setProperty('--shapka', `${h}px`);
   };
-  пометитьВысокие();
-  addEventListener('resize', пометитьВысокие);
-  // Замер зависит от того, когда он выполнен: до загрузки шрифтов высоты
-  // другие, а скрытая панель меряется в ноль. Поэтому пересчитываем ещё раз
-  // после отрисовки и после готовности шрифтов — дважды лишний раз дешевле,
-  // чем один раз не вовремя.
-  requestAnimationFrame(пометитьВысокие);
-  addEventListener('load', пометитьВысокие);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(пометитьВысокие);
-  // Скрытая панель меряется в ноль, поэтому при загрузке размечается только
-  // активный трек. Пересчитываем после переключения — обработчик добавлен
-  // вторым, так что отработает уже по новому треку.
-  document.querySelectorAll('[data-track-to]').forEach((кнопка) =>
-    кнопка.addEventListener('click', () => requestAnimationFrame(пометитьВысокие))
-  );
+  мерятьШапку();
+  addEventListener('resize', мерятьШапку);
+  addEventListener('load', мерятьШапку);
+  // До готовности шрифтов высота другая: строка ещё не перенеслась.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(мерятьШапку);
+
+  // Замер высоты разделов убран вместе с магнитом прокрутки 31 августа:
+  // класс is-tall существовал только чтобы снимать привязку с раздела,
+  // который не помещается под шапкой. Привязки нет — замер не читает никто,
+  // а мёртвая машинерия через месяц выглядит нужной и её начинают чинить.
+  //
+  // Что стоило тех сорока строк, чтобы не платить дважды, если магнит
+  // захотят вернуть: жёсткая привязка (mandatory) делает раздел выше экрана
+  // нечитаемым — прокрутка упирается; proximity без scroll-snap-stop: always
+  // почти не срабатывает при инерционной прокрутке трекпадом; а порог
+  // «помещается ли раздел» надо считать от высоты ПОД шапкой, а не от всего
+  // окна — раздел в 853px при экране 900 проходил как помещающийся, хотя
+  // под шапкой ему доступно 829, и приезжал обрезанным снизу.
 
   const движениеРазрешено = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -152,37 +156,20 @@
     setTimeout(() => секции.forEach((s) => s.classList.add('is-visible')), 2000);
   }
 
-  // ── Рекорды дня ───────────────────────────────────────────────────
-  const scoreUrl = (game, limit) =>
-    `/api/leaderboard/scores?game=${encodeURIComponent(game)}&period=today&limit=${limit}`;
-
-  // Рекорды заполняют строку в шапке. Список в ней выведен дважды — так
-  // лента едет по кругу без стыка, — поэтому один ответ кладём в обе копии,
-  // а не запрашиваем игру два раза.
-  const rec = document.querySelector('.rec');
-  if (rec) {
-    const games = [...new Set([...rec.querySelectorAll('[data-game]')].map((el) => el.dataset.game))];
-    for (const game of games) {
-      fetch(scoreUrl(game, 1))
-        .then((r) => r.json())
-        .then(({ scores = [] }) => {
-          const top = scores[0];
-          if (!top) return;
-          for (const item of rec.querySelectorAll(`[data-game="${CSS.escape(game)}"] b`)) {
-            item.textContent = `${top.nickname} · ${top.score}`;
-          }
-        })
-        .catch(() => {});
-    }
-  }
-
   // ── Подсветка карточки, на которой остановились ──────────────────
   // Класс один на оба способа ввода, и в стилях у игровых карточек нет
   // :hover. Так вышло из двух ошибок сразу: на тач-экранах :hover
   // залипает на карточке после касания, и анимировались две — залипшая
   // и та, на которой остановились; а вторая копия каждого правила рядом
   // с классом жила бы своей жизнью при первой же правке.
-  const gameCards = [...document.querySelectorAll('a.gcard')];
+  // Карточки с петлёй. Игровые — все, рабочие — только те, у которых
+  // ролик правда снят: сборка не ставит <video> без файла, а пустой слой
+  // хуже статичного снимка. Так механизм включается сам, когда клип
+  // появится, и молчит, пока его нет.
+  const gameCards = [
+    ...document.querySelectorAll('a.gcard'),
+    ...[...document.querySelectorAll('.card')].filter((c) => c.querySelector('.gclip')),
+  ];
   if (gameCards.length) {
     let dwell;
     let текущая = null;
@@ -210,6 +197,31 @@
       const начат = v.play();
       if (начат && начат.catch) начат.catch(() => v.classList.remove('is-playing'));
     };
+
+    // Прогрев. Замер Тестера: первое наведение на карточку стоит около
+    // 900 мс против 120–230 на последующих — всё это время файл только
+    // едет, а человек смотрит на неподвижный кадр и решает, что превью
+    // мёртвое. Начинаем качать, когда карточка показалась на экране: к
+    // моменту, когда до неё доведут мышь, она уже готова.
+    //
+    // Только там, где наведение вообще есть, и только если человек не
+    // просил экономить трафик. На телефоне наведения нет, а качать по
+    // мобильной сети то, чего никто не просил, — плохой обмен.
+    const экономят = () => {
+      const c = navigator.connection;
+      return Boolean(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || '')));
+    };
+    if (!наОщупь() && движениеРазрешено && !экономят() && 'IntersectionObserver' in window) {
+      const прогрев = new IntersectionObserver((записи) => {
+        for (const з of записи) {
+          if (!з.isIntersecting) continue;
+          const v = з.target.querySelector('.gclip');
+          if (v && !v.src && v.dataset.src) v.src = v.dataset.src;
+          прогрев.unobserve(з.target);
+        }
+      }, { rootMargin: '300px' });
+      for (const c of gameCards) if (c.querySelector('.gclip')) прогрев.observe(c);
+    }
 
     const подсветить = (карточка) => {
       // Ту же карточку не трогаем: снять и вернуть класс — значит
@@ -260,4 +272,302 @@
   }
 
 
+})();
+
+// ── Снимок во весь экран ──────────────────────────────────────────────
+// Просьба владельца: «картинка может быть маленькой, а при клике уже
+// раскрываться на весь экран». Разметка приходит рабочей ссылкой на полный
+// файл — без скриптов человек всё равно откроет его отдельной вкладкой, —
+// а этот код перехватывает клик и показывает поверх страницы.
+(() => {
+  const ссылки = [...document.querySelectorAll('a.shot-link')];
+  if (!ссылки.length) return;
+
+  let слой = null;
+  let откуда = null;
+
+  const закрыть = () => {
+    if (!слой) return;
+    слой.remove();
+    слой = null;
+    document.documentElement.style.overflow = '';
+    // Возвращаем внимание туда, откуда его увели: иначе после закрытия
+    // клавиатура оказывается в начале страницы.
+    откуда?.focus();
+  };
+
+  const открыть = (адрес, подпись) => {
+    закрыть();
+    слой = document.createElement('div');
+    слой.className = 'shot-full';
+    слой.setAttribute('role', 'dialog');
+    слой.setAttribute('aria-modal', 'true');
+    слой.setAttribute('aria-label', подпись || 'Снимок целиком');
+    слой.innerHTML = `
+      <button type="button" class="shot-full-close" aria-label="Закрыть">✕</button>
+      <img src="${адрес}" alt="${подпись || ''}">
+      ${подпись ? `<p class="shot-full-cap">${подпись}</p>` : ''}`;
+    document.body.append(слой);
+    // Пока картинка едет, страница под ней не должна прокручиваться:
+    // иначе колесо уводит фон, а человек думает, что промахнулся.
+    document.documentElement.style.overflow = 'hidden';
+    слой.querySelector('.shot-full-close').focus();
+    слой.addEventListener('click', (e) => {
+      // Клик по самой картинке не закрывает: её как раз пришли смотреть.
+      if (e.target.tagName !== 'IMG') закрыть();
+    });
+  };
+
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') закрыть(); });
+
+  for (const a of ссылки) {
+    a.addEventListener('click', (e) => {
+      // Средняя кнопка, Ctrl и Cmd открывают в новой вкладке — не мешаем.
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      откуда = a;
+      открыть(a.getAttribute('href'), a.querySelector('figcaption')?.textContent?.trim() || '');
+    });
+  }
+})();
+
+// ── Навыки: свёрнуты до пяти названий, раскрываются по нажатию ────────
+// Владелец с телефона: «целую страницу занимает, бессмысленно много… надо
+// сильно короче либо как-то раскрываемее». Померено: список тегов 719 px
+// при экране 844, то есть 85% экрана на одни теги.
+//
+// Сворачивает именно скрипт, а не сборка: без него страница остаётся такой
+// же полной, как была, и поисковик видит все 43 тега. Свёрнутый вид — пять
+// названий групп с числами, две строки.
+(() => {
+  const список = document.querySelector('.skills');
+  if (!список) return;
+  const групп = список.querySelectorAll('.skill').length;
+  const тегов = список.querySelectorAll('dd span').length;
+  if (групп < 2 || тегов < 12) return;
+
+  const кнопка = document.createElement('button');
+  кнопка.type = 'button';
+  кнопка.className = 'skills-more';
+  кнопка.setAttribute('aria-controls', список.id || (список.id = 'skills-list'));
+
+  const показать = (раскрыт) => {
+    список.classList.toggle('is-folded', !раскрыт);
+    кнопка.setAttribute('aria-expanded', String(раскрыт));
+    кнопка.textContent = раскрыт ? 'свернуть' : `показать все ${тегов}`;
+  };
+  кнопка.addEventListener('click', () => показать(список.classList.contains('is-folded')));
+  список.after(кнопка);
+  показать(false);
+})();
+
+// ── Компактный блок практикумов ─────────────────────────────────────
+// Оба маршрута приходят в HTML целиком. Скрипт лишь выбирает, какой из них
+// показать первым, поэтому без JavaScript курсы всё равно доступны.
+(() => {
+  document.querySelectorAll('[data-practicum-switch]').forEach((switcher) => {
+    const buttons = [...switcher.querySelectorAll('[data-practicum-to]')];
+    const panels = [...switcher.querySelectorAll('[data-practicum-panel]')];
+    if (buttons.length < 2 || buttons.length !== panels.length) return;
+
+    const show = (id, focus = false) => {
+      buttons.forEach((button) => {
+        const selected = button.dataset.practicumTo === id;
+        button.setAttribute('aria-selected', String(selected));
+        button.tabIndex = selected ? 0 : -1;
+        if (selected && focus) button.focus();
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.practicumPanel !== id;
+      });
+    };
+
+    buttons.forEach((button, index) => {
+      button.addEventListener('click', () => show(button.dataset.practicumTo));
+      button.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        const next = buttons[(index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length];
+        show(next.dataset.practicumTo, true);
+      });
+    });
+
+    show(buttons.find((button) => button.getAttribute('aria-selected') === 'true')?.dataset.practicumTo || buttons[0].dataset.practicumTo);
+  });
+})();
+
+// ── QueQuest: один честный переход, не декоративная вечная петля ──────
+(() => {
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  document.querySelectorAll('[data-quequest-play]').forEach((trigger) => {
+    const video = trigger.querySelector('.quequest-video');
+    if (!video) return;
+    let loading = null;
+
+    const play = () => {
+      if (reduced?.matches || trigger.classList.contains('is-playing')) return;
+      if (!video.src) {
+        video.src = video.dataset.src || '';
+        loading = new Promise((resolve) => video.addEventListener('canplay', resolve, { once:true }));
+        // preload="none" бережёт мобильную сеть, но после явного тапа
+        // браузеру всё равно надо сообщить, что ресурс теперь нужен.
+        video.load();
+      }
+      trigger.classList.remove('is-finished');
+      trigger.classList.add('is-playing');
+      const start = () => {
+        video.currentTime = 0;
+        video.play().catch(() => trigger.classList.remove('is-playing'));
+      };
+      loading ? loading.then(start) : start();
+    };
+
+    trigger.addEventListener('click', play);
+    trigger.addEventListener('mouseenter', () => {
+      if (window.matchMedia?.('(hover: hover)').matches) play();
+    });
+    trigger.addEventListener('focusin', play);
+    video.addEventListener('ended', () => {
+      trigger.classList.remove('is-playing');
+      trigger.classList.add('is-finished');
+    });
+  });
+})();
+
+// ── Рассказы на главной: обложка → сборник → текст в одной панели ──
+(() => {
+  const panel = document.querySelector('.story-lead');
+  if (!panel) return;
+  const covers = [...panel.querySelectorAll('[data-story-collection]')];
+  const collections = [...panel.querySelectorAll('[data-story-collection-panel]')];
+  const reader = panel.querySelector('[data-story-reader]');
+  const source = panel.querySelector('.story-source');
+  const all = panel.querySelector('[data-story-all]');
+  let currentCollection = null;
+  const closeReader = () => { if (reader) reader.hidden = true; };
+  const showCollection = (id) => {
+    currentCollection = id;
+    closeReader();
+    covers.forEach((cover) => cover.setAttribute('aria-expanded', String(cover.dataset.storyCollection === id)));
+    collections.forEach((collection) => { collection.hidden = collection.dataset.storyCollectionPanel !== id; });
+    all?.setAttribute('aria-expanded', 'false');
+    if (all?.querySelector('b')) all.querySelector('b').textContent = '↓';
+    const current = collections.find((collection) => collection.dataset.storyCollectionPanel === id);
+    requestAnimationFrame(() => current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+  covers.forEach((cover) => cover.addEventListener('click', () => showCollection(cover.dataset.storyCollection)));
+  all?.addEventListener('click', () => {
+    closeReader();
+    const open = all.getAttribute('aria-expanded') !== 'true';
+    currentCollection = null;
+    all.setAttribute('aria-expanded', String(open));
+    all.querySelector('b').textContent = open ? '↑' : '↓';
+    collections.forEach((collection) => { collection.hidden = !open; });
+    covers.forEach((cover) => cover.setAttribute('aria-expanded', String(open)));
+  });
+  panel.querySelectorAll('[data-story-open]').forEach((button) => button.addEventListener('click', () => {
+    const story = source?.querySelector(`[data-story-source="${CSS.escape(button.dataset.storyOpen)}"]`);
+    if (!story || !reader) return;
+    currentCollection = button.dataset.storyOpen.split('--')[0];
+    reader.querySelector('[data-story-reader-meta]').textContent = `Рассказ · ${story.dataset.storyBook}`;
+    reader.querySelector('[data-story-reader-title]').textContent = story.dataset.storyTitle;
+    reader.querySelector('[data-story-reader-copy]').innerHTML = story.innerHTML;
+    collections.forEach((collection) => { collection.hidden = true; });
+    reader.hidden = false;
+    reader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  panel.querySelector('[data-story-back]')?.addEventListener('click', () => {
+    if (currentCollection) showCollection(currentCollection);
+    else closeReader();
+  });
+  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+
+// ── Заявка о партнёрстве ────────────────────────────────────────────
+// Сервис сам валидирует поля, ловит заполненный honeypot и режет частые
+// запросы. Здесь только UX: не отправить одну форму дважды и назвать ответ.
+(() => {
+  const form = document.querySelector('[data-contact-form]');
+  if (!form) return;
+  const status = form.querySelector('[data-contact-status]');
+  const submit = form.querySelector('button[type="submit"]');
+  const say = (text, state) => {
+    status.textContent = text;
+    status.dataset.state = state;
+  };
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity() || submit.disabled) return;
+
+    const data = new FormData(form);
+    const payload = Object.fromEntries(['name', 'reply', 'message', 'company'].map((key) => [key, data.get(key)]));
+    submit.disabled = true;
+    say('Отправляю…', 'pending');
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        form.reset();
+        say('Запрос отправлен. Отвечу по указанному способу связи.', 'ok');
+      } else if (response.status === 429) {
+        say('С этого устройства запросов уже много. Попробуй позже.', 'error');
+      } else {
+        say('Не получилось отправить. Проверь поля и повтори позже.', 'error');
+      }
+    } catch (error) {
+      say('Связь оборвалась. Попробуй ещё раз.', 'error');
+    } finally {
+      submit.disabled = false;
+    }
+  });
+})();
+
+// ── Карточки проектов: техника прячется под «подробнее» ───────────────
+// Владелец с телефона: «тут просто должна быть короткая карточка,
+// продающая меня обычному человеку… потом уже профессионал заинтересуется,
+// подробнее узнает сам». Сверху остаётся название и одна строка словами,
+// под кнопкой — длинное описание, стек и числа.
+//
+// Сворачивает скрипт, а не сборка: без него карточка остаётся полной, и
+// поисковик видит всё. Так же устроены навыки и сборники рассказов.
+(() => {
+  const карточки = [...document.querySelectorAll('.card')].filter((к) => {
+    const низ = к.querySelector('.card-more');
+    // Нечего прятать — нечего и сворачивать: кнопка без содержимого
+    // раздражает сильнее, чем длинный текст.
+    return низ && низ.textContent.trim().length > 40;
+  });
+  if (!карточки.length) return;
+
+  for (const к of карточки) {
+    const низ = к.querySelector('.card-more');
+    низ.id = низ.id || `more-${к.id || Math.random().toString(36).slice(2)}`;
+    const кнопка = document.createElement('button');
+    кнопка.type = 'button';
+    кнопка.className = 'card-more-btn';
+    кнопка.setAttribute('aria-controls', низ.id);
+
+    const показать = (открыт) => {
+      низ.hidden = !открыт;
+      кнопка.setAttribute('aria-expanded', String(открыт));
+      кнопка.textContent = открыт ? 'свернуть' : 'подробнее';
+    };
+    кнопка.addEventListener('click', () => {
+      const pair = к.closest('[data-shared-details]');
+      if (!pair) return показать(низ.hidden);
+      const open = [...pair.querySelectorAll('.card-more')].some((item) => item.hidden);
+      pair.querySelectorAll('.card-more').forEach((item) => { item.hidden = !open; });
+      pair.querySelectorAll('.card-more-btn').forEach((item) => {
+        item.setAttribute('aria-expanded', String(open));
+        item.textContent = open ? 'свернуть' : 'подробнее';
+      });
+    });
+    низ.before(кнопка);
+    показать(false);
+  }
 })();

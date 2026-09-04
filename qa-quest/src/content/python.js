@@ -37,7 +37,7 @@ export const pythonLessons = [
         id: 'a', xp: 20, file: 'hello.py',
         brief: 'Выведи в терминал строку <code>Q-Bot online</code>.',
         starter: '# Напиши команду ниже\n',
-        hint: 'print("Q-Bot online")',
+        hint: 'Вызови print(...), а текст Q-Bot online возьми в кавычки.',
         solution: 'print("Q-Bot online")',
         checks: [
           { label: 'В терминале появилось «Q-Bot online»', kind: 'stdout', mode: 'equals', value: 'Q-Bot online' },

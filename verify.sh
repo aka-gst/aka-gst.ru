@@ -64,7 +64,8 @@ echo "== служебное наружу не отдаётся =="
 # исключили из выкладки. Проверяем, что не вернулись.
 for p in /.githooks/private-words.txt /.githooks/pre-commit /.gitignore /README.md \
          /build.mjs /deploy.sh /verify.sh /Caddyfile /sync-portfolio.sh \
-         /psy-admin/README.md /psy-admin/test.mjs /stories/solyanochka--letuny.txt; do
+         /psy-admin/README.md /psy-admin/test.mjs /psy-admin/tools/build-orion-demo.mjs \
+         /stories/solyanochka--letuny.txt; do
   expect "$p" 404
 done
 
@@ -107,9 +108,18 @@ printf '%s' "$page" \
       else printf '  FAIL  %s -> %s\n' "$asset" "$got"; fi
     done > /tmp/verify-assets.$$
 cat /tmp/verify-assets.$$
-ok=$((ok + $(grep -c '^  ok' /tmp/verify-assets.$$ || true)))
-bad=$((bad + $(grep -c '^  FAIL' /tmp/verify-assets.$$ || true)))
+schitat() { grep "$1" /tmp/verify-assets.$$ 2>/dev/null | wc -l | tr -d ' '; }
+nashli=$(schitat '^  ')
+ok=$((ok + $(schitat '^  ok')))
+bad=$((bad + $(schitat '^  FAIL')))
 rm -f /tmp/verify-assets.$$
+# Ноль найденных ассетов — это не «все хороши», а «страница не приехала».
+# Без этого порога раздел молча прибавляет ноль к обоим счётчикам, и его
+# отсутствие читается как отсутствие поломок. На главной их всегда больше
+# пяти; меньше — значит меряем не то.
+if [ "$nashli" -lt 5 ]; then
+  say_bad "ассетов на странице найдено $nashli — страница не приехала, проверять было нечего"
+fi
 
 echo
 echo "== выложено то же, что собрано =="
@@ -127,11 +137,168 @@ if [ -f "$HERE/index.html" ]; then
 fi
 
 echo
+echo "== на бою лежит то, что мы положили =="
+# Раньше сверялся только index.html сайта, и этого не хватало: у ТехноМагии
+# выкладка отработала «успешно», verify дал 62 из 62, а на бою лежал файл
+# игры на восемь килобайт короче исходного. Проверка смотрела на главную,
+# а вопрос был про файлы. «200 ≠ выложено» ровно в том виде, как записано.
+#
+# Сверяем ХЕШ, а не размер и не код. Размер ловит только изменение длины:
+# файл может отдаваться, быть ровно той же длины и всё равно быть
+# вчерашним — правка на один символ размера не меняет. Хеш ловит и это,
+# и разницу в обе стороны, включая случай, когда на бою файл НОВЕЕ
+# местного, о котором обычно не думают.
+#
+# Пустой ответ отсекается отдельно: без этого опечатка в адресе даёт
+# пустоту, а пустота неотличима от «не выложилось».
+same() {
+  path="$1"
+  if [ ! -f "$HERE$path" ]; then say_bad "$path — локального файла нет, сверять не с чем"; return; fi
+  tmp=$(mktemp)
+  # Обход кэша: без него можно померить прошлый ответ, а не бой. Совет
+  # сессии ТехноМагии, купленный её же ошибкой.
+  # shellcheck disable=SC2086
+  curl -s $RETRY "$BASE$path?svezho=$(date +%s)" -o "$tmp"
+  if [ ! -s "$tmp" ]; then rm -f "$tmp"; say_bad "$path — с боя ничего не пришло"; return; fi
+  a=$(shasum -a 256 "$tmp" | cut -d' ' -f1)
+  b=$(shasum -a 256 "$HERE$path" | cut -d' ' -f1)
+  rm -f "$tmp"
+  if [ "$a" = "$b" ]; then say_ok "$path совпадает с деревом"
+  else say_bad "$path НА БОЮ ДРУГОЙ — выкладка не доведена"; fi
+}
+
+for f in /technomagic/index.html /technomagic/src/main.js /technomagic/src/world.js \
+         /qa-quest/index.html /psy-admin/index.html /photodata/index.html \
+         /praktikum/index.html /praktikum/llm/index.html /praktikum/testirovanie/index.html \
+         /rasskazy/index.html /game-menu.css /player-name.js; do
+  same "$f"
+done
+
+# Игры, которые выкладывают свои сессии из своих репозиториев, сверить
+# нечем: исходника у нас нет. Молчать об этом нельзя — «не проверено» и
+# «проверено и хорошо» разные вещи.
+echo "  прим.  /acid/ /stealth/ /worm/ /udar/ /lines/ /tetcolor/ /coin/ /stihii/ —"
+echo "         выкладываются своими сессиями, содержимое здесь не сверяется"
+
+echo
 echo "== содержимое, а не только код ответа =="
-for needle in 'og:image' 'data-metric="tests"' 'data-panel="play"' 'class="social"' \
+for needle in 'og:image' '66 проверок прошли' 'data-panel="play"' 'class="social"' \
               'class="shot"' 'assets/shots/allure-gateway.png'; do
   if printf '%s' "$page" | grep -q "$needle"; then say_ok "на странице есть $needle"
   else say_bad "на странице НЕТ $needle"; fi
+done
+
+echo
+echo "== на всё, что лежит на сервере, можно попасть с витрины =="
+# Требование Сергея от 1 сентября 2026: «надо чтоб можно было попасть на
+# всё, что есть на сайте!! это важно». Выложено и достижимо — разные вещи:
+# NEON CLAW отвечала 200 неделю, а ссылки на неё не было нигде, и узнали мы
+# это от её же сессии, а не от проверки.
+#
+# Сверяются два списка: что отдаёт сервер и куда ведут ссылки с главной.
+# Публичный тестовый пульт удалён по решению владельца 3 сентября 2026:
+# игры он проверяет через вкладку «Игры». Три экспериментальные сборки пока
+# намеренно не выставлены на витрине и остаются доступными только по прямому
+# адресу; это названное владельцем исключение, а не случайная сирота.
+PRIVATE_TEST_DIRS="leela zoo puzzle-quest"
+#
+# У проверки ЕСТЬ ОБА ИСХОДА, и это записано здесь, чтобы следующий не
+# переоткрывал: красный получен переименованием ссылки на claw (проверка
+# назвала claw), зелёный — на нетронутом сайте. Проверка, которая не может
+# позеленеть, ничего не стережёт: к ней привыкают и её отключают.
+# Служебное в счёт не идёт — assets, api, счётчик и страницы ошибок.
+SERVER_DIRS=$(ssh -o ConnectTimeout=20 bonita 'ls -1 /opt/zakriva/caddy/site' 2>/dev/null \
+  | grep -vE '^(assets|404\.html|503\.html|index\.html|favicon|og\.png|robots|sitemap|game-menu|player-name|tour\.js|data)' || true)
+if [ -z "$SERVER_DIRS" ]; then
+  say_bad "список папок сервера пуст — сверить достижимость не с чем"
+else
+  # shellcheck disable=SC2086
+  # Берём и точные ссылки, и вложенные: на практикум ведут /praktikum/llm/
+  # и /praktikum/testirovanie/, а самой /praktikum/ в разметке нет.
+  # shellcheck disable=SC2086
+  LINKED=$(curl -s $RETRY "$BASE/" | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
+  ORPHANS=""
+  for d in $SERVER_DIRS; do
+    printf '%s\n' "$PRIVATE_TEST_DIRS" | tr ' ' '\n' | grep -qx "$d" && continue
+    printf '%s\n' "$LINKED" | grep -qx "$d" && continue
+    # Старый адрес, ведущий на новый, — не сирота, а дверь, оставленная для
+    # тех, у кого он в закладках. Сиротой считается только то, что отвечает
+    # само и никуда не ведёт: /knb/ и /worm/ отдают 308, и это правильно.
+    case "$(code "$BASE/$d/")" in
+      30*) continue ;;
+    esac
+    ORPHANS="$ORPHANS $d"
+  done
+  if [ -n "$ORPHANS" ]; then
+    say_bad "лежит на сервере, но ссылки с витрины нет:$ORPHANS"
+  else
+    say_ok "на каждую папку сервера есть ссылка с витрины"
+  fi
+fi
+
+echo
+echo "== внутреннее наружу не отдаётся =="
+# Правило 30а: рабочие файлы не лежат в выкладываемом корне, и проверять
+# это надо КУРЛОМ ПОСЛЕ выкладки, а не глазами по белому списку. Так уже
+# уезжали `.githooks` с личными данными, `ФИНИШ.md` с цитатами владельца
+# и `psy-admin/test.mjs`, отдававшийся пять дней. И `data/stories.json`,
+# который публично держал подписи обложек уже после того, как мы сняли их
+# со страниц и отчитались «сделано».
+for p in /data/stories.json /data/projects.json /shots/dharma-ai.jpg \
+         /qa-quest-lesson.jpg /psy-admin/test.mjs /verify.sh /build.mjs \
+         /deploy.sh /docs/ /tools/vylozhit.sh /package.json; do
+  expect "$p" 404
+done
+# Положительный контроль к этому разделу: если сервер вдруг отвечает 404
+# на всё подряд, двадцать зелёных строк выше не значат ничего.
+expect /assets/shots/dharma-ai.jpg 200
+
+echo
+echo "== ничего не притягивает экран =="
+# Владелец 31 августа 2026: «тут снова есть притягивание — уберите его
+# вообще отовсюду и чтоб он больше не появлялся!!». Это уже третий заход:
+# сначала убрали scroll-snap, потом он вернулся ощущением от плавной
+# самовольной прокрутки. Проверка стоит здесь, чтобы четвёртого не было.
+#
+# Берём файлы С БОЯ, а не из дерева: правка, которая не доехала, ничего не
+# чинит, а собранное дерево лжёт убедительнее всего (правило 48а).
+# scroll-padding-top намеренно НЕ в списке — это отступ якоря, а не
+# движение: без него заголовок встаёт под липкую шапку.
+#
+# Ищем объявления и вызовы, а не слова. Первый прогон покраснел на
+# комментарии «proximity без scroll-snap-stop: always», который как раз
+# объясняет, как притягивание убрали: проверка, краснеющая на объяснении,
+# будет отключена первой же рукой.
+#
+# И ГЛАВНОЕ — положительный контроль перед поиском. Без него проверка
+# зелёная на пустоте: не приехал файл, `grep -c` вернул ноль, и «ничего
+# не найдено» прочиталось как «ничего нет». Пять зелёных строк на файл,
+# которого не было. Поймано подсказкой сессии «Боты» 31 августа 2026: у
+# них счётчик чужих записей звал отсутствующий на сервере sqlite3 и
+# глушил ошибку, и единственная защита от порчи была слепой и выглядела
+# зелёной. Поэтому у каждого файла есть примета, которая обязана в нём
+# быть; нет приметы — меряем не то, и это FAIL, а не ok.
+for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js; do
+  case "$f" in
+    # У site.css приметой взят scroll-padding-top — он тут не случайно:
+    # мы его намеренно оставили, и заодно он стережёт сам себя.
+    */site.css) primeta='scroll-padding-top' ;;
+    */read.css) primeta='.bgrid' ;;
+    */app.js)   primeta='data-track-to' ;;
+    */read.js)  primeta='book-toggle' ;;
+  esac
+  # shellcheck disable=SC2086
+  body=$(curl -s $RETRY "$BASE$f?svezho=$(date +%s)" || echo '')
+  if ! printf '%s' "$body" | grep -q -- "$primeta"; then
+    say_bad "$f не доехал или не тот файл — приметы «$primeta» в нём нет, искать в нём нечего"
+    continue
+  fi
+  for bad_word in 'scroll-snap-type' 'scroll-behavior:' '.scrollIntoView(' "behavior: 'smooth'" 'behavior:"smooth"'; do
+    n=$(printf '%s' "$body" | grep -c -- "$bad_word" 2>/dev/null || true)
+    n=${n:-0}
+    if [ "$n" -eq 0 ]; then say_ok "$f без $bad_word"
+    else say_bad "$f: $bad_word вернулся ($n)"; fi
+  done
 done
 
 echo

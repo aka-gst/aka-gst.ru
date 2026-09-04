@@ -15,6 +15,7 @@
 
 import { TILE, TILE_SIZE, blocksMove, blocksSight, blocksShot, breakable, brokenBy } from './level.js';
 import { thinkEnemy, buildFlowField } from './ai.js';
+import { BY_EVENT } from './trace.js';
 import {
   GROUND, createField, updateField, groundAt, groundIndex, burningAt,
   paint, tilesInCircle, tilesInCone, tilesAlongLine,
@@ -77,6 +78,32 @@ const DOWN_TIME = 2;
  * вырубать станет незачем.
  */
 const SLEEP_TIME = 9;
+
+/*
+ * ЗАМЕДЛЕНИЕ — ПО ПРИЗНАКУ, А НЕ ПО СПИСКУ
+ * =========================================================
+ * Список «замедлять на бочке, на цепи и на стене» пришлось бы вести
+ * вечно, и он бы врал: то же самое, собранное игроком впервые и
+ * случайно, ничем не хуже. Признак вместо списка называет не событие, а
+ * положение дел — «ты что-то устроил, и оно доигралось без тебя»:
+ *
+ *   1. три РАЗНЫХ правила мира сработали подряд, внутри одного окна;
+ *   2. последнее из них тронуло живого;
+ *   3. и добил не твой снаряд, а последствие — цепь, огонь, тело, стена.
+ *
+ * Третье условие и есть весь смысл. Прямое попадание игрок и так видел:
+ * он в него целился. Показывать надо то, чего он не выбирал, — иначе
+ * замедление превращается в паузу после каждого выстрела.
+ */
+const SLOW_WINDOW = 0.9;   /* за столько секунд должны уложиться три правила */
+const SLOW_TIME = 0.55;    /* столько длится само замедление */
+const SLOW_SCALE = 0.35;   /* во столько раз медленнее идёт мир */
+
+/* Последствия, а не прямые попадания: добил мир, а не снаряд. */
+const NOT_YOURS = new Set(['chain', 'fire', 'fling', 'slam']);
+
+/* Событие тронуло живого, а не обстановку. */
+const TOUCHED_ALIVE = new Set(['kill', 'sleep', 'knock', 'held', 'ignite']);
 const BULLET_LIFE = 1.6;
 
 
@@ -254,8 +281,20 @@ export function setPower(world, on) {
 
   if (changed) {
     world.rebake = true;
+    creditConsequence(world, 'power');
     world.events.push({ type: 'power', on, doors: changed });
   }
+}
+
+/*
+ * Системная комната считает не нажимания, а изменения мира. Обычным этажам
+ * этот счётчик не нужен: для них он остаётся null и не меняет их HUD.
+ */
+function creditConsequence(world, kind, x = null, y = null) {
+  if (!world.systemic) return;
+  world.systemic.actions += 1;
+  world.systemic.last = kind;
+  world.events.push({ type: 'consequence', kind, actions: world.systemic.actions, x, y });
 }
 
 function slam(world, body, speed) {
@@ -492,6 +531,7 @@ export function createWorld(level) {
     state: 'play',
     exitOpen: false,
     alarm: 0,
+    systemic: level.systemic ? { actions: 0, last: '' } : null,
 
     flow: null,
     flowTimer: 0,
@@ -589,6 +629,10 @@ export function createWorld(level) {
     /* Типы 3 и 4 — оружие на полу из старых кодов. Подбирать нечего,
        поэтому они просто пропускаются: чужой код всё равно откроется. */
   }
+
+  /* Пустая комната — задача на материал и путь, а не на несуществующую
+     зачистку. Выход всё равно отделён реальными препятствиями карты. */
+  if (world.total === 0) openExit(world);
 
   createField(world);
   world.flow = buildFlowField(world, world.player.x, world.player.y);
@@ -1559,6 +1603,7 @@ function shatter(world, at, substance) {
     spark(world, x, y, 0, 3.2, 16, '#fff2a8', 220);
     emitNoise(world, x, y, 320, 'crystal');
     world.events.push({ type: 'crystal', x, y });
+    creditConsequence(world, 'crystal', x, y);
     discharge(world, x, y, JOLT);
     return true;
   }
@@ -1573,6 +1618,7 @@ function shatter(world, at, substance) {
     spark(world, x, y, 0, 3.2, 12, '#ffb347', 170);
     emitNoise(world, x, y, 240, 'hay');
     world.events.push({ type: 'hay', x, y });
+    if (tile === TILE.DOOR) creditConsequence(world, 'wood', x, y);
 
     const wx = at % world.w;
     const wy = (at / world.w) | 0;
@@ -1647,6 +1693,7 @@ function shatter(world, at, substance) {
     return true;
   }
 
+  if (tile === TILE.METAL) creditConsequence(world, 'metal', x, y);
   spark(world, x, y, 0, 3.2, 12, '#c9a27a', 170);
   emitNoise(world, x, y, 240, 'boulder');
   world.events.push({ type: 'boulder', x, y });
@@ -1852,6 +1899,19 @@ function scorch(world, body, dt) {
 export function update(world, dt, intent) {
   world.events.length = 0;
 
+  /*
+   * Часы мира идут НАСТОЯЩИМ временем, а не замедленным: иначе окно, в
+   * котором считаются три правила, растягивалось бы вместе с миром, и
+   * замедление продлевало бы само себя.
+   */
+  const real = dt;
+  world.clock = (world.clock || 0) + real;
+
+  if (world.slow > 0) {
+    world.slow = Math.max(0, world.slow - real);
+    dt *= SLOW_SCALE;
+  }
+
   /* Стоп-кадр в момент удара: он и делает попадание «мясным». */
   if (world.fx.hitstop > 0) {
     world.fx.hitstop -= dt;
@@ -1914,8 +1974,50 @@ export function update(world, dt, intent) {
   }
 
   noticeBodies(world);
+  maybeSlow(world);
 
   if (world.decals.length > 420) world.decals.splice(0, world.decals.length - 420);
+}
+
+/*
+ * Решение о замедлении принимается в конце шага, когда события кадра уже
+ * все на месте. Раньше — значит судить по половине кадра: цепь по воде
+ * успевает породить и «разряд», и «убил», и по первому из них ещё ничего
+ * не видно.
+ */
+function maybeSlow(world) {
+  if (!world.recent) world.recent = [];
+
+  let живое = null;
+  for (const event of world.events) {
+    const rule = BY_EVENT[event.type];
+    if (rule) world.recent.push({ t: world.clock, rule });
+    if (TOUCHED_ALIVE.has(event.type)) живое = event;
+  }
+
+  /* Окно скользит по настоящему времени и чистится здесь же, чтобы
+     список не рос весь этаж. */
+  while (world.recent.length && world.clock - world.recent[0].t > SLOW_WINDOW) {
+    world.recent.shift();
+  }
+
+  if (world.slow > 0) return;          /* уже идёт — не продлевать */
+  if (!живое) return;                  /* обстановку ломать можно молча */
+  if (!NOT_YOURS.has(живое.cause)) return;  /* в это ты целился сам */
+
+  /*
+   * Добивающий удар — третье происшествие, а не довесок к двум. В цепи
+   * по воде мир делает ровно три вещи: вскрыл бочку, пустил разряд,
+   * убил, — но названных правил там два, потому что у смерти своего
+   * имени в словаре нет. Считать только имена значило бы требовать
+   * четырёх событий вместо трёх и не срабатывать никогда: первая
+   * версия так и не сработала ни разу.
+   */
+  const разных = new Set(world.recent.map((r) => r.rule));
+  if (разных.size + 1 < 3) return;
+
+  world.slow = SLOW_TIME;
+  world.events.push({ type: 'slow', rules: [...разных], cause: живое.cause });
 }
 
 /*
@@ -2132,7 +2234,10 @@ function updateEnemy(world, enemy, dt) {
       /* Пробуждение — событие, а не тихая смена поля. Без него судьбу
          вырубленных приходится угадывать по состоянию мира в конце
          прогона, а это уже не замер, а гадание. */
-      world.events.push({ type: 'wake', kind: enemy.kind });
+      /* Флаг `subdued` отличает вырубленного стихией от сбитого с ног в
+         ближнем бою: второй встаёт через две секунды и делает это
+         постоянно, и объявлять каждый такой подъём — засорять экран. */
+      world.events.push({ type: 'wake', kind: enemy.kind, subdued: Boolean(enemy.subdued) });
     }
     return;
   }

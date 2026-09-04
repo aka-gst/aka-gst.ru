@@ -4,23 +4,23 @@
 .reader {
   /* Грунты. Тёмный тут теплее общесайтового: чистый #0b0c0d под три тысячи
      слов режет глаза, а бумажный нужен потому, что читают и при свете. */
-  --ink: #e6e0d4;
-  --ink-soft: #a49c8c;
-  --ground: #14120f;
-  --ground-soft: #1b1815;
-  --rule: #2b2721;
-  --accent-read: #c9a86a;
+  --ink: #e6e3dd;
+  --ink-soft: #97968f;
+  --ground: #0d0d0e;
+  --ground-soft: #17171a;
+  --rule: #282a2e;
+  --accent-read: #7ad9a4;
   --read-size: 19px;
   background: var(--ground);
   color: var(--ink);
 }
 html[data-ground="paper"] .reader {
-  --ink: #201d18;
-  --ink-soft: #6b6459;
-  --ground: #f3efe6;
-  --ground-soft: #e9e3d6;
-  --rule: #d8d1c1;
-  --accent-read: #8a6a24;
+  --ink: #1b1e1c;
+  --ink-soft: #5e6461;
+  --ground: #f2f1ee;
+  --ground-soft: #e6e7e4;
+  --rule: #d3d6d3;
+  --accent-read: #1f7a4d;
 }
 html[data-size="s"] .reader { --read-size: 17px; }
 html[data-size="l"] .reader { --read-size: 21px; }
@@ -30,7 +30,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
    берутся из грунта раздела: чёрная полоса над бумажным фоном выглядела бы
    заплаткой с другого сайта — а смысл шапки ровно обратный. */
 .reader .topbar {
-  max-width: 720px; padding: 16px 20px 0;
+  max-width: var(--maxw); padding: 16px 20px 0;
   background: transparent; backdrop-filter: none; border: 0;
   position: static;
 }
@@ -67,9 +67,33 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 }
 .reader-progress i { display: block; height: 100%; width: 0; background: var(--accent-read); }
 
+/* Единственная плавающая навигация текста: круг означает только «вверх».
+   Без подписи он не спорит с рассказом, а у цели остаётся честные 44 px. */
+.reader-back-to-top {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right, 0px));
+  bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid #53545a;
+  border-radius: 50%;
+  background: #17171a;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .3);
+  color: #f0efeb;
+  cursor: pointer;
+}
+.reader-back-to-top[hidden] { display: none; }
+.reader-back-to-top svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.reader-back-to-top:hover { border-color: var(--accent-read); color: var(--accent-read); }
+.reader-back-to-top:focus-visible { outline: 2px solid var(--accent-read); outline-offset: 3px; border-color: var(--accent-read); }
+
 .reader-top {
   display: flex; align-items: center; gap: 14px;
-  max-width: 720px; margin: 0 auto; padding: 20px 20px 8px;
+  max-width: var(--maxw); margin: 0 auto; padding: 20px 20px 8px;
 }
 .reader-top .site-home { color: var(--ink-soft); border-color: currentColor; }
 .reader-top .site-home:hover { color: var(--ink); }
@@ -84,7 +108,12 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .reader-bar button:hover { color: var(--ink); border-color: var(--ink-soft); }
 .reader-size { display: inline-flex; gap: 4px; }
 
-.reader-main { max-width: 720px; margin: 0 auto; padding: 0 20px 80px; }
+/* Та же безопасная зона, что и в подвале: без неё плашка с адресом сайта
+   на iPhone закрывает последние строки текста. */
+.reader-main { max-width: 720px; margin: 0 auto; padding: 0 20px calc(80px + env(safe-area-inset-bottom, 0px)); }
+/* Оглавление — часть сайта, а не узкая колонка книги. Сам текст рассказа
+   остаётся комфортной строкой в .reader-main--wide / .story-body. */
+.reader-main:not(.reader-main--wide) { max-width: var(--maxw); }
 
 /* ── Оглавление ─────────────────────────────────────────────────────── */
 
@@ -92,7 +121,131 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .reader-lede h1 { font-size: clamp(30px, 6vw, 44px); letter-spacing: -.02em; }
 .reader-lede p { margin-top: 8px; color: var(--ink-soft); font-size: 14px; }
 
-.book { margin-top: 38px; }
+/* Одна короткая «послесветовая» сборка: сначала остаётся зернистый след
+   заголовка, затем текст становится обычным. Это не скрывает чтение и не
+   требует скрипта или тяжёлого canvas. */
+.afterimage-title {
+  position: relative; display: inline-block; isolation: isolate;
+  animation: reader-afterimage-solid 1.25s cubic-bezier(.16, .8, .24, 1) both;
+  animation-delay: var(--afterimage-delay, 0s); animation-play-state: paused;
+}
+.afterimage-title::after {
+  content: attr(data-afterimage); position: absolute; inset: 0; z-index: -1;
+  pointer-events: none; color: transparent;
+  background: radial-gradient(circle, var(--accent-read) 0 1px, transparent 1.7px) 0 0 / 7px 7px;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: .12em -.05em 0 rgba(132, 91, 218, .5), -.1em .08em 0 rgba(116, 201, 90, .32);
+  animation: reader-afterimage-grain 1.25s cubic-bezier(.16, .8, .24, 1) both;
+  animation-delay: var(--afterimage-delay, 0s); animation-play-state: paused;
+}
+@keyframes reader-afterimage-solid {
+  0% { opacity: 1; filter: none; transform: none; }
+  55% { opacity: .76; filter: blur(.25px); }
+  100% { opacity: .24; filter: blur(1.2px); transform: translateY(-3px); }
+}
+@keyframes reader-afterimage-grain {
+  0% { opacity: 0; transform: translate(-.16em, .08em) scaleX(1.06); filter: blur(.5px); }
+  58% { opacity: .52; transform: translate(.08em, -.03em) scaleX(.99); }
+  100% { opacity: .94; transform: translate(.28em, -.12em) scaleX(.92); filter: blur(1.4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .afterimage-title { animation: none; }
+  .afterimage-title::after { display: none; animation: none; }
+}
+
+/* Три сборника — тремя карточками в ряд, в том же языке, что карточки игр
+   и работы на главной: полоса с картинкой, кикер, название, строка
+   действия. Просьба владельца — «сделай их тремя блоками, в духе моего
+   основного сайта… чтоб был единый стиль».
+
+   .book раскладки не имеет (display: contents): её дети — карточка и
+   список — становятся ячейками сетки напрямую. Из-за этого список
+   рассказов встаёт ПОД своей строкой карточек, а не в её колонке: на
+   широком экране три карточки стоят рядом и список раскрывается во всю
+   ширину под ними, на телефоне колонка одна и список оказывается прямо
+   под своей карточкой. Одна разметка, оба поведения правильные. */
+/* «Меня печатали» — единственная строка на странице, которую сказали не
+   мы: её поставила чужая редакция. Поэтому она отделена от наших чисел
+   полоской, но без хвастовства — рамок и значков тут не надо. */
+.reader-lede p.pub {
+  margin: 8px 0 0; padding-left: 11px;
+  border-left: 2px solid var(--accent-read);
+  font-size: 14px; line-height: 1.45; color: var(--ink);
+}
+
+/* «Напечатано» — страницы журнала. Кадры разной высоты и разного нрава:
+   две обложки, разворот, три страницы текста. Общей обрезки нет намеренно —
+   у страницы текста обрезать нечего, там всё содержание. Поэтому колонки
+   ровные, а высота у каждого своя. */
+.ploshchadki { margin: 6px 0 0; font-size: 14px; color: var(--ink-soft); }
+.ploshchadki--chisla { color: var(--ink); }
+.ploshchadki a { color: var(--accent-read); text-decoration: none; }
+.ploshchadki a:hover { text-decoration: underline; }
+
+.pechat { margin-top: 46px; }
+.pgrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px; align-items: start; margin-top: 18px;
+}
+.pcard { margin: 0; }
+.pcard a { display: block; border-radius: 8px; overflow: hidden; border: 1px solid var(--rule); }
+.pcard a:hover, .pcard a:focus-visible { border-color: var(--accent-read); }
+.pcard img { display: block; width: 100%; height: auto; }
+.pcard figcaption {
+  margin-top: 7px; font-size: 12px; line-height: 1.4; color: var(--ink-soft);
+}
+
+.bgrid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 30px; }
+.book { display: contents; }
+
+/* Колонки задаются явно, а не auto-fit. Раскрытый список шире колонки, и
+   при автоподборе он разрывал строку прямо на себе: первая карточка
+   оставалась одна наверху, а две другие уезжали под список. Поэтому
+   карточкам назначен первый ряд, списку второй — тогда три обложки стоят
+   рядом, что бы ни было открыто. На телефоне рядов нет вовсе: одна
+   колонка, и список встаёт сразу под своей карточкой, а не под всеми. */
+@media (min-width: 641px) {
+  .bgrid { grid-template-columns: repeat(3, 1fr); }
+  .bcard { grid-row: 1; }
+  .book-body { grid-row: 2; grid-column: 1 / -1; }
+}
+
+.bcard {
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--rule); border-radius: 16px;
+  background: var(--ground-soft);
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.bcard:hover, .book.is-open .bcard { border-color: var(--accent-read); }
+.bcard:hover { transform: translateY(-3px); }
+
+/* Обложка вписана целиком, а полосу заполняет её же размытая копия:
+   пропорции у трёх обложек разные (квадрат, альбом, портрет), и общая
+   обрезка срезала бы названия, которые нарисованы на самих картинках. */
+.bart {
+  position: relative; display: grid; place-items: center;
+  height: 208px; flex: none; overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+}
+.bart-fon {
+  position: absolute; inset: -12%; width: 124%; height: 124%;
+  object-fit: cover; filter: blur(22px) saturate(1.2) brightness(.62);
+}
+.bart-list {
+  position: relative; max-width: 86%; max-height: 176px;
+  width: auto; height: auto; object-fit: contain;
+  border-radius: 4px; box-shadow: 0 6px 22px rgba(0, 0, 0, .5);
+  transition: transform .3s ease;
+}
+.bcard:hover .bart-list { transform: scale(1.04); }
+
+.bcard-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.bcard-top { min-height: 14px; }
+.bcard-body h2 { margin: 0; font-size: 18px; line-height: 1.2; letter-spacing: -.01em; }
+.bcard-text { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+
 /* Заголовок сборника тем же строем, что блоки на «Работе» и «Играх»:
    надстрочная строка и заголовок. Раньше здесь была своя вёрстка, и раздел
    выглядел сделанным отдельно от сайта. */
@@ -150,7 +303,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
     color: var(--ink); background: var(--ground-soft);
     box-shadow: inset 2px 0 0 var(--accent-read);
   }
-  .reader .topbar, .reader-top { max-width: 1060px; }
+  .reader .topbar, .reader-top { max-width: var(--maxw); }
 }
 
 .book-list { list-style: none; margin: 0; padding: 0; counter-reset: story; }
@@ -177,6 +330,12 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .story-lead {
   grid-column: 2 / -1; font-size: 13px; line-height: 1.5; color: var(--ink-soft);
 }
+/* Авторская подпись к рассказу — не аннотация, а его собственная строка,
+   написанная для сборника. Она короче вытащенной первой фразы и весит
+   иначе: набираем её светлее и без многоточия, потому что это законченная
+   мысль, а не обрывок текста. */
+.story-lead--avtor { color: var(--ink); font-style: italic; }
+
 .book-list .story-name, .book-list .story-time { padding-top: 1px; }
 
 /* Обложки. Их рисовали под каждый рассказ, и без них раздел терял половину
@@ -199,10 +358,6 @@ html[data-size="xl"] .reader { --read-size: 24px; }
    часть обложек не её, и общая подпись приписала бы художнице чужие
    фотографии. Псевдоним без ссылки — решение владельца. */
 .story-cover { margin: 0 0 26px; }
-.story-cover-by {
-  margin-top: 8px; font-family: var(--mono); font-size: 11px;
-  letter-spacing: .06em; color: var(--ink-soft);
-}
 /* Обложка сборника вместо своей — полосой, а не во всю высоту. Своя
    обложка у рассказа горизонтальная и занимает разумное место, а обложки
    сборников вертикальные: 887×1200 у «Трёх изнутри» дало бы 744 пикселя
@@ -265,7 +420,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 
 @media (max-width: 640px) {
   .reader-top { padding: 14px 16px 6px; gap: 10px; }
-  .reader-main { padding: 0 16px 60px; }
+  .reader-main { padding: 0 16px calc(60px + env(safe-area-inset-bottom, 0px)); }
   .story-nav { grid-template-columns: 1fr; text-align: left; }
   .story-nav a:last-child { text-align: left; }
 }
@@ -283,3 +438,29 @@ html[data-size="xl"] .reader { --read-size: 24px; }
   cursor: pointer;
 }
 .reader-resume:hover { color: var(--accent-read); border-color: currentColor; }
+
+/* ── Оглавление: раскрытие сборника и разворот рассказа ─────────────── */
+
+/* Кнопку и обложку-кнопку рисуем только когда скрипт их включил: без
+   скриптов страница остаётся обычным полным оглавлением, и намекать на
+   несуществующее нажатие нельзя. */
+/* Строка действия внизу карточки — тот же приём, что «ЗАПУСТИТЬ ↗» на
+   карточках игр: не кнопка-пилюля, а подпись, которая говорит, что будет
+   по нажатию. Нажимается вся карточка, подпись только объявляет это. */
+.book-toggle {
+  margin: auto 0 0; padding: 10px 0 0; border: 0; background: none;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--accent-read);
+  text-align: left; cursor: pointer;
+}
+.book.is-open .book-toggle { color: var(--ink-soft); }
+
+/* Текст, развёрнутый прямо в списке. Ширина та же, что у страницы
+   рассказа, — читать одинаково удобно, где бы ни открыл. */
+.story-inline { grid-column: 1 / -1; margin: 14px 0 4px; }
+.story-inline-body p { margin: 0 0 1em; max-width: 34em; line-height: 1.62; }
+.story-inline-body .story-break { border: 0; margin: 1.6em auto; width: 60px; border-top: 1px solid var(--rule); }
+.story-inline-wait { color: var(--ink-soft); font-family: var(--mono); font-size: 12px; }
+.story-inline-more { margin-top: 10px; font-family: var(--mono); font-size: 11px; }
+.story-inline-more a { color: var(--accent-read); }
+.book-list li.is-open { background: var(--ground-soft); }

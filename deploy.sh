@@ -30,8 +30,15 @@ for arg in "$@"; do
 done
 
 # Что именно отдаётся посетителю. Всё остальное остаётся дома.
+# data/ здесь НЕТ намеренно. Сборка читает его из репозитория, странице он
+# не нужен ни при загрузке, ни во время работы — проверено поиском по всем
+# доставленным файлам. А на сервере он отдавал наружу `stories.json` с
+# подписями обложек, которые владелец 31 августа 2026 просил убрать: со
+# страниц мы их сняли, а из данных нет, и «сделано» было неполным пять
+# часов. Не вписывать обратно.
 PAYLOAD="
 index.html
+en
 404.html
 503.html
 og.png
@@ -43,7 +50,6 @@ game-menu.css
 player-name.js
 tour.js
 assets
-data
 praktikum
 rasskazy
 technomagic
@@ -161,10 +167,10 @@ echo "== содержимое сайта =="
 if $go; then
   # shellcheck disable=SC2086
   # shellcheck disable=SC2086
-  rsync -avz --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
+  rsync -avz --omit-dir-times --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
 else
   # shellcheck disable=SC2086
-  rsync -avzn --itemize-changes --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
+  rsync -avzn --omit-dir-times --itemize-changes --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
   echo
   echo "  (черновой прогон; повторите с --go)"
 fi

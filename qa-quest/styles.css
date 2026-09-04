@@ -119,17 +119,6 @@ button:disabled { cursor: not-allowed; }
 .brand strong { font-size: 16px; letter-spacing: .16em; }
 .brand small { color: var(--muted); font: 500 10px "Roboto Mono", monospace; letter-spacing: .1em; margin-top: 3px; }
 
-.mode-switch {
-  display: flex; gap: 3px; padding: 3px;
-  border: 1px solid var(--line); border-radius: 11px; background: #0b161f;
-}
-.mode-switch button {
-  border: 0; background: transparent; color: var(--muted);
-  padding: 8px 16px; border-radius: 8px; font: 600 13px Manrope; transition: .18s;
-}
-.mode-switch button:hover { color: var(--text); }
-.mode-switch button.active { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent-line); }
-
 .profile-strip { display: flex; align-items: center; gap: 16px; }
 
 .streak-chip {
@@ -220,6 +209,32 @@ button:disabled { cursor: not-allowed; }
 }
 .welcome-start:hover { filter: brightness(1.06); }
 
+/* На тесте один человек выбрал машины, второй — серверы. Оба входа стоят
+   рядом и одинакового веса: маленький переключатель в шапке не объяснял, что
+   за ним меняется весь сюжет курса. */
+.story-choice { grid-column: 1 / -1; display: grid; gap: 9px; }
+.story-choice-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.story-choice-head span {
+  color: var(--accent); font: 700 10px "Roboto Mono", monospace; letter-spacing: .14em;
+}
+.story-choice-head small { color: var(--muted); font-size: 12px; }
+.story-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.story-card {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; text-align: left;
+  padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
+  background: #0b1620; color: var(--text); font: inherit; cursor: pointer; transition: .18s;
+}
+.story-card strong { font-size: 16px; }
+.story-card > span { grid-column: 1 / -1; color: #b9c7ce; font-size: 13px; line-height: 1.45; }
+.story-card small { grid-column: 2; grid-row: 1; color: var(--muted); font: 600 11px "Roboto Mono", monospace; }
+.story-card:hover, .story-card:focus-visible { transform: translateY(-1px); }
+.story-card-garage { border-color: #6d5028; background: linear-gradient(140deg, rgba(255, 180, 84, .10), rgba(255, 180, 84, .03)); }
+.story-card-garage strong, .story-card-garage.active small { color: #ffb454; }
+.story-card-ice { border-color: #2c5768; background: linear-gradient(140deg, rgba(103, 232, 249, .10), rgba(103, 232, 249, .03)); }
+.story-card-ice strong, .story-card-ice.active small { color: #67e8f9; }
+.story-card.active { box-shadow: inset 0 0 0 1px currentColor, 0 0 20px -10px currentColor; }
+.story-card:not(.active) small { color: #b7c5cc; }
+
 .mode-hint { color: var(--accent); white-space: nowrap; }
 
 .stuck-button { display: block; width: calc(100% - 32px); margin: 0 16px 14px; text-align: center; text-decoration: none; }
@@ -303,6 +318,7 @@ button:disabled { cursor: not-allowed; }
   transition: .16s;
 }
 .next-course:hover { border-color: #315368; background: #12222d; }
+.next-route-label { color: var(--accent); font: 600 10px "Roboto Mono", monospace; letter-spacing: .12em; }
 .next-course strong { font-size: 14px; }
 .next-course small { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .next-course-go { color: var(--mint); font: 600 11px "Roboto Mono", monospace; margin-top: 3px; }
@@ -520,6 +536,8 @@ code, .task-card code, .brief code {
 }
 .hint-box p { margin: 0 0 6px; }
 .hint-box .hint-note { color: #9a93c9; font-size: 11px; }
+.hint-box.automatic { border-color: #6a5828; background: #211d11; }
+.hint-box .hint-auto { color: var(--yellow); font-size: 11px; font-weight: 700; }
 .hint-box pre {
   margin: 0; padding: 9px 11px; background: #0d1018; border-radius: 7px; overflow-x: auto;
   color: #dff6f2; font: 12px/1.55 "Roboto Mono", monospace;
@@ -640,8 +658,6 @@ code, .task-card code, .brief code {
 @media (max-width: 860px) {
   .app-shell { padding: 0 12px 20px; }
   .topbar { flex-wrap: wrap; gap: 12px; }
-  .mode-switch { order: 3; width: 100%; }
-  .mode-switch button { flex: 1; }
   .profile-strip { gap: 10px; }
   .level-chip { display: none; }
   .xp-block { width: 120px; }
@@ -651,8 +667,6 @@ code, .task-card code, .brief code {
   .lesson-aside { max-height: none; }
   .aside-list { display: none; }
   .back-button { border-bottom: 0; padding: 12px 14px; }
-  /* Подсказка про режим на телефоне нужнее, чем на большом экране: там
-     переключатель занимает всю ширину и без пояснения выглядит загадкой. */
   .progress-hint { display: none; }
 
   /* Кнопка старта во всю ширину: на телефоне узкая кнопка посреди блока
@@ -802,13 +816,6 @@ body.theme-garage .ambient-one { background: var(--accent); }
    один раз потеряли под нижним краем поле для кода. */
 body.lesson-open .story-switch { display: none; }
 
-/* Каждый переключатель показывается там, где виден его эффект. Историю меняют
-   на карте — там выбирают мир. Глубину меняют в уроке — там сразу видно, что
-   изменилось: одна задача или три, выжимка или разбор. Раньше оба висели
-   рядом всегда, и переключатель подачи выглядел настройкой неизвестно чего.
-   Заодно на телефоне это на целый ряд меньше в шапке. */
-body:not(.lesson-open) .mode-switch { display: none; }
-
 /* Итог — единственное место на первом экране, где сказано, что человек унесёт.
    Стоит прямо над кнопкой: узнавать это на шестнадцатом шаге поздно. */
 .welcome-outcome {
@@ -827,27 +834,6 @@ body:not(.lesson-open) .mode-switch { display: none; }
   content: '✓'; position: absolute; left: 0; top: 0;
   color: var(--mint); font-weight: 700;
 }
-
-/* ---------- вопрос про объём ---------- */
-
-.mode-dialog {
-  width: min(520px, 92vw); padding: 22px; border: 1px solid var(--accent-line);
-  border-radius: 16px; background: var(--panel); color: var(--text);
-}
-.mode-dialog::backdrop { background: rgba(4, 9, 13, .82); }
-.mode-dialog h2 { margin: 0 0 6px; font-size: 22px; }
-.mode-dialog-lead { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.5; }
-.mode-dialog-note { margin: 14px 0 0; color: var(--muted); font-size: 13px; }
-.mode-picks { display: grid; gap: 10px; }
-.mode-pick {
-  display: grid; gap: 3px; text-align: left; padding: 14px 16px;
-  background: #0d1720; border: 1px solid var(--line); border-radius: 12px;
-  color: var(--text); font: inherit; cursor: pointer; transition: .15s;
-}
-.mode-pick:hover, .mode-pick:focus-visible { border-color: var(--accent); background: var(--accent-glow); }
-.mode-pick strong { font-size: 17px; color: var(--accent); }
-.mode-pick span { font-size: 14px; }
-.mode-pick em { font-style: normal; font-size: 13px; color: var(--muted); }
 
 /* Правая колонка: задача сверху, рабочее место под ней. Обе части живут в
    одном столбце и прокручиваются вместе с ним, а не порознь. */
@@ -877,11 +863,11 @@ body.theme-garage .panel {
 /* Неон. Общий язык для обеих историй: акцент не просто цветной, он светится —
    так выглядит подсветка приборов и так же выглядит строка в терминале. Цвет
    берётся из истории, свечение одно и то же. */
-.eyebrow, .mode-pick strong, .theme-choice-name, .rig-button-name,
+.eyebrow, .theme-choice-name, .rig-button-name,
 .brief-real > span, .task-card > span, .welcome-outcome b {
   text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
 }
-.story-switch button.active, .mode-switch button.active {
+.story-switch button.active {
   box-shadow: inset 0 0 0 1px var(--accent-line), 0 0 18px -4px var(--accent);
 }
 .brand-mark { box-shadow: 0 0 22px -6px var(--accent); }
@@ -1046,6 +1032,20 @@ svg.fault .pc-lamp-rear ellipse { fill: #ff6b6b; filter: drop-shadow(0 0 10px #f
    приборную свалку, а смысл в том, чтобы связать одну строчку кода с одним
    понятным движением железа. */
 .stand-extra { margin-top: 2px; }
+.incident-feed {
+  display: grid; gap: 5px; padding: 9px 10px; margin-top: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
+  border-radius: 8px; background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.incident-feed[hidden] { display: none; }
+.incident-feed > b { font-size: 13px; color: var(--text); }
+.incident-feed p { margin: 0; font-size: 12px; line-height: 1.42; color: var(--muted); }
+.incident-feed .incident-lead { color: #d4e7ee; }
+.incident-feed .incident-defense { color: var(--accent); }
+.incident-feed a { width: fit-content; font-size: 11px; color: var(--accent); }
+.incident-eyebrow {
+  font: 600 9.5px "Roboto Mono", monospace; letter-spacing: .12em; color: var(--accent);
+}
 .st-cap {
   display: block; margin-bottom: 5px;
   font: 600 9.5px "Roboto Mono", monospace; letter-spacing: .12em; color: var(--muted);
@@ -1094,6 +1094,8 @@ svg.fault .pc-lamp-rear ellipse { fill: #ff6b6b; filter: drop-shadow(0 0 10px #f
   /* 26 пикселей полей с каждой стороны на узком экране съедают седьмую часть
      ширины — на телефоне это строка текста. */
   .welcome { padding: 18px 14px; }
+  .story-choice-head { display: grid; gap: 2px; }
+  .story-choice-grid { grid-template-columns: 1fr; }
 }
 
 /* Страховка от бокового увода: даже если что-то однажды снова окажется шире

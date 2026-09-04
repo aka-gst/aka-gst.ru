@@ -5,7 +5,7 @@
 import { lessonById, loadPracticums } from './content/index.js';
 import { activeTheme, THEMES, setTheme } from './content/themes.js';
 import {
-  loadStore, subscribe, store, setMode, pickMode, levelInfo, resetProgress, isLessonOpen,
+  loadStore, subscribe, store, levelInfo, resetProgress, isLessonOpen,
 } from './store.js';
 import { bootRunner, onRunnerChange } from './runner.js';
 import { auth, onAuthChange, probeAuth, login, register, recover, logout, progressHint } from './auth.js';
@@ -75,32 +75,12 @@ function route() {
     // Отрисовка создаёт место под кадры пустым — возвращаем в него текущее
     // состояние, иначе перерисовка посреди загрузки стирает картинку.
     paintBoot(runnerStatus);
-    askMode();
   } else {
     screens.lesson.hidden = true;
     screens.map.hidden = false;
     document.body.classList.remove('lesson-open');
     renderMap(screens.map, { onOpen: openLesson });
   }
-}
-
-/*
- * Вопрос про объём — один раз, при первом входе в урок. Переключатель наверху
- * остаётся, но теперь он не единственное объяснение: две кнопки без подписи
- * человек просто не трогал и проходил короткий курс, не зная об этом.
- */
-function askMode() {
-  if (store.state.modePicked) return;
-  const dialog = $('modeDialog');
-  if (dialog.open) return;
-  dialog.querySelectorAll('.mode-pick').forEach((button) => {
-    button.onclick = () => {
-      pickMode(button.dataset.pick);
-      dialog.close();
-      route();
-    };
-  });
-  dialog.showModal();
 }
 
 /* ---------- шапка ---------- */
@@ -118,15 +98,6 @@ function renderHeader() {
   streakChip.title = streak.current > 0
     ? `Серия: ${streak.current} дн. подряд, рекорд ${streak.best}`
     : 'Реши задачу сегодня, чтобы начать серию';
-
-  document.querySelectorAll('.mode-switch button').forEach((button) => {
-    button.classList.toggle('active', button.dataset.mode === store.state.mode);
-    button.setAttribute('aria-pressed', String(button.dataset.mode === store.state.mode));
-  });
-
-  // Переключатель без объяснения выглядит бесполезным: человек видит две
-  // кнопки и не понимает, что изменится. Говорим прямо, что он делает.
-  // Без названия режима: оно и так написано на нажатой кнопке прямо над строкой.
 
 }
 
@@ -313,18 +284,6 @@ function accountDialog(mode = 'login') {
 
 loadStore();
 subscribe(renderHeader);
-
-document.querySelectorAll('.mode-switch button').forEach((button) => {
-  button.addEventListener('click', () => {
-    setMode(button.dataset.mode);
-    route();
-    // Раньше это висело строкой в служебном ряду постоянно. Объяснение нужно в
-    // момент выбора, а не всё время: что выбрано, и так написано на кнопке.
-    toast(store.state.mode === 'sprint'
-      ? 'в уроке суть и одна задача'
-      : 'в уроке объяснение, примеры и три задачи');
-  });
-});
 
 $('accountButton').addEventListener('click', () => accountDialog());
 $('closeDialog').addEventListener('click', () => $('accountDialog').close());

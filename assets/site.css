@@ -71,6 +71,30 @@ html[data-track="play"] body {
     var(--bg);
 }
 
+/* Рассказы — холодные чернила с ягодным сигналом: отдельный зал сайта,
+   но не коричневая «бумага» и не копия фиолетовой игровой темы. */
+html[data-track="stories"] {
+  --bg: #090912;
+  --bg-soft: #10101c;
+  --panel: #151321;
+  --line: #332b4a;
+  --line-soft: #221d33;
+  --text: #f8f3ff;
+  --muted: #aaa0bd;
+  --dim: #706680;
+  --accent: #ff73b5;
+  --accent-dim: #43203a;
+  --warn: #ffc86b;
+  --fail: #ff6f82;
+  --card-hover: #20182c;
+}
+html[data-track="stories"] body {
+  background:
+    radial-gradient(circle at 92% -5%, rgba(255, 115, 181, .14), transparent 33%),
+    radial-gradient(circle at 3% 16%, rgba(105, 74, 255, .10), transparent 29%),
+    var(--bg);
+}
+
 a { color: inherit; }
 h1, h2, h3 { margin: 0; font-weight: var(--title-weight); letter-spacing: var(--title-spacing); line-height: 1.1; }
 p { margin: 0; }
@@ -102,7 +126,17 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
   border-bottom: 1px solid var(--line-soft);
 }
 
+/* Знак стоит рядом с надписью, а не вместо неё. Три SVG используют один
+   лаймово-фиолетовый язык, но разные силуэты; на 28 px они остаются
+   различимыми, в отличие от прежней подробной растровой эмблемы. */
+.brand-znak {
+  height: 34px; width: 34px; margin-right: 10px;
+  flex: 0 0 34px; display: block;
+}
+@media (max-width: 640px) { .brand-znak { height: 28px; width: 28px; flex-basis: 28px; margin-right: 8px; } }
+
 .brand {
+  display: inline-flex; align-items: center; min-width: 132px;
   font-family: var(--mono); font-size: 15px; font-weight: 700;
   letter-spacing: -.02em; text-decoration: none;
 }
@@ -139,6 +173,9 @@ html[data-track="play"] .track-switch [data-track-to="play"] {
   box-shadow: 0 0 22px rgba(154, 99, 255, .5);
 }
 html[data-track="play"] .track-switch [data-track-to="play"] svg { color: #f6f2ff; }
+html[data-track="stories"] .track-switch [data-track-to="stories"] {
+  background: var(--accent); color: #08120c; box-shadow: 0 0 20px rgba(94, 227, 155, .3);
+}
 
 /* Выбранная вкладка чуть дышит — тем же приёмом, что полоски в шапке игр. */
 @media (prefers-reduced-motion: no-preference) {
@@ -170,7 +207,84 @@ html[data-track="play"] .track-switch button[aria-pressed="true"] {
 main { max-width: var(--maxw); margin: 0 auto; padding: 0 24px 80px; }
 .panel { display: none; }
 html[data-track="work"] .panel[data-panel="work"],
-html[data-track="play"] .panel[data-panel="play"] { display: block; }
+html[data-track="play"] .panel[data-panel="play"],
+html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
+
+.story-lead { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:18px 28px; align-items:start; margin-top:26px; padding:28px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
+.story-lead h1 { margin:8px 0 12px; font-size:clamp(30px,4vw,47px); line-height:1.03; }
+.story-lead p:not(.kicker) { max-width:560px; color:var(--muted); line-height:1.5; }
+.story-all-link { align-self:start; padding:0; border:0; background:none; color:var(--accent); font:700 13px var(--sans); white-space:nowrap; cursor:pointer; }
+.story-shelves { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+.story-lead-book { display:grid; grid-template-columns:94px minmax(0,1fr); gap:12px; align-items:center; min-height:138px; padding:10px; border:1px solid var(--line); border-radius:11px; background:none; color:var(--text); font:700 16px var(--sans); text-align:left; transition:border-color .15s ease, background .15s ease; cursor:pointer; }
+.story-lead-book:hover, .story-lead-book:focus-visible { border-color:var(--accent); background:var(--card-hover); outline:0; }
+.story-lead-book[aria-expanded="true"] { border-color:var(--accent); background:var(--accent-dim); box-shadow:0 0 22px rgba(255,115,181,.12); }
+.story-lead-book img { width:94px; height:116px; object-fit:cover; border:1px solid var(--line); border-radius:7px; box-shadow:0 10px 22px rgba(0,0,0,.3); }
+.story-collections { grid-column:1 / -1; }
+.story-collection { display:grid; grid-template-columns:150px minmax(0, 1fr); gap:22px; margin-top:4px; padding:18px; border:1px solid var(--line); border-radius:12px; background:rgba(6,5,14,.38); scroll-margin-top:calc(var(--shapka,71px) + 16px); }
+.story-collection[hidden], .story-reader-inline[hidden] { display:none; }
+.story-collection > img { width:150px; height:220px; object-fit:cover; border-radius:8px; box-shadow:0 12px 28px #0006; }
+.story-collection h2, .story-reader-inline h2 { margin:5px 0 8px; font-size:28px; }
+.story-collection p:not(.kicker) { color:var(--muted); }
+.story-collection-intro { max-width:720px; margin:14px 0 18px; padding:14px 16px; border-left:2px solid var(--accent); background:rgba(255,115,181,.05); }
+.story-collection-intro p { margin:0 0 8px; }
+.story-collection-intro p:last-child { margin-bottom:0; }
+.story-collection-count { margin:0; }
+.story-collection ol { columns:2; gap:26px; margin:18px 0 0; padding-left:20px; }
+.story-collection li { break-inside:avoid; margin:0 0 7px; }
+.story-collection button { padding:0; border:0; background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.story-collection button:hover, .story-collection button:focus-visible { color:var(--accent); outline:0; }
+.story-reader-inline { grid-column:1 / -1; margin-top:4px; padding:24px; border:1px solid var(--line); border-radius:12px; background:rgba(0,0,0,.11); }
+.story-reader-inline > button { padding:0; border:0; background:none; color:var(--accent); font:700 13px var(--sans); cursor:pointer; }
+.story-reader-copy { max-width:760px; color:var(--text); font-size:17px; line-height:1.72; }
+.story-reader-copy .story-break { width:38%; margin:28px 0; border:0; border-top:1px solid var(--line); }
+.story-to-top { position:fixed; right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); z-index:30; display:flex; align-items:center; gap:7px; min-height:44px; padding:10px 14px; border:1px solid var(--accent); border-radius:999px; background:rgba(15,12,25,.92); box-shadow:0 10px 34px #0009; color:var(--text); font:700 12px var(--sans); cursor:pointer; backdrop-filter:blur(10px); }
+.story-to-top:hover, .story-to-top:focus-visible { background:var(--accent-dim); outline:2px solid var(--accent); outline-offset:2px; }
+.story-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 24px; margin-top:14px; padding:13px 18px; border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:13px; }
+.story-bar b { color:var(--accent); font-size:16px; }.story-bar a { margin-left:auto; color:var(--text); font-weight:700; text-decoration:none; }
+@media (max-width:640px){.story-lead{grid-template-columns:1fr; padding:20px;}.story-all-link{justify-self:start;}.story-shelves{grid-template-columns:1fr;}.story-lead-book{grid-template-columns:76px 1fr;min-height:104px;}.story-lead-book img{width:76px;height:94px;}.story-collection{grid-template-columns:86px 1fr;gap:14px;padding:14px;}.story-collection > img{width:86px;height:128px;}.story-collection ol{columns:1;margin-top:14px;}.story-reader-inline{padding:18px;}.story-reader-copy{font-size:16px;}.story-to-top span{display:none;}.story-to-top{width:44px;justify-content:center;padding:0;}.story-bar a{margin-left:0;}}
+
+/* ── Первый экран работы ──────────────────────────────────────────── */
+/* На первом экране две реальные системы: приватный AI-шлюз и продукт с
+   агентами. Практика не притворяется частью этой пары и живёт ниже. */
+.work-lead {
+  position: relative; overflow: hidden; margin-top: 26px; padding: 28px;
+  border: 1px solid var(--line); border-radius: 16px; background: var(--panel);
+}
+.work-duet { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; align-items:stretch; }
+.work-system { display:grid; grid-template-rows:auto 1fr auto; gap:16px; min-width:0; min-height:420px; padding:24px; border:1px solid var(--line); border-radius:12px; background:linear-gradient(135deg,var(--bg-soft),var(--panel)); color:var(--text); text-decoration:none; }
+.work-gateway-copy, .work-dharma-copy { align-self:start; }
+.work-lead h1 { margin: 8px 0 12px; max-width: 500px; font-size: clamp(30px, 4vw, 47px); line-height: 1.03; }
+.work-gateway-copy > p:not(.kicker) { max-width: 500px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.work-lead-fact { margin-top: 12px; color: var(--text) !important; font-size: 13px !important; }
+.work-lead-fact b { color: var(--accent); }
+.work-gateway-proof { position:relative; align-self:stretch; display:block; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); text-decoration:none; }
+.work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform .35s ease,filter .35s ease; }
+.work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
+.work-dharma-shot { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
+.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:center; transition:transform .35s ease,filter .35s ease; }
+.dharma-journey { position:absolute; right:10px; bottom:10px; z-index:1; display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid #65e5b55c; border-radius:999px; background:#07120edd; color:#c8ffe9; font:600 9px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase; opacity:.78; }
+.dharma-journey i { display:block; width:12px; height:1px; background:linear-gradient(90deg,#65e5b5,#d3fff0); transform-origin:left center; }
+.work-dharma:hover .dharma-journey, .work-dharma:focus-visible .dharma-journey { opacity:1; border-color:#65e5b5; box-shadow:0 0 18px #46dca34d; }
+@media (prefers-reduced-motion:no-preference) { .work-dharma:hover .dharma-journey i, .work-dharma:focus-visible .dharma-journey i { animation:dharma-route .8s ease-in-out both; }.work-dharma:hover .dharma-journey i:nth-of-type(2), .work-dharma:focus-visible .dharma-journey i:nth-of-type(2) { animation-delay:.38s; } }
+@keyframes dharma-route { from { transform:scaleX(.1); opacity:.2; } to { transform:scaleX(1); opacity:1; } }
+.work-dharma-copy { display:grid; align-content:start; gap:9px; }
+.work-dharma h2 { margin: 0; font-size: 25px; line-height: 1; }
+.work-dharma p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.work-system-link { align-self:end; color:var(--accent); font-size:13px; font-weight:700; text-decoration:none; }
+.work-gateway-proof:hover, .work-gateway-proof:focus-visible, .work-dharma:hover, .work-dharma:focus-visible { border-color: var(--accent); outline: 0; }
+.work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-dharma:hover img, .work-dharma:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
+.work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
+.work-duet-note b { color: var(--text); }
+
+/* Сигнал возвращается с прежней частотой, но не «режет» блок мгновенным взмахом. */
+@media (prefers-reduced-motion: no-preference) {
+  .work-lead::after {
+    content: ""; position: absolute; right: -22%; bottom: 0; width: 42%; height: 2px;
+    background: linear-gradient(90deg, transparent, #7356d9, #b68bff, transparent);
+    animation: work-scan 3.8s cubic-bezier(.2,.7,.2,1) infinite;
+  }
+}
+@keyframes work-scan { 0%, 69% { transform: translateX(145%); opacity: 0; } 72% { opacity: 1; } 94%, 100% { transform: translateX(-330%); opacity: 0; } }
 
 .kicker {
   font-family: var(--mono); font-size: 11px; font-weight: 600;
@@ -180,11 +294,35 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 /* ── Первый экран «Работа»: отчёт прогона ─────────────────────────── */
 
 .report {
-  margin: 34px 0 0;
+  margin: 22px 0 0;
   border: 1px solid var(--line); border-radius: var(--r);
   background: var(--panel);
   overflow: hidden;
 }
+
+/* Первый экран продаёт понятный результат, а не стек. Доказательства никуда
+   не делись: они раскрываются нативной кнопкой и доступны без JavaScript. */
+.report-brief { padding: 24px 26px 20px; max-width: 720px; }
+.report-brief h1 { margin: 7px 0 5px; font-size: clamp(30px, 4.4vw, 46px); }
+.report-name { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .08em; }
+.report-benefits { display: grid; gap: 4px; margin-top: 16px; }
+.report-benefits p { color: var(--text); font-size: 16px; line-height: 1.45; }
+.report-live {
+  margin-top: 16px; padding: 10px 12px; border-left: 2px solid var(--warn);
+  background: var(--bg-soft); color: var(--muted); font-size: 12.5px; line-height: 1.45;
+}
+.report-live b { color: var(--warn); }
+.report-more { border-top: 1px solid var(--line); }
+.report-more > summary {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  min-height: 54px; padding: 14px 28px; cursor: pointer; list-style: none;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+}
+.report-more > summary::-webkit-details-marker { display: none; }
+.report-more > summary::after { content: '+'; flex: none; font-size: 18px; line-height: 1; }
+.report-more[open] > summary::after { content: '−'; }
+.report-more > summary span { color: var(--dim); font-family: var(--sans); font-size: 12px; letter-spacing: 0; text-transform: none; }
+.report-more-content { border-top: 1px solid var(--line); }
 
 .report-bar {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -281,8 +419,10 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
 /* На карточке снимок идёт во всю ширину — как полоса чисел над ним,
    поэтому его выводим из общего правила с полями по 20px. */
-.card > .shot { margin: 0; }
-.card > .shot img {
+.card > .shot, .card > .card-shot-link { margin: 0; }
+.card-shot-link { display:block; color:inherit; text-decoration:none; cursor:pointer; }
+.card-shot-link:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+.card > .shot img, .card-shot-link .shot img {
   /* Обрезаем низ, а не верх: в интерфейсах смысл собран в шапке экрана. */
   aspect-ratio: 16 / 9;
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
@@ -292,30 +432,26 @@ html[data-track="play"] .panel[data-panel="play"] { display: block; }
 
 /* ── Прокрутка по блокам ─────────────────────────────────────────── */
 
-html { scroll-behavior: smooth; }
+/* Отступ под прилипшую шапку. Считается от её настоящей высоты, которую
+   меряет app.js: константа 88 работала на десктопе (шапка 71) и полностью
+   ломалась на телефоне, где шапка переносится и становится 128 — заголовок
+   уезжал под неё целиком, 24 пикселя из 24. Запасное значение на случай,
+   если скрипт не выполнится, взято по десктопной шапке. */
+/* scroll-behavior здесь БЫЛО и убрано намеренно: любой переход по якорю
+   ехал плавно, и это читается как притягивание. scroll-padding-top не
+   движение, а отступ: без него якорь встаёт под липкую шапку и заголовок
+   не видно. Его оставляем. */
+html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 
-/* Родная привязка оставлена запасным вариантом на случай, если скрипт не
-   выполнится. Жёсткую (mandatory) ставить нельзя: проверено — она делает
-   раздел выше экрана нечитаемым, прокрутка упирается и не пускает вниз.
-   Когда app.js берёт магнит на себя, он гасит эту привязку сам.
-   На узких экранах не включаем вовсе: там она мешает больше, чем помогает. */
-@media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
-  html { scroll-snap-type: y proximity; }
-  .report, .block {
-    scroll-snap-align: start; scroll-margin-top: 84px;
-    /* Остановка обязательна: без неё proximity почти никогда не срабатывает
-       при инерционной прокрутке трекпадом, и «листания» не видно вовсе.
-       Действует только на блоки, которые остались точками привязки, —
-       длинные разделы ниже её теряют вместе с привязкой. */
-    scroll-snap-stop: always;
-  }
-  /* Раздел, который не помещается под шапкой, привязку теряет целиком, а не
-     только обязательную остановку. Пока он оставался точкой привязки, магнит
-     подтягивал к его началу — и раздел вставал обрезанным снизу, потому что
-     не влезал. Свободная прокрутка здесь честнее магнита, который не может
-     показать блок целиком. Класс вешает app.js по замеру. */
-  .report.is-tall, .block.is-tall { scroll-snap-align: none; scroll-snap-stop: normal; }
-}
+/* Привязка прокрутки («магнит») убрана 31 августа 2026 по слову Сергея:
+   «мы уже несколько раз это проговаривали». Её чинили трижды — mandatory на
+   proximity, обязательную остановку, потерю привязки у длинных разделов — и
+   каждый раз он снова говорил «прилипание». Симптом не уходил до конца,
+   значит причина была не в настройке, а в самой привязке (правило 7м).
+   Комментарий выше к тому же врал: он обещал, что магнит берёт на себя
+   app.js, а в app.js никакого магнита нет — только класс is-tall.
+   Смещение под прилипшую шапку осталось: оно к привязке отношения не имеет
+   и нужно, чтобы заголовок не уезжал под шапку при прыжке по якорю. */
 
 /* Проявление блока при входе в экран. Класс data-reveal ставит app.js, а не
    разметка: если скрипт не выполнится, содержимое просто останется видимым,
@@ -332,7 +468,7 @@ html { scroll-behavior: smooth; }
 
 /* ── Общие блоки ──────────────────────────────────────────────────── */
 
-.block { margin-top: 64px; }
+.block { margin-top: 48px; }
 /* Первому блоку панели верхний отступ не нужен: над ним только шапка сайта. */
 .panel > .block:first-child { margin-top: 34px; }
 /* Без заголовка блоку не нужен прежний отступ — карточки поднимаются выше. */
@@ -351,11 +487,22 @@ html { scroll-behavior: smooth; }
   background: var(--panel);
   /* Без overflow: hidden — иначе карточка обрезает всплывающую панель
      «чем покрыто». Скругление верха берёт на себя сама полоса чисел. */
-  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.card:hover { border-color: var(--dim); background: var(--card-hover); transform: translateY(-2px); }
+/* Отклик на наведение. Было −2 точки без тени: Тестер померил наведением
+   настоящей мыши, и на карточке высотой под 900 точек две точки глаз считает
+   за «ничего не произошло». Тень тут важнее сдвига — именно она читается как
+   «карточка поднялась». Масштаб не берём: карточки со снимками от него мылят. */
+.card:hover, .card:focus-visible {
+  border-color: var(--dim); background: var(--card-hover);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 24px -8px #0009;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card:hover, .card:focus-visible { transform: none; }
+}
 /* Полоса чисел и снимок идут во всю ширину карточки, остальное — с полями. */
-.card > *:not(.band):not(.shot) { margin-left: 20px; margin-right: 20px; }
+.card > *:not(.band):not(.shot):not(.card-shot-link) { margin-left: 20px; margin-right: 20px; }
 .card h3 { font-size: 19px; }
 .card-title {
   color: inherit; text-decoration: none;
@@ -456,6 +603,14 @@ html { scroll-behavior: smooth; }
   letter-spacing: .06em; text-transform: uppercase;
   border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
 }
+/* На игровой карточке метка состояния снимает рамку и фон. С ними она
+   выглядела кнопкой — круглой, обведённой, в правом верхнем углу, — и
+   человек жал её вместо настоящей ссылки «ЗАПУСТИТЬ», которая стоит
+   ниже. Кнопка, которая ничего не делает, это баг, а не мелочь. На
+   карточках работы метка остаётся как была: там она несёт версию и
+   рядом нет ничего, с чем её спутать. */
+.gcard .status { border: 0; background: none; padding: 0; }
+
 .status-released, .status-live, .status-published {
   border-color: var(--accent-dim); background: var(--accent-dim); color: var(--accent);
 }
@@ -486,11 +641,149 @@ html { scroll-behavior: smooth; }
 .link b { font-weight: 400; }
 .link.muted { color: var(--dim); }
 
+/* ── Переключаемые практикумы ─────────────────────────────────────── */
+.practicum-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.practicum-tabs button {
+  flex: 1 1 0; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line);
+  border-radius: 9px; background: var(--bg-soft); color: var(--muted); cursor: pointer;
+  font: 600 12px/1.25 var(--sans); text-align: left;
+}
+.practicum-tabs button[aria-selected="true"] { border-color: var(--accent); background: var(--accent-dim); color: var(--text); }
+.practicum-card {
+  display: grid; gap: 10px; padding: 20px; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel);
+}
+.practicum-card[hidden] { display: none; }
+.practicum-card .card-head { padding-top: 0; }
+.practicum-card h3 { font-size: 20px; }
+.practicum-card .tagline { color: var(--text); font-size: 14px; }
+.practicum-card--route { width: min(100%, 620px); grid-template-columns:120px minmax(0,1fr); align-items:center; }
+.practicum-route-shot { aspect-ratio:1/1; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+.practicum-route-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:top center; }
+.practicum-route-copy { display:grid; gap:8px; }
+.practicum-route-copy .card-links { margin-top:0; }
+
+.practicum-teaser .practicum-card { max-width: 760px; }
+
+.practicum-stage { min-height:min(480px,calc(100vh - var(--shapka) - 130px)); }
+.practicum-stage > .practicum-card--quest { min-height:inherit; }
+/* Полный экран нужен только квесту. Два маршрута с мини-снимком не должны
+   оставлять под собой пустую «сцену» после переключения. */
+.practicum-stage:has(.practicum-card--route:not([hidden])) { min-height:0; }
+.practicum-card--quest { grid-template-columns:minmax(280px, .95fr) minmax(0, 1fr); grid-template-rows:1fr; align-items:stretch; gap:22px; overflow:hidden; background:linear-gradient(135deg,var(--accent-dim),var(--panel)); }
+.practicum-quest-mark { display:grid; place-items:center; min-height:280px; overflow:hidden; border:1px solid var(--line); border-radius:9px; background:radial-gradient(circle at 50% 45%,#211542 0, var(--bg) 64%); }
+.practicum-quest-mark img { display:block; width:min(82%,360px); height:auto; filter:drop-shadow(0 0 24px #7656ff55); }
+.practicum-quest-copy { display:grid; align-content:center; gap:11px; }
+.practicum-quest-copy h3 { margin:0; font-size:clamp(28px,4vw,42px); }
+.practicum-quest-copy .tagline { font-size:17px; line-height:1.48; }
+.practicum-quest-copy s { color:#c6b7ee; text-decoration-color:#9b68ff; text-decoration-thickness:2px; }
+.practicum-note { margin:0; color:var(--muted); font-size:13px; line-height:1.45; }
+@media (max-width:640px) { .practicum-tabs { overflow-x:auto; }.practicum-tabs button { min-width:155px; }.practicum-stage { min-height:0; }.practicum-card--quest { grid-template-columns:1fr; }.practicum-card--route { grid-template-columns:88px minmax(0,1fr); width:100%; padding:16px; }.practicum-quest-mark { min-height:220px; }.practicum-quest-mark img { width:min(72%,280px); }.practicum-quest-copy .tagline { font-size:15px; } }
+
+/* Один главный квест, а не три одинаково тяжёлые карточки. Два практикума
+   остаются рядом как инструменты, не перенося и не выдавливая QueQuest. */
+.practicum-switch .practicum-pilot-grid { display:grid; grid-template-columns:minmax(0, 2fr) minmax(280px, 1fr); gap:14px; align-items:stretch; }
+.quequest-card { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--accent) 48%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, color-mix(in srgb, var(--accent-dim) 78%, #140d2a), var(--panel) 64%); }
+.quequest-visual { position:relative; display:block; min-height:0; overflow:hidden; border:0; border-right:1px solid var(--line); padding:0; background:#080a0f; cursor:pointer; text-align:left; }
+.quequest-poster, .quequest-video { display:block; width:100%; height:100%; min-height:390px; object-fit:cover; object-position:center; }
+.quequest-video { position:absolute; inset:0; opacity:0; transition:opacity .22s ease; }
+.quequest-visual.is-playing .quequest-video, .quequest-visual.is-finished .quequest-video { opacity:1; }
+.quequest-play-label { position:absolute; left:14px; bottom:14px; z-index:2; display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid #cbb9ff66; border-radius:999px; background:#0d0a1cdd; color:#f1edff; font:600 11px/1 var(--mono); letter-spacing:.04em; }
+.quequest-visual:hover .quequest-play-label, .quequest-visual:focus-visible .quequest-play-label { border-color:#cbb9ff; box-shadow:0 0 18px #8063e955; }
+.quequest-copy { display:grid; align-content:center; gap:12px; padding:26px; }
+.quequest-heading { display:flex; align-items:center; gap:9px; }
+.quequest-heading img { width:34px; height:34px; object-fit:contain; filter:drop-shadow(0 0 12px #8d6cff88); }
+.quequest-heading .kicker { margin:0; }
+.quequest-copy h3 { margin:0; font-size:clamp(31px, 4vw, 48px); line-height:1; }
+.quequest-copy .tagline { margin:0; color:var(--text); font-size:16px; line-height:1.48; }
+.quequest-copy .practicum-note { margin:0; }
+.practicum-side { display:grid; grid-template-rows:auto minmax(0,1fr); min-width:0; }
+.practicum-switch .practicum-tabs { display:grid; grid-template-columns:1fr; gap:7px; margin:0 0 10px; overflow:visible; }
+.practicum-switch .practicum-tabs button { min-width:0; min-height:52px; padding:9px 11px; text-align:left; }
+.practicum-detail-stage { min-height:0; }
+.practicum-detail { display:grid; grid-template-columns:76px minmax(0,1fr); gap:13px; height:100%; min-height:278px; padding:16px; border:1px solid var(--line); border-radius:var(--r); background:var(--panel); }
+.practicum-detail[hidden] { display:none; }
+.practicum-detail-shot { align-self:start; aspect-ratio:1/1; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+.practicum-detail-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:top center; }
+.practicum-detail-copy { display:grid; align-content:start; gap:8px; min-width:0; }
+.practicum-detail-copy .card-head { display:block; padding:0; }
+.practicum-detail-copy .status { display:none; }
+.practicum-detail-copy h3 { margin:0; font-size:18px; line-height:1.16; }
+.practicum-detail-copy .tagline { margin:0; font-size:13px; line-height:1.43; }
+.practicum-detail-copy .metric-chips { gap:5px; }
+.practicum-detail-copy .metric-chip { padding:4px 6px; font-size:10px; }
+.practicum-detail-copy .card-links { margin-top:2px; }
+@media (min-width:901px) { .quequest-card { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:570px; min-height:0; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { align-content:center; gap:8px; padding:16px 20px; }.quequest-copy .tagline { font-size:15px; line-height:1.4; }.practicum-side { height:570px; }.practicum-detail-stage { height:456px; }.practicum-detail { overflow:auto; } }
+@media (max-width:900px) { .practicum-switch .practicum-pilot-grid { grid-template-columns:1fr; }.practicum-side { grid-template-columns:minmax(180px, .72fr) minmax(0, 1.28fr); gap:10px; }.practicum-switch .practicum-tabs { margin:0; }.practicum-detail { min-height:0; }.quequest-card { min-height:0; } }
+@media (max-width:640px) { .quequest-card { grid-template-columns:1fr; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { padding:18px; }.quequest-copy .tagline { font-size:14px; }.practicum-side { grid-template-columns:1fr; }.practicum-switch .practicum-tabs { grid-template-columns:1fr 1fr; }.practicum-switch .practicum-tabs button { min-height:50px; font-size:11px; }.practicum-detail { grid-template-columns:66px minmax(0,1fr); min-height:0; }.practicum-detail-copy .metric-chips { display:none; }.quequest-play-label { left:10px; bottom:10px; } }
+@media (prefers-reduced-motion:reduce) { .quequest-video { display:none; }.quequest-play-label::before { content:"Кадр"; }.quequest-play-label { cursor:default; } }
+
+/* ── Заявка о партнёрстве ─────────────────────────────────────────── */
+.partner-form {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+  max-width: 760px; padding: 20px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel);
+}
+.partner-form label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; }
+.partner-form input, .partner-form textarea {
+  width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg-soft); color: var(--text); font: inherit; resize: vertical;
+}
+.partner-form input:focus, .partner-form textarea:focus { border-color: var(--accent); outline: 0; }
+.partner-message { grid-column: 1 / -1; }
+.partner-form button {
+  justify-self: start; min-height: 44px; padding: 10px 15px; border: 1px solid var(--accent); border-radius: 8px;
+  background: var(--accent); color: #092013; font: 700 13px/1 var(--sans); cursor: pointer;
+}
+.partner-form button:disabled { opacity: .6; cursor: wait; }
+.partner-honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.partner-status { align-self: center; margin: 0; color: var(--muted); font-size: 13px; }
+.partner-status[data-state="ok"] { color: var(--accent); }
+.partner-status[data-state="error"] { color: var(--fail); }
+
 /* ── Опыт и навыки ────────────────────────────────────────────────── */
 
 /* Раньше разделители рисовались фоном контейнера в зазорах сетки, и
    неполный последний ряд превращался в светлый пустой блок. Теперь у каждой
    группы своя рамка, а flex растягивает остаток ряда — дыре взяться неоткуда. */
+/* Навыки на телефоне занимали 719 пикселей из 844 — почти экран целиком
+   на одни теги, и это при том, что весь блок «Опыт и навыки» тянется на
+   3.5 экрана. Владелец: «с телефона целую страницу занимает, бессмысленно
+   много… надо сильно короче либо как-то раскрываемее».
+
+   Свёрнутый вид — пять названий групп с числами, две строки. Этого хватает,
+   чтобы понять, чем человек занимается; кому нужны сами теги, тот раскроет.
+   Разметка приходит РАЗВЁРНУТОЙ и сворачивается скриптом: без скриптов и
+   для поисковика видны все 43 тега. */
+.card-more-btn {
+  margin-top: 14px; padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--neon); align-self: flex-start;
+}
+.card-more-btn:hover, .card-more-btn:focus-visible { color: var(--ink); }
+.card-more[hidden] { display: none; }
+.card-more { margin-top: 14px; }
+
+.skills dt i {
+  display: none; margin-left: 6px; font-style: normal;
+  font-family: var(--mono); font-size: 11px; color: var(--dim);
+}
+.skills.is-folded { display: flex; flex-wrap: wrap; gap: 8px; }
+.skills.is-folded .skill {
+  flex: 0 0 auto; margin: 0; padding: 0; background: none; border: 0; border-radius: 0;
+}
+.skills.is-folded dd { display: none; }
+.skills.is-folded dt {
+  margin: 0; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px;
+  font-size: 13px; white-space: nowrap;
+}
+.skills.is-folded dt i { display: inline; }
+.skills-more {
+  margin-top: 12px; padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--neon);
+}
+.skills-more:hover, .skills-more:focus-visible { color: var(--ink); }
+
 .skills { display: flex; flex-wrap: wrap; gap: 12px; }
 .skill {
   flex: 1 1 200px; min-width: 0;
@@ -512,17 +805,89 @@ html { scroll-behavior: smooth; }
 
 .jobs { display: grid; gap: 1px; margin-top: 14px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .job { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 24px; padding: 20px 22px; background: var(--panel); }
+/* У мест работы отклика не было вовсе: `transition: all` стоял, а правила
+   :hover не существовало. Подъём тут ставить нельзя по двум причинам —
+   карточка не ссылка (проверено: 7 из 7 карточек проектов это <a>, а из
+   шести мест работы ни одно), и лежат они плитками через зазор в 1 точку,
+   который подъём бы разорвал. Поэтому подсветка: она говорит «вот эта
+   строка», а не «сюда можно нажать» (правило 10). */
+.job { transition: background .15s ease; }
+.job:hover { background: var(--card-hover); }
 /* Снимок в строке опыта идёт во второй столбец, к тексту, а не в узкую
    колонку с датой: полоса журнала шириной 170 пикселей — марка, а не
    документ. Ширину ограничиваем: во всю колонку она задавила бы список. */
-.job .shot { grid-column: 2; max-width: 420px; margin-top: 10px; }
+/* Скан показываем маркой, а не обоями: журнальный кегль на экране всё равно
+   не прочитать, а 420×591 занимали 0.66 высоты экрана при четырёх строках
+   текста — карточка на девять десятых состояла из картинки, единственной во
+   всей ленте. Решение Сергея 31 августа: «картинка может быть маленькой, а
+   при клике уже раскрываться на весь экран». */
+/* Скан кликается — но ссылкой он выглядеть не должен: это картинка,
+   а не текст. Убираем всё, что браузер добавляет ссылке по умолчанию. */
+/* Петля поверх снимка на карточке работы. Снимок остаётся постером: он
+   уже стоит и уже той же формы, поэтому переход между ними не дёргается.
+   Слой появляется только когда ролик пошёл — до этого его не видно вовсе. */
+.shot { position: relative; }
+.shot .gclip {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  /* object-position ОБЯЗАН совпадать со снимком под ним (.shot img —
+     top center). Он был по умолчанию 50% 50%, и cover резал два слоя
+     по-разному: даже при побайтно одинаковых кадрах картинка в момент
+     подмены сдвигалась. */
+  object-fit: cover; object-position: top center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s ease;
+}
+.shot .gclip.is-playing { opacity: 1; }
+
+.shot-link { display: block; color: inherit; text-decoration: none; }
+.shot-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+.job .shot { grid-column: 2; margin-top: 10px; text-align: center; }
+/* Полоса PlayStation — свидетельство, а не обложка раздела. Держим её в
+   правом краю той же строки: высоту задаёт текст, снимок открывается целиком
+   по клику. */
+.job--with-shot { grid-template-columns: 170px minmax(0, 1fr) 56px; }
+.job--with-shot .shot { grid-column: 3; grid-row: 1 / span 3; align-self: center; margin: 0; }
+.job--with-shot .shot img { width: 48px; max-height: 64px; object-fit: cover; object-position: top; }
+.job--publication { grid-template-columns:170px minmax(0, 1fr) 56px; min-height:0; padding:20px 22px; align-items:center; }
+.job--publication .job-period { grid-row:span 2; }
+.job-publication-shot { grid-column:3; grid-row:1 / span 2; justify-self:end; text-decoration:none; }
+.job-publication-shot img { width:46px; height:64px; object-fit:cover; object-position:top; border-radius:5px; }
+.job-publication-shot:hover img, .job-publication-shot:focus-visible img { transform:scale(1.04); box-shadow:0 8px 20px -6px #000a; }
+/* Потолок по ВЫСОТЕ, а не по ширине: Глаза мерили высоты всех шести пунктов
+   ленты на 375×812. Пункт с публикацией весил 709 px — выше текущей работы
+   в 1.4 раза и выше диплома в 5 раз, а картинка занимала 51% экрана. Без
+   картинки пункт весит 291, соседи — от 370 до 497. При 160 px пункт встаёт
+   ~451: ниже текущей работы, выше короткого диплома, в общем строю.
+   Выше 206 начинается «кричит» — это их граница, не наша догадка. */
+.job .shot img { max-height: 132px; width: auto; margin: 0 auto; }
+.job .shot a { display: block; border-radius: 8px; }
+.job .shot img { transition: transform .15s ease, box-shadow .15s ease; }
+.job .shot a:hover img, .job .shot a:focus-visible img {
+  transform: scale(1.03); box-shadow: 0 8px 20px -6px #000a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .job .shot a:hover img, .job .shot a:focus-visible img { transform: none; }
+}
 .job .shot img { border-radius: 8px; }
 /* На телефоне колонка и так узкая — ограничивать её ещё и здесь значит
    показывать журнальную полосу размером с почтовую марку. */
 @media (max-width: 900px) {
   .job .shot { max-width: none; grid-column: 1 / -1; }
+  .job--with-shot { grid-template-columns: minmax(0, 1fr) 56px; }
+  .job--with-shot .shot { grid-column: 2; grid-row: 1 / span 3; }
+  .job--with-shot .shot img { width: 48px; max-height: 64px; }
 }
 .job-period { grid-row: span 3; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+/* Пометка «свой проект» стоит под датой, а не рядом с названием: там
+   она спорила бы с ним за внимание, а сказать надо тихо — это уточнение
+   о происхождении строки, а не её заголовок. */
+.job-own {
+  display: block; margin-top: 6px; color: var(--accent);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
 .job h3 { font-size: 16px; }
 .job-role { font-size: 13px; color: var(--accent); }
 /* Название организации ведёт на её сайт. Подчёркивание рисуем фоном, как
@@ -553,6 +918,18 @@ html { scroll-behavior: smooth; }
 .list-title a { color: var(--accent); text-decoration: none; }
 .list-title a:hover { text-decoration: underline; }
 .list-note { font-size: 13px; color: var(--muted); }
+
+/* Архив не должен занимать экран, пока человек не решил в него зайти. */
+.project-index { border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+.project-index summary {
+  display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 18px;
+  cursor: pointer; color: var(--text); font-size: 14px; font-weight: 650; list-style: none;
+}
+.project-index summary::-webkit-details-marker { display: none; }
+.project-index summary b { color: var(--accent); font-size: 17px; transition: transform .18s ease; }
+.project-index[open] summary { border-bottom: 1px solid var(--line); }
+.project-index[open] summary b { transform: rotate(180deg); }
+.project-index .list { border: 0; border-radius: 0 0 var(--r) var(--r); }
 
 /* ── Каналы связи ─────────────────────────────────────────────────── */
 
@@ -768,6 +1145,10 @@ a.gcard.is-lit .gclip { transform: scale(1.06); }
 .gcard-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; flex: 1; }
 .gcard-top { display: flex; justify-content: flex-end; }
 .gcard-title { font-size: 22px; font-weight: var(--title-weight); letter-spacing: var(--title-spacing); }
+.gcard-formerly {
+  display: block; margin-top: 3px; font-family: var(--mono); font-size: 10px;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--dim); font-weight: 400;
+}
 .gcard-text { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
 .gcard .launch {
   margin-top: auto; padding-top: 6px;
@@ -807,25 +1188,6 @@ article.gcard .launch { color: var(--dim); }
 }
 .topbar-link:hover, .topbar-link:focus-visible { color: var(--text); border-color: var(--line); }
 
-/* Карточка рассказа на вкладке «Игры». Намеренно не похожа на игровую:
-   у неё нет кадра и анимации — рассказ обещает не зрелище, а текст, и
-   выглядеть должен соответственно. */
-.scard {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 18px 20px 16px;
-  border: 1px solid var(--line); border-radius: 16px;
-  background: linear-gradient(160deg, var(--panel), var(--bg-soft));
-  color: inherit; text-decoration: none;
-  transition: border-color .2s ease, transform .2s ease;
-}
-.scard:hover, .scard:focus-visible { border-color: var(--neon); transform: translateY(-3px); }
-.scard-book {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--dim);
-}
-.scard-title { font-size: 19px; }
-.scard-lead { font-size: 13px; line-height: 1.5; color: var(--muted); }
-.scard-time { margin-top: auto; font-family: var(--mono); font-size: 11px; color: var(--dim); }
 
 /* Переход между полками. Ссылка одна и в обе стороны — про игру по рассказу
    тут ничего не сказано намеренно: ни одной такой игры пока нет. */
@@ -837,60 +1199,23 @@ article.gcard .launch { color: var(--dim); }
 .story-cross a:hover { text-decoration: underline; }
 .story-cross b { font-weight: 400; }
 
-/* ── Рекорды строкой в шапке ─────────────────────────────────────── */
-/* Раньше это был блок в самом низу вкладки «Игры»: чтобы его увидеть, надо
-   было пролистать все карточки, и он читался как ещё один экран. Здесь это
-   сводка на один взгляд. Лента едет только под курсором — сама по себе она
-   дёргала бы глаз на каждой странице. */
-/* Место под ленту занято на обеих вкладках, даже когда её не видно: иначе
-   переключатель «Работа/Игры» переезжал бы при каждой смене раздела. */
-.rec {
-  display: flex; align-items: center; gap: 10px;
-  flex: 1 1 200px; min-width: 0;
-}
-html[data-track="work"] .rec { visibility: hidden; }
-.rec-label {
-  flex: none; font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--dim); white-space: nowrap;
-}
-/* Края растворяются, иначе строка обрывается на полуслове по границе. */
-.rec-view {
-  flex: 1 1 auto; min-width: 0; overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-}
-.rec-run {
-  display: flex; gap: 26px; width: max-content;
-  animation: rec-run 30s linear infinite; animation-play-state: paused;
-}
-.rec-item {
-  display: inline-flex; align-items: baseline; gap: 6px;
-  white-space: nowrap; font-size: 10.5px; color: var(--dim);
-}
-.rec-item i { font-style: normal; }
-/* Зелёный здесь — сигнальный цвет всего сайта, и в бегущей строке он кричал.
-   Счёт остаётся заметнее названия, но уже не спорит с карточками. */
-.rec-item b { font-family: var(--mono); color: var(--muted); font-weight: 500; }
-/* Список выведен дважды, поэтому сдвиг ровно на половину замыкает круг. */
-@keyframes rec-run { to { transform: translateX(-50%); } }
-
-@media (hover: hover) {
-  .rec:hover .rec-run, .rec:focus-within .rec-run { animation-play-state: running; }
-}
-@media (hover: none) {
-  /* На телефоне наводить нечем — лента едет сама. */
-  .rec-run { animation-play-state: running; }
-}
-/* Без движения строка обрезается по ширине, поэтому даём её пролистать. */
-@media (prefers-reduced-motion: reduce) {
-  .rec-view { overflow-x: auto; }
-}
-
 /* ── Подвал ───────────────────────────────────────────────────────── */
+
+/* Нижний отступ считает безопасную зону: на iPhone под страницей висит
+   плашка с адресом сайта, и без этого она съедала последнюю строку — не
+   «почти», а буквально закрывала слова. На машинах без выреза env() даёт
+   ноль, и отступ остаётся прежним. */
+/* «Код открыт» под играми — просьба владельца: «и вот даже код у проектов
+   и игр открыт — смотрите и пользуйтесь». Число проверено: у всех
+   девяти игр с вкладки есть публичный репозиторий, сверено по API. Меняется
+   число игр — меняется и эта строка, иначе получится обещание вроде
+   «четырёх способов пройти», которых не было. */
+.story-cross--code { margin-top: 26px; }
 
 .sitefoot {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  max-width: var(--maxw); margin: 0 auto; padding: 22px 24px 40px;
+  max-width: var(--maxw); margin: 0 auto;
+  padding: 22px 24px calc(40px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line-soft);
   font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim);
 }
@@ -911,6 +1236,15 @@ html[data-track="work"] .rec { visibility: hidden; }
 
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
+  .work-lead { margin-top: 18px; padding: 18px; }
+  .work-duet { grid-template-columns: 1fr; gap: 12px; }
+  .work-system { min-height:0; padding:18px; }
+  .work-lead h1 { font-size: 31px; }
+  .work-gateway-copy > p:not(.kicker) { font-size: 13px; line-height: 1.45; }
+  .work-gateway-proof img { height:auto; min-height:0; aspect-ratio:16 / 8; }
+  .work-dharma-shot img { height:auto; min-height:0; aspect-ratio:16 / 8; }
+  .work-dharma h2 { font-size: 22px; }
+  .work-dharma p { font-size: 12px; }
   .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   /* На телефоне переключатель — главный элемент шапки: две крупные цели
      во всю ширину, а не мелкие подписи. Первый посетитель не нашёл здесь
@@ -922,20 +1256,56 @@ html[data-track="work"] .rec { visibility: hidden; }
   }
   .track-switch button svg { width: 19px; height: 19px; }
   .socials { margin-left: auto; }
-  /* Шапка липкая: третья строка съела бы пятую часть экрана. Лента встаёт
-     в первую строку между подписью и соцсетями, а ярлык прячем — «Деревня
-     vlkirr · 4» читается и без слова REC. */
   /* На телефоне значок встаёт под текстом слева, а не жмётся к правому краю. */
   .play-bar { gap: 8px 10px; padding: 10px 14px; }
   .play-bar .verdict { margin-left: 0; }
-  html[data-track="play"] .rec { flex: 1 1 70px; }
-  html[data-track="work"] .rec { display: none; }
-  .rec-label { display: none; }
-  .sitefoot { padding: 20px 16px 36px; }
+  .sitefoot { padding: 20px 16px calc(36px + env(safe-area-inset-bottom, 0px)); }
   .report-metrics { grid-template-columns: 1fr; }
-  .block { margin-top: 48px; }
+  .report-brief { padding: 18px 18px 14px; }
+  .report-brief h1 { font-size: 28px; line-height: 1.04; }
+  .report-benefits { margin-top: 12px; gap: 3px; }
+  .report-benefits p { font-size: 14px; line-height: 1.35; }
+  .report-live { margin-top: 12px; padding: 8px 10px; font-size: 11.5px; line-height: 1.4; }
+  .report-more > summary { min-height: 48px; padding: 11px 18px; font-size: 10.5px; }
+  .report-more > summary span { display: none; }
+  .practicum-tabs { flex-direction: column; }
+  .practicum-tabs button { min-height: 44px; }
+  .partner-form { grid-template-columns: 1fr; padding: 16px; }
+  .partner-message { grid-column: auto; }
+  .block { margin-top: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ── Снимок во весь экран ──────────────────────────────────────────── */
+/* Слой поверх страницы. Появляется по клику, закрывается по Escape, по
+   клику мимо картинки и крестиком. Клик по самой картинке не закрывает:
+   её как раз пришли смотреть, и промах по ней читался бы как поломка. */
+.shot-full {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 24px;
+  background: #060708f2;
+}
+.shot-full img {
+  max-width: min(94vw, 1100px); max-height: 84vh;
+  width: auto; height: auto; border-radius: 10px;
+  background: var(--panel);
+}
+.shot-full-cap {
+  margin: 0; max-width: 60ch; text-align: center;
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.5; color: var(--muted);
+}
+.shot-full-close {
+  position: absolute; top: 14px; right: 16px;
+  width: 40px; height: 40px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel);
+  color: var(--muted); font-size: 15px; cursor: pointer;
+}
+.shot-full-close:hover, .shot-full-close:focus-visible { color: var(--fg); border-color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .shot-full { animation: shot-full-in .18s ease-out; }
+  @keyframes shot-full-in { from { opacity: 0; } to { opacity: 1; } }
 }
