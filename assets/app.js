@@ -443,6 +443,13 @@
     const story = source?.querySelector(`[data-story-source="${CSS.escape(button.dataset.storyOpen)}"]`);
     if (!story || !reader) return;
     currentCollection = button.dataset.storyOpen.split('--')[0];
+    // Отдельная страница рассказа. Режем по ПЕРВОМУ «--»: слева сборник,
+    // справа slug, и он же — имя папки в /rasskazy/. Сверено по всем 23.
+    const ssylka = reader.querySelector('[data-story-permalink]');
+    if (ssylka) {
+      const slug = button.dataset.storyOpen.slice(button.dataset.storyOpen.indexOf('--') + 2);
+      ssylka.href = slug ? `/rasskazy/${slug}/` : '/rasskazy/';
+    }
     reader.querySelector('[data-story-reader-meta]').textContent = `Рассказ · ${story.dataset.storyBook}`;
     reader.querySelector('[data-story-reader-title]').textContent = story.dataset.storyTitle;
     reader.querySelector('[data-story-reader-copy]').innerHTML = story.innerHTML;

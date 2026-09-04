@@ -919,7 +919,7 @@ ${сборникиПоказ.map((collection) => `
         <div class="story-collections">
 ${сборникиПоказ.map(storyCollectionPanel).join('\n')}
         </div>
-        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑ <span>Наверх</span></button></article>
+        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑ <span>Наверх</span></button></article>
         <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
       </section>`;
 
