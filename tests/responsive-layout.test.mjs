@@ -301,6 +301,24 @@ test('рассказы разбиты на абзацы и подписаны', 
   assert.match(site('assets/read.css'), /html\[data-ground="paper"\] \.reader/);
 });
 
+test('боковое оглавление явно разделяет три сборника', () => {
+  const css = site('assets/read.css');
+  const page = site('rasskazy/pulya-v-stakane/index.html');
+  const правилоЗаголовка = css.match(/\.reader-side-book\s*\{([^}]+)\}/)?.[1] || '';
+  const правилоРазделителя = css.match(/\.reader-side ul \+ \.reader-side-book::before\s*\{([^}]+)\}/)?.[1] || '';
+
+  assert.equal((page.match(/class="reader-side-book"/g) || []).length, 3);
+  assert.match(правилоЗаголовка, /border-left:\s*2px solid var\(--accent-read\)/);
+  assert.match(правилоРазделителя, /background:\s*var\(--rule\)/);
+
+  // Отрицательный контроль: старая версия без маркера и разделителя обязана
+  // провалить ту же проверку, иначе тест стережёт только наличие заголовков.
+  const старыйЗаголовок = правилоЗаголовка.replace(/border-left:\s*2px solid var\(--accent-read\);?/, '');
+  const старыйРазделитель = '';
+  assert.doesNotMatch(старыйЗаголовок, /border-left:\s*2px solid var\(--accent-read\)/);
+  assert.doesNotMatch(старыйРазделитель, /background:\s*var\(--rule\)/);
+});
+
 test('на главной обложка раскрывает один сборник, затем рассказ', () => {
   const html = site('index.html');
   const js = site('assets/app.js');

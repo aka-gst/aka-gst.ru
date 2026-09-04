@@ -287,10 +287,18 @@ html[data-size="xl"] .reader { --read-size: 24px; }
     padding-right: 8px; font-size: 13px;
   }
   .reader-side-book {
-    margin: 18px 0 6px; font-family: var(--mono); font-size: 10px;
-    letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft);
+    position: relative;
+    margin: 32px 0 8px; padding: 7px 9px;
+    border-left: 2px solid var(--accent-read); border-radius: 6px;
+    background: var(--ground-soft);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--ink);
   }
   .reader-side-book:first-child { margin-top: 0; }
+  .reader-side ul + .reader-side-book::before {
+    content: ""; position: absolute; top: -17px; left: 0; right: 0;
+    height: 1px; background: var(--rule);
+  }
   .reader-side ul { list-style: none; margin: 0; padding: 0; }
   .reader-side li { margin: 0; }
   .reader-side a {
