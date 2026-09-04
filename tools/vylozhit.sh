@@ -36,10 +36,19 @@ fi
 [ $# -gt 0 ] || { echo "  что выкладываем? имена файлов и папок от корня репозитория"; exit 2; }
 
 LIST=""
+needs_psy_admin_guard=0
 for x in "$@"; do
   [ -e "$x" ] || { echo "  нет такого: $x"; exit 2; }
   LIST="$LIST ./${x#./}"
+  case "${x#./}" in
+    psy-admin|psy-admin/*) needs_psy_admin_guard=1 ;;
+  esac
 done
+
+if [ "$needs_psy_admin_guard" -eq 1 ]; then
+  echo "== PsyAdmin: защита от старой выкладки =="
+  node psy-admin/tools/release-guard.mjs --live-base "$SITE"
+fi
 
 n=1
 while [ "$n" -le 3 ]; do
