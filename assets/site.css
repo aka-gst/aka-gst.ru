@@ -913,7 +913,11 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 }
 .skills-more:hover, .skills-more:focus-visible { color: var(--ink); }
 
-.skills { display: flex; flex-wrap: wrap; gap: 12px; }
+/* Колонки навыков росли до высоты самой длинной: флекс по умолчанию
+   растягивает дочерние. Отсюда у «Product Engineering» полколонки пустоты,
+   а у «Надёжности AI» — под завязку. Пусть каждая колонка будет по своему
+   содержимому. */
+.skills { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
 .skill {
   flex: 1 1 200px; min-width: 0;
   padding: 16px 18px; background: var(--panel);
