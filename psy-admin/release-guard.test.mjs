@@ -12,7 +12,7 @@ import {
   fetchTextWithRetry,
 } from "./tools/release-guard.mjs";
 
-const release = "psy-widget-20260905-01";
+const release = "psy-widget-20260905-02";
 const widget = `<script type="module" src="/psy-admin/widget-contract.js?v=${release}"></script>
 const stylesheet = new URL("./widget.css?v=${release}", import.meta.url).href;
 const preparedQuestionCases = [];
@@ -68,8 +68,8 @@ assert.match(
   }).join("\n"),
   /index.html/,
 );
-assert.equal(compareReleaseVersions("psy-widget-20260905-01", "psy-widget-20260904-17"), 1);
-assert.equal(compareReleaseVersions("psy-widget-20260904-17", "psy-widget-20260905-01"), -1);
+assert.equal(compareReleaseVersions("psy-widget-20260905-02", "psy-widget-20260904-17"), 1);
+assert.equal(compareReleaseVersions("psy-widget-20260904-17", "psy-widget-20260905-02"), -1);
 assert.equal(compareReleaseVersions(release, release), 0);
 assert.equal(
   extractRelease(`<script type="module" src="/psy-admin/psy-widget.js?v=${release}"></script>`, "бой"),
