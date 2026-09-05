@@ -769,6 +769,36 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
    БОЛЬШЕ НЕ НУЖЕН ЭТОЙ РАБОТЕ» отрезало верхнюю строку, пропадали шапка игры
    и подпись PALLET. Смотреть надо картинку, а не долю экрана. */
 .practicum-switch .practicum-pilot-grid { display:grid; grid-template-columns:1fr; gap:18px; align-items:stretch; }
+/* Блок должен занимать экран, а не больше. Замер до правки на 2000×1150:
+   блок 1488 при доступных 1079 — кадр QueQuest начинался на 1055, то есть у
+   самой кромки, а кнопка «Показать переход» уходила на 1648, под сгиб.
+   Раскладку не меняем: одна колонка, QueQuest сверху во всю ширину — это
+   выбор Сергея (вариант 2, коммит 4d19b29). Вписываем ВЫСОТУ: карточке
+   QueQuest даём остаток экрана, картинка масштабируется внутрь (object-fit
+   уже cover), практикумы под ней остаются нетронутыми. */
+@media (min-width: 901px) {
+  .practicum-switch .practicum-pilot-grid {
+    grid-template-rows: minmax(320px, 1fr) minmax(0, auto);
+    max-height: calc(100dvh - 190px);
+  }
+  /* Практикумы жёстко заданы в 570 (строка 831), и при нехватке места весь
+     дефицит съедал кадр: он падал до 120 пикселей — полоска вместо сцены.
+     Здесь отпускаем их высоту и разрешаем прокрутку внутри: кадру гарантируем
+     320, остальное делим. Размен назван вслух, а не подобран молча. */
+  .practicum-switch .practicum-side { height: auto; min-height: 0; }
+  .practicum-switch .practicum-detail-stage { height: auto; min-height: 0; }
+  /* Кадру задано соотношение 16:9, и его высоту диктует ШИРИНА, а не место.
+     От этого при первой попытке рамка ужалась с 789 до 372, а кадр остался
+     636 и вылез наружу — кнопка «Показать переход» уехала на 221 пиксель
+     ниже своей же карточки, поверх практикумов. Поймала проверка «кнопка
+     внутри карточки», а не глаз. Поэтому здесь соотношение отпускаем и
+     делаем кадр гибкой строкой: он занимает остаток и масштабируется внутрь. */
+  .practicum-switch .quequest-card { min-height: 0; height: 100%;
+    grid-template-rows: minmax(120px, 1fr) auto; }
+  .practicum-switch .quequest-visual { aspect-ratio: auto; min-height: 0; height: 100%; }
+  .practicum-switch .quequest-poster,
+  .practicum-switch .quequest-video { min-height: 0; height: 100%; }
+}
 .practicum-switch .practicum-side { display:block; }
 .practicum-switch .practicum-detail-stage { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
 @media (max-width:760px) { .practicum-switch .practicum-detail-stage { grid-template-columns:1fr; } }
