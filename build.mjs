@@ -646,6 +646,20 @@ const workLead = `
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
               <span><b data-metric="tests">66</b> проверок · живой LLM и браузер ↗</span>
             </a>
+            <details class="gw-live">
+              <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
+              <ol class="gw-steps">
+                <li data-gw="ok"><b>запрос к модели</b><span>ответ пришёл, 17 мс</span></li>
+                <li data-gw="warn"><b>модель замолчала</b><span>ждём… ждём… ответа нет</span></li>
+                <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
+                <li data-gw="warn"><b>связь оборвалась посреди ответа</b><span>половина текста уже пришла</span></li>
+                <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «поток прерван», закрыл корректно</span></li>
+                <li data-gw="ok"><b>восемь запросов разом</b><span>все 200 · p50 17.2 мс · p95 18.2 мс</span></li>
+              </ol>
+              <p class="gw-note">Запись прогона стенда отказов, 5 сентября. Шлюз настоящий,
+              обрыв настоящий — поддельный только источник ответа. Модель получила 11 обращений,
+              ни один запрос не завис. Повторяется одной командой из репозитория.</p>
+            </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>

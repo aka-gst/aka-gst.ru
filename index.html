@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — Архитектор AI-продуктов и агентных систем">
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=b5482e76">
+    <link rel="stylesheet" href="/assets/site.css?v=60f03529">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -85,6 +85,20 @@
               <img src="/assets/shots/allure-gateway.png?v=ff284351" alt="Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено" width="1200" height="750" decoding="async">
               <span><b data-metric="tests">66</b> проверок · живой LLM и браузер ↗</span>
             </a>
+            <details class="gw-live">
+              <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
+              <ol class="gw-steps">
+                <li data-gw="ok"><b>запрос к модели</b><span>ответ пришёл, 17 мс</span></li>
+                <li data-gw="warn"><b>модель замолчала</b><span>ждём… ждём… ответа нет</span></li>
+                <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
+                <li data-gw="warn"><b>связь оборвалась посреди ответа</b><span>половина текста уже пришла</span></li>
+                <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «поток прерван», закрыл корректно</span></li>
+                <li data-gw="ok"><b>восемь запросов разом</b><span>все 200 · p50 17.2 мс · p95 18.2 мс</span></li>
+              </ol>
+              <p class="gw-note">Запись прогона стенда отказов, 5 сентября. Шлюз настоящий,
+              обрыв настоящий — поддельный только источник ответа. Модель получила 11 обращений,
+              ни один запрос не завис. Повторяется одной командой из репозитория.</p>
+            </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
           <a class="work-system work-dharma" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">
@@ -1503,6 +1517,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=cd252f91" defer></script>
+    <script src="/assets/app.js?v=49be8652" defer></script>
   </body>
 </html>

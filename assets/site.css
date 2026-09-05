@@ -287,6 +287,43 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-dharma:hover img, .work-dharma:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
 .work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
 .work-duet-note b { color: var(--text); }
+
+/* Живое окно шлюза в карточке первого проекта.
+   Свёрнуто по умолчанию: первый экран дороже, чем этот блок, и разворачивает
+   его тот, кому интересно. Шаги проступают один за другим — но НЕ по таймеру
+   от загрузки, а по открытию, иначе анимация играет в закрытом блоке впустую.
+   Работает и без JS: <details> раскрывается сам, шаги просто появляются сразу. */
+.gw-live { margin: 14px 0 0; border-top: 1px solid var(--line); padding-top: 12px; }
+.gw-live > summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center;
+  gap: 7px; min-height: 44px; font: 600 13px/1.3 var(--sans); color: var(--text); }
+.gw-live > summary::-webkit-details-marker { display: none; }
+.gw-live > summary i { font-style: normal; color: var(--muted); transition: transform .18s ease; }
+.gw-live[open] > summary i { transform: rotate(90deg); }
+.gw-live > summary:hover i { color: var(--text); }
+.gw-steps { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 7px; }
+.gw-steps li { display: grid; grid-template-columns: 15px 1fr; gap: 9px; align-items: baseline;
+  font: 12.5px/1.45 var(--mono); }
+.gw-steps li b { grid-column: 2; font-weight: 700; color: var(--text); }
+.gw-steps li span { grid-column: 2; color: var(--muted); }
+.gw-steps li::before { grid-column: 1; grid-row: 1 / span 2; font-size: 12px; line-height: 1.45; }
+.gw-steps li[data-gw="ok"]::before   { content: "·"; color: var(--muted); }
+.gw-steps li[data-gw="warn"]::before { content: "⚠"; color: #ffd479; }
+.gw-steps li[data-gw="fix"]::before  { content: "✔"; color: #3ddc84; }
+.gw-steps li[data-gw="fix"] b { color: #8ce89a; }
+.gw-note { margin: 11px 0 0; font: 11.5px/1.5 var(--mono); color: var(--muted); }
+
+/* Проступание шагов: включается классом, который ставит скрипт при открытии. */
+.gw-live.igraet .gw-steps li { opacity: 0; animation: gw-vhod .34s ease-out forwards; }
+.gw-live.igraet .gw-steps li:nth-child(1) { animation-delay: .05s }
+.gw-live.igraet .gw-steps li:nth-child(2) { animation-delay: .55s }
+.gw-live.igraet .gw-steps li:nth-child(3) { animation-delay: 1.15s }
+.gw-live.igraet .gw-steps li:nth-child(4) { animation-delay: 1.85s }
+.gw-live.igraet .gw-steps li:nth-child(5) { animation-delay: 2.45s }
+.gw-live.igraet .gw-steps li:nth-child(6) { animation-delay: 3.15s }
+@keyframes gw-vhod { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) {
+  .gw-live.igraet .gw-steps li { opacity: 1; animation: none; }
+}
 .work-put { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 16px 0 0; }
 .work-put-main { font: 600 14px/1.3 var(--sans); color: var(--text); text-decoration: none;
   border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; min-height: 44px;
