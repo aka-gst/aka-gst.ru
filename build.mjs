@@ -573,7 +573,7 @@ if (!qaQuest || !dharmaAi || practicumProjects.some((project) => !project)) {
 
 const practicumImage = (shot) => {
   const { w, h } = imageSize(`assets/shots/${shot.file}`);
-  return `<img src="${shotSrc(shot.file)}" alt="${esc(shot.alt)}" width="${w}" height="${h}" decoding="async">`;
+  return `<img src="${shotSrc(shot.file)}" alt="${esc(shot.alt)}" width="${w}" height="${h}" loading="lazy" decoding="async">`;
 };
 
 const practicumRouteIntro = {
@@ -607,12 +607,12 @@ const practicumSwitch = `
         <div class="practicum-pilot-grid">
           <article class="quequest-card" aria-labelledby="quequest-title">
             <button class="quequest-visual" type="button" data-quequest-play aria-label="Показать путь QueQuest: от ручной работы к автоматике">
-              <img class="quequest-poster" src="/assets/shots/quequest-automation.jpg?v=${assetVersion('assets/shots/quequest-automation.jpg')}" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
+              <img class="quequest-poster" loading="lazy" src="/assets/shots/quequest-automation.jpg?v=${assetVersion('assets/shots/quequest-automation.jpg')}" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
               <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=${assetVersion('assets/clips/clip-quequest-manual-to-ai.webm')}" aria-hidden="true"></video>
               <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
             </button>
             <div class="quequest-copy">
-              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="512" height="512" decoding="async"><p class="kicker">Квест · Python</p></div>
+              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Квест · Python</p></div>
               <h3 id="quequest-title">QueQuest</h3>
               <p class="tagline">Сначала герой тащит груз сам. Потом пишет настоящее Python-правило — и механическая рука продолжает разрешённую работу.</p>
             </div>

@@ -13,7 +13,10 @@
   };
 
   const setTrack = (track, { push = true } = {}) => {
-    if (!['work', 'play', 'stories'].includes(track)) return;
+    if (!['work', 'play', 'stories'].includes(track)) {
+      if (track) console.warn('[app] setTrack: раздела нет, значение отброшено:', track);
+      return;
+    }
     root.dataset.track = track;
     document.title = titles[track];
     const markKey = track === 'play' ? 'markPlay' : track === 'stories' ? 'markStories' : 'markWork';
