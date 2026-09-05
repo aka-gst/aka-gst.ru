@@ -38,7 +38,7 @@
 .psy-widget-message { max-width: 92%; margin: 0; padding: 10px 12px; border-radius: 14px; font-size: .9rem; line-height: 1.38; }
 .psy-widget-message b { display: block; margin-bottom: 5px; }
 .psy-widget-message p { margin: 0; }
-.psy-widget-message.assistant { background: #f1edf9; }
+.psy-widget-message.assistant { justify-self: end; width: fit-content; max-width: min(72%, 28rem); background: #f1edf9; }
 .psy-widget-message.user { justify-self: end; background: #253357; color: #fff; }
 .psy-widget-message.crisis { background: #fff0ee; color: #632d2a; }
 .psy-widget-links { display: grid; gap: 7px; margin-top: 10px; }

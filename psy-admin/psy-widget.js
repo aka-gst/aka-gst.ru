@@ -1,8 +1,8 @@
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260905-01";
+import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260905-02";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260905-01", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260905-02", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -13,7 +13,7 @@ mount.innerHTML = `
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
-        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б, В или Г.</span></div>
+        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б или В.</span></div>
         <div class="psy-widget-head-actions">
           <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
@@ -24,7 +24,6 @@ mount.innerHTML = `
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-A.wav" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-B.wav" data-voice-volume="0.72">Б</button>
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-C.wav" data-voice-volume="0.72">В</button>
-        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-D.ogg" data-voice-volume="0.72">Г</button>
         <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить пример голоса" title="Остановить голос: пробел">■ Стоп</button>
       </div>
       <div class="psy-widget-evaluation">
