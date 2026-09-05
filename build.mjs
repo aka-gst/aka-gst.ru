@@ -661,6 +661,10 @@ const workLead = `
             <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
         </div>
+        <p class="work-put">
+          <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
+          <a class="work-put-alt" href="/put/">та же история текстом →</a>
+        </p>
         <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>`;
 
