@@ -9,16 +9,44 @@
 // её роликов выходила фотографиями. Правило 27 в чистом виде: правка в одной
 // из копий не сделана.
 
-import { spawn } from 'node:child_process';
+import { spawn, execSync } from 'node:child_process';
 
 export const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export const запуститьChrome = (порт, размер = '1200,750') =>
-  spawn(CHROME, [
+// Подметалка ПЕРЕД прогоном, а не уборка после.
+//
+// 5 сентября 2026: у Глаз висело 4 процесса и 0.92 ГБ. Причина не в
+// `chrome.kill()` — он честен, дети умирают вместе с ним, проверено обоими
+// исходами. Причина в том, что прогон шёл через `| head -80`: head закрыл
+// трубу, следующая печать дала SIGPIPE, Node умер ДО `finally`, и убирать
+// стало некому. Уборка, зависящая от того, доживёт ли процесс до конца, —
+// уборка на честном слове.
+//
+// Метём ТОЛЬКО свой порт, а не всё безголовое: на машине работает несколько
+// сессий разом, и слепая уборка убила бы чужой живой прогон.
+const подмести = (порт) => {
+  try {
+    const хвосты = execSync(`pgrep -f 'remote-debugging-port=${порт}' || true`)
+      .toString().trim().split('\n').filter(Boolean);
+    if (!хвосты.length) return 0;
+    execSync(`pkill -f 'remote-debugging-port=${порт}' || true`);
+    // Пауза ТОЛЬКО когда мели: убитые процессы отпускают порт не мгновенно,
+    // и новый Chrome падал с ECONNREFUSED. Поймано проверкой поломкой —
+    // подметалка сработала, а прогон после неё не поднялся.
+    execSync('sleep 1');
+    return хвосты.length;
+  } catch { return 0; }
+};
+
+export const запуститьChrome = (порт, размер = '1200,750') => {
+  const убрано = подмести(порт);
+  if (убрано) console.warn(`  igrat: подмёл ${убрано} хвостов с прошлого прогона на порту ${порт}`);
+  return spawn(CHROME, [
     '--headless=new', '--disable-gpu', '--hide-scrollbars', '--mute-audio',
     `--remote-debugging-port=${порт}`, `--window-size=${размер}`, 'about:blank',
   ], { stdio: 'ignore' });
+};
 
 export const подключиться = async (порт) => {
   for (let i = 0; i < 60; i += 1) {
