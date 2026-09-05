@@ -1298,8 +1298,18 @@ article.gcard .launch { color: var(--dim); }
 
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
-  .work-lead { margin-top: 18px; padding: 18px; }
-  .work-duet { grid-template-columns: 1fr; gap: 12px; }
+  /* Кнопка «Путь» — на первый экран. Замер до правки: она стояла на 922 при
+     экране 844, то есть ниже сгиба, а просили именно первый экран. Ставим её
+     между Gateway (кончается на 552) и Дармой (начиналась на 564) — заголовок
+     раздела остаётся первым, ничего больше не двигается по смыслу.
+     display:contents растворяет обёртку, чтобы карточки и кнопка стали
+     соседями и слушались order; gap при этом теряется, поэтому отступы явные. */
+  .work-lead { margin-top: 18px; padding: 18px; display: flex; flex-direction: column; }
+  .work-duet { display: contents; }
+  .work-gateway { order: 1; }
+  .work-put { order: 2; margin: 12px 0 0; }
+  .work-dharma { order: 3; margin-top: 12px; }
+  .work-duet-note { order: 4; }
   .work-system { min-height:0; padding:18px; }
   .work-lead h1 { font-size: 31px; }
   .work-gateway-copy > p:not(.kicker) { font-size: 13px; line-height: 1.45; }
