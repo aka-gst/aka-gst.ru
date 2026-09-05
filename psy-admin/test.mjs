@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
 import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260905-02";
+const widgetVersion = "psy-widget-20260905-01";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -49,7 +49,6 @@ assert.match(widgetCss, /\.psy-widget-panel \{[^}]*width: min\(520px, calc\(100v
 assert.match(widgetCss, /\.psy-widget-payment \{[^}]*min-height: 54px;/);
 assert.match(widgetCss, /\.psy-widget-booking \{[^}]*min-height: 54px;/);
 assert.match(widgetCss, /\.psy-widget-voice-status \{[^}]*min-height: 1\.35em;[^}]*white-space: nowrap;/);
-assert.match(widgetCss, /\.psy-widget-message\.assistant \{[^}]*justify-self: end;[^}]*width: fit-content;/);
 assert.doesNotMatch(widgetSource, /\/psy-admin\/payment/);
 assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=specialist">Записаться к специалисту<\/a>/);
 assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=seminar">Записаться на семинар<\/a>/);
@@ -57,9 +56,9 @@ assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=rental">Оста�
 assert.match(widgetSource, /psyadmin-A\.wav/);
 assert.match(widgetSource, /psyadmin-B\.wav/);
 assert.match(widgetSource, /psyadmin-C\.wav/);
-assert.doesNotMatch(widgetSource, /psyadmin-D\.ogg/);
-assert.match(widgetSource, /Выберите естественный голос: A, Б или В\./);
-assert.doesNotMatch(widgetSource, /Выберите естественный голос: A, Б, В или Г\./);
+assert.match(widgetSource, /psyadmin-D\.ogg/);
+assert.match(widgetSource, /Выберите естественный голос: A, Б, В или Г\./);
+assert.ok((await stat(new URL("./audio/voices/psyadmin-D.ogg", import.meta.url))).size > 800_000);
 assert.match(widgetSource, /data-voice-volume="0\.55" data-voice-eq-gain="-5"/);
 assert.match(widgetSource, /data-voice-stop/);
 assert.match(widgetSource, /Остановить голос/);
