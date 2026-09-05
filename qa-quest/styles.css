@@ -1,1140 +1,465 @@
-/* QA Quest — тёмная лаборатория. Палитра и ощущение остались от первой версии,
-   структура переписана под карту курса и рабочую область урока. */
-
 :root {
-  --bg: #081018;
-  --panel: #101b25;
-  --panel-2: #0b151e;
-  --line: #213443;
-  --line-soft: #172734;
-  --text: #eef6f7;
-  --muted: #8ea2ae;
-  --cyan: #67e8f9;
-  --mint: #72f1b8;
-  --yellow: #ffd166;
-  --red: #ff6b6b;
-  --violet: #a78bfa;
-  /* Акцент — единственный цвет, который меняется вместе с историей. Сеть
-     светится холодным, бокс — тёплым, и это должно быть видно с первого
-     взгляда, а не только по названию в шапке. Остальная палитра общая:
-     мятный всегда значит «сошлось», красный всегда «не сошлось». */
-  --accent: #67e8f9;
-  --accent-line: var(--accent-line);
-  --accent-soft: var(--accent-soft);
-  --accent-glow: var(--accent-glow);
-  --shadow: 0 18px 60px rgba(0, 0, 0, .35);
-  --radius: 16px;
+  color-scheme: dark;
+  --coal: #080b11;
+  --steel: #171e29;
+  --steel-2: #253142;
+  --cyan: #64e9ff;
+  --cyan-dim: #2a7180;
+  --sodium: #ffc857;
+  --danger: #ff4d5a;
+  --bone: #e9e3d5;
+  --muted: #8993a1;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  font-family: "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
 
-/* display на секциях экранов перебивает стандартное поведение [hidden] */
-[hidden] { display: none !important; }
-
-html { min-height: 100%; background: var(--bg); scrollbar-width: thin; scrollbar-color: #1d2c38 transparent; }
-html::-webkit-scrollbar { width: 10px; }
-html::-webkit-scrollbar-track { background: transparent; }
-html::-webkit-scrollbar-thumb { background: #1d2c38; border-radius: 5px; border: 3px solid transparent; background-clip: padding-box; }
-
-body {
+html, body {
+  width: 100%;
+  height: 100%;
   margin: 0;
-  min-height: 100vh;
-  color: var(--text);
-  font-family: Manrope, system-ui, sans-serif;
-  background:
-    url("bg-grid.svg") repeat,
-    radial-gradient(circle at 70% 0%, #102638 0, transparent 32%),
-    url("bg-night.jpg") center / cover no-repeat,
-    linear-gradient(145deg, #071017, #0a1119 55%, #08131b);
-  overflow-x: hidden;
+  overflow: hidden;
+  background: var(--coal);
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
-.ambient { position: fixed; border-radius: 50%; filter: blur(100px); opacity: .12; pointer-events: none; }
-.ambient-one { width: 380px; height: 380px; background: var(--accent); right: -80px; top: 15%; }
-.ambient-two { width: 300px; height: 300px; background: var(--violet); left: 12%; bottom: -100px; }
+button, textarea { font: inherit; }
 
-.app-shell {
-  position: relative; z-index: 1; max-width: 1680px; margin: auto; padding: 0 22px 26px;
-  /* Колонка на всю высоту вместо ручного calc(100vh - 140px): высота шапки
-     менялась сегодня трижды, и каждый раз вылезали лишние пиксели, а с ними
-     полоса прокрутки всей страницы там, где прокручивать нечего. */
-  display: flex; flex-direction: column; min-height: 100vh;
-}
-/* На большом экране урок помещается целиком, и высота задана точно, а не
-   «не меньше»: иначе оболочка растёт под содержимое, страница оказывается
-   выше экрана и появляется полоса прокрутки там, где прокручивать нечего.
-   Но правило обязано остаться правилом большого экрана. Пока оно было
-   безусловным, на телефоне выходило вот что: там вёрстка урока нарочно
-   вытягивается в столбец и становится выше экрана, а overflow: hidden
-   отменял прокрутку — редактор кода уходил под нижний край, и добраться до
-   него было нельзя вовсе. Человек видел задачу и кнопку «Запустить», но не
-   поле, куда писать. */
-/* Порог 1241, а не 861. Ниже 1240 рабочая область складывается в столбец —
-   правая колонка уходит под среднюю, — и запрет прокрутки означал, что всё
-   лишнее просто обрезается: редактор сжимался до сотни пикселей, писать было
-   негде. Урок помещается в экран целиком только при трёх колонках; там правило
-   и работает. */
-@media (min-width: 1241px) {
-  body.lesson-open, body.lesson-open .app-shell { height: 100vh; min-height: 0; overflow: hidden; }
-}
-.app-shell > main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-
-.panel {
-  /* Фактура мира под панелью: у бокса крашеный металл в работе, у сети —
-     матовый лёд изнутри. Лежит под градиентом, а не поверх содержимого:
-     наложение сверху пришлось бы держать в отдельном слое, и оно вуалью
-     ложилось бы на текст. Прозрачность градиента подобрана так, чтобы фактуру
-     было видно на просвет и не видно под буквами. */
-  background:
-    linear-gradient(150deg, rgba(16, 27, 37, .93), rgba(9, 18, 26, .93)),
-    url("ice-panel.jpg") center / 380px repeat;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+button {
+  min-width: 44px;
+  min-height: 44px;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-button { font-family: inherit; cursor: pointer; }
-button:disabled { cursor: not-allowed; }
+button:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--bone);
+  outline-offset: 3px;
+}
 
-/* ---------- шапка ---------- */
+.game {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 460px;
+  isolation: isolate;
+  background: var(--coal);
+  user-select: none;
+}
 
-.topbar {
-  min-height: 74px;
+#gameCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.game-brand {
+  position: absolute;
+  top: max(18px, env(safe-area-inset-top));
+  left: max(20px, env(safe-area-inset-left));
   display: flex;
   align-items: center;
-  gap: 20px;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-  padding: 10px 0;
+  gap: 10px;
+  color: var(--bone);
+  letter-spacing: .13em;
+  pointer-events: none;
 }
 
-.brand { display: flex; align-items: center; gap: 13px; color: inherit; text-decoration: none; }
-.brand-mark {
-  display: grid; place-items: center; width: 42px; height: 42px;
-  border: 1px solid var(--accent); border-radius: 12px; background: #0b1d28;
-  font: 800 20px "Roboto Mono", monospace; color: var(--accent); box-shadow: 0 0 30px #67e8f924;
-}
-.brand-mark span { color: var(--mint); }
-.brand strong, .brand small { display: block; }
-.brand strong { font-size: 16px; letter-spacing: .16em; }
-.brand small { color: var(--muted); font: 500 10px "Roboto Mono", monospace; letter-spacing: .1em; margin-top: 3px; }
-
-.profile-strip { display: flex; align-items: center; gap: 16px; }
-
-.streak-chip {
-  border: 1px solid var(--line); background: #14110b; color: var(--yellow);
-  border-radius: 10px; padding: 8px 11px; font: 600 13px "Roboto Mono", monospace;
-}
-.level-chip {
-  display: flex; gap: 8px; align-items: baseline;
-  border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; background: #0b161f;
-}
-.level-chip span, .xp-block span { font: 600 10px "Roboto Mono", monospace; color: var(--muted); letter-spacing: .12em; }
-.level-chip strong { color: var(--yellow); font: 700 20px "Roboto Mono", monospace; }
-.xp-block { width: 190px; }
-.xp-block > div:first-child { display: flex; justify-content: space-between; }
-.xp-block b { font: 500 11px "Roboto Mono", monospace; color: var(--accent); }
-.xp-track { height: 5px; background: #1a2a36; border-radius: 10px; margin-top: 7px; overflow: hidden; }
-.xp-track i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--mint)); transition: width .5s; }
-
-.account-button {
-  border: 1px solid var(--line); background: transparent; color: var(--text);
-  border-radius: 10px; padding: 9px 15px; font: 600 13px Manrope; transition: .18s;
-}
-.account-button:hover { border-color: var(--accent); color: var(--accent); }
-.account-button.signed { border-color: #2d9269; color: var(--mint); }
-
-.status-strip {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  padding: 9px 2px; font: 500 12px "Roboto Mono", monospace; color: var(--muted);
-}
-.site-back {
-  color: var(--muted); text-decoration: none; white-space: nowrap;
-  border: 1px solid transparent; border-radius: 7px; padding: 3px 8px; transition: .18s;
-}
-.site-back:hover, .site-back:focus-visible { color: var(--accent); border-color: var(--line); }
-
-.python-chip { display: inline-flex; align-items: center; gap: 7px; }
-.python-chip::before {
-  content: ""; width: 7px; height: 7px; border-radius: 50%; background: #3d5462; transition: .3s;
-}
-.python-chip[data-status="loading"]::before { background: var(--yellow); animation: pulse 1.1s infinite; }
-.python-chip[data-status="ready"]::before { background: var(--mint); box-shadow: 0 0 10px var(--mint); }
-.python-chip[data-status="failed"]::before { background: var(--red); }
-@keyframes pulse { 50% { opacity: .3; } }
-.progress-hint { flex: 1; min-width: 200px; }
-.text-button { background: none; border: 0; color: var(--muted); font: 500 12px Manrope; padding: 4px; }
-.text-button:hover { color: var(--text); }
-
-/* ---------- карта курса ---------- */
-
-.map-screen { display: flex; flex-direction: column; gap: 18px; padding-top: 8px; }
-
-.continue-card {
-  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-  text-align: left; width: 100%;
-  border: 1px solid var(--accent-line); border-radius: var(--radius); padding: 13px 18px;
-  background: linear-gradient(120deg, #102b38, #0b1a24 70%);
-  color: var(--text); position: relative; transition: .2s;
-}
-.continue-card:hover { border-color: var(--accent); transform: translateY(-1px); }
-.continue-card.done { cursor: default; }
-.continue-label { font: 600 10px "Roboto Mono", monospace; letter-spacing: .14em; color: var(--accent); }
-.continue-card strong { font-size: 18px; }
-.continue-card small { color: var(--muted); font-size: 13px; flex: 1; }
-.continue-go { color: var(--mint); font: 600 17px Manrope; margin-left: auto; }
-
-.welcome {
-  border: 1px solid var(--accent-line); border-radius: var(--radius); padding: 22px 26px;
-  background: linear-gradient(120deg, #102b38, #0b1a24 70%);
-  display: grid; gap: 20px 40px; align-items: center;
-}
-/* На широком экране текст не должен жаться в левую треть, оставляя половину
-   карточки пустой: факты уезжают во вторую колонку и заполняют её. */
-@media (min-width: 900px) { .welcome { grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr); } }
-.welcome h2 { margin: 7px 0 10px; font-size: 26px; line-height: 1.2; }
-.welcome-text p { margin: 0 0 18px; color: #c5d2d8; font-size: 15px; line-height: 1.6; }
-.welcome-facts {
-  margin: 0; padding: 14px 16px 14px 34px; list-style: none;
-  border: 1px solid var(--line); border-radius: 12px; background: rgba(9, 21, 30, .5);
-  color: var(--muted); font-size: 13px; line-height: 1.55;
-}
-.welcome-facts li { position: relative; padding: 5px 0; }
-.welcome-facts li::before {
-  content: "→"; position: absolute; left: -20px; color: var(--accent); font-size: 12px;
-}
-.welcome-start {
-  border: 0; background: var(--mint); color: #052116;
-  border-radius: 10px; padding: 13px 22px; font: 700 14px Manrope;
-}
-.welcome-start:hover { filter: brightness(1.06); }
-
-/* На тесте один человек выбрал машины, второй — серверы. Оба входа стоят
-   рядом и одинакового веса: маленький переключатель в шапке не объяснял, что
-   за ним меняется весь сюжет курса. */
-.story-choice { grid-column: 1 / -1; display: grid; gap: 9px; }
-.story-choice-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.story-choice-head span {
-  color: var(--accent); font: 700 10px "Roboto Mono", monospace; letter-spacing: .14em;
-}
-.story-choice-head small { color: var(--muted); font-size: 12px; }
-.story-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.story-card {
-  display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; text-align: left;
-  padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
-  background: #0b1620; color: var(--text); font: inherit; cursor: pointer; transition: .18s;
-}
-.story-card strong { font-size: 16px; }
-.story-card > span { grid-column: 1 / -1; color: #b9c7ce; font-size: 13px; line-height: 1.45; }
-.story-card small { grid-column: 2; grid-row: 1; color: var(--muted); font: 600 11px "Roboto Mono", monospace; }
-.story-card:hover, .story-card:focus-visible { transform: translateY(-1px); }
-.story-card-garage { border-color: #6d5028; background: linear-gradient(140deg, rgba(255, 180, 84, .10), rgba(255, 180, 84, .03)); }
-.story-card-garage strong, .story-card-garage.active small { color: #ffb454; }
-.story-card-ice { border-color: #2c5768; background: linear-gradient(140deg, rgba(103, 232, 249, .10), rgba(103, 232, 249, .03)); }
-.story-card-ice strong, .story-card-ice.active small { color: #67e8f9; }
-.story-card.active { box-shadow: inset 0 0 0 1px currentColor, 0 0 20px -10px currentColor; }
-.story-card:not(.active) small { color: #b7c5cc; }
-
-.mode-hint { color: var(--accent); white-space: nowrap; }
-
-.stuck-button { display: block; width: calc(100% - 32px); margin: 0 16px 14px; text-align: center; text-decoration: none; }
-.stuck-button:disabled { color: var(--mint); }
-
-.tier {
-  border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px;
-  background: linear-gradient(150deg, rgba(16, 27, 37, .9), rgba(9, 18, 26, .9));
-}
-.tier.locked { opacity: .78; }
-.tier-head { display: flex; align-items: center; gap: 14px; }
-.tier-mark {
-  width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 34px;
-  border-radius: 10px; border: 1px solid var(--line); background: #0b1620;
-  font: 700 15px "Roboto Mono", monospace; color: var(--accent);
-}
-.accent-mint .tier-mark { color: var(--mint); }
-.accent-violet .tier-mark { color: var(--violet); }
-.tier-title { flex: 1; }
-.tier-title h2 { margin: 0; font-size: 19px; }
-.tier-title p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
-.tier-count { font: 600 13px "Roboto Mono", monospace; color: var(--muted); }
-.tier-bar { height: 4px; border-radius: 6px; background: #16242f; margin: 14px 0 12px; overflow: hidden; }
-.tier-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--mint)); transition: width .5s; }
-.accent-violet .tier-bar i { background: linear-gradient(90deg, var(--violet), var(--accent)); }
-.tier-about { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.55; max-width: 74ch; }
-
-.tier-gate {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  border: 1px dashed var(--line); border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 13px;
-}
-
-.node-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 9px; }
-.node {
-  display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; text-align: left;
-  border: 1px solid var(--line-soft); background: #0b1620; color: var(--text);
-  border-radius: 12px; padding: 11px 12px; transition: .16s;
-}
-.node:hover:not(:disabled) { border-color: #315368; background: #12222d; transform: translateY(-1px); }
-.node-badge {
-  width: 30px; height: 30px; display: grid; place-items: center; position: relative;
-  border: 1px solid #335064; border-radius: 9px; font: 600 11px "Roboto Mono", monospace; color: var(--muted);
-}
-.node-badge svg { width: 18px; height: 18px; display: block; color: var(--accent); }
-/* Состояние читается цветом и рамкой, а не подменой знака: пунктир — ещё
-   закрыт, мятный — пройден, жёлтый — пройден целиком. */
-.node.locked .node-badge { border-style: dashed; }
-.node.locked .node-badge svg { color: #4a5f6d; }
-.node-flag {
-  position: absolute; right: -5px; bottom: -5px; font-style: normal; font-size: 10px;
-  width: 14px; height: 14px; display: grid; place-items: center;
-  border-radius: 50%; background: #0b1620; color: var(--mint);
-}
-.node.mastered .node-flag { color: var(--yellow); }
-.node-copy strong { display: block; font-size: 13px; }
-.node-copy small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
-.node-time {
-  display: block; font-style: normal; color: var(--violet);
-  font-size: 10px; letter-spacing: .06em; margin-bottom: 2px;
-}
-.welcome-story {
-  color: #c7d0d6 !important; font-style: italic;
-  border-left: 3px solid var(--accent); padding-left: 13px; margin-bottom: 14px !important;
-}
-
-.node-progress { font: 500 11px "Roboto Mono", monospace; color: var(--muted); }
-.node.done .node-badge { border-color: #2d9269; }
-.node.done .node-badge svg { color: var(--mint); }
-.node.mastered .node-badge { border-color: var(--yellow); }
-.node.mastered .node-badge svg { color: var(--yellow); }
-.node.next { border-color: var(--accent); box-shadow: 0 0 0 1px #67e8f925; }
-.node.locked { opacity: .4; }
-
-.next-courses { border-top: 1px solid var(--line); padding-top: 22px; margin-top: 6px; }
-.next-courses h2 { margin: 0 0 6px; font-size: 17px; color: #cfdae0; }
-.next-courses > p { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.55; max-width: 74ch; }
-.next-course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 10px; }
-.next-course {
-  display: grid; gap: 5px; text-align: left; padding: 15px 17px;
-  border: 1px solid var(--line-soft); border-radius: 12px; background: #0b1620; color: var(--text);
-  transition: .16s;
-}
-.next-course:hover { border-color: #315368; background: #12222d; }
-.next-route-label { color: var(--accent); font: 600 10px "Roboto Mono", monospace; letter-spacing: .12em; }
-.next-course strong { font-size: 14px; }
-.next-course small { color: var(--muted); font-size: 12px; line-height: 1.5; }
-.next-course-go { color: var(--mint); font: 600 11px "Roboto Mono", monospace; margin-top: 3px; }
-.next-course.accent-violet .next-course-go { color: var(--violet); }
-
-.map-footnote { color: var(--muted); font-size: 12px; text-align: center; margin: 2px 0 0; }
-.map-footnote b { color: var(--accent); }
-
-/* ---------- рабочая область урока ---------- */
-
-.workspace {
+.game-brand__sigil {
+  width: 38px;
+  height: 38px;
   display: grid;
-  grid-template-columns: 236px minmax(380px, 1fr) minmax(360px, 420px);
-  gap: 14px;
-  padding-top: 8px;
-  flex: 1;
-  min-height: 0;
-}
-
-.lesson-aside { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.back-button {
-  border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--muted);
-  padding: 14px 16px; text-align: left; font: 600 12px Manrope;
-}
-.back-button:hover { color: var(--accent); }
-.aside-list { overflow-y: auto; padding: 8px 7px; flex: 1; }
-.aside-item {
-  width: 100%; display: grid; grid-template-columns: 26px 1fr; gap: 9px; align-items: center; text-align: left;
-  border: 1px solid transparent; background: transparent; color: var(--text);
-  border-radius: 9px; padding: 7px 8px; margin-bottom: 2px;
-}
-.aside-item:hover:not(:disabled) { background: #14232e; }
-.aside-item.active { background: #132a36; border-color: #315368; }
-.aside-item:disabled { opacity: .35; }
-.aside-index { font: 600 11px "Roboto Mono", monospace; color: var(--muted); }
-.aside-item strong { display: block; font-size: 12px; }
-.aside-item small { display: block; font-size: 10px; color: var(--muted); margin-top: 1px; }
-.aside-item.done .aside-index { color: var(--mint); }
-
-/* Две строки, а не три: задача уехала в правую колонку, и пустая третья строка
-   оставляла под редактором мёртвую полосу в треть экрана. Разбор занимает всё
-   свободное место, редактор — сколько ему нужно. */
-/* Вторая строка не просто auto: строка auto сжимается до минимума содержимого,
-   когда разбору не хватает места, и в решённом состоянии редактор схлопывался
-   с 260 пикселей до 77 — писать было негде. Нижняя граница у строки, а не у
-   самого поля: тогда разбор отдаёт место, а не наоборот. */
-.lesson-main { display: grid; grid-template-rows: minmax(0, 1fr) minmax(228px, auto); gap: 12px; min-height: 0; }
-
-.brief-wrap { position: relative; overflow: hidden; min-height: 0; }
-/* Высоту задаёт строка сетки, а не жёсткие 40vh: с ними разбор упирался в
-   потолок посреди экрана, а ниже оставалась пустота. */
-.brief { padding: 18px 20px; overflow-y: auto; height: 100%; }
-/* Полосу прокрутки видно всегда: системная на macOS прячется, и о том, что
-   блок вообще прокручивается, узнать неоткуда. */
-.brief { scrollbar-width: thin; scrollbar-color: #2a4050 transparent; }
-.brief::-webkit-scrollbar { width: 9px; }
-.brief::-webkit-scrollbar-track { background: transparent; }
-.brief::-webkit-scrollbar-thumb { background: #294050; border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
-.brief::-webkit-scrollbar-thumb:hover { background: #3a5a6e; background-clip: padding-box; }
-
-.scroll-hint {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
-  border: 0; cursor: pointer; padding: 0 0 6px;
-  background: linear-gradient(to bottom, rgba(13, 22, 30, 0), rgba(13, 22, 30, .97) 60%);
-  color: var(--accent); font-size: 17px; line-height: 1;
-  /* Гасится прозрачностью, а не display: иначе на последних пикселях
-     прокрутки блок дёргался бы от перестройки вёрстки. */
-  opacity: 0; pointer-events: none; transition: opacity .2s;
-}
-.brief-wrap.has-more .scroll-hint { opacity: 1; pointer-events: auto; }
-.scroll-hint:hover { color: var(--mint); }
-.brief-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
-.eyebrow { font: 600 10px "Roboto Mono", monospace; color: var(--accent); letter-spacing: .14em; }
-.brief-head h1 { font-size: 24px; margin: 7px 0 3px; line-height: 1.15; }
-.brief-subtitle { margin: 0; color: var(--muted); font-size: 13px; }
-.reward {
-  white-space: nowrap; border: 1px solid #3d4a38; background: #18261f; color: var(--yellow);
-  border-radius: 9px; padding: 7px 10px; font: 600 11px "Roboto Mono", monospace;
-}
-
-.brief-body { margin-top: 12px; }
-.brief-story {
-  margin: 0 0 14px; padding: 10px 14px; border-left: 3px solid var(--violet);
-  background: rgba(167, 139, 250, .07); border-radius: 0 9px 9px 0;
-  color: #c3bce0; font-size: 13px; line-height: 1.55; font-style: italic;
-}
-
-.brief-idea, .brief-theory { color: #c5d2d8; font-size: 14px; line-height: 1.62; margin: 0; }
-.brief-idea p, .brief-theory p { margin: 0 0 8px; }
-.brief-idea p:last-child, .brief-theory p:last-child { margin-bottom: 0; }
-.brief-notes p { margin: 0 0 5px; }
-.brief-notes p:last-child { margin-bottom: 0; }
-.brief-learned {
-  margin: 14px 0 0; padding: 10px 13px; border-left: 3px solid var(--yellow);
-  background: rgba(255, 209, 102, .06); border-radius: 0 9px 9px 0;
-  color: #d3cbb4; font-size: 13px; line-height: 1.5;
-}
-.brief-learned span { color: var(--yellow); font-weight: 600; }
-
-.brief-more { color: var(--muted); font-size: 12px; margin: 10px 0 0; font-style: italic; }
-.brief-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 0; }
-.brief-notes > div { padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; background: rgba(35, 211, 159, .06); }
-.brief-notes span { display: block; margin-bottom: 3px; color: var(--mint); font: 800 10px "Roboto Mono", monospace; letter-spacing: .07em; }
-.brief-notes p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-
-.brief-examples { margin-top: 11px; border: 1px solid var(--line); border-radius: 10px; background: #0a151e; }
-.brief-examples summary { cursor: pointer; padding: 9px 13px; color: #b8c8d0; font-size: 12px; font-weight: 600; }
-.brief-examples .example { padding: 0 13px 11px; }
-.brief-examples pre {
-  margin: 0 0 6px; padding: 10px 12px; background: #071119; border: 1px solid var(--line-soft);
-  border-radius: 8px; overflow-x: auto; color: #dff6f2; font: 12px/1.6 "Roboto Mono", monospace;
-}
-.brief-examples p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-
-.task-block { padding: 12px 16px 14px; }
-.task-tabs { display: flex; gap: 6px; margin: 0 0 10px; }
-.task-tab {
-  display: inline-flex; align-items: center; gap: 6px;
-  border: 1px solid var(--line); background: #0b1620; color: var(--muted);
-  border-radius: 9px; padding: 7px 12px; font: 600 12px Manrope;
-}
-.task-tab.active { border-color: var(--accent); color: var(--accent); background: #10222d; }
-.task-tab.done i { color: var(--mint); font-style: normal; }
-
-.task-card { border-left: 3px solid var(--accent); background: #0a1922; padding: 11px 14px; border-radius: 0 9px 9px 0; }
-.task-card span { font: 600 10px "Roboto Mono", monospace; color: var(--accent); letter-spacing: .12em; }
-.task-card p { font-size: 14px; line-height: 1.5; margin: 5px 0 0; }
-.task-card div > p:first-child { margin-top: 5px; }
-
-code, .task-card code, .brief code {
-  font-family: "Roboto Mono", monospace; color: var(--accent);
-  background: #08131b; padding: 2px 5px; border-radius: 4px; font-size: .92em;
-}
-
-.editor-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.editor-toolbar {
-  flex: 0 0 48px; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 14px; border-bottom: 1px solid var(--line);
-}
-.file-tab { font: 500 12px "Roboto Mono", monospace; display: flex; align-items: center; gap: 8px; }
-.status-dot { width: 7px; height: 7px; background: var(--yellow); border-radius: 50%; }
-.editor-actions { display: flex; gap: 8px; }
-.ghost-button {
-  border: 1px solid var(--line); background: transparent; color: var(--muted);
-  border-radius: 8px; padding: 8px 12px; font: 600 12px Manrope;
-}
-.ghost-button:hover { color: var(--text); border-color: #315368; }
-.run-button {
-  border: 0; background: var(--mint); color: #052116;
-  border-radius: 8px; padding: 9px 14px; font: 700 12px Manrope;
-}
-.run-button:disabled { opacity: .5; }
-.run-button kbd { font: 500 9px "Roboto Mono", monospace; opacity: .6; margin-left: 7px; }
-
-.editor-wrap { display: grid; grid-template-columns: 46px 1fr; background: #071119; flex: 1; min-height: 0; }
-.gutter {
-  margin: 0; padding: 16px 11px; text-align: right; color: #405565;
-  border-right: 1px solid var(--line-soft); font: 14px/1.62 "Roboto Mono", monospace;
-  user-select: none; overflow: hidden;
-}
-.code-editor {
-  width: 100%; height: 100%; border: 0; outline: 0; resize: none; padding: 16px;
-  background: transparent; color: #dff6f2; font: 14px/1.62 "Roboto Mono", monospace;
-  tab-size: 4; caret-color: var(--mint);
-  /* Строка кода не переносится, а уезжает вбок — как в любом редакторе.
-     С переносом номер строки указывал бы не на ту строку, а сообщения об
-     ошибках Python ссылаются именно на номера. */
-  white-space: pre; overflow-x: auto;
-}
-
-.lab-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.panel-heading {
-  flex: 0 0 46px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--line); font: 700 11px "Roboto Mono", monospace; letter-spacing: .1em; color: #b8c8d0;
-}
-.run-state { color: var(--muted); font-weight: 500; letter-spacing: 0; }
-.console-output {
-  margin: 0; padding: 13px 16px; min-height: 110px; max-height: 34%; overflow: auto;
-  white-space: pre-wrap; word-break: break-word;
-  color: #9cc1b3; font: 12px/1.55 "Roboto Mono", monospace; background: #050c11;
-  border-bottom: 1px solid var(--line);
-}
-.console-output.ok { color: #b6f0d5; }
-.console-output.error { color: #ffb3b3; }
-
-.checks { padding: 13px 16px; overflow-y: auto; flex: 1; min-height: 0; }
-.checks h2 { font: 700 10px "Roboto Mono", monospace; color: var(--muted); letter-spacing: .1em; margin: 0 0 9px; }
-.check-row { display: grid; grid-template-columns: 18px 1fr; gap: 9px; align-items: start; padding: 6px 0; }
-.check-icon {
-  width: 16px; height: 16px; border: 1px solid #39505e; border-radius: 50%;
-  display: grid; place-items: center; font-size: 9px; color: var(--muted); margin-top: 1px;
-}
-.check-row b { font: 500 12px Manrope; color: #aabac2; }
-.check-row small { display: block; margin-top: 3px; color: #7d919c; font: 11px/1.4 "Roboto Mono", monospace; }
-.check-row.pass b { color: #c4eedb; }
-.check-row.pass .check-icon { border-color: #43a678; background: #17362a; color: var(--mint); }
-.check-row.fail b { color: #ffc2c2; }
-.check-row.fail .check-icon { border-color: #a75151; color: var(--red); }
-
-.next-step {
-  margin: 4px 16px 12px; width: calc(100% - 32px);
-  border: 1px solid #2d9269; background: #10281f; color: var(--mint);
-  border-radius: 9px; padding: 11px; font: 700 12px Manrope; transition: .18s;
-}
-.next-step:hover { background: #15352a; border-color: var(--mint); }
-
-.hint-button {
-  margin: 0 16px 12px; border: 1px solid #5a4c26; background: #211d11; color: var(--yellow);
-  padding: 10px; border-radius: 9px; font: 600 12px Manrope;
-}
-.hint-button:disabled { opacity: .5; }
-.hint-box {
-  margin: 0 16px 14px; padding: 11px 12px; border-radius: 9px;
-  background: #171b28; border: 1px solid #393557; color: #c9c4ee; font-size: 12px; line-height: 1.5;
-}
-.hint-box p { margin: 0 0 6px; }
-.hint-box .hint-note { color: #9a93c9; font-size: 11px; }
-.hint-box.automatic { border-color: #6a5828; background: #211d11; }
-.hint-box .hint-auto { color: var(--yellow); font-size: 11px; font-weight: 700; }
-.hint-box pre {
-  margin: 0; padding: 9px 11px; background: #0d1018; border-radius: 7px; overflow-x: auto;
-  color: #dff6f2; font: 12px/1.55 "Roboto Mono", monospace;
-}
-
-/* ---------- практикум: команды и чек-лист ---------- */
-
-.lab-badge {
-  display: inline-block; margin-right: 8px; padding: 2px 7px; border-radius: 5px;
-  background: #2a2140; color: var(--violet); font: 700 9px "Roboto Mono", monospace; letter-spacing: .1em;
-}
-
-.group-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 16px 0 9px; }
-.group-head h3 { margin: 0; font-size: 14px; color: #cfdae0; }
-.group-head span { color: var(--muted); font-size: 12px; }
-.node.lab .node-badge { border-color: #4b3f6b; color: var(--violet); }
-
-.commands-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.commands-body { overflow-y: auto; padding: 13px 15px; flex: 1; min-height: 0; }
-.command-block { border: 1px solid var(--line-soft); border-radius: 10px; background: #071119; margin-bottom: 10px; overflow: hidden; }
-.command-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 7px 10px 7px 13px; border-bottom: 1px solid var(--line-soft);
-  font: 600 10px "Roboto Mono", monospace; color: var(--muted); letter-spacing: .08em; text-transform: uppercase;
-}
-.copy-button { padding: 5px 9px; font-size: 11px; }
-.command-block pre {
-  margin: 0; padding: 12px 13px; overflow-x: auto;
-  color: #dff6f2; font: 12px/1.6 "Roboto Mono", monospace; white-space: pre;
-}
-.command-more { color: var(--muted); font-size: 11px; margin: 0 0 8px 2px; }
-.command-expected { border-left: 3px solid var(--mint); background: #0a1a16; padding: 10px 13px; border-radius: 0 9px 9px 0; }
-.command-expected span { font: 600 10px "Roboto Mono", monospace; color: var(--mint); letter-spacing: .1em; }
-.command-expected ul { margin: 6px 0 0; padding-left: 18px; color: #b6c8ce; font-size: 12px; line-height: 1.5; }
-.command-empty { color: var(--muted); font-size: 13px; margin: 0; }
-
-.checklist-note { margin: 11px 16px 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
-.check-row.tickable {
-  width: 100%; text-align: left; border: 1px solid transparent; background: transparent;
-  border-radius: 8px; padding: 8px 7px; margin-bottom: 2px; color: inherit;
-}
-.check-row.tickable:hover { background: #14232e; }
-.check-row.tickable .check-icon { cursor: pointer; }
-
-.page-link {
-  display: block; margin: 4px 16px 10px; padding: 10px; border-radius: 9px; text-align: center;
-  border: 1px solid #4b3f6b; background: #1b172b; color: var(--violet);
-  font: 700 12px Manrope; text-decoration: none;
-}
-.page-link:hover { border-color: var(--violet); background: #221d38; }
-
-/* ---------- словарь, диалог, тост ---------- */
-
-.term-tip { position: relative; color: var(--accent); border-bottom: 1px dotted currentColor; cursor: help; outline: none; }
-.term-tip::after {
-  content: attr(data-tip); position: absolute; z-index: 30; left: 50%; bottom: calc(100% + 8px);
-  width: 250px; padding: 9px 11px; border: 1px solid var(--accent); border-radius: 8px;
-  background: #101a29; color: #e8f2ff; box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
-  font: 12px/1.4 Manrope; opacity: 0; visibility: hidden; transform: translate(-50%, 4px);
-  transition: .15s ease; pointer-events: none;
-}
-.term-tip:hover::after, .term-tip:focus::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
-
-.finale-dialog {
-  border: 1px solid var(--accent-line); border-radius: 16px; background: var(--panel); color: var(--text);
-  padding: 0; width: min(620px, 94vw); overflow: hidden; box-shadow: var(--shadow);
-}
-.finale-dialog::backdrop { background: rgba(4, 9, 13, .8); }
-.finale-dialog img { display: block; width: 100%; height: auto; }
-.finale-body { padding: 18px 22px 22px; display: grid; gap: 8px; }
-.finale-body strong { font-size: 26px; }
-.finale-body p { margin: 0; color: #c5d2d8; font-size: 14px; line-height: 1.55; }
-.finale-body .dialog-actions { margin-top: 8px; }
-
-.account-dialog {
-  border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text);
-  padding: 0; width: min(400px, 92vw); box-shadow: var(--shadow);
-}
-.account-dialog::backdrop { background: rgba(4, 9, 13, .72); }
-.dialog-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px;
-}
-.dialog-body { padding: 16px; display: grid; gap: 11px; font-size: 13px; line-height: 1.5; }
-.dialog-body p { margin: 0; color: var(--muted); }
-.dialog-body input {
-  border: 1px solid var(--line); background: #0a151e; color: var(--text);
-  border-radius: 9px; padding: 11px 12px; font: 400 14px Manrope; outline: none;
-}
-.dialog-body input:focus { border-color: var(--accent); }
-.dialog-actions { display: flex; gap: 8px; }
-.dialog-actions button { flex: 1; }
-.dialog-error { color: var(--yellow) !important; min-height: 1em; font-size: 12px; }
-.dialog-note { font-size: 12px; }
-
-.dialog-warn { color: var(--yellow) !important; font-size: 12px; line-height: 1.45; }
-.dialog-link { align-self: center; text-decoration: underline; text-underline-offset: 3px; }
-.recovery-codes {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-  border: 1px solid var(--line); border-radius: 10px; background: #0a151e; padding: 11px;
-}
-.recovery-codes code { text-align: center; background: transparent; border: 0; font-size: 13px; letter-spacing: .04em; }
-
-.toast {
-  position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 30px); opacity: 0;
-  background: #142720; border: 1px solid #3a8f69; color: #d8ffed;
-  border-radius: 10px; padding: 12px 18px; font-size: 13px; transition: .25s; z-index: 40; pointer-events: none;
-}
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-/* ---------- адаптив ---------- */
-
-@media (max-width: 1240px) {
-  .workspace { grid-template-columns: 200px minmax(0, 1fr); height: auto; }
-  .lab-panel { grid-column: 1 / -1; height: 420px; }
-}
-
-@media (max-width: 860px) {
-  .app-shell { padding: 0 12px 20px; }
-  .topbar { flex-wrap: wrap; gap: 12px; }
-  .profile-strip { gap: 10px; }
-  .level-chip { display: none; }
-  .xp-block { width: 120px; }
-  .workspace { display: flex; flex-direction: column; height: auto; }
-  /* На телефоне навигацию по урокам берёт на себя карта,
-     поэтому в рабочей области остаётся только возврат к ней. */
-  .lesson-aside { max-height: none; }
-  .aside-list { display: none; }
-  .back-button { border-bottom: 0; padding: 12px 14px; }
-  .progress-hint { display: none; }
-
-  /* Кнопка старта во всю ширину: на телефоне узкая кнопка посреди блока
-     читается как второстепенная, а это главное действие экрана. */
-  .welcome-start { width: 100%; }
-
-  /* iOS сам приближает страницу, когда фокус попадает в поле со шрифтом
-     мельче 16 пикселей, и человеку приходится отодвигать её руками. Лечится
-     размером шрифта, а не запретом масштабирования: запрет сломал бы
-     увеличение тем, кому оно нужно. Междустрочный интервал тот же, иначе
-     номера строк разъедутся с кодом. */
-  .code-editor, .gutter { font-size: 16px; line-height: 1.62; }
-  .dialog-body input { font-size: 16px; }
-  .status-strip { justify-content: space-between; }
-  .brief { max-height: none; }
-  .editor-wrap { min-height: 260px; }
-  .lab-panel { height: auto; }
-  .console-output { max-height: 200px; }
-  .brief-notes { grid-template-columns: 1fr; }
-  .continue-go { display: none; }
-  .term-tip::after { left: 0; width: min(240px, 74vw); transform: translate(0, 4px); }
-  .term-tip:hover::after, .term-tip:focus::after { transform: translate(0, 0); }
-}
-
-/* Карточка второй истории красится в её цвет, а не в цвет текущей: человек
-   должен видеть, куда попадёт, ещё не нажав. */
-
-/* Реальный случай из новостей. Отделён от теории намеренно: это единственное
-   место урока, где говорится про настоящий мир, и смешивать его с объяснением
-   приёма не стоит — человек должен видеть, что это не выдумка автора. */
-.brief-real {
-  margin-top: 12px; padding: 12px 14px;
-  background: rgba(255, 209, 102, .06);
-  border-left: 2px solid var(--amber, #ffd166); border-radius: 0 10px 10px 0;
-}
-.brief-real > span {
-  display: block; margin-bottom: 4px;
-  font-size: 11px; letter-spacing: .06em; color: #ffd166;
-}
-.brief-real > div { font-size: 14px; line-height: 1.55; color: #c5d2d8; }
-
-/* Фон истории про машины. Если файла ещё нет, слой просто не отрисуется и
-   останется общий градиент — награда и фон не должны ломаться из-за того,
-   что картинку не успели нарисовать. */
-body.theme-garage {
-  /* Цвет — единственное, чем истории различаются. Поверхности у них общие:
-     тёплая подложка давала грязно-коричневый, которого не было ни на старте,
-     ни в остальном интерфейсе, и весь экран выглядел выцветшим. */
-  --accent: #ffc247;
-  --accent-line: #6b552a;
-  --accent-soft: #2a2110;
-  --accent-glow: rgba(255, 194, 71, .12);
-  background:
-    url("bg-grid.svg") repeat,
-    radial-gradient(circle at 70% 0%, #102638 0, transparent 32%),
-    linear-gradient(rgba(6, 10, 14, .62), rgba(6, 10, 14, .62)),
-    url("garage-bg.jpg") center / cover no-repeat,
-    linear-gradient(145deg, #071017, #0a1119 55%, #08131b);
-}
-body.theme-garage .ambient-one { background: var(--accent); }
-
-/* Кадры загрузки Python. Занимают место пустого терминала и уходят, как только
-   Python готов. Высота задана заранее, иначе появление картинки дёргало бы
-   панель — этот же промах мы уже ловили на подсказке про прокрутку. */
-.boot-visual {
-  border: 1px solid #213443; border-radius: 10px; overflow: hidden;
-  background: #060b10; aspect-ratio: 2 / 1; max-height: 200px;
-}
-.boot-visual img { display: block; width: 100%; height: 100%; object-fit: cover; }
-
-/* ---------- пробная поездка ---------- */
-
-.rig-button {
-  display: grid; gap: 3px; text-align: left; width: 100%;
-  margin: 0 0 16px; padding: 14px 16px;
-  background: rgba(255, 209, 102, .07);
-  border: 1px solid #3a3020; border-radius: 14px;
-  color: var(--text); font: inherit; cursor: pointer;
-  transition: border-color .15s, background .15s;
-}
-.rig-button:hover, .rig-button:focus-visible { border-color: #ffd166; background: rgba(255, 209, 102, .12); }
-.rig-button-name { font-size: 17px; font-weight: 700; color: #ffd166; }
-.rig-button-hint { font-size: 14px; color: #c5d2d8; }
-
-.rig-dialog {
-  width: min(760px, 94vw); padding: 0; border: 1px solid #2a2418; border-radius: 16px;
-  background: #0a0c10; color: var(--text); overflow: hidden;
-}
-.rig-dialog::backdrop { background: rgba(4, 6, 9, .86); }
-.rig-top {
-  display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
-  padding: 12px 16px; border-bottom: 1px solid #1d2129;
-}
-.rig-tuning { font-size: 12px; color: var(--muted); }
-.rig-hud { font-family: "Roboto Mono", monospace; font-size: 14px; color: #ffd166; white-space: nowrap; }
-/* Высота задана долей экрана: на телефоне поездка должна помещаться целиком,
-   иначе управлять придётся вслепую, а страница под ней ещё и поедет. */
-.rig-canvas { display: block; width: 100%; height: min(52vh, 380px); touch-action: none; background: #06080b; }
-.rig-verdict { margin: 0; padding: 12px 16px; background: rgba(255, 209, 102, .08); font-size: 15px; }
-.rig-actions {
-  display: flex; justify-content: space-between; gap: 12px; align-items: center;
-  padding: 12px 16px; border-top: 1px solid #1d2129;
-}
-.rig-help { font-size: 12px; color: var(--muted); }
-@media (max-width: 560px) {
-  .rig-actions { flex-direction: column; align-items: stretch; }
-  .rig-actions .ghost-button { width: 100%; }
-}
-
-/* Обложка ступени. Кадр широкий и низкий, поэтому обрезается по высоте, а не
-   ужимается: сплющенная картинка читается как ошибка вёрстки. */
-.next-course-cover {
-  display: block; width: 100%; height: 96px; object-fit: cover;
-  border-radius: 10px; margin-bottom: 10px; opacity: .85;
-}
-/* У закрытой ступени обложка приглушена, но не обесцвечена: при .4 и половине
-   серого она превращалась в мутное пятно, и было непонятно, картинка это или
-   брак вёрстки. Приглушение должно читаться как «пока закрыто», а не как «не
-   загрузилось». */
-.next-course.locked .next-course-cover { opacity: .62; filter: grayscale(.25); }
-
-/* Переключатель истории. Выглядит как переключатель режима намеренно: человек
-   уже знает эту форму, и она читается как выбор, а не как настройка. Активная
-   сторона подсвечена акцентом истории — то есть при переключении меняется и
-   цвет самой кнопки, и цвет всего сайта. */
-.story-switch {
-  display: flex; gap: 3px; padding: 3px;
-  border: 1px solid var(--accent-line); border-radius: 11px; background: #0b161f;
-}
-.story-switch button {
-  border: 0; background: transparent; color: var(--muted);
-  padding: 8px 14px; border-radius: 8px; font: 600 13px Manrope; transition: .18s;
-  white-space: nowrap; cursor: pointer;
-}
-.story-switch button:hover { color: var(--text); }
-.story-switch button.active {
-  background: var(--accent-soft); color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent-line);
-}
-@media (max-width: 860px) {
-  .story-switch { order: 2; width: 100%; }
-  .story-switch button { flex: 1; }
-}
-
-/* На экране урока переключатель истории не нужен: истории меняют на карте, а
-   не посреди задачи. Экран урока и так был самым тесным местом — там мы уже
-   один раз потеряли под нижним краем поле для кода. */
-body.lesson-open .story-switch { display: none; }
-
-/* Итог — единственное место на первом экране, где сказано, что человек унесёт.
-   Стоит прямо над кнопкой: узнавать это на шестнадцатом шаге поздно. */
-.welcome-outcome {
-  margin: 0 0 16px !important; padding: 12px 14px;
-  background: var(--accent-glow); border-left: 2px solid var(--accent);
-  border-radius: 0 10px 10px 0; font-size: 15px; line-height: 1.55;
-}
-.welcome-outcome b { color: var(--accent); }
-
-.welcome-selling { margin: 0 0 12px; padding: 0; list-style: none; display: grid; gap: 8px; }
-.welcome-selling li {
-  position: relative; padding-left: 20px;
-  font-size: 14px; line-height: 1.5; color: #c5d2d8;
-}
-.welcome-selling li::before {
-  content: '✓'; position: absolute; left: 0; top: 0;
-  color: var(--mint); font-weight: 700;
-}
-
-/* Правая колонка: задача сверху, рабочее место под ней. Обе части живут в
-   одном столбце и прокручиваются вместе с ним, а не порознь. */
-.lesson-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
-.lesson-side .lab-panel { flex: 1; min-height: 0; }
-.lesson-side .task-block { flex: 0 0 auto; }
-@media (max-width: 1240px) {
-  .lesson-side { grid-column: 1 / -1; }
-}
-
-/* Фактура принадлежит истории. Файл подменяется, слой остаётся тем же. */
-body.theme-garage .panel {
-  background:
-    linear-gradient(150deg, rgba(16, 27, 37, .93), rgba(9, 18, 26, .93)),
-    url("garage-panel.jpg") center / 380px repeat;
-}
-
-/* Полоса возвращения над карточкой «Продолжить». Тот, кто зашёл во второй раз,
-   вступительного экрана не видит, и до сих пор его встречал голый
-   прямоугольник с текстом — возвращение в историю выглядело как возвращение в
-   таблицу. */
-.continue-strip {
-  display: block; width: 100%; height: 84px; object-fit: cover;
-  border-radius: 14px 14px 0 0; margin-bottom: -10px;
-}
-
-/* Неон. Общий язык для обеих историй: акцент не просто цветной, он светится —
-   так выглядит подсветка приборов и так же выглядит строка в терминале. Цвет
-   берётся из истории, свечение одно и то же. */
-.eyebrow, .theme-choice-name, .rig-button-name,
-.brief-real > span, .task-card > span, .welcome-outcome b {
-  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
-}
-.story-switch button.active {
-  box-shadow: inset 0 0 0 1px var(--accent-line), 0 0 18px -4px var(--accent);
-}
-.brand-mark { box-shadow: 0 0 22px -6px var(--accent); }
-.node.next, .continue-card { box-shadow: 0 0 26px -10px var(--accent); }
-
-/* Правая колонка первого экрана. Раньше «чем берём» и факты были отдельными
-   детьми сетки и раскладывались зигзагом, растягивая левую половину: карта со
-   списком шагов уезжала за нижний край, и человек не видел, из чего вообще
-   состоит курс. */
-.welcome-side { display: grid; gap: 12px; align-content: start; }
-
-/* ---------- живая машина на первом экране ---------- */
-
-.pc-wrap { border: 1px solid var(--accent-line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; }
-.pc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.pc-head span { font: 600 10px "Roboto Mono", monospace; letter-spacing: .14em; color: var(--accent); }
-.pc-head small { font-size: 11px; color: var(--muted); }
-
-.pc-stage { background: #070d13; border: 1px solid var(--line-soft); border-radius: 10px; overflow: hidden; }
-.pc-stage svg { display: block; width: 100%; height: auto; }
-.pc-stage { display: grid; place-items: center; }
-
-.pc-shadow ellipse { fill: rgba(0, 0, 0, .55); }
-.pc-body path:first-child { stroke: var(--accent-line); stroke-width: 1.5; }
-.pc-glass { fill: #16303d; }
-.pc-wheel circle { fill: #0b1219; stroke: #26323c; stroke-width: 2; }
-.pc-hub { fill: #16222c; }
-
-/* Всё подвижное поворачивается вокруг своей петли. Плавность здесь не
-   украшение: мгновенный скачок читается как перерисовка, а не как действие. */
-.pc-trunk path { fill: #16232e; stroke: var(--accent-line); stroke-width: 1.2; }
-.pc-trunk { transform-origin: 232px 58px; transition: transform .45s cubic-bezier(.2, .9, .3, 1); }
-svg.trunk .pc-trunk { transform: rotate(-38deg); }
-
-.pc-door path { fill: rgba(30, 46, 60, .55); stroke: var(--accent-line); stroke-width: 1.2; }
-.pc-door circle { fill: var(--accent); opacity: .5; }
-.pc-door { transition: transform .45s cubic-bezier(.2, .9, .3, 1); }
-.pc-door-front { transform-origin: 112px 80px; }
-.pc-door-rear { transform-origin: 226px 80px; }
-svg.doors .pc-door-front { transform: rotate(-26deg); }
-svg.doors .pc-door-rear { transform: rotate(26deg); }
-
-.pc-lamp ellipse { fill: #2a3540; transition: fill .18s, filter .18s; }
-.pc-beam path { fill: var(--accent); opacity: 0; transition: opacity .18s; }
-svg.lights .pc-lamp-front ellipse { fill: #fff3d0; filter: drop-shadow(0 0 14px var(--accent)); }
-svg.lights .pc-lamp-rear ellipse { fill: #ff6b6b; filter: drop-shadow(0 0 12px #ff6b6b); }
-svg.lights .pc-beam path { opacity: .13; }
-
-.pc-log { font: 12px/1.6 "Roboto Mono", monospace; color: var(--muted); min-height: 58px; }
-.pc-log p { margin: 0; }
-.pc-log p.cmd { color: var(--accent); }
-.pc-log p.ok { color: var(--mint); }
-.pc-log p.bad { color: #ffb4b4; }
-
-.pc-row { display: flex; gap: 8px; }
-/* 16 пикселей — не вкусовщина: при меньшем iOS сам приближает страницу, когда
-   фокус попадает в поле, и человеку приходится отодвигать её руками. */
-.pc-input {
-  flex: 1; min-width: 0; padding: 9px 11px; font: 16px "Roboto Mono", monospace;
-  background: #070d13; color: var(--text); border: 1px solid var(--line); border-radius: 9px;
-}
-.pc-input:focus { outline: none; border-color: var(--accent); }
-.pc-send {
-  padding: 9px 14px; border: 0; border-radius: 9px; cursor: pointer;
-  background: var(--accent-soft); color: var(--accent); font: 600 13px Manrope;
-  box-shadow: inset 0 0 0 1px var(--accent-line);
-}
-.pc-hints { display: flex; flex-wrap: wrap; gap: 6px; }
-.pc-hint {
-  padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
-  background: transparent; color: var(--muted); font: 12px "Roboto Mono", monospace;
-}
-.pc-hint:hover { border-color: var(--accent); color: var(--accent); }
-
-/* Разбор уезжал вбок от тачпада, и появлялась горизонтальная полоса. Причина
-   не в содержимом, а в правиле: overflow-y: auto включает и горизонтальную
-   прокрутку, если что-то внутри шире контейнера. Ширину режем явно, а длинные
-   листинги пусть прокручиваются внутри себя, а не тащат за собой всю колонку. */
-.brief { overflow-x: hidden; }
-.brief-notes, .brief-real, .brief-theory { min-width: 0; overflow-wrap: anywhere; }
-.brief pre { max-width: 100%; overflow-x: auto; }
-
-/* Первый экран обязан помещаться в один экран: до сих пор он занимал полтора,
-   и человек не видел ни кнопки, ни карты, пока не прокрутит. Главный едок —
-   холст машины: он тянулся по ширине колонки и на большом мониторе занимал
-   треть высоты. */
-.pc-stage svg { height: 172px; }
-.pc-wrap { gap: 8px; padding: 10px 12px; }
-.pc-log { min-height: 44px; font-size: 11.5px; line-height: 1.5; }
-.welcome-side { gap: 10px; }
-.welcome-selling { gap: 6px; margin-bottom: 0; }
-.welcome-selling li { font-size: 13.5px; }
-.welcome-facts li { font-size: 13.5px; }
-.welcome-outcome { margin: 0 0 12px !important; padding: 10px 12px; font-size: 14.5px; }
-
-/* Строка, которую шина набирает сама. Курсор и цвет говорят, что это не ты. */
-.pc-input.auto { color: var(--accent); border-color: var(--accent-line); }
-
-@media (min-width: 1100px) {
-  /* Ужимаем только там, где экран широкий и высота становится узким местом. */
-  .welcome { align-items: start; }
-  .welcome-story { margin-bottom: 10px !important; }
-}
-
-/* Служебная строка на всю ширину: слева выход на сайт, по центру — что сейчас
-   в уроке, справа сброс. Раньше всё лежало в один ряд слева, и две кнопки не
-   читались кнопками: выход выглядел серым текстом, сброс — просто текстом. */
-.status-strip { justify-content: space-between; width: 100%; }
-.strip-left, .strip-right { display: flex; align-items: center; gap: 14px; }
-.status-strip .mode-hint { text-align: center; }
-
-/* Выход не должен выделяться — но должен читаться ссылкой. Стрелка и
-   подчёркивание по наведению делают это без крика. */
-.site-back {
-  color: var(--muted); text-decoration: none; font: 500 13px Manrope;
-  padding: 4px 0; border-bottom: 1px solid transparent; transition: .15s;
-}
-.site-back:hover { color: var(--accent); border-bottom-color: var(--accent-line); }
-
-/* Сброс — действие необратимое, и выглядеть должен как кнопка, а не как
-   надпись. Но не как главное действие экрана: обводка, не заливка. */
-.reset-button {
-  padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px;
-  background: transparent; color: var(--muted); font: 500 12.5px Manrope;
-  cursor: pointer; transition: .15s; white-space: nowrap;
-}
-.reset-button:hover { border-color: #ff6b6b; color: #ff6b6b; }
-
-@media (max-width: 860px) {
-  .status-strip { flex-wrap: wrap; }
-  .strip-left, .strip-right { width: 100%; justify-content: space-between; }
-  .status-strip .mode-hint { width: 100%; text-align: left; }
-}
-
-/* ---------- стенд урока ---------- */
-
-.stand-wrap { border-bottom: 1px solid var(--line-soft); padding: 8px 12px 10px; display: grid; gap: 6px; }
-.stand-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.stand-head span { font: 600 10px "Roboto Mono", monospace; letter-spacing: .14em; color: var(--accent); }
-.stand-note { font-size: 11px; color: var(--muted); }
-.stand { background: #070d13; border: 1px solid var(--line-soft); border-radius: 10px; overflow: hidden; }
-.stand svg { display: block; width: 100%; height: 128px; }
-
-/* Проекция на лобовое. Моноширинный шрифт не прихоть: сюда попадает вывод
-   программы, и он должен выглядеть выводом программы. */
-.pc-hud rect { fill: rgba(103, 232, 249, .07); stroke: var(--accent-line); stroke-width: .8; }
-.pc-hud text { font: 11px "Roboto Mono", monospace; fill: var(--accent); }
-.pc-hud-ray { stroke: var(--accent); stroke-width: .8; opacity: .35; }
-
-.pc-signal circle { fill: #2a3540; transition: fill .12s, filter .12s; }
-svg.blink .pc-signal circle { fill: #ffb454; filter: drop-shadow(0 0 9px #ffb454); }
-
-/* Допуск и отказ читаются цветом стекла, а не подписью: подпись пришлось бы
-   переводить на язык каждой задачи, а цвет понятен без слов. */
-svg.ok .pc-glass { fill: #1b3a2c; }
-svg.no .pc-glass { fill: #3a1f1f; }
-svg.fault .pc-hud rect { stroke: #ff6b6b; fill: rgba(255, 107, 107, .09); }
-svg.fault .pc-hud text { fill: #ff6b6b; }
-svg.fault .pc-lamp-rear ellipse { fill: #ff6b6b; filter: drop-shadow(0 0 10px #ff6b6b); }
-
-/* Приборы под машиной. Показывается один: два сразу превращают стенд в
-   приборную свалку, а смысл в том, чтобы связать одну строчку кода с одним
-   понятным движением железа. */
-.stand-extra { margin-top: 2px; }
-.incident-feed {
-  display: grid; gap: 5px; padding: 9px 10px; margin-top: 4px;
-  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
-  border-radius: 8px; background: color-mix(in srgb, var(--accent) 6%, transparent);
-}
-.incident-feed[hidden] { display: none; }
-.incident-feed > b { font-size: 13px; color: var(--text); }
-.incident-feed p { margin: 0; font-size: 12px; line-height: 1.42; color: var(--muted); }
-.incident-feed .incident-lead { color: #d4e7ee; }
-.incident-feed .incident-defense { color: var(--accent); }
-.incident-feed a { width: fit-content; font-size: 11px; color: var(--accent); }
-.incident-eyebrow {
-  font: 600 9.5px "Roboto Mono", monospace; letter-spacing: .12em; color: var(--accent);
-}
-.st-cap {
-  display: block; margin-bottom: 5px;
-  font: 600 9.5px "Roboto Mono", monospace; letter-spacing: .12em; color: var(--muted);
-}
-
-.st-lamp-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.st-lamp-row i {
-  width: 13px; height: 13px; border-radius: 50%;
-  background: #1a2530; border: 1px solid var(--line);
-}
-.st-lamp-row i.on {
-  background: var(--accent); border-color: var(--accent);
-  box-shadow: 0 0 10px -1px var(--accent);
-}
-
-.st-row {
-  display: flex; justify-content: space-between; gap: 10px;
-  padding: 3px 0; border-bottom: 1px dashed var(--line-soft);
-  font: 12px "Roboto Mono", monospace;
-}
-.st-row:last-child { border-bottom: 0; }
-.st-row b { color: var(--muted); font-weight: 500; }
-.st-row u { color: var(--accent); text-decoration: none; }
-
-/* Трос натягивается на каждом шаге цикла: сколько рывков — столько прошёл
-   while. Ширина, а не число, потому что натяжение видно, а число надо читать. */
-.st-rope { height: 8px; border-radius: 999px; background: #121c25; overflow: hidden; border: 1px solid var(--line); }
-.st-rope i {
-  display: block; height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, #6d5028, var(--accent));
-  transition: width .4s cubic-bezier(.2, .9, .3, 1);
-}
-
-/* Колонки первого экрана начинаются сверху и не растягиваются друг под друга:
-   иначе более короткая тянется до высоты соседней пустотой. */
-@media (min-width: 900px) { .welcome { align-items: start; } }
-
-/* Элемент сетки по умолчанию не сжимается ниже своей «минимальной» ширины, и
-   на телефоне колонка первого экрана вышла 354 пикселя при доступных 299:
-   страница поехала вбок, а текст обрезался справа. min-width: 0 снимает этот
-   негласный минимум — это и есть штатное лечение, а не подпорка. */
-.welcome > *, .welcome-side > *, .welcome-text > * { min-width: 0; }
-.pc-wrap, .pc-row, .pc-hints { min-width: 0; }
-
-@media (max-width: 860px) {
-  /* 26 пикселей полей с каждой стороны на узком экране съедают седьмую часть
-     ширины — на телефоне это строка текста. */
-  .welcome { padding: 18px 14px; }
-  .story-choice-head { display: grid; gap: 2px; }
-  .story-choice-grid { grid-template-columns: 1fr; }
-}
-
-/* Страховка от бокового увода: даже если что-то однажды снова окажется шире
-   экрана, страница не поедет. Причину это не лечит, поэтому стоит после
-   настоящей починки, а не вместо неё. */
-html, body { overflow-x: hidden; max-width: 100%; }
-
-@media (max-width: 860px) {
-  /* На телефоне кнопка «Начать» оказывалась на 902-м пикселе — ниже экрана, и
-     первое, что делал человек, это листал мимо текста. Поднимаем её сразу под
-     сюжет: сначала зачем, потом как начать, и только потом подробности. */
-  .welcome-text { display: flex; flex-direction: column; }
-  .continue-label { order: 1; }
-  .welcome-text h2 { order: 2; }
-  .welcome-story { order: 3; }
-  .welcome-start { order: 4; margin-bottom: 16px; }
-  .welcome-outcome { order: 5; }
-  .welcome-facts { order: 7; }
-  .welcome-about { order: 6; }
+  place-items: center;
+  background: var(--bone);
+  color: var(--coal);
+  font-size: 21px;
+  font-weight: 900;
+  transform: skewX(-7deg);
+}
+
+.game-brand__sigil span { color: var(--danger); }
+.game-brand__text { font-size: 14px; font-weight: 900; }
+.game-brand__text small { display: block; margin-top: 3px; color: var(--muted); font: 9px/1.2 ui-monospace, monospace; letter-spacing: .08em; }
+
+.hud {
+  position: absolute;
+  top: 14%;
+  left: clamp(20px, 5vw, 84px);
+  width: min(620px, calc(100vw - 40px));
+  pointer-events: none;
+  text-shadow: 0 2px 12px #000;
+  transition: opacity .22s ease;
+}
+
+.game[data-intro="warehouse"] .hud,
+.game[data-intro="warehouse"] .system-readout,
+.game[data-intro="warehouse"] .action-button { opacity: 0; }
+.game[data-wake-reveal="true"] .hud { opacity: 0; }
+.game[data-wake-reveal="true"] .skill-journal { opacity: 0; }
+
+.hud__eyebrow,
+.ending__eyebrow {
+  margin: 0 0 12px;
+  color: var(--sodium);
+  font: 700 11px/1.2 ui-monospace, monospace;
+  letter-spacing: .18em;
+}
+
+.hud h1 {
+  margin: 0;
+  max-width: 560px;
+  color: var(--bone);
+  font-size: clamp(32px, 6vw, 76px);
+  line-height: .93;
+  letter-spacing: -.055em;
+  text-transform: uppercase;
+}
+
+#gameMessage {
+  display: inline-block;
+  margin: 20px 0 0;
+  padding: 8px 11px;
+  background: var(--bone);
+  color: var(--coal);
+  font: 800 13px/1 ui-monospace, monospace;
+  letter-spacing: .08em;
+  text-shadow: none;
+  text-transform: uppercase;
+}
+
+.hud__progress {
+  width: 210px;
+  height: 3px;
+  margin-top: 18px;
+  background: #ffffff1f;
+}
+
+.hud__progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--cyan);
+  box-shadow: 0 0 13px var(--cyan);
+  transition: width .2s ease;
+}
+
+.system-readout {
+  position: absolute;
+  top: max(22px, env(safe-area-inset-top));
+  right: max(112px, calc(env(safe-area-inset-right) + 112px));
+  display: flex;
+  gap: 24px;
+  color: var(--muted);
+  font: 9px/1.1 ui-monospace, monospace;
+  letter-spacing: .09em;
+}
+
+.system-readout b { display: block; margin-top: 4px; color: var(--bone); font-size: 11px; }
+
+.power-rack {
+  position: absolute;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: calc(24px + var(--safe-bottom));
+  display: flex;
+  gap: 9px;
+}
+
+.power {
+  position: relative;
+  width: 92px;
+  height: 76px;
+  padding: 9px;
+  overflow: hidden;
+  border: 1px solid #ffffff2c;
+  background: #0d131dcc;
+  backdrop-filter: blur(8px);
+  text-align: left;
+}
+
+.power:hover { border-color: var(--cyan); }
+.power:active { transform: translateY(2px); }
+.power__key { color: var(--muted); font: 9px ui-monospace, monospace; }
+.power b { display: block; margin-top: 17px; font-size: 11px; letter-spacing: .08em; }
+.power i { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--cyan); box-shadow: 0 0 15px var(--cyan); }
+.power--pulse i { background: var(--sodium); box-shadow: 0 0 15px var(--sodium); }
+.power--shield i { background: var(--bone); box-shadow: 0 0 15px var(--bone); }
+.power[disabled] { opacity: .22; filter: grayscale(1); }
+
+.action-button {
+  position: absolute;
+  left: max(22px, env(safe-area-inset-left));
+  bottom: calc(24px + var(--safe-bottom));
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  border-left: 3px solid var(--sodium);
+  background: var(--bone);
+  color: var(--coal);
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+.action-button__key { color: #6c665b; font: 9px ui-monospace, monospace; }
+
+.storage-warning {
+  position: absolute;
+  z-index: 6;
+  top: max(74px, calc(env(safe-area-inset-top) + 58px));
+  left: 50%;
+  width: min(520px, calc(100vw - 32px));
+  padding: 11px 14px;
+  transform: translateX(-50%);
+  border: 1px solid #ff4d5a88;
+  background: #1a090de8;
+  box-shadow: 0 14px 45px #000b, inset 3px 0 0 var(--danger);
+  color: #ffb4ba;
+  font: 800 10px/1.35 ui-monospace, monospace;
+  letter-spacing: .08em;
+  text-align: center;
+  pointer-events: none;
+}
+
+.storage-warning[hidden] { display: none; }
+
+.corner-tools {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  display: flex;
+  gap: 6px;
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #ffffff24;
+  background: #080b11b8;
+  color: var(--muted);
+  font: 17px/1 ui-monospace, monospace;
+}
+
+.icon-button:hover { color: var(--bone); border-color: #ffffff66; }
+
+.machine {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  right: 0;
+  width: min(470px, 34vw);
+  height: 100%;
+  padding: max(28px, env(safe-area-inset-top)) 34px calc(30px + var(--safe-bottom));
+  border-left: 1px solid #64e9ff52;
+  background: #0a1019f4;
+  box-shadow: -28px 0 80px #000a;
+  user-select: text;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+.machine[hidden], .ending[hidden] { display: none; }
+.skill-journal[hidden] { display: none; }
+.skill-journal {
+  position: absolute;
+  z-index: 3;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: calc(22px + var(--safe-bottom));
+  width: min(280px, calc(100vw - 40px));
+  padding: 12px;
+  border: 1px solid #64e9ff55;
+  background: #080b11e8;
+  box-shadow: 0 0 35px #64e9ff13;
+  pointer-events: none;
+}
+.skill-journal > p { margin: 0 0 8px; color: var(--cyan); font: 800 9px/1.2 ui-monospace, monospace; letter-spacing: .12em; }
+.skill-card { display: grid; gap: 3px; padding: 8px 10px; border-left: 3px solid #59687a; background: #ffffff08; }
+.skill-card + .skill-card { margin-top: 5px; }
+.skill-card b { color: var(--muted); font: 900 13px/1 ui-monospace, monospace; }
+.skill-card span { color: var(--muted); font: 10px/1.25 ui-monospace, monospace; }
+.skill-card small { color: #718398; font: 8px/1.2 ui-monospace, monospace; }
+.skill-card[data-unlocked="true"] { border-left-color: var(--cyan); box-shadow: inset 18px 0 30px #64e9ff0b; }
+.skill-card[data-unlocked="true"] b { color: var(--bone); }
+.skill-card[data-unlocked="true"] span { color: var(--cyan); }
+.skill-card[data-unlocked="false"] { opacity: .4; filter: grayscale(1); }
+.machine__rail { position: absolute; left: -46px; top: 50%; width: 46px; height: 4px; background: var(--cyan); box-shadow: 0 0 20px var(--cyan); }
+.machine__rail span { position: absolute; right: 8px; top: -5px; width: 13px; height: 13px; border-radius: 50%; background: white; box-shadow: 0 0 22px var(--cyan); }
+.machine__header { display: flex; align-items: center; justify-content: space-between; }
+.machine__status { color: var(--cyan); font: 10px ui-monospace, monospace; letter-spacing: .15em; }
+.machine__status i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+.machine h2 { max-width: 100%; margin: clamp(18px, 5vh, 44px) 0 10px; color: var(--bone); font-size: clamp(30px, 2.7vw, 41px); line-height: .96; letter-spacing: -.04em; overflow-wrap: anywhere; text-transform: uppercase; }
+.machine p { max-width: 420px; color: var(--muted); line-height: 1.5; }
+.machine-clue {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 10px 13px;
+  overflow: hidden;
+  border: 1px dashed #ffc85770;
+  background: #e9e3d50d;
+  color: var(--sodium);
+  transform: rotate(-.4deg);
+}
+.machine-clue::after { content: ""; position: absolute; right: -12px; top: -18px; width: 40px; height: 40px; background: #0a1019; transform: rotate(38deg); }
+.machine-clue span { font: 8px/1.2 ui-monospace, monospace; letter-spacing: .14em; }
+.machine-clue span, .machine-clue code { position: relative; z-index: 1; min-width: 0; }
+.machine-clue code { color: var(--bone); font: 800 14px/1 ui-monospace, monospace; white-space: nowrap; }
+.other-mind-status {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 5px 14px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid #ffffff16;
+  background: #05080d;
+  color: #59687a;
+  font: 9px/1.3 ui-monospace, monospace;
+  letter-spacing: .12em;
+}
+.other-mind-glyph {
+  position: relative;
+  grid-row: 1 / 3;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #4c5868;
+  border-radius: 52% 48% 58% 42%;
+  background: #151b24;
+  box-shadow: 0 0 6px #4c586844;
+  transform: rotate(-24deg) scale(.72);
+}
+.other-mind-glyph span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 3px;
+  border-radius: 50%;
+  background: #4c5868;
+  transform: translate(-50%, -50%);
+}
+.other-mind-status b { color: #718398; }
+.other-mind-status p { grid-column: 2 / -1; min-height: 18px; margin: 0; color: inherit; font: 11px/1.45 ui-monospace, monospace; letter-spacing: 0; }
+.other-mind-status[data-phase="waking"] { border-color: #ffc85766; color: var(--sodium); }
+.other-mind-status[data-phase="waking"] .other-mind-glyph { border-color: var(--sodium); box-shadow: 0 0 22px #ffc85788; animation: other-mind-birth 1.2s cubic-bezier(.2, .8, .2, 1) 1 both; }
+.other-mind-status[data-phase="waking"] .other-mind-glyph span { height: 7px; background: var(--sodium); }
+.other-mind-status[data-phase="awake"] { border-color: #64e9ff78; color: var(--cyan); box-shadow: inset 3px 0 0 var(--cyan), 0 0 24px #64e9ff12; }
+.other-mind-status[data-phase="awake"] .other-mind-glyph { border-color: var(--cyan); background: #0a2b33; box-shadow: 0 0 20px #64e9ff66; transform: none; }
+.other-mind-status[data-phase="awake"] .other-mind-glyph span { height: 13px; border: 3px solid var(--bone); background: #071017; }
+.other-mind-status[data-phase="silent"] { border-style: dashed; border-color: #ffc85755; color: #c5a86c; }
+.other-mind-status[data-phase="silent"] .other-mind-glyph { border-style: dashed; border-color: #a98147; }
+@keyframes other-mind-birth {
+  0% { transform: rotate(-24deg) scale(.72); }
+  45% { transform: rotate(5deg) scale(1.12); }
+  100% { transform: rotate(0) scale(1); }
+}
+.code-label { display: block; margin: 22px 0 9px; color: var(--sodium); font: 9px ui-monospace, monospace; letter-spacing: .14em; }
+.code-editor { display: grid; grid-template-columns: 36px 1fr; min-height: 150px; border: 1px solid #ffffff1f; background: #05080d; }
+.code-editor > span { padding-top: 16px; border-right: 1px solid #ffffff12; color: #46505d; text-align: center; font: 12px ui-monospace, monospace; }
+.code-editor textarea { width: 100%; padding: 15px; resize: none; border: 0; outline: 0; background: transparent; color: var(--cyan); caret-color: var(--bone); font: 14px/1.65 ui-monospace, monospace; }
+.code-editor:focus-within { border-color: #64e9ff99; box-shadow: inset 3px 0 0 var(--cyan), 0 0 20px #64e9ff14; }
+.code-feedback { min-height: 40px; padding: 11px 13px; background: #ffffff08; color: var(--muted); font: 11px/1.5 ui-monospace, monospace; }
+.code-feedback[data-status="loading"] { color: var(--sodium); }
+.code-feedback[data-status="success"] { color: var(--cyan); }
+.code-feedback[data-status="error"] { color: #ff8b94; border-left: 2px solid var(--danger); }
+.run-code { width: 100%; margin-top: 12px; padding: 14px 18px; background: var(--sodium); color: var(--coal); font-weight: 900; letter-spacing: .12em; }
+.run-code:hover { background: var(--bone); }
+.run-code:disabled { cursor: wait; opacity: .55; }
+
+.ending {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: min(760px, calc(100% - 36px));
+  padding: clamp(20px, 3vw, 34px);
+  transform: translateX(-50%);
+  border: 1px solid #ffc85759;
+  background: #090d14f2;
+  box-shadow: 0 30px 100px #000;
+  text-align: center;
+  animation: ending-rise .38s cubic-bezier(.2, .8, .2, 1) both;
+}
+.ending h2 { margin: 0; color: var(--bone); font-size: clamp(30px, 4vw, 52px); line-height: .95; text-transform: uppercase; }
+.ending p { color: var(--muted); line-height: 1.6; }
+.ending__future { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 24px 0; background: #ffffff24; }
+.ending__future span { padding: 14px 6px; background: var(--steel); color: var(--cyan); font: 9px ui-monospace, monospace; }
+@keyframes ending-rise {
+  from { opacity: 0; transform: translate(-50%, 28px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.screen-noise,
+.screen-vignette { position: absolute; inset: 0; pointer-events: none; }
+.screen-noise { z-index: 8; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E"); mix-blend-mode: soft-light; }
+.screen-vignette { z-index: 7; box-shadow: inset 0 0 150px 28px #000a; }
+
+@media (max-width: 760px) {
+  .game { min-height: 100dvh; }
+  .game-brand__text small, .system-readout span:nth-child(-n + 2) { display: none; }
+  .hud { top: 17%; }
+  .hud h1 { font-size: clamp(33px, 11vw, 56px); max-width: 90%; }
+  .system-readout { top: max(22px, env(safe-area-inset-top)); right: 118px; }
+  .power-rack { right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + var(--safe-bottom)); gap: 5px; }
+  .power { width: 66px; height: 64px; padding: 7px; }
+  .power__key { display: none; }
+  .power b { margin-top: 22px; font-size: 10px; }
+  .action-button { left: max(12px, env(safe-area-inset-left)); bottom: calc(12px + var(--safe-bottom)); height: 64px; }
+  .game[data-first-action-guide="true"] .action-button {
+    border-color: var(--sodium);
+    box-shadow: 0 0 0 1px #ffc85788, 0 0 28px #ffc85744;
+    animation: first-action-pulse .72s ease-in-out infinite alternate;
   }
+  .machine { top: auto; bottom: 0; width: 100%; height: min(82dvh, 720px); padding: 20px 18px calc(18px + var(--safe-bottom)); border-top: 1px solid #64e9ff52; border-left: 0; }
+  .machine__rail { left: 50%; top: -28px; width: 4px; height: 28px; }
+  .machine__rail span { right: -4px; top: 6px; }
+  .machine h2 { margin: 24px 0 8px; font-size: 32px; }
+  .machine p { margin: 0; font-size: 13px; }
+  .machine-clue { margin-top: 12px; }
+  .other-mind-status { margin-top: 12px; padding: 9px 11px; }
+  .other-mind-status p { font-size: 10px; }
+  .code-label { margin-top: 18px; }
+  .code-editor { min-height: 120px; }
+  .ending__future { grid-template-columns: repeat(2, 1fr); }
+  .skill-journal { right: 12px; bottom: calc(12px + var(--safe-bottom)); width: min(250px, calc(100vw - 24px)); }
+}
 
-/* Сцена сети. Классы общие со сценой машины, поэтому здесь только то, чего у
-   машины нет: сердцевина узла, нити связи и щит. */
-.pc-core { fill: rgba(103, 232, 249, .05); stroke: var(--accent-line); stroke-width: 1.4; }
-.pc-thread { stroke: var(--accent-line); stroke-width: .9; opacity: .7; fill: none; }
-body:not(.theme-garage) .pc-glass { fill: #16303d; stroke: var(--accent); stroke-width: 1.2; }
-body:not(.theme-garage) .pc-beam path { fill: var(--accent); opacity: .12; }
-body:not(.theme-garage) svg.lights .pc-beam path { opacity: .5; }
-body:not(.theme-garage) .pc-door path { fill: rgba(103, 232, 249, .12); }
-body:not(.theme-garage) .pc-trunk { transform-origin: 236px 85px; }
-body:not(.theme-garage) svg.trunk .pc-trunk { transform: translateX(34px) rotate(-8deg); opacity: .35; }
-body:not(.theme-garage) svg.doors .pc-door-front { transform: translateX(-16px); }
-body:not(.theme-garage) svg.doors .pc-door-rear { transform: translateX(16px); }
+@keyframes first-action-pulse {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
 
-/* Кнопка и список фактов под ней — одна колонка, одна ширина. Разной длины
-   элементы в узкой колонке читаются как недоделанная вёрстка. */
-.welcome-text .welcome-facts { margin: 4px 0 0; }
+@media (max-height: 520px) and (orientation: landscape) {
+  .game { min-height: 100dvh; }
+  .hud { top: 20%; }
+  .hud h1 { font-size: 38px; max-width: 430px; }
+  #gameMessage { margin-top: 10px; }
+  .power { height: 58px; }
+  .power b { margin-top: 8px; }
+  .machine { padding: 10px 16px; }
+  .machine__header .icon-button { width: 44px; height: 44px; }
+  .machine h2 { margin: 0 0 4px; font-size: 28px; }
+  .machine p { margin: 0; font-size: 11px; line-height: 1.25; }
+  .machine .other-mind-status { margin-top: 5px; padding: 5px 8px; }
+  .machine .other-mind-glyph { width: 34px; height: 34px; }
+  .code-label { margin: 7px 0 5px; }
+  .code-editor { min-height: 88px; height: 88px; }
+  .code-editor > span { padding-top: 9px; }
+  .code-editor textarea { padding: 8px 12px; line-height: 1.35; }
+  .code-feedback { min-height: 30px; padding: 6px 9px; }
+  .run-code { min-height: 44px; margin-top: 5px; padding: 8px 14px; }
+}
 
-/* В виджете на первом экране проекции показывать нечего: программу там ещё не
-   запускали, и полоса висела пустой. Она нужна в стенде урока, где на неё
-   выходит вывод кода, — там и остаётся. */
-.pc-stage .pc-hud { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  .other-mind-status, .other-mind-glyph { animation: none !important; }
+}

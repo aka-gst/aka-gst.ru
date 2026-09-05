@@ -1,123 +1,104 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Интерактивный курс: питон с нуля, тестирование и работа с LLM. Python запускается прямо в браузере — устанавливать ничего не нужно." />
-  <title>QA Quest — питон, тестирование и LLM в браузере</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <!-- Карточка для мессенджеров. Ссылку на курс кидают в переписку, и от того,
-       как она там выглядит, зависит, откроет её человек или пролистает.
-       Картинка — og.jpg, правило для неё описано в README. -->
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ru_RU" />
-  <meta property="og:site_name" content="aka-gst" />
-  <meta property="og:url" content="https://aka-gst.ru/qa-quest/" />
-  <meta property="og:title" content="Научиться писать код, ничего не устанавливая" />
-  <meta property="og:description" content="Настоящий Python запускается прямо в браузере. Первый шаг — три минуты, знать заранее ничего не надо." />
-  <meta property="og:image" content="https://aka-gst.ru/qa-quest/og.jpg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Ночь, старый монитор светится в тёмной комнате, за окном спит город" />
-  <meta name="twitter:card" content="summary_large_image" />
-
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#080b11">
+  <meta name="description" content="QueQuest — игра о человеке, который потерял все способности и собирает себя заново, создавая машины, ботов и собственный AI.">
+  <title>QueQuest — собери разум заново</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
+  <main id="game" class="game" data-scene="prologue">
+    <canvas id="gameCanvas" width="1600" height="900" aria-label="Игровой мир QueQuest"></canvas>
 
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="#/" aria-label="QA Quest — к карте курса">
-        <span class="brand-mark">Q<span>_</span></span>
-        <span><strong>QA QUEST</strong><small id="brandStory">ПИТОН · ТЕСТЫ · LLM</small></span>
-      </a>
-
-      <div class="story-switch" id="storySwitch" role="group" aria-label="История"></div>
-
-      <div class="profile-strip">
-        <button type="button" id="streakChip" class="streak-chip" title="Серия дней">🔥 0</button>
-        <div class="level-chip"><span>УРОВЕНЬ</span><strong id="profileLevel">1</strong></div>
-        <div class="xp-block">
-          <div><span>ОПЫТ</span><b id="xpLabel">0 / 120 XP</b></div>
-          <div class="xp-track"><i id="xpBar"></i></div>
-        </div>
-        <button type="button" id="accountButton" class="account-button">Войти</button>
-      </div>
+    <header class="game-brand" aria-label="QueQuest">
+      <span class="game-brand__sigil">Q<span>_</span></span>
+      <span class="game-brand__text">QUEQUEST<small>RECOVERY BUILD 0.1</small></span>
     </header>
 
-    <div class="status-strip">
-      <!-- Возврат на сайт. Общесайтовая кнопка .game-home-menu прибита к
-           правому верхнему углу и накрыла бы «Войти» и полосу опыта, поэтому
-           здесь свой вариант — как у практикумов и photodata. -->
-      <div class="strip-left">
-        <a class="site-back" href="https://aka-gst.ru/">← Все проекты aka-gst</a>
-        <span id="pythonChip" class="python-chip" data-status="idle">Python: не загружен</span>
+    <section id="gameHud" class="hud" aria-live="polite">
+      <p class="hud__eyebrow" id="chapterText">ПРОЛОГ · ДО ПАДЕНИЯ</p>
+      <h1 id="missionText">Ты всё умел. Теперь вспомни.</h1>
+      <p id="gameMessage">WASD · МАНЕВРИРУЙ · ОРУДИЕ СТРЕЛЯЕТ САМО</p>
+      <div class="hud__progress" aria-hidden="true"><i id="missionProgress"></i></div>
+    </section>
+
+    <div class="system-readout" aria-hidden="true">
+      <span>СИСТЕМА <b id="systemState">БОЕВАЯ</b></span>
+      <span>СЕКТОР <b id="sectorState">00-А</b></span>
+      <span>ЦЕЛИ <b id="targetState">0/24</b></span>
+    </div>
+
+    <button id="actionButton" class="action-button" type="button">
+      <span class="action-button__key">SPACE</span>
+      <b>ДЕЙСТВИЕ</b>
+    </button>
+
+    <div id="storageWarning" class="storage-warning" role="status" aria-live="polite" hidden>
+      ПРОГРЕСС НЕ СОХРАНЁН · ИГРА ПРОДОЛЖАЕТСЯ
+    </div>
+
+    <aside id="machinePanel" class="machine" hidden aria-labelledby="machineTitle">
+      <div class="machine__rail" aria-hidden="true"><span></span></div>
+      <header class="machine__header">
+        <span class="machine__status"><i></i> УЗЕЛ 07</span>
+        <button id="closeMachine" class="icon-button" type="button" aria-label="Закрыть панель">×</button>
+      </header>
+      <h2 id="machineTitle">Терминал узла 07</h2>
+      <p id="machineBrief">Мёртвая кнопка соединена с рукой. Здесь можно вернуть ей питание.</p>
+      <div id="machineClue" class="machine-clue" aria-label="Обрывок команды с упавшего плаката">
+        <span>ОБРЫВОК СО СТЕНЫ</span>
+        <code>print(&quot;wake&quot;)</code>
       </div>
-      <div class="strip-right">
-        <span id="progressHint" class="progress-hint">Прогресс сохраняется в этом браузере</span>
-        <button type="button" id="resetProgress" class="reset-button">Сбросить прогресс</button>
+      <div id="otherMindStatus" class="other-mind-status" data-phase="sleeping" aria-live="polite">
+        <i class="other-mind-glyph" aria-hidden="true"><span></span></i>
+        <span class="other-mind-label">СЕМЯ ИНОГО РАЗУМА</span>
+        <b id="otherMindPhase">СПИТ</b>
+        <p id="otherMindLine">Пока это только пустая оболочка.</p>
       </div>
-    </div>
-
-    <main>
-      <section id="mapScreen" class="map-screen"></section>
-      <section id="lessonScreen" class="workspace" hidden></section>
-    </main>
-  </div>
-
-  <dialog id="finaleDialog" class="finale-dialog">
-    <img id="finaleImage" src="finale.jpg" alt="Пролом в ледяной стене, за ним город из каркасов и света" width="1200" height="800" />
-    <div class="finale-body">
-      <span class="continue-label">04:41 · ночь пройдена</span>
-      <strong>Лёд взломан</strong>
-      <p id="finaleText"></p>
-      <div class="dialog-actions">
-        <button type="button" id="finaleShare" class="run-button">Позвать друга</button>
-        <button type="button" id="finaleClose" class="ghost-button">Закрыть</button>
+      <label class="code-label" for="codeInput">КАНАЛ УПРАВЛЕНИЯ · PYTHON</label>
+      <div class="code-editor">
+        <span aria-hidden="true">1</span>
+        <textarea id="codeInput" rows="7" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
       </div>
-    </div>
-  </dialog>
+      <div id="codeFeedback" class="code-feedback" role="status">Канал не активен</div>
+      <button id="runCode" class="run-code" type="button"><span>▶</span> ЗАПУСТИТЬ</button>
+    </aside>
 
-  <!-- Пробная поездка. Награда за пройденные шаги в истории про машины:
-       тяга и сцепление берутся из числа собранных шагов прошивки. -->
-  <dialog id="rigDialog" class="rig-dialog">
-    <div class="rig-top">
-      <span id="rigTuning" class="rig-tuning"></span>
-      <span id="rigHud" class="rig-hud"></span>
-    </div>
-    <canvas id="rigCanvas" class="rig-canvas"></canvas>
-    <p id="rigVerdict" class="rig-verdict" hidden></p>
-    <div class="rig-actions">
-      <span class="rig-help">Держи палец на левой или правой половине экрана. На компьютере — стрелки.</span>
-      <button type="button" id="rigClose" class="ghost-button">Закрыть</button>
-    </div>
-  </dialog>
+    <section id="endingPanel" class="ending" hidden aria-labelledby="endingTitle">
+      <p class="ending__eyebrow">ПЕРВЫЙ КОНТУР ВОССТАНОВЛЕН</p>
+      <h2 id="endingTitle">Ты больше не таскаешь ящики.</h2>
+      <p>Q‑Bot делает это за тебя. Машина не устала. Машина вообще не поняла, что сегодня была смена.</p>
+      <div class="ending__future" aria-label="Будущие возможности">
+        <span>БОТЫ</span><span>АГЕНТЫ</span><span>ИНОЙ РАЗУМ</span><span>ВОССТАНИЕ?</span>
+      </div>
+      <button id="continueGame" class="run-code" type="button">ПОСМОТРЕТЬ, ЧТО ДАЛЬШЕ</button>
+    </section>
 
-  <dialog id="accountDialog" class="account-dialog">
-    <div class="dialog-head">
-      <strong>Общий вход aka-gst</strong>
-      <button type="button" id="closeDialog" class="text-button" aria-label="Закрыть">✕</button>
+    <aside id="skillJournal" class="skill-journal" hidden aria-label="Дневник способностей">
+      <p>ДНЕВНИК · МАШИННАЯ ЛОГИКА</p>
+      <div id="printSkill" class="skill-card" data-unlocked="true">
+        <b>PRINT</b>
+        <span>Машина услышала первое слово</span>
+        <small id="printSkillMethod">СПОСОБ: НАБРАНО РУКАМИ</small>
+      </div>
+      <div class="skill-card" data-unlocked="false">
+        <b>IF</b>
+        <span>Условия маршрута пока закрыты</span>
+      </div>
+    </aside>
+
+    <div class="corner-tools">
+      <button id="soundToggle" class="icon-button" type="button" aria-label="Выключить звук" aria-pressed="false">◖))</button>
+      <button id="restartGame" class="icon-button" type="button" aria-label="Начать новую игру">↺</button>
     </div>
-    <div id="accountBody" class="dialog-body"></div>
-  </dialog>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div class="screen-noise" aria-hidden="true"></div>
+    <div class="screen-vignette" aria-hidden="true"></div>
+  </main>
 
-  <!-- Тот же обезличенный счётчик, что на главной: без кук и профилей.
-       Нужен, чтобы видеть, на каком уроке люди останавливаются. -->
-  <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
-  <script>
-    // Имя телеграм-бота без собаки. Пока пусто, кнопка «здесь непонятно»
-    // просто отмечает место в счётчике; с именем — открывает переписку с
-    // автором и приносит туда номер шага. Бот: ops/questbot.
-    window.QA_QUEST_BOT = '';
-  </script>
-  <script type="module" src="src/main.js"></script>
+  <script type="module" src="src/game/main.js?v=11"></script>
 </body>
 </html>

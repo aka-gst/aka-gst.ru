@@ -17,12 +17,14 @@ import { createAudio } from './audio.js';
 import { createScore, readBest, writeBest } from './score.js';
 import { ELEMENTS, ELEMENT_ORDER, STACK_LIMIT, CHARGE_STEP, spellOf, colourOf } from './magic.js';
 import { parseHash, buildLink, compare, cleanNick, NICK_KEY } from './challenge.js';
-import { loadBook, noteSpell, bookPages, bookCount, elementMarks } from './book.js';
+import { loadBook, noteSpell, noteObservation, bookPages, bookCount, elementMarks } from './book.js';
 import { iconTag } from './icons.js';
 import { pulse } from './pulse.js';
 import { createTrace, traceEvent, traceKey, traceDelivery } from './trace.js';
-import { createShowcase, withSeed } from './showcase.js';
+import { createEpisodeShowcase, createShowcase, withSeed } from './showcase.js';
 import { loadArt } from './art.js';
+import { operationResult } from './operation.js';
+import { physicalHint } from './observations.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -67,12 +69,18 @@ const ui = {
   tomeCount: $('tomeCount'),
   tomeSubstances: $('tomeSubstances'),
   tomeSignatures: $('tomeSignatures'),
+  tomeObservations: $('tomeObservations'),
   tomeClose: $('tomeClose'),
   tomeOpen: $('tomeOpen'),
   found: $('found'),
   foundKicker: $('foundKicker'),
   foundName: $('foundName'),
   foundNote: $('foundNote'),
+  operationHud: $('operationHud'),
+  operationGoal: $('operationGoal'),
+  operationOptional: $('operationOptional'),
+  operationLesson: $('operationLesson'),
+  physicalObservation: $('physicalObservation'),
 };
 
 /*
@@ -449,6 +457,25 @@ function clearScreen() {
 
   result = score.finish(world);
 
+  if (world.operation) {
+    const facts = operationResult(world);
+    const hostage = facts.hostage === 'rescued' ? 'СПАСЁН'
+      : facts.hostage === 'dead' ? 'ПОГИБ' : 'ОСТАВЛЕН';
+    showVeil({
+      tone: 'clear',
+      kicker: 'ОПЕРАЦИЯ ЗАВЕРШЕНА',
+      title: 'ЯДРО У ТЕБЯ',
+      text: 'Мир запомнил не способ, а последствия.',
+      stats: `<span>ЗАЛОЖНИК: ${hostage}</span>`
+        + `<span>МИРНЫЕ: ЖИВЫ ${facts.civiliansAlive} · ПОГИБЛИ ${facts.civiliansDead}</span>`
+        + `<span>ОХРАНА: ДЕЙСТВУЕТ ${facts.guardsActive} · БЕЗ СОЗНАНИЯ ${facts.guardsUnconscious} · ПОГИБЛА ${facts.guardsDead}</span>`
+        + `<span>ШУМНЫЕ ИНЦИДЕНТЫ ${facts.alerts} · ВРЕМЯ ${formatTime(facts.time)}</span>`,
+      action: 'ЕЩЁ РАЗ',
+      second: 'СТАРЫЕ ЭТАЖИ',
+    });
+    return;
+  }
+
   pulse('etazh-zachischen', {
     etazh: level.title,
     popytka: attempts,
@@ -802,7 +829,8 @@ function renderTome() {
   const count = bookCount(book);
 
   ui.tomeCount.textContent =
-    `${count.substances}/${count.substancesTotal} · ИМЕННЫХ ${count.signatures}/${count.signaturesTotal}`;
+    `${count.substances}/${count.substancesTotal} · ИМЕННЫХ ${count.signatures}/${count.signaturesTotal}`
+    + ` · МИР ${count.observations}/${count.observationsTotal}`;
 
   ui.tomeSubstances.innerHTML = pages.substances.map((entry) => {
     const marks = elementMarks(entry.elements)
@@ -853,6 +881,14 @@ function renderTome() {
       ? `<li data-known="0"><span class="tome-note">`
         + `ещё ${rest} — их вещества пока не открыты</span></li>`
       : '');
+
+  ui.tomeObservations.innerHTML = pages.observations.map((entry) => (
+    entry.known
+      ? `<li data-known="1"><b class="tome-sign">${entry.name}</b>`
+        + `<br><span class="tome-note">${entry.note}</span></li>`
+      : '<li data-known="0"><b class="tome-sign">???</b>'
+        + '<br><span class="tome-note">Наблюдай последствия действий.</span></li>'
+  )).join('');
 }
 
 function showTome() {
@@ -943,6 +979,25 @@ function updateHud(force) {
   ui.kills.textContent = `${world.kills}/${world.total}`;
   ui.clock.textContent = formatTime(world.time);
 
+  if (world.operation) {
+    ui.operationHud.hidden = false;
+    ui.operationGoal.textContent = world.operation.coreTaken
+      ? 'ВЕРНУТЬСЯ К ВЫХОДУ' : 'УКРАСТЬ ЯДРО';
+    ui.operationOptional.textContent = world.hostage?.rescued
+      ? 'ЗАЛОЖНИК: СПАСЁН' : world.hostage?.alive
+        ? 'ЗАЛОЖНИК: НЕОБЯЗАТЕЛЬНО' : 'ЗАЛОЖНИК: ПОГИБ';
+    ui.operationLesson.hidden = world.operation.waterLesson;
+    ui.operationLesson.textContent = world.operation.candleLesson
+      ? 'ЛУЖА ПРОВОДИТ РАЗРЯД ПО ВСЕМ, КТО С НЕЙ СОЕДИНЁН'
+      : 'ЗАЖГИ СВЕЧУ ТОЧНО. ШИРОКИЙ ОГОНЬ ЗАДЕНЕТ ВСЁ РЯДОМ';
+  } else {
+    ui.operationHud.hidden = true;
+  }
+
+  const observation = physicalHint(world, picked);
+  ui.physicalObservation.textContent = observation;
+  ui.physicalObservation.hidden = !observation;
+
   if (challenge) {
     ui.target.hidden = false;
     ui.targetTime.textContent = `${challenge.nick} ${formatTime(challenge.time)}`;
@@ -986,6 +1041,12 @@ function drainEvents() {
 
     const name = SFX_BY_EVENT[event.type];
     if (name) audio.sfx(name, event);
+
+    const observation = noteObservation(book, event);
+    if (observation) {
+      showFound('НАБЛЮДЕНИЕ МИРА', observation.name, observation.note, '#7ffcff');
+      audio.sfx('spot');
+    }
 
     if (event.type === 'daemon') {
       /* Очередь ушла в выстрел — метка «только что легла» больше ни к
@@ -1032,9 +1093,11 @@ function drainEvents() {
        * Новый исход, которого игрок раньше не видел: он ударил, враг не
        * умер и при этом не отбился. Без слов это читается как промах,
        * а не как милосердие. Поэтому первая строка несёт факт, а не
-       * шутку: не убит, и он встанет.
+       * шутку: не убит; поднимется ли он, сообщает само событие.
        */
-      setToast(jab('sleep', 'НЕ УБИТ — В ОТКЛЮЧКЕ. ЧЕРЕЗ ВРЕМЯ ВСТАНЕТ'), 2.4);
+      setToast(jab('sleep', event.permanent
+        ? 'НЕ УБИТ — БЕЗ СОЗНАНИЯ. НЕ ПОДНИМЕТСЯ'
+        : 'НЕ УБИТ — В ОТКЛЮЧКЕ. ЧЕРЕЗ ВРЕМЯ ВСТАНЕТ'), 2.4);
       vibrate(10);
     } else if (event.type === 'wake' && event.subdued) {
       /* Сбитого с ног в ближнем бою не объявляем — он встаёт каждые две
@@ -1343,6 +1406,10 @@ ui.veilAction.addEventListener('click', (event) => {
   else if (scene === 'dead') startLevel(level, { silent: true });
   else if (scene === 'clear') {
     attempts = 0;
+    if (world.operation) {
+      startLevel(level, { silent: true });
+      return;
+    }
     if (hasNextFloor()) {
       levelIndex += 1;
       /* Следующий этаж — уже не тот, на который звали: цель снимается. */
@@ -1365,7 +1432,20 @@ ui.veilSecond.addEventListener('click', (event) => {
   audio.sfx('ui');
   event.currentTarget.blur();
   if (scene === 'pause') startLevel(level, { silent: true });
-  else if (scene === 'clear') { attempts = 0; startLevel(level, { silent: true }); }
+  else if (scene === 'clear') {
+    attempts = 0;
+    if (world.operation && CAMPAIGN.length > 1) {
+      levelIndex = 1;
+      level = CAMPAIGN[levelIndex];
+      world = createWorld(level);
+      score = createScore(level, 0);
+      levelCode = encode(level);
+      view = { x: world.player.x, y: world.player.y };
+      renderer.invalidate();
+      updateHud(true);
+      callScreen();
+    } else startLevel(level, { silent: true });
+  }
 });
 
 ui.codeBox.addEventListener('focus', () => ui.codeBox.select());
@@ -1471,6 +1551,15 @@ window.technomagic = {
   audio() { return audio; },
   get view() { return lastView; },
   get picked() { return picked; },
+  state() {
+    return {
+      scene,
+      worldState: world?.state ?? null,
+      operation: world ? operationResult(world) : null,
+      coreTaken: Boolean(world?.core?.taken),
+      candleLit: Boolean(world?.props.find((prop) => prop.kind === 'candle')?.lit),
+    };
+  },
 
   /*
    * СНАРЯД ДЛЯ ВИТРИНЫ
@@ -1502,12 +1591,21 @@ window.technomagic = {
      * вкладке холст вообще не имеет размера, и спросить его не у кого.
      */
     if (options.width && options.height) {
+      canvas.style.width = `${options.width}px`;
+      canvas.style.height = `${options.height}px`;
       renderer.resize(options.width, options.height, options.dpr || 1);
     } else {
       resize();
     }
 
-    const made = withSeed(seed, () => createShowcase(CAMPAIGN[0], renderer));
+    const made = withSeed(seed, () => (
+      options.episode
+        ? createEpisodeShowcase(CAMPAIGN[0], renderer, {
+          width: options.width || window.innerWidth,
+          height: options.height || window.innerHeight,
+        })
+        : createShowcase(CAMPAIGN[0], renderer)
+    ));
 
     document.body.classList.add('is-shooting');
 
@@ -1523,6 +1621,9 @@ window.technomagic = {
       stop() {
         shooting = null;
         document.body.classList.remove('is-shooting');
+        canvas.style.width = '';
+        canvas.style.height = '';
+        resize();
         renderer.invalidate();
       },
     };
