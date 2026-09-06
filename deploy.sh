@@ -30,6 +30,10 @@ for arg in "$@"; do
 done
 
 # Что именно отдаётся посетителю. Всё остальное остаётся дома.
+# .githooks/ исключены везде и навсегда: 28 августа список личных слов уже
+# уехал в веб-корень, а сегодня черновой прогон снова показал .githooks в
+# папке проекта — на этот раз без личных данных, но по той же дороге.
+# Правило 25: белый список сверху, а внутри папок — прицельные запреты.
 # data/ здесь НЕТ намеренно. Сборка читает его из репозитория, странице он
 # не нужен ни при загрузке, ни во время работы — проверено поиском по всем
 # доставленным файлам. А на сервере он отдавал наружу `stories.json` с
@@ -169,10 +173,10 @@ echo "== содержимое сайта =="
 if $go; then
   # shellcheck disable=SC2086
   # shellcheck disable=SC2086
-  rsync -avz --omit-dir-times --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
+  rsync -avz --omit-dir-times --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='**/.githooks' --exclude='**/.githooks/**' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
 else
   # shellcheck disable=SC2086
-  rsync -avzn --omit-dir-times --itemize-changes --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
+  rsync -avzn --omit-dir-times --itemize-changes --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='**/.githooks' --exclude='**/.githooks/**' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
   echo
   echo "  (черновой прогон; повторите с --go)"
 fi
