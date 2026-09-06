@@ -329,14 +329,24 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .gw-steps li[data-gw="fix"] b { color: #8ce89a; }
 .gw-note { margin: 11px 0 0; font: 11.5px/1.5 var(--mono); color: var(--muted); }
 
-/* Проступание шагов: включается классом, который ставит скрипт при открытии. */
-.gw-live.igraet .gw-steps li { opacity: 0; animation: gw-vhod .34s ease-out forwards; }
-.gw-live.igraet .gw-steps li:nth-child(1) { animation-delay: .05s }
-.gw-live.igraet .gw-steps li:nth-child(2) { animation-delay: .55s }
-.gw-live.igraet .gw-steps li:nth-child(3) { animation-delay: 1.15s }
-.gw-live.igraet .gw-steps li:nth-child(4) { animation-delay: 1.85s }
-.gw-live.igraet .gw-steps li:nth-child(5) { animation-delay: 2.45s }
-.gw-live.igraet .gw-steps li:nth-child(6) { animation-delay: 3.15s }
+/* Проступание шагов: включается классом, который ставит скрипт при открытии.
+   Задержку ведёт переменная, а не :nth-child — прогонов девять, и шагов у них
+   от трёх до пяти; список правил на каждый номер пришлось бы дописывать
+   руками, и на шестом он бы кончился молча. */
+.gw-live.igraet .gw-run:not([hidden]) .gw-steps li {
+  opacity: 0; animation: gw-vhod .34s ease-out forwards;
+  animation-delay: calc(var(--gw-i, 0) * .6s + .05s);
+}
+/* Уход перед сменой прогона: не мигание, а короткое затухание блока целиком. */
+.gw-live .gw-run.uhodit { animation: gw-uhod .4s ease-in forwards; }
+@keyframes gw-uhod { to { opacity: 0 } }
+.gw-case { margin: 9px 0 0; font: 11px/1.45 var(--mono); color: var(--muted); opacity: .85; }
+/* Кому движение мешает — шаги просто стоят на месте, и смены прогонов нет:
+   человек читает один целиком, а не догоняет уезжающее. */
+@media (prefers-reduced-motion: reduce) {
+  .gw-live.igraet .gw-run:not([hidden]) .gw-steps li { opacity: 1; animation: none; }
+  .gw-live .gw-run.uhodit { animation: none; }
+}
 @keyframes gw-vhod { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) {
   .gw-live.igraet .gw-steps li { opacity: 1; animation: none; }

@@ -674,10 +674,47 @@
     console.warn('[gw] окно шлюза без шагов — разметка не заполнена');
     return;
   }
-  блок.addEventListener('toggle', () => {
-    if (!блок.open) { блок.classList.remove('igraet'); return; }
+  // Сергей 6 сентября: «сейчас один раз проиграло и встало». Теперь прогоны
+  // идут по кругу: доиграл — пять секунд подержали готовый список, затухание,
+  // следующий прогон. Следующий берётся случайно из ОСТАЛЬНЫХ, чтобы один и
+  // тот же не выпадал дважды подряд.
+  const прогоны = [...блок.querySelectorAll('.gw-run')];
+  const тихо = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let текущий = прогоны.findIndex((р) => !р.hidden);
+  if (текущий < 0) текущий = 0;
+  let таймер = null;
+
+  // Номер шага — переменной, а не правилом на каждый номер: шагов у прогонов
+  // от трёх до пяти.
+  for (const р of прогоны) {
+    [...р.querySelectorAll('.gw-steps li')].forEach((li, i) => li.style.setProperty('--gw-i', String(i)));
+  }
+
+  const длительность = (i) => {
+    const n = прогоны[i].querySelectorAll('.gw-steps li').length;
+    return (0.05 + (n - 1) * 0.6 + 0.34) * 1000;
+  };
+
+  const играть = (i) => {
+    прогоны.forEach((р, k) => { р.hidden = k !== i; р.classList.remove('uhodit'); });
     блок.classList.remove('igraet');
-    void блок.offsetWidth;           // перезапуск анимации при повторном открытии
+    void блок.offsetWidth;           // перезапуск анимации
     блок.classList.add('igraet');
+    if (тихо || прогоны.length < 2) return;   // движения не просили — стоим на одном
+    clearTimeout(таймер);
+    таймер = setTimeout(() => {
+      прогоны[i].classList.add('uhodit');
+      таймер = setTimeout(() => {
+        // Следующий — любой, кроме нынешнего.
+        const k = (i + 1 + Math.floor(Math.random() * (прогоны.length - 1))) % прогоны.length;
+        if (блок.open) играть(k);
+      }, 400);
+    }, длительность(i) + 5000);
+  };
+
+  блок.addEventListener('toggle', () => {
+    clearTimeout(таймер);
+    if (!блок.open) { блок.classList.remove('igraet'); return; }
+    играть(текущий);
   });
 })();

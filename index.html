@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — Архитектор AI-продуктов и агентных систем">
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=2d6e0781">
+    <link rel="stylesheet" href="/assets/site.css?v=cb70eb87">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -91,15 +91,86 @@
             </a>
             <details class="gw-live">
               <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
-<ol class="gw-steps">
-                <li data-gw="ok"><b>запрос к модели</b><span>ответ пришёл, 17 мс</span></li>
-                <li data-gw="warn"><b>модель замолчала</b><span>ждём… ждём… ответа нет</span></li>
-                <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
-                <li data-gw="warn"><b>связь оборвалась посреди ответа</b><span>половина текста уже пришла</span></li>
-                <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «поток прерван», закрыл корректно</span></li>
-                <li data-gw="ok"><b>восемь запросов разом</b><span>все 200 · p50 17.2 мс · p95 18.2 мс</span></li>
-              </ol>
-              <p class="gw-note">Запись прогона: молчание модели и обрыв потока, 6 сентября. Шлюз настоящий, обрыв настоящий — поддельный только источник ответа. Модель получила 11 обращений, ни один запрос не завис. Повторяется одной командой из репозитория.</p>
+<div class="gw-runs"><div class="gw-run" data-run="0">
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>обычный чат, приложение ждёт ответа</span></li>
+                  <li data-gw="warn"><b>модель не ответила вовсе</b><span>истекло время ожидания</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
+                  <li data-gw="ok"><b>наружу не ушло ничего лишнего</b><span>ни в ответе, ни в журнале нет подробностей отказа</span></li>
+                </ol>
+                <p class="gw-case">модель замолчала · Медиана 2 мс по 11 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="1" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос с потоковым ответом</b><span>приложение готово читать по кускам</span></li>
+                  <li data-gw="warn"><b>модель прислала негодное событие</b><span>в потоке не то, чего ждут</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>отдал в поток «invalid upstream stream» и закрыл его как положено — «data: [DONE]»</span></li>
+                  <li data-gw="ok"><b>соединение к модели закрыто</b><span>и приватное содержимое чужого события не попало ни в ответ, ни в журнал</span></li>
+                </ol>
+                <p class="gw-case">мусор вместо потока · Медиана 4 мс по 3 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="2" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>поток пошёл</b><span>первая часть текста уже у приложения</span></li>
+                  <li data-gw="warn"><b>связь оборвалась на середине</b><span>остальное не придёт никогда</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «upstream stream interrupted», закрыл поток корректно</span></li>
+                  <li data-gw="ok"><b>приложение получило половину и знает об этом</b><span>секрет из внутренней ошибки наружу не ушёл</span></li>
+                </ol>
+                <p class="gw-case">обрыв посреди ответа · Медиана 6 мс по 3 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="3" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>ответ пришёл быстро</span></li>
+                  <li data-gw="warn"><b>в ответе не разбираемый JSON</b><span>разобрать нечего</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>502 «invalid upstream response» вместо мусора в приложении</span></li>
+                </ol>
+                <p class="gw-case">модель ответила не тем · Медиана 2 мс по 8 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="4" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>соединение живо</span></li>
+                  <li data-gw="warn"><b>модель ответила ошибкой HTTP</b><span>внутри неё написано лишнее</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream error», подробности внутрь ответа не попали</span></li>
+                </ol>
+                <p class="gw-case">модель вернула ошибку · Медиана 2 мс по 8 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="5" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>обычный чат</span></li>
+                  <li data-gw="warn"><b>соединение оборвалось</b><span>разрыв временный, но приложение об этом не знает</span></li>
+                  <li data-gw="fix"><b>шлюз повторил сам</b><span>второй заход прошёл, приложение получило нормальный ответ</span></li>
+                </ol>
+                <p class="gw-case">связь оборвалась и вернулась · Медиана 1005 мс по 4 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="6" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>двенадцать запросов одновременно</b><span>у каждого свой номер</span></li>
+                  <li data-gw="ok"><b>все двенадцать вернулись верными</b><span>ответ каждого пришёл со своим же номером, ничего не перепуталось</span></li>
+                  <li data-gw="ok"><b>модель получила ровно двенадцать обращений</b><span>ни одного лишнего и ни одного потерянного</span></li>
+                  <li data-gw="ok"><b>шлюз остановился штатно</b><span>код возврата 0, ничего не зависло</span></li>
+                </ol>
+                <p class="gw-case">двенадцать запросов разом · Медиана 1443 мс по 3 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="7" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="warn"><b>модель остановлена</b><span>шлюз отвечает 503 «backend not ready», без подробностей</span></li>
+                  <li data-gw="ok"><b>модель поднялась</b><span>готовность вернулась сама</span></li>
+                  <li data-gw="warn"><b>остановлен сам шлюз</b><span>процесса нет</span></li>
+                  <li data-gw="ok"><b>шлюз поднялся</b><span>первый же запрос вернул нормальный ответ</span></li>
+                </ol>
+                <p class="gw-case">перезапустили и модель, и сам шлюз · Медиана 1116 мс по 3 прогонам.</p>
+              </div>
+              <div class="gw-run" data-run="8" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="fix"><b>таймаут</b><span>502 «upstream unavailable»</span></li>
+                  <li data-gw="fix"><b>негодный поток</b><span>502 «invalid upstream stream»</span></li>
+                  <li data-gw="fix"><b>обрыв потока</b><span>200 с пришедшей частью и пометкой «upstream stream interrupted»</span></li>
+                  <li data-gw="ok"><b>восемь запросов разом</b><span>все 200, p95 меньше секунды</span></li>
+                  <li data-gw="ok"><b>модель получила 11 обращений</b><span>ни один запрос не завис</span></li>
+                </ol>
+                <p class="gw-case">стенд отказов целиком · Медиана 161 мс по 3 прогонам. Шлюз настоящий, обрывы настоящие — поддельный только источник ответа.</p>
+              </div></div>
+              <p class="gw-note">9 записей прогонов из журналов, 6 сентября. Шлюз настоящий, отказы настоящие — поддельный только источник ответа. Повторяется одной командой из репозитория.</p>
             </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
@@ -250,10 +321,10 @@
 }
 </style>
 <h2>Живой цех</h2>
-<p class="svezhest">снимок 05:21 · цех работал в эту минуту</p>
-<div class="plitki"><div class="plitka"><b>42%</b><span>Процессор</span></div><div class="plitka"><b>41%</b><span>Видеоядро</span></div><div class="plitka"><b>11 ГБ</b><span>Свободно памяти</span></div><div class="plitka"><b>24 ГБ</b><span>Всего памяти</span></div></div>
-<ol class="zadachi"><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 28</span><span class="skolko">93 событий · идёт 6 мин · mac · running</span></div></li><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 20</span><span class="skolko">11 событий · идёт 6 мин · mac · running</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">1 мин назад</span></div><div class="niz"><span class="chto">задача 29</span><span class="skolko">9 событий · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">Рот</span><span class="kogda">6 мин назад</span></div><div class="niz"><span class="chto">задача 2</span><span class="skolko">3 событий · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">7 мин назад</span></div><div class="niz"><span class="chto">задача 3</span><span class="skolko">4 событий · mac · completed</span></div></li></ol>
-<details class="lenta"><summary>Лента событий — последние 40 из 120</summary><ol><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 29</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li></ol></details>
+<p class="svezhest">снимок 05:34 · цех работал в эту минуту</p>
+<div class="plitki"><div class="plitka"><b>54%</b><span>Процессор</span></div><div class="plitka"><b>23%</b><span>Видеоядро</span></div><div class="plitka"><b>12 ГБ</b><span>Свободно памяти</span></div><div class="plitka"><b>24 ГБ</b><span>Всего памяти</span></div></div>
+<ol class="zadachi"><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 20</span><span class="skolko">16 событий · идёт 7 мин · mac · running</span></div></li><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 30</span><span class="skolko">2 событий · mac · running</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">4 мин назад</span></div><div class="niz"><span class="chto">задача 31</span><span class="skolko">82 событий · идёт 5 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">Рот</span><span class="kogda">6 мин назад</span></div><div class="niz"><span class="chto">задача 2</span><span class="skolko">15 событий · идёт 3 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">6 мин назад</span></div><div class="niz"><span class="chto">задача 3</span><span class="skolko">5 событий · mac · completed</span></div></li></ol>
+<details class="lenta"><summary>Лента событий — последние 40 из 120</summary><ol><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">5 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">6 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">6 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 31</span><span class="kogda">6 мин назад</span></li></ol></details>
 </section>
         </div>
       </section>
@@ -1598,6 +1669,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=ab80a93c" defer></script>
+    <script src="/assets/app.js?v=d72789ef" defer></script>
   </body>
 </html>
