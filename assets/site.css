@@ -556,7 +556,11 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .block-head h2 { margin: 8px 0 10px; font-size: clamp(22px, 2.6vw, 30px); }
 .block-head > p:last-child { color: var(--muted); font-size: 14px; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px; }
+/* min(310px, 100%) вместо 310px: на экране 320 под сетку остаётся 288, и
+   жёсткие 310 выпихивали карточки за край — страницу можно было сдвинуть
+   вбок на 31 пиксель. Нашёл Тестер 6 сентября 2026. На широких экранах
+   ничего не меняется: там 100% больше трёхсот десяти. */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); gap: 14px; }
 
 .card {
   display: flex; flex-direction: column; gap: 10px;
@@ -1484,4 +1488,19 @@ article.gcard .launch { color: var(--dim); }
 @media (max-width: 700px) {
   .masterskaya .mast-panel { padding: 8px; border-radius: 14px; }
   .masterskaya .mast-stamp { margin: 2px 2px 8px; }
+}
+
+/* ═══ Совсем узкие экраны (320 и уже) ═══════════════════════════════════
+   Тестер, 6 сентября 2026: на 320 у главной scrollWidth 351 при clientWidth
+   320 — страницу можно было сдвинуть вбок на 31 пиксель. Виноваты были два
+   места: сетка карточек (починена выше) и кнопки переключателя разделов.
+   Кнопки лежат в flex и по умолчанию не сжимаются ниже своего содержимого,
+   а «Рассказы» со значком в 15 пунктов туда не влезают втроём.
+   Крупные цели на телефоне трогать нельзя — их выбрали после того, как
+   живой человек не нашёл переход к играм, — поэтому высота и ширина в треть
+   остаются, а уходит только значок: подпись человек читает, значок узнаёт.  */
+@media (max-width: 359px) {
+  .track-switch button { min-width: 0; padding: 12px 6px; font-size: 13px; gap: 0; }
+  .track-switch button svg { display: none; }
+  .topbar { padding: 12px 12px; }
 }
