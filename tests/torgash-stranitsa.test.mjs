@@ -17,7 +17,10 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const корень = join(dirname(fileURLToPath(import.meta.url)), '..');
-const папка = join(корень, 'torgash');
+// Имя папки со случайным хвостом: адрес без ссылки с витрины, хвост снимает
+// обход по словарю. Те же имена стоят в deploy.sh, verify.sh, .gitignore и в
+// tools/obnovit-torgash.sh — при переезде правятся вместе.
+const папка = join(корень, 'torgash-gnjeev4lb7');
 const естьПапка = existsSync(папка);
 
 // Чистая проверка — чтобы её можно было завалить нарочно.
@@ -34,7 +37,7 @@ export const беды = (файлы, html) => {
   return б;
 };
 
-test('страница теста не тащит наружу лишнего', { skip: !естьПапка && 'папки torgash нет' }, () => {
+test('страница теста не тащит наружу лишнего', { skip: !естьПапка && 'папки страницы теста нет' }, () => {
   const файлы = readdirSync(папка);
   const html = readFileSync(join(папка, 'index.html'), 'utf8');
   assert.ok(html.length > 1000, `страница подозрительно короткая: ${html.length}`);

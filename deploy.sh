@@ -61,7 +61,7 @@ qa-quest
 psy-admin
 photodata
 way
-torgash
+torgash-gnjeev4lb7
 "
 
 echo "== сборка =="
