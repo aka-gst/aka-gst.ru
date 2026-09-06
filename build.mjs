@@ -665,7 +665,7 @@ const practicumSwitch = `
           <article class="quequest-card" aria-labelledby="quequest-title">
             <div class="quequest-stage">
               <a class="quequest-visual" id="quequest-visual" href="/qa-quest/" data-quequest-play data-umami-event="project-open" data-umami-event-project="qa-quest" aria-label="Открыть игру QueQuest">
-                <img class="quequest-poster" loading="lazy" src="/assets/shots/quequest-automation.jpg?v=${assetVersion('assets/shots/quequest-automation.jpg')}" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
+                <img class="quequest-poster" loading="lazy" src="/assets/shots/quequest-automation.jpg?v=${assetVersion('assets/shots/quequest-automation.jpg')}" alt="Герой QueQuest внутри защиты компьютера окружён вирусами" width="1280" height="720" decoding="async">
                 <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=${assetVersion('assets/clips/clip-quequest-manual-to-ai.webm')}" aria-hidden="true"></video>
               </a>
               <button class="quequest-play-btn" type="button" data-quequest-play-for="quequest-visual">Показать переход <b aria-hidden="true">→</b></button>
@@ -673,7 +673,7 @@ const practicumSwitch = `
             <div class="quequest-copy">
               <div class="quequest-left">
                 <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
-                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+                <p class="tagline">Вирусы лезут в компьютер, а ты оказываешься внутри защиты. Потом возвращаешь способности через настоящий Python и передаёшь машине только разрешённую работу.</p>
               </div>
               <h3 id="quequest-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QueQuest</a></h3>
               <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть игру <b aria-hidden="true">↗</b></a>
