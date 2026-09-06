@@ -1,0 +1,21 @@
+{
+  "kogda": "2026-09-06T21:47",
+  "chem": "Vision VNDetectFaceRectanglesRequest, кадр раз в 0.5 с",
+  "petli": [
+    {"petlya": "clip-acid.mp4", "sha256": "750a39b94d94c20d", "kadrov": 11, "lic": 0},
+    {"petlya": "clip-coin.mp4", "sha256": "472fb9a0984b1ec1", "kadrov": 7, "lic": 0},
+    {"petlya": "clip-hotline-abakan.mp4", "sha256": "883ca21374f2ade8", "kadrov": 5, "lic": 0},
+    {"petlya": "clip-lines.mp4", "sha256": "4988e50937d25cf4", "kadrov": 5, "lic": 0},
+    {"petlya": "clip-neon-claw.mp4", "sha256": "692d78cefbf7dc0f", "kadrov": 11, "lic": 0},
+    {"petlya": "clip-photodata.mp4", "sha256": "6df41534523b65ee", "kadrov": 8, "lic": 0},
+    {"petlya": "clip-psy-admin.mp4", "sha256": "cc3cdb8a31eae53c", "kadrov": 14, "lic": 0},
+    {"petlya": "clip-puzzle-quest.mp4", "sha256": "04715904e2d99b0d", "kadrov": 13, "lic": 0},
+    {"petlya": "clip-qa-quest.mp4", "sha256": "bc658d0d5530e96a", "kadrov": 15, "lic": 0},
+    {"petlya": "clip-quequest-manual-to-ai.webm", "sha256": "8a8d710ef70942a8", "kadrov": 19, "lic": 0},
+    {"petlya": "clip-stealth.mp4", "sha256": "98b1260b7b03d79a", "kadrov": 12, "lic": 0},
+    {"petlya": "clip-stihii.mp4", "sha256": "cc386126a0dec146", "kadrov": 7, "lic": 0},
+    {"petlya": "clip-technomagic.mp4", "sha256": "92abe000ef1d9a03", "kadrov": 11, "lic": 0},
+    {"petlya": "clip-tetcolor.mp4", "sha256": "9e3cf75687f894f7", "kadrov": 16, "lic": 0},
+    {"petlya": "clip-worm.mp4", "sha256": "4b587cf1cad5b210", "kadrov": 6, "lic": 0}
+  ]
+}
