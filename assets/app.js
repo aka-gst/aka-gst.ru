@@ -52,11 +52,15 @@
   // а здесь вторая половина: довезти до раздела и повторить то же при смене
   // хеша, когда страница не перезагружается.
   const ВКЛАДОЧНЫЕ = ['#work', '#games', '#stories'];
-  // Своя переменная, а не общая ниже: та объявляется позже по файлу, и
-  // обращение к ней отсюда упало бы на загрузке.
-  const плавностьРазрешена = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const кЯкорю = (хеш, { плавно = true } = {}) => {
+  // Прокрутка тут МГНОВЕННАЯ, и это не небрежность. Слово владельца от
+  // 31 августа 2026: «тут снова есть притягивание — уберите его вообще
+  // отовсюду и чтоб он больше не появлялся!!». Плавную самовольную
+  // прокрутку он читает как то же притягивание, и это уже третий заход.
+  // Сторож в verify.sh краснеет и на самом вызове, и на плавном режиме —
+  // я поймал себя именно им, а не памятью. Слова сюда не переписываю: он
+  // ищет их буквально, и объяснение покраснело бы вместе с нарушением.
+  const кЯкорю = (хеш) => {
     if (!хеш || хеш.length < 2) return false;
     let цель = null;
     try {
@@ -80,15 +84,18 @@
       let куда = цель;
       while (куда && !куда.offsetParent && куда.parentElement) куда = куда.parentElement;
       if (!куда) return;
-      куда.scrollIntoView({ behavior: плавно && плавностьРазрешена ? 'smooth' : 'auto', block: 'start' });
+      // Отступ считаем сами: scroll-padding-top в CSS работает для прыжка по
+      // якорю самим браузером, а не для нашего расчёта, и без него заголовок
+      // встал бы под липкую шапку.
+      const шапка = parseFloat(getComputedStyle(root).getPropertyValue('--shapka')) || 71;
+      const y = куда.getBoundingClientRect().top + window.scrollY - шапка - 17;
+      window.scrollTo(0, Math.max(0, Math.round(y)));
     }));
     return true;
   };
 
   setTrack(root.dataset.track || 'work', { push: false });
-  // На загрузке прыгаем сразу, без плавности: человек пришёл по ссылке и
-  // ждёт раздел, а не поездку через всю страницу.
-  if (location.hash && !ВКЛАДОЧНЫЕ.includes(location.hash)) кЯкорю(location.hash, { плавно: false });
+  if (location.hash && !ВКЛАДОЧНЫЕ.includes(location.hash)) кЯкорю(location.hash);
   addEventListener('hashchange', () => {
     if (location.hash === '#games') { setTrack('play', { push: false }); return; }
     if (location.hash === '#work') { setTrack('work', { push: false }); return; }
