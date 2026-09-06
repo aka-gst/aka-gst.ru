@@ -12,6 +12,7 @@ export const AUTOFIRE_FIRST_SHOT = 0.35;
 export const AUTOFIRE_INTERVAL = 0.36;
 export const PROLOGUE_TIMEOUT = 8.4;
 export const WAREHOUSE_INTRO_DURATION = 5.2;
+export const CHIP_INSERT_DURATION = 1.05;
 export const WAKE_REVEAL_DURATION = 2.6;
 export const OTHER_MIND_AWAKE_HOLD_DURATION = 1.5;
 export const REWARD_REVEAL_DURATION = 1.8;
@@ -31,18 +32,19 @@ export const CRATE_LAYOUT = Object.freeze([
   { id: 'box-01', kind: 'normal', x: 265, y: 560, status: 'source' },
   { id: 'box-02', kind: 'normal', x: 205, y: 630, status: 'source' },
   { id: 'box-03', kind: 'normal', x: 325, y: 650, status: 'source' },
-  { id: 'box-04', kind: 'normal', x: 720, y: 525, status: 'queued' },
-  { id: 'box-05', kind: 'normal', x: 780, y: 525, status: 'queued' },
-  { id: 'box-06', kind: 'normal', x: 720, y: 585, status: 'queued' },
-  { id: 'box-07', kind: 'normal', x: 780, y: 585, status: 'queued' },
-  { id: 'box-08', kind: 'normal', x: 720, y: 645, status: 'queued' },
-  { id: 'box-09', kind: 'normal', x: 780, y: 645, status: 'queued' },
+  { id: 'box-04', kind: 'normal', x: 120, y: 500, status: 'queued' },
+  { id: 'box-05', kind: 'normal', x: 190, y: 500, status: 'queued' },
+  { id: 'box-06', kind: 'normal', x: 260, y: 485, status: 'queued' },
+  { id: 'box-07', kind: 'normal', x: 330, y: 500, status: 'queued' },
+  { id: 'box-08', kind: 'normal', x: 110, y: 580, status: 'queued' },
+  { id: 'box-09', kind: 'normal', x: 120, y: 665, status: 'queued' },
   { id: 'red-01', kind: 'red', x: 25, y: 585, status: 'hidden' },
 ]);
 
 export const CHECKPOINTS = Object.freeze([
   'start',
   'warehouse',
+  'chip',
   'machine',
   'red-crate',
   'reward',

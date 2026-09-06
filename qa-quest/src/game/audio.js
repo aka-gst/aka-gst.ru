@@ -6,6 +6,7 @@ export const SOUND_RECIPES = Object.freeze({
   collapse: Object.freeze({ frequency: 74, end: 27, duration: .72, gain: .14, type: 'sawtooth' }),
   pickup: Object.freeze({ frequency: 290, end: 360, duration: .07, gain: .035, type: 'triangle' }),
   drop: Object.freeze({ frequency: 130, end: 82, duration: .12, gain: .05, type: 'square' }),
+  cash: Object.freeze({ frequency: 1046, end: 1568, duration: .32, gain: .115, type: 'sine' }),
   wake: Object.freeze({ frequency: 210, end: 520, duration: .28, gain: .055, type: 'sine' }),
   arm: Object.freeze({ frequency: 118, end: 154, duration: .18, gain: .045, type: 'triangle' }),
   blocked: Object.freeze({ frequency: 96, end: 96, duration: .35, gain: .09, type: 'square' }),

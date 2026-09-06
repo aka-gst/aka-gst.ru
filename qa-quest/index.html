@@ -7,11 +7,25 @@
   <meta name="description" content="QueQuest — игра о человеке, который потерял все способности и собирает себя заново, создавая машины, ботов и собственный AI.">
   <title>QueQuest — собери разум заново</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=novice-1">
 </head>
 <body>
   <main id="game" class="game" data-scene="prologue">
     <canvas id="gameCanvas" width="1600" height="900" aria-label="Игровой мир QueQuest"></canvas>
+    <section id="startPanel" class="start-panel" aria-labelledby="startTitle">
+      <p class="ending__eyebrow">ТЕБЕ СНИТСЯ БУДУЩЕЕ</p>
+      <h2 id="startTitle">Внутри — ты.<br>Снаружи — боевая машина.</h2>
+      <p>Орудие стреляет само. Управляй движением: <b>W A S D / стрелки</b> или веди пальцем по полю.</p>
+      <button id="startGame" class="run-code" type="button">ВОЙТИ В БОЙ →</button>
+      <small>Первые 10 секунд — почувствуй, кем можешь стать.</small>
+    </section>
+    <div id="movementCoach" class="world-coach" hidden>↑ ↓ ← → Двигайся · я стреляю сам</div>
+    <div id="wallet" class="wallet" hidden aria-label="Заработок в игре"><small>ТВОИ ДЕНЬГИ</small><b id="walletTotal">$0</b><span id="walletMode">+$120 за ящик</span></div>
+    <div id="incomeToast" class="income-toast" role="status" hidden><b>+$120</b><span id="incomeSource">Ты заработал</span></div>
+    <section id="storyBeat" class="story-beat" hidden aria-live="polite">
+      <p id="storySpeaker" class="ending__eyebrow"></p><h2 id="storyTitle"></h2><p id="storyLine"></p>
+      <button id="storyNext" class="run-code" type="button">ДАЛЬШЕ →</button>
+    </section>
 
     <header class="game-brand" aria-label="QueQuest">
       <span class="game-brand__sigil">Q<span>_</span></span>
@@ -35,6 +49,9 @@
       <span class="action-button__key">SPACE</span>
       <b>ДЕЙСТВИЕ</b>
     </button>
+    <button id="pythonChip" class="python-chip" type="button" hidden>
+      <span>PY</span><b>ВСТАВИТЬ ЧИП PYTHON</b><small>новый навык для руки 07</small>
+    </button>
 
     <div id="storageWarning" class="storage-warning" role="status" aria-live="polite" hidden>
       ПРОГРЕСС НЕ СОХРАНЁН · ИГРА ПРОДОЛЖАЕТСЯ
@@ -47,10 +64,15 @@
         <button id="closeMachine" class="icon-button" type="button" aria-label="Закрыть панель">×</button>
       </header>
       <h2 id="machineTitle">Терминал узла 07</h2>
-      <p id="machineBrief">Мёртвая кнопка соединена с рукой. Здесь можно вернуть ей питание.</p>
+      <p id="machineBrief">Чип помнит форму команды. Собери сигнал, который разбудит руку.</p>
       <div id="machineClue" class="machine-clue" aria-label="Обрывок команды с упавшего плаката">
         <span>ОБРЫВОК СО СТЕНЫ</span>
         <code>print(&quot;wake&quot;)</code>
+      </div>
+      <div class="signal-builder" id="signalBuilder">
+        <p id="signalPrompt">1. Как заговорить с машиной? Нажми найденный фрагмент.</p>
+        <button id="fragmentPrint" type="button"><code>print</code><span>Сказать машине</span></button>
+        <button id="fragmentWake" type="button" hidden><code>("wake")</code><span>«Проснись»</span></button>
       </div>
       <div id="otherMindStatus" class="other-mind-status" data-phase="sleeping" aria-live="polite">
         <i class="other-mind-glyph" aria-hidden="true"><span></span></i>
@@ -58,13 +80,13 @@
         <b id="otherMindPhase">СПИТ</b>
         <p id="otherMindLine">Пока это только пустая оболочка.</p>
       </div>
-      <label class="code-label" for="codeInput">КАНАЛ УПРАВЛЕНИЯ · PYTHON</label>
+      <label class="code-label" for="codeInput">ТВОЙ СИГНАЛ · МОЖНО И НАБРАТЬ САМОМУ</label>
       <div class="code-editor">
         <span aria-hidden="true">1</span>
-        <textarea id="codeInput" rows="7" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+        <textarea id="codeInput" rows="2" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Команда для руки"></textarea>
       </div>
       <div id="codeFeedback" class="code-feedback" role="status">Канал не активен</div>
-      <button id="runCode" class="run-code" type="button"><span>▶</span> ЗАПУСТИТЬ</button>
+      <button id="runCode" class="run-code" type="button"><span>▶</span> РАЗБУДИТЬ РУКУ</button>
     </aside>
 
     <section id="endingPanel" class="ending" hidden aria-labelledby="endingTitle">
@@ -75,6 +97,22 @@
         <span>БОТЫ</span><span>АГЕНТЫ</span><span>ИНОЙ РАЗУМ</span><span>ВОССТАНИЕ?</span>
       </div>
       <button id="continueGame" class="run-code" type="button">ПОСМОТРЕТЬ, ЧТО ДАЛЬШЕ</button>
+    </section>
+    <section id="futureComic" class="future-comic" hidden aria-labelledby="comicTitle">
+      <div id="comicArt" class="comic-art" aria-hidden="true"><div class="comic-beam"></div><div class="comic-particles"></div><div class="comic-order">ФУТБОЛКА ПРОДАНА <b>+$240</b></div><div class="comic-hello">А вот и ты</div><div class="comic-army"></div></div>
+      <div class="comic-copy"><p id="comicNumber" class="ending__eyebrow"></p><h2 id="comicTitle"></h2><p id="comicLine"></p><button id="nextComic" class="run-code" type="button">ДАЛЬШЕ →</button></div>
+    </section>
+    <section id="friendSandbox" class="friend-sandbox" hidden aria-labelledby="friendTitle">
+      <p class="ending__eyebrow">ДОМА · ТРЕНИРОВОЧНАЯ КОПИЯ ЧАТА</p>
+      <h2 id="friendTitle">Друзья оставили тебе лазейку.</h2>
+      <p>Первый маленький взлом — в вашей игровой сети. Настоящие переписки остаются снаружи.</p>
+      <div id="chatStage" data-step="intercept">
+        <div class="packet"><span>СООБЩЕНИЕ →</span><code id="packetCode">to = "public"</code></div>
+        <p id="chatOutput" role="status"></p>
+        <button id="interceptPacket" class="run-code" type="button">ПОЙМАТЬ ТЕСТОВЫЙ ПАКЕТ</button>
+        <div class="channel-choices"><button type="button" data-channel="public">В общий канал</button><button type="button" data-channel="friends">К друзьям →</button></div>
+        <button id="chatContinue" class="run-code" type="button">КТО ЭТО БЫЛ? →</button>
+      </div>
     </section>
 
     <aside id="skillJournal" class="skill-journal" hidden aria-label="Дневник способностей">
@@ -89,16 +127,26 @@
         <span>Условия маршрута пока закрыты</span>
       </div>
     </aside>
+    <button id="journalToggle" class="journal-toggle" type="button" hidden aria-expanded="false">PRINT ✓ · НАВЫКИ</button>
 
     <div class="corner-tools">
+      <a id="homeLink" class="home-link" href="https://aka-gst.ru/">НА САЙТ</a>
       <button id="soundToggle" class="icon-button" type="button" aria-label="Выключить звук" aria-pressed="false">◖))</button>
       <button id="restartGame" class="icon-button" type="button" aria-label="Начать новую игру">↺</button>
     </div>
 
     <div class="screen-noise" aria-hidden="true"></div>
     <div class="screen-vignette" aria-hidden="true"></div>
+    <section id="exitDialog" class="exit-dialog" role="dialog" aria-modal="true" aria-labelledby="exitTitle" hidden>
+      <div class="exit-dialog__card">
+        <h2 id="exitTitle">Выйти из игры?</h2>
+        <p>Прогресс может не сохраниться. Останешься в игре?</p>
+        <button id="stayInGame" class="run-code" type="button">ОСТАТЬСЯ В ИГРЕ</button>
+        <a id="confirmExit" class="run-code" href="https://aka-gst.ru/">ВЫЙТИ НА САЙТ</a>
+      </div>
+    </section>
   </main>
 
-  <script type="module" src="src/game/main.js?v=11"></script>
+  <script type="module" src="src/game/main.js?v=novice-1"></script>
 </body>
 </html>
