@@ -634,9 +634,11 @@ const practicumSwitch = `
               <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
             </button>
             <div class="quequest-copy">
-              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
+              <div class="quequest-left">
+                <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
+                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+              </div>
               <h3 id="quequest-title">QueQuest</h3>
-              <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
             </div>
           </article>
           <div class="practicum-more">
@@ -731,6 +733,15 @@ const workLead = `
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
           </div>
           <div class="work-col work-col--dharma">
+          <div class="work-put">
+            <p class="kicker">Путь</p>
+            <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
+            <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
+            <p class="work-put-links">
+              <a class="work-put-alt" href="/put/">та же история текстом →</a>
+              <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
+            </p>
+          </div>
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
@@ -744,15 +755,6 @@ const workLead = `
             <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Другой ведёт покупателя к заказу.</p>
-          <div class="work-put">
-            <p class="kicker">Путь</p>
-            <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
-            <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
-            <p class="work-put-links">
-              <a class="work-put-alt" href="/put/">та же история текстом →</a>
-              <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
-            </p>
-          </div>
           </div>
         </div>
       </section>`;
@@ -1202,7 +1204,35 @@ ${socialLinks('footer')}
 </html>
 `;
 
-writeFileSync(join(root, 'index.html'), html);
+// ── Точка в конце коротких строк ─────────────────────────────────────
+// Сергей 6 сентября 2026: «точки в конце предложения убери — ты знаешь, что
+// я это не люблю везде; в Dharma вижу точку в конце, в Gateway вижу точку в
+// конце». Слово «везде» здесь главное: это не про две карточки.
+//
+// Сделано проходом по готовой странице, а не правкой каждой строки руками:
+// текстов на карточках десятки, их правят разные сессии, и следующая правка
+// вернула бы точку молча. Список классов прицельный — только то, что человек
+// читает как подпись; абзацы страниц и рассказы не задеты. Точки МЕЖДУ
+// предложениями внутри строки остаются, снимается последняя. Вопросительный
+// и восклицательный знаки не трогаются: правило про точку.
+const БЕЗ_ТОЧКИ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'work-put-sub',
+  'gw-case', 'gw-note', 'mast-stamp', 'kicker', 'job-role', 'shot-caption'];
+const снятьТочки = (страница) => {
+  let снято = 0;
+  const итог = страница.replace(
+    new RegExp(`(<(\\w+)[^>]*class="[^"]*\\b(?:${БЕЗ_ТОЧКИ.join('|')})\\b[^"]*"[^>]*>)([^<]*?)\\.(</\\2>)`, 'g'),
+    (всё, начало, тег, текст, конец) => {
+      // «…» и сокращения вида «т. д.» не трогаем: снимаем точку только после
+      // буквы или цифры и только когда перед ней не точка.
+      if (/[.\s]$/.test(текст) || !/[\wа-яё\d)»]$/i.test(текст)) return всё;
+      снято += 1;
+      return начало + текст + конец;
+    });
+  if (снято) console.log(`  точек в конце снято: ${снято}`);
+  return итог;
+};
+
+writeFileSync(join(root, 'index.html'), снятьТочки(html));
 
 // ── Индекс раздела практикумов ───────────────────────────────────────
 // Редирект /praktikum вёл в пустоту, пока этой страницы не было.

@@ -304,9 +304,15 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
    оставался пустым, тогда как справа его добирал блок комикса.
    Теперь остаток забирает тот, кто в колонке один: слева — карточка шлюза
    (у неё внутри строка 1fr, растёт кадр отчёта), справа — блок комикса. */
+/* Порядок в правой колонке задан Сергеем 6 сентября: сверху комикс — на
+   уровне Gateway, — под ним Dharma. И обе стрелочные подписи должны стоять
+   в одну линию: для этого подпись у обеих колонок последняя, а излишек
+   высоты забирает то, что стоит выше неё. Слева это карточка шлюза, справа
+   блок комикса. */
 .work-col--gateway > .work-system { flex: 1 1 auto; }
 .work-col--dharma > .work-system { flex: 0 0 auto; }
 .work-col > .work-put { flex: 1 1 auto; }
+.work-col > .work-duet-note { flex: 0 0 auto; margin-top: auto; }
 /* Подпись теперь у каждой карточки своя, со стрелкой вверх — к ней.
    Третьего предложения («две разные рабочие системы, а не концепты») нет:
    его слова — «уже можно открыть исходный код и пройти по сайту». */
@@ -1558,11 +1564,16 @@ article.gcard .launch { color: var(--dim); }
    взят из Аниматеки, где он и записан. Содержимое при этом не трогаем
    вовсе, иначе внутренние карточки пересчитывали бы раскладку каждый кадр. */
 .practicum-more { display: grid; gap: 12px; }
+/* Вдвое ниже по слову Сергея: «я же просил». Была 44 точки — стала 22.
+   Но 22 точки под пальцем не нажать, а смотрел он с десктопа. Поэтому вдвое
+   ниже там, где ведут мышью, и пальцевый размер там, где ведут пальцем.
+   Разница названа вслух в отчёте: если он захочет 22 и на телефоне — одна
+   правка. */
 .practicum-more-btn {
   justify-self: start; display: inline-flex; align-items: center; gap: 8px;
   min-height: 44px; padding: 11px 16px; border: 1px solid var(--line);
   border-radius: 10px; background: var(--panel); color: var(--text);
-  font: 600 14px/1.2 var(--sans); cursor: pointer;
+  font: 600 13px/1.2 var(--sans); cursor: pointer;
   transition: background .15s ease, border-color .15s ease;
 }
 .practicum-more-btn:hover { background: var(--card-hover); border-color: var(--accent); }
@@ -1593,3 +1604,31 @@ article.gcard .launch { color: var(--dim); }
 }
 .work-gateway-proof span.gw-journey b { white-space: nowrap; }
 .work-gateway-proof:hover .gw-journey, .work-gateway-proof:focus-visible .gw-journey { opacity: 1; border-color: #65e5b5; box-shadow: 0 0 18px #46dca34d; }
+
+/* ═══ Подложка карточки QueQuest ════════════════════════════════════════
+   Сергей 6 сентября: «поле с названием пустоватое: QueQuest большим справа
+   снизу, а „Игра · Python“ и описание про ящики — с левой стороны».
+   Две колонки: слева знак, кикер и фраза про ящики; справа внизу — имя,
+   крупно. Имя прижато к нижней кромке, поэтому пустота уходит вверх, где
+   её держит текст, а не остаётся дырой под названием.                     */
+@media (min-width: 761px) {
+  .quequest-copy {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end; gap: 16px 24px;
+  }
+  .quequest-left { display: grid; align-content: center; gap: 8px; min-width: 0; }
+  .quequest-copy h3 {
+    margin: 0; align-self: end; text-align: right;
+    font-size: clamp(30px, 3.4vw, 52px); line-height: .95; letter-spacing: -.01em;
+  }
+}
+/* На телефоне колонок нет: имя над текстом, как и было. */
+@media (max-width: 760px) {
+  .quequest-left { display: grid; gap: 8px; }
+  .quequest-copy h3 { margin: 8px 0 0; }
+}
+
+/* Мышь целится точнее пальца — здесь кнопка вдвое ниже, как и просил Сергей. */
+@media (pointer: fine) {
+  .practicum-more-btn { min-height: 22px; padding: 3px 12px; font-size: 12px; }
+}

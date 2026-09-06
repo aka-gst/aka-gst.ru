@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — Архитектор AI-продуктов и агентных систем">
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=745cf11e">
+    <link rel="stylesheet" href="/assets/site.css?v=28da6ea1">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -98,7 +98,7 @@
                   <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
                   <li data-gw="ok"><b>наружу не ушло ничего лишнего</b><span>ни в ответе, ни в журнале нет подробностей отказа</span></li>
                 </ol>
-                <p class="gw-case">модель замолчала · Медиана 2 мс по 11 прогонам.</p>
+                <p class="gw-case">модель замолчала · Медиана 2 мс по 11 прогонам</p>
               </div>
               <div class="gw-run" data-run="1" hidden>
                 <ol class="gw-steps">
@@ -107,7 +107,7 @@
                   <li data-gw="fix"><b>шлюз вмешался</b><span>отдал в поток «invalid upstream stream» и закрыл его как положено — «data: [DONE]»</span></li>
                   <li data-gw="ok"><b>соединение к модели закрыто</b><span>и приватное содержимое чужого события не попало ни в ответ, ни в журнал</span></li>
                 </ol>
-                <p class="gw-case">мусор вместо потока · Медиана 4 мс по 3 прогонам.</p>
+                <p class="gw-case">мусор вместо потока · Медиана 4 мс по 3 прогонам</p>
               </div>
               <div class="gw-run" data-run="2" hidden>
                 <ol class="gw-steps">
@@ -116,7 +116,7 @@
                   <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «upstream stream interrupted», закрыл поток корректно</span></li>
                   <li data-gw="ok"><b>приложение получило половину и знает об этом</b><span>секрет из внутренней ошибки наружу не ушёл</span></li>
                 </ol>
-                <p class="gw-case">обрыв посреди ответа · Медиана 6 мс по 3 прогонам.</p>
+                <p class="gw-case">обрыв посреди ответа · Медиана 6 мс по 3 прогонам</p>
               </div>
               <div class="gw-run" data-run="3" hidden>
                 <ol class="gw-steps">
@@ -124,7 +124,7 @@
                   <li data-gw="warn"><b>в ответе не разбираемый JSON</b><span>разобрать нечего</span></li>
                   <li data-gw="fix"><b>шлюз вмешался</b><span>502 «invalid upstream response» вместо мусора в приложении</span></li>
                 </ol>
-                <p class="gw-case">модель ответила не тем · Медиана 2 мс по 8 прогонам.</p>
+                <p class="gw-case">модель ответила не тем · Медиана 2 мс по 8 прогонам</p>
               </div>
               <div class="gw-run" data-run="4" hidden>
                 <ol class="gw-steps">
@@ -132,7 +132,7 @@
                   <li data-gw="warn"><b>модель ответила ошибкой HTTP</b><span>внутри неё написано лишнее</span></li>
                   <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream error», подробности внутрь ответа не попали</span></li>
                 </ol>
-                <p class="gw-case">модель вернула ошибку · Медиана 2 мс по 8 прогонам.</p>
+                <p class="gw-case">модель вернула ошибку · Медиана 2 мс по 8 прогонам</p>
               </div>
               <div class="gw-run" data-run="5" hidden>
                 <ol class="gw-steps">
@@ -140,7 +140,7 @@
                   <li data-gw="warn"><b>соединение оборвалось</b><span>разрыв временный, но приложение об этом не знает</span></li>
                   <li data-gw="fix"><b>шлюз повторил сам</b><span>второй заход прошёл, приложение получило нормальный ответ</span></li>
                 </ol>
-                <p class="gw-case">связь оборвалась и вернулась · Медиана 1005 мс по 4 прогонам.</p>
+                <p class="gw-case">связь оборвалась и вернулась · Медиана 1005 мс по 4 прогонам</p>
               </div>
               <div class="gw-run" data-run="6" hidden>
                 <ol class="gw-steps">
@@ -149,7 +149,7 @@
                   <li data-gw="ok"><b>модель получила ровно двенадцать обращений</b><span>ни одного лишнего и ни одного потерянного</span></li>
                   <li data-gw="ok"><b>шлюз остановился штатно</b><span>код возврата 0, ничего не зависло</span></li>
                 </ol>
-                <p class="gw-case">двенадцать запросов разом · Медиана 1443 мс по 3 прогонам.</p>
+                <p class="gw-case">двенадцать запросов разом · Медиана 1443 мс по 3 прогонам</p>
               </div>
               <div class="gw-run" data-run="7" hidden>
                 <ol class="gw-steps">
@@ -158,7 +158,7 @@
                   <li data-gw="warn"><b>остановлен сам шлюз</b><span>процесса нет</span></li>
                   <li data-gw="ok"><b>шлюз поднялся</b><span>первый же запрос вернул нормальный ответ</span></li>
                 </ol>
-                <p class="gw-case">перезапустили и модель, и сам шлюз · Медиана 1116 мс по 3 прогонам.</p>
+                <p class="gw-case">перезапустили и модель, и сам шлюз · Медиана 1116 мс по 3 прогонам</p>
               </div>
               <div class="gw-run" data-run="8" hidden>
                 <ol class="gw-steps">
@@ -168,15 +168,24 @@
                   <li data-gw="ok"><b>восемь запросов разом</b><span>все 200, p95 меньше секунды</span></li>
                   <li data-gw="ok"><b>модель получила 11 обращений</b><span>ни один запрос не завис</span></li>
                 </ol>
-                <p class="gw-case">стенд отказов целиком · Медиана 161 мс по 3 прогонам. Шлюз настоящий, обрывы настоящие — поддельный только источник ответа.</p>
+                <p class="gw-case">стенд отказов целиком · Медиана 161 мс по 3 прогонам. Шлюз настоящий, обрывы настоящие — поддельный только источник ответа</p>
               </div></div>
-              <p class="gw-note">9 записей из журналов, прогон 04.09 в 01:46. Шлюз настоящий, отказы настоящие — поддельный только источник ответа. Повторяется одной командой из репозитория.</p>
+              <p class="gw-note">9 записей из журналов, прогон 04.09 в 01:46. Шлюз настоящий, отказы настоящие — поддельный только источник ответа. Повторяется одной командой из репозитория</p>
             </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
           </div>
           <div class="work-col work-col--dharma">
+          <div class="work-put">
+            <p class="kicker">Путь</p>
+            <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
+            <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню</p>
+            <p class="work-put-links">
+              <a class="work-put-alt" href="/put/">та же история текстом →</a>
+              <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
+            </p>
+          </div>
           <a class="work-system work-dharma" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">
             <div class="work-dharma-shot">
               <img src="/assets/shots/anigma.jpg?v=c7d10c9b" alt="Первый экран магазина ANIGMA: коллекция AFTERIMAGE PROTOCOL и артворк OBSERVER_01" width="1200" height="750" decoding="async">
@@ -190,15 +199,6 @@
             <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Другой ведёт покупателя к заказу.</p>
-          <div class="work-put">
-            <p class="kicker">Путь</p>
-            <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
-            <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
-            <p class="work-put-links">
-              <a class="work-put-alt" href="/put/">та же история текстом →</a>
-              <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
-            </p>
-          </div>
           </div>
         </div>
       </section>
@@ -217,9 +217,11 @@
               <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
             </button>
             <div class="quequest-copy">
-              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=efbcb86e" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
+              <div class="quequest-left">
+                <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=efbcb86e" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
+                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+              </div>
               <h3 id="quequest-title">QueQuest</h3>
-              <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
             </div>
           </article>
           <div class="practicum-more">
@@ -236,7 +238,7 @@
                 <span class="status status-published">v3</span>
               </div>
               <h3><a class="card-title" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></h3>
-              <p class="tagline">Поднимаешь локальную модель, подключаешь к приложению и проверяешь ответ, границы, устойчивость и приватность.</p>
+              <p class="tagline">Поднимаешь локальную модель, подключаешь к приложению и проверяешь ответ, границы, устойчивость и приватность</p>
               <ul class="chips"><li><b>19</b> <span>разделов</span></li><li><b>16</b> <span>экспериментов</span></li><li><b>~82 мин</b> <span>чтения</span></li></ul>
               <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
             </div>
@@ -250,7 +252,7 @@
                 <span class="status status-live">открыт</span>
               </div>
               <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
-              <p class="tagline">Собираешь агента с памятью и инструментами, а потом ловишь его ошибки: схема ответа, allowlist и источники.</p>
+              <p class="tagline">Собираешь агента с памятью и инструментами, а потом ловишь его ошибки: схема ответа, allowlist и источники</p>
               <ul class="chips"><li><b>16</b> <span>разделов</span></li><li><b>10</b> <span>лабораторных</span></li><li><b>~51 мин</b> <span>чтения</span></li></ul><ul class="chips"><li><b>76</b> <span>автотестов</span></li><li><b>6/6</b> <span>evaluation</span></li><li><b>100%</b> <span>retrieval hit</span></li></ul>
               <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
             </div>
@@ -321,10 +323,10 @@
 }
 </style>
 <h2>Живой цех</h2>
-<p class="svezhest">снимок 05:44 · цех работал в эту минуту</p>
-<div class="plitki"><div class="plitka"><b>86%</b><span>Процессор</span></div><div class="plitka"><b>48%</b><span>Видеоядро</span></div><div class="plitka"><b>10 ГБ</b><span>Свободно памяти</span></div><div class="plitka"><b>24 ГБ</b><span>Всего памяти</span></div></div>
-<ol class="zadachi"><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 32</span><span class="skolko">2 событий · mac · running</span></div></li><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 20</span><span class="skolko">30 событий · идёт 17 мин · mac · running</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">9 мин назад</span></div><div class="niz"><span class="chto">задача 30</span><span class="skolko">24 событий · идёт 1 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">14 мин назад</span></div><div class="niz"><span class="chto">задача 31</span><span class="skolko">50 событий · идёт 4 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">Рот</span><span class="kogda">16 мин назад</span></div><div class="niz"><span class="chto">задача 2</span><span class="skolko">9 событий · идёт 2 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">16 мин назад</span></div><div class="niz"><span class="chto">задача 3</span><span class="skolko">5 событий · mac · completed</span></div></li></ol>
-<details class="lenta"><summary>Лента событий — последние 40 из 120</summary><ol><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">6 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">7 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">7 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">8 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">8 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">9 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 30</span><span class="kogda">10 мин назад</span></li></ol></details>
+<p class="svezhest">снимок 05:58 · цех работал в эту минуту</p>
+<div class="plitki"><div class="plitka"><b>48%</b><span>Процессор</span></div><div class="plitka"><b>41%</b><span>Видеоядро</span></div><div class="plitka"><b>12 ГБ</b><span>Свободно памяти</span></div><div class="plitka"><b>24 ГБ</b><span>Всего памяти</span></div></div>
+<ol class="zadachi"><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">1 мин назад</span></div><div class="niz"><span class="chto">задача 20</span><span class="skolko">38 событий · идёт 27 мин · mac · running</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">3 мин назад</span></div><div class="niz"><span class="chto">задача 33</span><span class="skolko">24 событий · идёт 1 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">13 мин назад</span></div><div class="niz"><span class="chto">задача 32</span><span class="skolko">20 событий · идёт 1 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">23 мин назад</span></div><div class="niz"><span class="chto">задача 30</span><span class="skolko">24 событий · идёт 1 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">28 мин назад</span></div><div class="niz"><span class="chto">задача 31</span><span class="skolko">14 событий · идёт 1 мин · mac · completed</span></div></li></ol>
+<details class="lenta"><summary>Лента событий — последние 40 из 120</summary><ol><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 33</span><span class="kogda">5 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">6 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">6 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">8 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">11 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">12 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">13 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">13 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">14 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">14 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">14 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">14 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">14 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">14 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 32</span><span class="kogda">14 мин назад</span></li></ol></details>
 </section>
         </div>
       </section>
