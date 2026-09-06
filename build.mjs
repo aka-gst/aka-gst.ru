@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Генерирует index.html из data/site.json и data/projects.json.
 // Запуск: node build.mjs
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -678,6 +678,7 @@ const workLead = `
         <p class="work-put">
           <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
           <a class="work-put-alt" href="/put/">та же история текстом →</a>
+          <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
         </p>
         <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>`;
@@ -732,11 +733,78 @@ const partnerForm = `
             <p class="partner-status" data-contact-status aria-live="polite"></p>
           </form>`;
 
+// ── Мастерская: лента «Живого цеха» ──────────────────────────────────
+// Ленту кладут Руки файлом data/tseh/zhivoy-tseh.html по своему расписанию,
+// сборка вставляет её в страницу. Один источник и одна копия: держать её ещё
+// и отдельным файлом на сервере — значит завести вторую, которая разъедется
+// с первой (правило 27). Живого запроса нет вовсе: страница показывает снимок.
+const ПУТЬ_ЦЕХА = 'data/tseh/zhivoy-tseh.html';
+
+// Файл приезжает от чужого генератора и по расписанию, то есть его никто не
+// читает глазами перед вставкой. Значит читать должна сборка — и падать, а не
+// вставлять молча (правило 7р). Список прицельный: всё, что может выполниться,
+// принять ввод или сходить наружу.
+const опасноеВЦехе = (html) => [
+  [/<script/i, 'тег <script>'],
+  [/<iframe/i, 'тег <iframe>'],
+  [/<(input|form|textarea|button|select)\b/i, 'поле ввода или кнопка'],
+  [/\son[a-z]+\s*=/i, 'обработчик события on*'],
+  [/https?:\/\//i, 'внешний адрес'],
+  [/url\s*\(/i, 'загрузка через url()'],
+  [/@import/i, '@import в стилях'],
+  [/<(link|object|embed|img|video|audio|svg)\b/i, 'внешний ресурс'],
+].filter(([re]) => re.test(html)).map(([, имя]) => имя);
+
+const цех = (() => {
+  const полный = join(root, ПУТЬ_ЦЕХА);
+  if (!existsSync(полный)) {
+    console.warn(`  !! ленты нет: ${ПУТЬ_ЦЕХА} — Мастерская выйдет с честной пометкой`);
+    return null;
+  }
+  const html = readFileSync(полный, 'utf8');
+  const беда = опасноеВЦехе(html);
+  if (беда.length) {
+    throw new Error(`${ПУТЬ_ЦЕХА}: в ленте ${беда.join(', ')} — не вставляю в страницу`);
+  }
+  return { html: html.trim(), снят: statSync(полный).mtime };
+})();
+
+// Снимок, который молчит о своём возрасте, врёт: внутри ленты написано «цех
+// работает прямо сейчас», и через сутки это станет неправдой. Поэтому время
+// съёмки стоит НАД лентой, до её слов, а не под ней.
+const цехПодпись = (() => {
+  if (!цех) return 'Лента ещё не приезжала. Как только цех пришлёт файл, он появится здесь.';
+  const часов = (Date.now() - цех.снят.getTime()) / 3600000;
+  const когда = цех.снят.toLocaleString('ru-RU', {
+    day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow',
+  });
+  const свежесть = часов < 6 ? 'снимок' : `снимок ${часов < 48 ? 'вчерашний' : 'старый'}`;
+  return `${свежесть} от ${когда} · обновляется файлом от цеха, а не запросом из браузера`;
+})();
+
+const masterskaya = `
+      <section class="block masterskaya" id="masterskaya" aria-labelledby="masterskaya-title">
+        <div class="block-head">
+          <p class="kicker">Мастерская</p>
+          <h2 id="masterskaya-title">Как это сделано — видно изнутри</h2>
+          <p>Не рассказ о процессе, а его след: чем заняты машины и агенты, пока идёт работа.</p>
+        </div>
+        <div class="mast-tabs" role="list">
+          <span class="mast-tab is-current" role="listitem" aria-current="true">Живой цех</span>
+        </div>
+        <div class="mast-panel">
+          <p class="mast-stamp">${esc(цехПодпись)}</p>
+${цех ? цех.html : ''}
+        </div>
+      </section>`;
+
 // ── Панель «Работа» ──────────────────────────────────────────────────
 const workPanel = `
       ${workLead}
 
 ${practicumSwitch.trim()}
+
+${masterskaya.trim()}
 
       <section class="block" aria-labelledby="products-title">
         <div class="block-head">

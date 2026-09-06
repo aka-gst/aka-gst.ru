@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — Архитектор AI-продуктов и агентных систем">
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=3c69496b">
+    <link rel="stylesheet" href="/assets/site.css?v=68f4c38d">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -117,6 +117,7 @@
         <p class="work-put">
           <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
           <a class="work-put-alt" href="/put/">та же история текстом →</a>
+          <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
         </p>
         <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>
@@ -173,6 +174,73 @@
           </article>
             </div>
           </aside>
+        </div>
+      </section>
+
+<section class="block masterskaya" id="masterskaya" aria-labelledby="masterskaya-title">
+        <div class="block-head">
+          <p class="kicker">Мастерская</p>
+          <h2 id="masterskaya-title">Как это сделано — видно изнутри</h2>
+          <p>Не рассказ о процессе, а его след: чем заняты машины и агенты, пока идёт работа.</p>
+        </div>
+        <div class="mast-tabs" role="list">
+          <span class="mast-tab is-current" role="listitem" aria-current="true">Живой цех</span>
+        </div>
+        <div class="mast-panel">
+          <p class="mast-stamp">снимок от 6 сентября в 04:12 · обновляется файлом от цеха, а не запросом из браузера</p>
+<section class="zhivoy-tseh" data-sostoyanie="zhivo">
+<style>
+.zhivoy-tseh{container-type:inline-size;--fon:#0b0c0d;--panel:#14171a;--liniya:#23282d;--tekst:#eef1f3;
+  --tusklo:#8b949c;--zhivo:#3fb950;--ustarelo:#d29922;background:var(--fon);
+  color:var(--tekst);padding:18px;border-radius:12px;
+  font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.zhivoy-tseh h2{margin:0 0 2px;font-size:18px;font-weight:600}
+.zhivoy-tseh .svezhest{font-size:13px;margin:0 0 14px;color:var(--tusklo)}
+.zhivoy-tseh[data-sostoyanie=zhivo] .svezhest{color:var(--zhivo)}
+.zhivoy-tseh[data-sostoyanie=ustarelo] .svezhest{color:var(--ustarelo)}
+.zhivoy-tseh .plitki{display:grid;gap:8px;margin-bottom:14px;
+  grid-template-columns:repeat(auto-fit,minmax(104px,1fr))}
+.zhivoy-tseh .plitka{background:var(--panel);border:1px solid var(--liniya);
+  border-radius:12px;padding:9px 12px}
+.zhivoy-tseh .plitka b{display:block;font-size:17px;font-weight:600}
+.zhivoy-tseh .plitka span{color:var(--tusklo);font-size:11px}
+.zhivoy-tseh ol{list-style:none;margin:0;padding:0}
+.zhivoy-tseh li{padding:10px 12px;margin-bottom:6px;background:var(--panel);
+  border:1px solid var(--liniya);border-radius:12px}
+.zhivoy-tseh .kto{font-weight:600;white-space:nowrap}
+.zhivoy-tseh .chto{color:var(--tusklo);white-space:nowrap}
+.zhivoy-tseh .skolko{color:var(--tusklo);font-size:12px;text-align:right}
+.zhivoy-tseh .kogda{color:var(--tusklo);font-size:12px;white-space:nowrap}
+.zhivoy-tseh .verh,.zhivoy-tseh .niz{display:flex;flex-wrap:wrap;
+  justify-content:space-between;gap:2px 12px;align-items:baseline}
+.zhivoy-tseh .niz{margin-top:1px}
+.zhivoy-tseh .chasy{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;
+  margin-top:9px}
+.zhivoy-tseh .chasy i{height:5px;border-radius:2px;background:#1e2429}
+.zhivoy-tseh .chasy i.est{background:var(--zhivo);opacity:.75}
+.zhivoy-tseh li.running .chasy i.est{opacity:1}
+.zhivoy-tseh .lenta{margin-top:12px;background:var(--panel);
+  border:1px solid var(--liniya);border-radius:12px;padding:10px 12px}
+.zhivoy-tseh .lenta summary{cursor:pointer;color:var(--tusklo);font-size:12px}
+.zhivoy-tseh .lenta ol{margin-top:10px}
+.zhivoy-tseh .lenta li{display:grid;grid-template-columns:minmax(64px,auto) 1fr auto;
+  gap:10px;padding:5px 0;margin:0;background:none;border:0;border-top:1px solid var(--liniya)}
+.zhivoy-tseh li.running .kto::after{content:"";display:inline-block;width:6px;
+  height:6px;margin-left:7px;border-radius:50%;background:var(--zhivo);
+  vertical-align:middle}
+@container (max-width:420px){
+  .zhivoy-tseh{padding:14px}
+  .zhivoy-tseh .verh,.zhivoy-tseh .niz{gap:2px 8px}
+  .zhivoy-tseh .skolko{text-align:left;flex-basis:100%}
+  .zhivoy-tseh .skolko,.zhivoy-tseh .kogda{text-align:left}
+}
+</style>
+<h2>Живой цех</h2>
+<p class="svezhest">цех работает прямо сейчас</p>
+<div class="plitki"><div class="plitka"><b>45%</b><span>Процессор</span></div><div class="plitka"><b>62%</b><span>Видеоядро</span></div><div class="plitka"><b>11 ГБ</b><span>Свободно памяти</span></div><div class="plitka"><b>24 ГБ</b><span>Всего памяти</span></div></div>
+<ol class="zadachi"><li class="completed"><div class="verh"><span class="kto">Рот</span><span class="kogda">2 мин назад</span></div><div class="niz"><span class="chto">задача 2</span><span class="skolko">34 событий · идёт 5 мин · mac · completed</span></div></li><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">2 мин назад</span></div><div class="niz"><span class="chto">задача 17</span><span class="skolko">10 событий · идёт 3 мин · mac · running</span></div></li><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">2 мин назад</span></div><div class="niz"><span class="chto">задача 20</span><span class="skolko">15 событий · идёт 3 мин · mac · running</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">3 мин назад</span></div><div class="niz"><span class="chto">задача 21</span><span class="skolko">61 событий · идёт 4 мин · mac · completed</span></div></li></ol>
+<details class="lenta"><summary>Лента событий — последние 40 из 120</summary><ol><li><span class="kto">сессия</span><span class="chto">задача 17</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 17</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 20</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">4 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">4 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">4 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 17</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 17</span><span class="kogda">4 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 21</span><span class="kogda">4 мин назад</span></li></ol></details>
+</section>
         </div>
       </section>
 
