@@ -60,6 +60,7 @@ technomagic
 qa-quest
 psy-admin
 photodata
+way
 "
 
 echo "== сборка =="

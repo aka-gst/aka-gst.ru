@@ -1,0 +1,541 @@
+<title>Дневник пути</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0c0d">
+<style>
+:root{
+  --fon:#0b0d11; --panel:#f6f4ef; --liniya:#e4e0d6;
+  --tekst:#15181c; --tusklo:#6b7280; --nadfon:#e6e2d9;
+  --zhivo:#5b8c6e; --svezhee:#8ce89a; --svezhee-fon:#f2f8f4;
+  --zhdet:#b07d2b; --slom:#c0453f;
+  --med:#2f6f8f; --yoga:#6a4fa8; --prak:#a8641f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fon);color:var(--nadfon);
+  font:15px/1.5 -apple-system,system-ui,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.holst{max-width:1180px;margin:0 auto;padding:20px 16px 40px;
+  min-height:100vh;display:flex;flex-direction:column}
+
+/* На ноутбуке колонка в 760 занимала половину окна: при 1440 это 0.51 доли
+   ширины, по бокам по 356 точек черноты. Широкий экран поэтому разложен в
+   две колонки — лента слева, число и счёт справа, — и пустого места не
+   остаётся. Порядок в разметке телефонный: число сверху, лента под ним;
+   на широком колонки меняются местами через order. */
+.stolby{flex:1;display:flex;flex-direction:column}
+@media (min-width:900px){
+  .stolby{display:grid;grid-template-columns:minmax(0,1fr) 330px;
+    grid-template-rows:auto auto 1fr;gap:16px 20px;align-items:start}
+  .lenta{grid-column:1;grid-row:1/4}
+  .pusto{grid-column:1;grid-row:1}
+  .bok{grid-column:2;grid-row:1}
+  .nedelya{grid-column:2;grid-row:2}
+}
+/* На телефоне неделя стоит ПОД лентой: наверху экрана должны быть число и
+   первые отметки, а не сводная картинка. В боковой колонке ноутбука она,
+   наоборот, наверху — там места хватает обоим. */
+.nedelya{margin-top:16px}
+@media (min-width:900px){.nedelya{margin-top:0}}
+
+/* Шапка: имя, состояние связи, языки. Всё в одну строку — первый экран
+   на телефоне должен помещаться целиком, вместе с первой отметкой. */
+.shapka{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
+.svyaz{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--tusklo)}
+.tochka{width:8px;height:8px;border-radius:50%;background:var(--tusklo);flex:none}
+body[data-svyaz=zhivo] .tochka{background:var(--zhivo);
+  animation:puls 2.4s ease-in-out infinite}
+body[data-svyaz=slom] .tochka{background:var(--slom)}
+body[data-svyaz=slom] .svyaz{color:var(--slom)}
+@keyframes puls{0%,100%{opacity:1}50%{opacity:.35}}
+.yazyki{margin-left:auto;display:flex;gap:2px;background:var(--panel);
+  border:1px solid var(--liniya);border-radius:9px;padding:2px}
+.yazyki button{background:none;border:0;color:var(--tusklo);font:inherit;
+  font-size:12px;padding:5px 10px;border-radius:7px;cursor:pointer}
+.yazyki button[aria-pressed=true]{background:var(--liniya);color:var(--tekst)}
+
+/* Число, ради которого всё: сколько прошло от нажатия в боте до появления
+   здесь. Это и есть «синхронизация», которую видно глазом. */
+.zaderzhka{background:var(--panel);color:var(--tekst);border:1px solid var(--liniya);
+  border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.zaderzhka b{display:block;font:600 30px/1.05 ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+.zaderzhka span{color:var(--tusklo);font-size:15px;line-height:1.35}
+body[data-chasy=nesvereny] .zaderzhka b{color:var(--zhdet);font-size:19px}
+/* До первой отметки в плашке стоял прочерк — а это буквально первый кадр,
+   который видит человек: большая светлая плашка, а в ней тире. Пока число
+   не измерено, плашка говорит словами. */
+body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
+  font-family:inherit;font-weight:600}
+
+/* Счёт отметок. На широком экране он держит правую колонку, на узком стоит
+   под числом и отвечает на вопрос «а сколько их всего». */
+.svodka{display:flex;gap:10px;margin-bottom:16px}
+.svodka div{flex:1;background:var(--panel);color:var(--tekst);
+  border:1px solid var(--liniya);border-radius:14px;padding:12px 14px}
+.svodka b{display:block;font:600 22px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+.svodka span{color:var(--tusklo);font-size:13.5px}
+
+/* Неделя. Стоит в боковой колонке не ради красоты: без неё правая половина
+   ноутбука ниже сводки — чёрное поле, а дневник как раз про путь, который
+   виден только на нескольких днях сразу. */
+.nedelya{background:var(--panel);color:var(--tekst);border:1px solid var(--liniya);
+  border-radius:14px;padding:14px 16px 12px}
+.nedelya>span{color:var(--tusklo);font-size:13.5px;display:block;margin-bottom:12px}
+.dni{display:flex;align-items:flex-end;gap:8px;height:78px}
+.den{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;
+  justify-content:flex-end}
+.den i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--zhivo);
+  min-height:3px;opacity:.85}
+.den.pusto-den i{background:var(--liniya);opacity:1}
+.den u{text-decoration:none;color:var(--tusklo);font-size:11.5px}
+.den.segodnya-den u{color:var(--tekst);font-weight:600}
+
+.lenta{list-style:none;margin:0;padding:0;flex:1}
+/* Пустая лента всё равно растягивалась на весь экран и выталкивала надпись
+   «Отметок пока нет» на самое дно, оставляя посередине дыру в пол-экрана.
+   Пусто она места не занимает. */
+.lenta:empty{flex:0}
+.otmetka{display:flex;align-items:center;gap:12px;padding:13px 15px;
+  margin-bottom:8px;background:var(--panel);color:var(--tekst);border:1px solid var(--liniya);
+  border-radius:14px;
+  animation:poyavlenie .55s cubic-bezier(.22,1,.36,1) both}
+/* Анимация появления: отметка приходит сверху и слегка разгорается. Без неё
+   новая запись просто «моргает» и синхронность не читается. */
+@keyframes poyavlenie{
+  from{opacity:0;transform:translateY(-14px) scale(.985);
+        border-color:var(--zhivo);box-shadow:0 0 0 3px rgba(116,211,174,.14)}
+  60%{opacity:1;transform:none}
+  to{opacity:1;transform:none;border-color:var(--liniya);box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce){.otmetka{animation:none}}
+/* Карточка, которая растёт на своём месте, не должна вдобавок въезжать
+   сверху: два движения разом читаются как дёрганье. */
+.otmetka.rastet{animation:none}
+/* Метка на свежей записи — взято из сцены YSI. Она и делает синхронность
+   видимой: человек смотрит на страницу и понимает, что запись приехала
+   сама, а не лежала тут раньше. Гаснет сама через несколько секунд. */
+.otmetka.svezhee{background:var(--svezhee-fon);border-color:var(--zhivo)}
+.metka{display:flex;width:fit-content;align-items:center;gap:6px;margin-top:5px;
+  padding:3px 9px;border-radius:999px;background:#e3f2e8;color:#2f5d42;
+  font-size:11.5px;white-space:nowrap}
+.metka::before{content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--zhivo)}
+.znak{width:38px;height:38px;border-radius:11px;flex:none;display:grid;
+  place-items:center;font-size:17px;background:#ecebe4}
+.otmetka[data-vid=meditation] .znak{color:var(--med);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--med) 35%,transparent)}
+.otmetka[data-vid=yoga] .znak{color:var(--yoga);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--yoga) 35%,transparent)}
+.otmetka[data-vid=practice] .znak{color:var(--prak);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--prak) 35%,transparent)}
+.telo{flex:1;min-width:0}
+.telo b{display:block;font-weight:600;font-size:15px}
+.telo .dlit{display:block}
+.telo span{color:var(--tusklo);font-size:14px}
+.kogda{color:var(--tusklo);font-size:13.5px;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.pusto{color:var(--tusklo);font-size:14px;text-align:center;padding:34px 10px}
+
+@media (max-width:430px){
+  .holst{padding:14px 12px 28px}
+  h1{font-size:18px}
+  .zaderzhka b{font-size:26px}
+  .otmetka{padding:11px 12px;gap:10px}
+  .znak{width:34px;height:34px}
+}
+</style>
+
+<div class="holst">
+  <header class="shapka">
+    <h1 data-t="zagolovok">Дневник пути</h1>
+    <div class="svyaz"><i class="tochka"></i><span data-svyaz-text>—</span></div>
+    <nav class="yazyki" aria-label="язык">
+      <button type="button" data-yaz="ru" aria-pressed="true">RU</button>
+      <button type="button" data-yaz="en" aria-pressed="false">EN</button>
+      <button type="button" data-yaz="de" aria-pressed="false">DE</button>
+    </nav>
+  </header>
+
+  <div class="stolby">
+    <aside class="bok">
+      <div class="zaderzhka">
+        <b data-zaderzhka>—</b>
+        <span data-t="zaderzhka_podpis">время доставки · от телефона до этой страницы</span>
+      </div>
+      <div class="svodka">
+        <div><b data-segodnya>0</b><span data-t="segodnya">сегодня</span></div>
+        <div><b data-vsego>0</b><span data-t="vsego">всего</span></div>
+      </div>
+    </aside>
+
+    <ol class="lenta" data-lenta></ol>
+    <p class="pusto" data-pusto data-t="pusto">Отметок пока нет</p>
+
+    <div class="nedelya">
+      <span data-t="nedelya">последние семь дней</span>
+      <div class="dni" data-dni></div>
+    </div>
+  </div>
+</div>
+
+<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
+<script>
+(() => {
+  'use strict';
+
+  // Подписи короткие и без точек в конце: так во всех интерфейсных строках.
+  const SLOVA = {
+    ru: {zagolovok:'Дневник пути', zaderzhka_podpis:'время доставки · от телефона до этой страницы',
+         zhdyot:'ждёт первой отметки', nedelya:'последние семь дней', segodnya:'сегодня', vsego:'всего',
+         pusto:'Отметок пока нет', zhivo:'на связи', zhdet:'подключаемся',
+         slom:'связь потеряна', nesvereny:'часы не сверены',
+         meditation:'Медитация', yoga:'Йога', practice:'Практика',
+         minut:'мин', sek:'с', tolko:'только что появилось'},
+    en: {zagolovok:'Path Diary', zaderzhka_podpis:'delivery time · from phone to this page',
+         zhdyot:'waiting for the first entry', nedelya:'last seven days', segodnya:'today', vsego:'total',
+         pusto:'No entries yet', zhivo:'connected', zhdet:'connecting',
+         slom:'connection lost', nesvereny:'clocks not synced',
+         meditation:'Meditation', yoga:'Yoga', practice:'Practice',
+         minut:'min', sek:'s', tolko:'just appeared'},
+    de: {zagolovok:'Wegtagebuch', zaderzhka_podpis:'Zustellzeit · vom Handy bis zu dieser Seite',
+         zhdyot:'wartet auf den ersten Eintrag', nedelya:'letzte sieben Tage', segodnya:'heute', vsego:'gesamt',
+         pusto:'Noch keine Einträge', zhivo:'verbunden', zhdet:'verbinde',
+         slom:'Verbindung verloren', nesvereny:'Uhren nicht synchron',
+         meditation:'Meditation', yoga:'Yoga', practice:'Praxis',
+         minut:'Min', sek:'s', tolko:'gerade erschienen'},
+  };
+  const ZNAKI = {meditation:'◎', yoga:'༄', practice:'✦'};
+
+  let yaz = (navigator.language || 'ru').slice(0, 2);
+  if (!SLOVA[yaz]) yaz = 'ru';
+  // Адрес приёмника. На бою страница лежит на том же сайте, что и приёмник,
+  // поэтому по умолчанию путь относительный — так же, как договорено с сайтом.
+  // Параметр ?istochnik= нужен для проверки: им страницу натравливают на
+  // заглушку (проверить обрыв) или на живой приёмник через локальный прокси.
+  const BAZA = (new URLSearchParams(location.search).get('istochnik') || '')
+    .replace(/\/+$/, '');
+  const adres = put => BAZA + put;
+
+  let popravka = null;            // разница часов сервера и браузера, мс
+  let chasyGrubo = false;         // поправка взята из заголовка Date: точность ~1 с
+  let poslednyayaZaderzhka = null;
+  let bylZamer = false;           // задержку доставки хоть раз измеряли
+  const vidno = new Set();
+
+  const lenta = document.querySelector('[data-lenta]');
+  const pusto = document.querySelector('[data-pusto]');
+  const polePauzy = document.querySelector('[data-zaderzhka]');
+
+  const t = k => (SLOVA[yaz] && SLOVA[yaz][k]) || SLOVA.ru[k] || k;
+
+  function perevesti() {
+    document.documentElement.lang = yaz;
+    for (const el of document.querySelectorAll('[data-t]')) el.textContent = t(el.dataset.t);
+    for (const b of document.querySelectorAll('[data-yaz]'))
+      b.setAttribute('aria-pressed', String(b.dataset.yaz === yaz));
+    pokazatSvyaz(document.body.dataset.svyaz || 'zhdet');
+    pokazatZaderzhku(poslednyayaZaderzhka);
+    for (const el of lenta.querySelectorAll('[data-vid]')) {
+      el.querySelector('.vid').textContent = t(el.dataset.vid);
+      const m = el.dataset.minut;
+      el.querySelector('.dlit').textContent = m && m !== '0' ? `${m} ${t('minut')}` : '';
+      const mk = el.querySelector('.metka'); if (mk) mk.textContent = t('tolko');
+    }
+  }
+
+  function pokazatSvyaz(sost) {
+    document.body.dataset.svyaz = sost;
+    document.querySelector('[data-svyaz-text]').textContent = t(sost);
+  }
+
+  function pokazatZaderzhku(sek) {
+    poslednyayaZaderzhka = sek;
+    // Пока задержку ни разу не измеряли, в большой плашке стоял прочерк — а
+    // это буквально первый кадр, который видит человек. Пишем словами, чего
+    // ждём. Условие именно про ЗАМЕР, а не про наличие отметок: отметки из
+    // начального списка приехали не потоком, время их доставки неизвестно,
+    // и прочерк рядом с ними так же нем.
+    if (sek === null && !bylZamer) {
+      document.body.dataset.zhdyot = 'da';
+      polePauzy.textContent = t('zhdyot');
+      return;
+    }
+    if (typeof sek === 'number') bylZamer = true;
+    document.body.dataset.zhdyot = 'net';
+    // Часы не сверены — так и пишем. Показать выдуманное число здесь хуже,
+    // чем не показать никакого: страница ровно про то, что число честное.
+    if (popravka === null) {
+      document.body.dataset.chasy = 'nesvereny';
+      polePauzy.textContent = t('nesvereny');
+      return;
+    }
+    document.body.dataset.chasy = 'svereny';
+    // «0.0 с» читается как «нет данных», хотя это настоящее число. Меньше
+    // десятой доли пишем со знаком «меньше» — тогда ноль и пустота не
+    // путаются на экране.
+    // Поправка из заголовка Date округлена до секунды, значит и задержку
+    // здесь нельзя писать десятыми: это была бы придуманная точность.
+    polePauzy.textContent =
+      sek === null ? '—' :
+      chasyGrubo ? `≈${Math.max(0, Math.round(sek))} ${t('sek')}` :
+      sek < 0.1 ? `<0.1 ${t('sek')}` :
+      `${sek.toFixed(1)} ${t('sek')}`;
+  }
+
+  // Счётчик. Уронить страницу он права не имеет: его может не быть вовсе
+  // (localhost, блокировщик, отложенная загрузка), и тогда обёртка молчит.
+  // В события не уходит ничего про человека — ни вида практики, ни минут,
+  // ни времени записи: только то, что событие было.
+  // Наши прогоны помечаются, чтобы не осесть в боевых данных: страница,
+  // открытая с ?test, шлёт события с приставкой test- и их видно отдельно.
+  const PROBA = new URLSearchParams(location.search).has('test');
+  function sobytie(imya, dannye) {
+    try {
+      const p = window.pulse || window.umami;
+      if (p && typeof p.track === 'function') p.track((PROBA ? 'test-' : '') + imya, dannye);
+    } catch (err) {
+      console.info('дневник: счётчик недоступен', err && err.message);
+    }
+  }
+
+  // Уважаем системную просьбу не двигать: там анимации выключены совсем.
+  const tihiy = matchMedia('(prefers-reduced-motion: reduce)');
+
+  function rastit(li) {
+    // Высоту меряем у уже вставленной карточки, а не задаём числом: она
+    // зависит от языка, длины подписи и наличия метки «только что».
+    const vysota = li.getBoundingClientRect().height;
+    li.classList.add('rastet');
+    li.style.overflow = 'hidden';
+    // Одной высоты мало: при box-sizing:border-box height:0 не схлопывает
+    // ни отступы, ни рамку, и карточка всё равно занимает 28 точек — то
+    // есть четверть рывка остаётся. Гасим заодно padding и border.
+    const st = getComputedStyle(li);
+    const hod = li.animate(
+      [{height: '0px', marginBottom: '0px', paddingTop: '0px', paddingBottom: '0px',
+        borderTopWidth: '0px', borderBottomWidth: '0px', opacity: 0, transform: 'scale(.98)'},
+       {height: vysota + 'px', marginBottom: '8px',
+        paddingTop: st.paddingTop, paddingBottom: st.paddingBottom,
+        borderTopWidth: st.borderTopWidth, borderBottomWidth: st.borderBottomWidth,
+        opacity: 1, transform: 'none'}],
+      {duration: 520, easing: 'cubic-bezier(.22,1,.36,1)'});
+    hod.finished.then(() => { li.style.overflow = ''; }, () => {});
+  }
+
+  function ochistit() {
+    // Обнулить надо всё разом, иначе останется след прошлого показа: старое
+    // число задержки при пустой ленте читалось бы как «доставка идёт 0.3 с»,
+    // хотя доставлять уже нечего.
+    lenta.replaceChildren();
+    vidno.clear();
+    bylZamer = false;
+    pusto.hidden = false;
+    schitat();
+    pokazatZaderzhku(null);
+    console.info('дневник: лента обнулена по сигналу приёмника');
+  }
+
+  function schitat() {
+    const vse = lenta.querySelectorAll('.otmetka');
+    const nachaloDnya = new Date(); nachaloDnya.setHours(0, 0, 0, 0);
+    let segodnya = 0;
+    for (const el of vse) {
+      const ts = Number(el.dataset.ts);
+      if (Number.isFinite(ts) && ts >= nachaloDnya.getTime()) segodnya++;
+    }
+    document.querySelector('[data-segodnya]').textContent = String(segodnya);
+    document.querySelector('[data-vsego]').textContent = String(vse.length);
+    nedelyu(vse, nachaloDnya.getTime());
+  }
+
+  function nedelyu(vse, nachaloSegodnya) {
+    const den = 86400000;
+    const schyot = new Array(7).fill(0);        // [0] — шесть дней назад, [6] — сегодня
+    for (const el of vse) {
+      const ts = Number(el.dataset.ts);
+      if (!Number.isFinite(ts)) continue;
+      const nazad = Math.floor((nachaloSegodnya - ts) / den) + (ts >= nachaloSegodnya ? 0 : 1);
+      const i = 6 - Math.max(0, nazad);
+      if (i >= 0 && i < 7) schyot[i]++;
+    }
+    const potolok = Math.max(1, ...schyot);
+    const dni = document.querySelector('[data-dni]');
+    dni.replaceChildren();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(nachaloSegodnya - (6 - i) * den);
+      const stolb = document.createElement('div');
+      stolb.className = 'den' + (schyot[i] ? '' : ' pusto-den') + (i === 6 ? ' segodnya-den' : '');
+      const i_ = document.createElement('i');
+      // Пустой день оставляет тонкую полоску, а не исчезает: провал в череде
+      // дней — тоже часть пути, и его должно быть видно.
+      i_.style.height = schyot[i] ? Math.round(12 + 46 * schyot[i] / potolok) + 'px' : '3px';
+      i_.title = String(schyot[i]);
+      const u = document.createElement('u');
+      u.textContent = d.toLocaleDateString(yaz === 'ru' ? 'ru-RU' : yaz, {weekday: 'short'})
+        .replace('.', '').slice(0, 2);
+      stolb.append(i_, u);
+      dni.append(stolb);
+    }
+  }
+
+  function vremya(ms) {
+    return new Date(ms).toLocaleTimeString(yaz === 'ru' ? 'ru-RU' : yaz,
+      {hour: '2-digit', minute: '2-digit'});
+  }
+
+  // Живой приёмник называет поля по-русски, заглушка — латиницей. Принимаем
+  // обе формы: страница не должна ломаться от того, чьё событие пришло.
+  // Чужой вход не роняет страницу (человеку это ничего не объяснит), но
+  // молчать о непонятом нельзя — иначе отметка не появится, и никто не
+  // узнает почему. Отсюда console.warn: тихо для человека, громко для нас.
+  function razobrat(syroe, svezhee) {
+    if (!syroe || typeof syroe !== 'object') {
+      console.warn('дневник: событие не объект', syroe);
+      return null;
+    }
+    const vid = syroe.vid ?? syroe['вид'];
+    // Живой приёмник называет длительность minuty, заглушка — minut.
+    // Разница в одной букве стоила бы пустой длительности у всех отметок,
+    // и страница выглядела бы исправной.
+    // Длительность приходит под четырьмя именами: min (чаще всего), minuty,
+    // minut, «минут». Твёрдого договора о формате у приёмника пока нет, и
+    // угадывать по одному имени значит терять большинство отметок.
+    const minut = Number(syroe.min ?? syroe.minuty ?? syroe.minut ?? syroe['минут'] ?? 0);
+    // Живой приёмник шлёт ts в СЕКУНДАХ с дробью, заглушка — ts_ms в
+    // миллисекундах. Принять секунды за миллисекунды значит показать 1970
+    // год: число остаётся числом, и молча ничего не ломается. Различаем по
+    // порядку величины: 1e11 мс — это 1973 год, дальше этой границы времени
+    // в секундах уже не встречаются, а времена в миллисекундах — всегда.
+    let ts = Number(syroe.ts_ms ?? syroe['время_мс'] ?? NaN);
+    if (!Number.isFinite(ts)) {
+      const syroeTs = Number(syroe.ts ?? syroe['время'] ?? NaN);
+      if (Number.isFinite(syroeTs)) ts = syroeTs < 1e11 ? syroeTs * 1000 : syroeTs;
+    }
+    if (!vid || !Number.isFinite(ts)) {
+      console.warn('дневник: в событии нет вида или времени', syroe);
+      return null;
+    }
+    // Служебные сигналы приёмника — разговор машин, а не запись человека о
+    // своей практике: отметкой такое показывать нельзя, оно бы врало.
+    // __ochishcheno приходит, когда ленту обнулили командой перед показом;
+    // по нему экран чистится целиком. Незнакомый служебный сигнал просто
+    // не показываем — молча для человека, громко в консоли для нас.
+    if (String(vid).startsWith('__')) {
+      // Только свежий сигнал, пришедший потоком. Тот же __ochishcheno,
+      // оставшийся в истории, иначе чистил бы ленту при КАЖДОЙ загрузке —
+      // и страница на бою была бы вечно пустой, ничем этого не выдавая.
+      if (vid === '__ochishcheno' && svezhee) ochistit();
+      else console.info('дневник: служебный сигнал пропущен', vid, svezhee ? 'свежий' : 'из истории');
+      return null;
+    }
+    if (!ZNAKI[vid]) console.warn('дневник: незнакомый вид', vid);
+    // n — порядковый номер живого приёмника. Два события в одну миллисекунду
+    // одного вида без него слились бы в одно, и второе пропало бы молча.
+    return {vid: String(vid), ts_ms: ts, minut: Number.isFinite(minut) ? minut : 0,
+            n: syroe.n};
+  }
+
+  function dobavit(syroe, svezhee) {
+    const s = razobrat(syroe, svezhee);
+    if (!s) return;
+    const klyuch = `${s.ts_ms}-${s.vid}-${s.n ?? ''}`;
+    if (vidno.has(klyuch)) return;
+    vidno.add(klyuch);
+
+    const li = document.createElement('li');
+    li.className = 'otmetka';
+    li.dataset.vid = s.vid;
+    li.dataset.ts = String(s.ts_ms);
+    li.dataset.minut = String(s.minut || 0);
+    li.innerHTML =
+      `<i class="znak">${ZNAKI[s.vid] || '•'}</i>` +
+      `<span class="telo"><b class="vid"></b><span class="dlit"></span>` +
+      (svezhee ? `<span class="metka" data-t2="tolko"></span>` : '') + `</span>` +
+      `<span class="kogda"></span>`;
+    li.querySelector('.vid').textContent = t(s.vid);
+    li.querySelector('.dlit').textContent =
+      s.minut ? `${s.minut} ${t('minut')}` : '';
+    li.querySelector('.kogda').textContent = vremya(s.ts_ms);
+    if (svezhee) {
+      li.classList.add('svezhee');
+      const m = li.querySelector('.metka');
+      if (m) m.textContent = t('tolko');
+      setTimeout(() => li.classList.remove('svezhee'), 6000);
+    }
+    lenta.prepend(li);
+    pusto.hidden = true;
+    schitat();
+    // Только факт появления. Вид практики и длительность — это про человека,
+    // и в счётчик они не уходят.
+    if (svezhee) sobytie('otmetka');
+
+    // Появление — тот самый момент, который продаётся, и он должен быть
+    // самым заметным на экране. Раньше было наоборот: новая карточка
+    // занимала высоту сразу, весь список рывком уезжал вниз, и глаз ловил
+    // скачок, а не появление. Поэтому карточка РАСТЁТ на своём месте от
+    // нулевой высоты — тогда лента едет вместе с ней, плавно, и смотреть
+    // хочется на новую запись, а не на прыжок остальных.
+    if (svezhee && !tihiy.matches) rastit(li);
+
+    if (svezhee && popravka !== null) {
+      // Время бота приведено к нашим часам поправкой из state, иначе
+      // разница часов устройств выдала бы себя за задержку доставки.
+      const seychas = Date.now() + popravka;
+      pokazatZaderzhku(Math.max(0, (seychas - s.ts_ms) / 1000));
+    }
+  }
+
+  async function nachalo() {
+    try {
+      const r = await fetch(adres('/api/dnevnik/state'), {cache: 'no-store'});
+      const d = await r.json();
+      // Часы сверяем тем, что дал приёмник. Если он не шлёт server_ms —
+      // берём заголовок Date: он округлён до секунды, поэтому дальше
+      // задержка показывается со знаком «примерно», а не десятыми.
+      if (typeof d.server_ms === 'number') {
+        popravka = d.server_ms - Date.now();
+        chasyGrubo = false;
+      } else {
+        const zag = Date.parse(r.headers.get('Date') || '');
+        if (Number.isFinite(zag)) { popravka = zag - Date.now(); chasyGrubo = true; }
+      }
+      const spisok = d['события'] || d.sobytiya || [];
+      if (!Array.isArray(spisok)) console.warn('дневник: список событий не массив', d);
+      for (const s of (Array.isArray(spisok) ? spisok : [])) dobavit(s, false);
+      pokazatZaderzhku(null);
+    } catch {
+      pokazatZaderzhku(null);
+    }
+  }
+
+  function slushat() {
+    const potok = new EventSource(adres('/api/dnevnik/stream'));
+    let bylo = false;
+    potok.onopen = () => { bylo = true; pokazatSvyaz('zhivo'); };
+    potok.onmessage = e => {
+      try { dobavit(JSON.parse(e.data), true); } catch {}
+    };
+    potok.onerror = () => {
+      // Обрыв называем словами. Нулей на месте чисел не показываем: ноль
+      // означал бы «доставили мгновенно», а это другое утверждение.
+      if (bylo) sobytie('svyaz_poteryana');
+      pokazatSvyaz('slom');
+      potok.close();
+      setTimeout(slushat, bylo ? 1500 : 4000);
+    };
+  }
+
+  for (const b of document.querySelectorAll('[data-yaz]'))
+    b.addEventListener('click', () => {
+      yaz = b.dataset.yaz; perevesti();
+      schitat();                     // дни недели подписаны на языке страницы
+      sobytie('yazyk', {yazyk: yaz});
+    });
+
+  sobytie('otkrytie', {yazyk: yaz});
+
+  pokazatSvyaz('zhdet');
+  perevesti();
+  schitat();                         // пустая неделя рисуется сразу, а не после первой отметки
+  nachalo().then(slushat);
+})();
+</script>
