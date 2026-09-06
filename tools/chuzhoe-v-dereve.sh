@@ -40,6 +40,19 @@ rasskazy/
 utro/
 en/"
 
+# То, что выкладка и так не шлёт: те же исключения, что в rsync внутри
+# deploy.sh. Без этого проверка краснеет на файлах, которые НИКОГДА не
+# уедут, — например psy-admin/test.mjs лежит незакоммиченным сутки и
+# исключён из отправки. Проверка, которая нудит на неотправляемом, будет
+# отключена, и вместе с ней пропадёт та, что стережёт настоящее.
+NE_SHLYOM="test.mjs
+README.md
+proizvodnye.json
+ФИНИШ.md
+.gitignore
+.githooks
+psy-admin/tools/"
+
 [ $# -gt 0 ] || { echo "!! не дано ни одного пути выкладки" >&2; exit 2; }
 
 VSE=$(git status --porcelain -- "$@" | sed 's/^...//' | sed 's/ -> .*//')
@@ -50,6 +63,11 @@ for f in $VSE; do
   for s in $SBORKA; do
     case "$f" in
       "$s"|"$s"*) propustit=1; break ;;
+    esac
+  done
+  for n in $NE_SHLYOM; do
+    case "$f" in
+      "$n"|*"/$n"|"$n"*|*"/$n"*) propustit=1; break ;;
     esac
   done
   [ "$propustit" = 1 ] && continue
