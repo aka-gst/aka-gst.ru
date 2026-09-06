@@ -7,17 +7,17 @@
   <meta name="description" content="QueQuest — игра о человеке, который потерял все способности и собирает себя заново, создавая машины, ботов и собственный AI.">
   <title>QueQuest — собери разум заново</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=novice-1">
+  <link rel="stylesheet" href="styles.css?v=center-virus-1">
 </head>
 <body>
   <main id="game" class="game" data-scene="prologue">
     <canvas id="gameCanvas" width="1600" height="900" aria-label="Игровой мир QueQuest"></canvas>
     <section id="startPanel" class="start-panel" aria-labelledby="startTitle">
       <p class="ending__eyebrow">ТЕБЕ СНИТСЯ БУДУЩЕЕ</p>
-      <h2 id="startTitle">Внутри — ты.<br>Снаружи — боевая машина.</h2>
+      <h2 id="startTitle">На компьютере вирусы.<br>Ты — внутри защиты.</h2>
       <p>Орудие стреляет само. Управляй движением: <b>W A S D / стрелки</b> или веди пальцем по полю.</p>
       <button id="startGame" class="run-code" type="button">ВОЙТИ В БОЙ →</button>
-      <small>Первые 10 секунд — почувствуй, кем можешь стать.</small>
+      <small>В жизни антивирус убирает заражение. Здесь ты увидишь эту битву изнутри. Это игра, не проверка твоего компьютера.</small>
     </section>
     <div id="movementCoach" class="world-coach" hidden>↑ ↓ ← → Двигайся · я стреляю сам</div>
     <div id="wallet" class="wallet" hidden aria-label="Заработок в игре"><small>ТВОИ ДЕНЬГИ</small><b id="walletTotal">$0</b><span id="walletMode">+$120 за ящик</span></div>
@@ -42,7 +42,7 @@
     <div class="system-readout" aria-hidden="true">
       <span>СИСТЕМА <b id="systemState">БОЕВАЯ</b></span>
       <span>СЕКТОР <b id="sectorState">00-А</b></span>
-      <span>ЦЕЛИ <b id="targetState">0/24</b></span>
+      <span>ОЧИЩЕНО <b id="targetState">0/24</b></span>
     </div>
 
     <button id="actionButton" class="action-button" type="button">
@@ -98,6 +98,7 @@
       </div>
       <button id="continueGame" class="run-code" type="button">ПОСМОТРЕТЬ, ЧТО ДАЛЬШЕ</button>
     </section>
+    <div id="cursorCompanion" class="cursor-companion" hidden aria-hidden="true"><i></i><i></i><b></b></div>
     <section id="futureComic" class="future-comic" hidden aria-labelledby="comicTitle">
       <div id="comicArt" class="comic-art" aria-hidden="true"><div class="comic-beam"></div><div class="comic-particles"></div><div class="comic-order">ФУТБОЛКА ПРОДАНА <b>+$240</b></div><div class="comic-hello">А вот и ты</div><div class="comic-army"></div></div>
       <div class="comic-copy"><p id="comicNumber" class="ending__eyebrow"></p><h2 id="comicTitle"></h2><p id="comicLine"></p><button id="nextComic" class="run-code" type="button">ДАЛЬШЕ →</button></div>
@@ -147,6 +148,6 @@
     </section>
   </main>
 
-  <script type="module" src="src/game/main.js?v=novice-1"></script>
+  <script type="module" src="src/game/main.js?v=center-virus-1"></script>
 </body>
 </html>

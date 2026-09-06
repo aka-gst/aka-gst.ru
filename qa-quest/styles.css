@@ -417,10 +417,13 @@ textarea:focus-visible {
   position: absolute;
   z-index: 5;
   left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
+  top: 50%;
   width: min(760px, calc(100% - 36px));
-  padding: clamp(20px, 3vw, 34px);
-  transform: translateX(-50%);
+  padding: 96px clamp(20px, 3vw, 34px) clamp(20px, 3vw, 34px);
+  transform: translate(-50%, -50%);
+  max-height: calc(100dvh - 160px);
+  overflow-y: auto;
+  touch-action: pan-y;
   border: 1px solid #ffc85759;
   background: #090d14f2;
   box-shadow: 0 30px 100px #000;
@@ -428,12 +431,19 @@ textarea:focus-visible {
   animation: ending-rise .38s cubic-bezier(.2, .8, .2, 1) both;
 }
 .ending h2 { margin: 0; color: var(--bone); font-size: clamp(30px, 4vw, 52px); line-height: .95; text-transform: uppercase; }
+.game[data-scene="reward"] .hud { visibility: hidden; }
+.cursor-companion { position: absolute; z-index: 10; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border: 3px solid var(--cyan); background: #081b28f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; gap: 14px; pointer-events: none; box-shadow: 0 0 24px #64e9ff44; animation: mind-breathe 2.4s ease-in-out infinite alternate; }
+.cursor-companion i { width: 7px; height: 5px; background: var(--cyan); transform: translateY(-5px); }
+.cursor-companion b { position: absolute; width: 20px; height: 5px; border-bottom: 2px solid var(--cyan); border-radius: 50%; bottom: 14px; }
+.cursor-companion[data-biting="true"] b { height: 19px; width: 25px; bottom: 7px; background: #64e9ff; animation: companion-chomp .28s ease-in-out infinite alternate; }
+@keyframes companion-chomp { to { transform: scaleY(.2); } }
+@keyframes mind-breathe { from { box-shadow: 0 0 12px #64e9ff33; } to { box-shadow: 0 0 30px #64e9ff77; } }
 .ending p { color: var(--muted); line-height: 1.6; }
 .ending__future { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 24px 0; background: #ffffff24; }
 .ending__future span { padding: 14px 6px; background: var(--steel); color: var(--cyan); font: 9px ui-monospace, monospace; }
 @keyframes ending-rise {
-  from { opacity: 0; transform: translate(-50%, 28px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .screen-noise,
@@ -522,7 +532,7 @@ textarea:focus-visible {
 .wallet small { color: #a1bcb0; font: 10px ui-monospace, monospace; }
 .wallet b { grid-row: span 2; color: #70ffac; font: 900 30px ui-monospace, monospace; }
 .wallet span { font: 11px ui-monospace, monospace; color: #d3f5e0; }
-.income-toast { position: absolute; z-index: 8; left: 50%; top: 35%; transform: translateX(-50%); text-align: center; width: min(360px, calc(100% - 28px)); padding: 16px; border-radius: 16px; background: #071b13ed; border: 1px solid #67ffa478; box-shadow: 0 0 60px #43ff9420; pointer-events: none; }
+.income-toast { position: absolute; z-index: 8; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; width: min(360px, calc(100% - 28px)); padding: 16px; border-radius: 16px; background: #071b13ed; border: 1px solid #67ffa478; box-shadow: 0 0 60px #43ff9420; pointer-events: none; }
 .income-toast b { display: block; font: 900 clamp(38px, 6vw, 64px)/1 ui-monospace, monospace; color: #70ff9b; text-shadow: 0 0 22px #41ff8477; }
 .income-toast span { display: block; color: #d5ffe3; font-size: 15px; margin-top: 9px; }
 .corner-tools { z-index: 15; align-items: center; }
@@ -599,6 +609,16 @@ textarea:focus-visible {
 }
 @media (max-height: 520px) and (orientation: landscape) {
   .future-comic { grid-template-columns: 55% 45%; grid-template-rows: 1fr; }
+  .ending { max-height: calc(100dvh - 120px); padding: 82px 24px 14px; }
+  .ending .ending__eyebrow { margin: 0 0 8px; font-size: 9px; }
+  .ending h2 { font-size: 28px; }
+  .ending p { font-size: 12px; line-height: 1.3; margin: 8px 0; }
+  .ending__future { margin: 10px 0; }
+  .ending__future span { padding: 8px 6px; }
+  .wallet { padding: 4px 12px; bottom: 6px; gap: 2px 10px; }
+  .wallet b { font-size: 24px; }
+  .wallet small { font-size: 8px; }
+  .wallet span { font-size: 9px; }
   .comic-copy { overflow-y: auto; touch-action: pan-y; padding: 72px 18px 12px; }
   .comic-copy h2 { font-size: 24px; }
   .comic-copy p { font-size: 13px; }

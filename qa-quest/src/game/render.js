@@ -236,17 +236,19 @@ function drawDrone(ctx, enemy, now) {
   ctx.strokeStyle = '#ff7580';
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(-31, -9); ctx.lineTo(-12, -23); ctx.lineTo(18, -18);
-  ctx.lineTo(33, 0); ctx.lineTo(18, 18); ctx.lineTo(-12, 23); ctx.closePath();
+  ctx.arc(0, 0, 26, 0, Math.PI * 2);
   ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#ff4d5a';
-  ctx.fillRect(-8, -5, 22, 10);
-  ctx.strokeStyle = '#8c98a8';
+  // Spiked bodies read as infection, not anonymous combat drones.
+  for (let spike = 0; spike < 10; spike++) {
+    const angle = spike * Math.PI / 5;
+    const x = Math.cos(angle), y = Math.sin(angle);
+    ctx.beginPath(); ctx.moveTo(x*25, y*25); ctx.lineTo(x*39, y*39); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x*39, y*39, 4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  }
+  ctx.fillStyle = '#ffdbb2';
+  ctx.fillRect(-13, -9, 7, 7); ctx.fillRect(6, -9, 7, 7);
   ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(-17, 14); ctx.lineTo(-37, 34);
-  ctx.moveTo(14, 15); ctx.lineTo(34, 35);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-12, 10); ctx.lineTo(-4, 5); ctx.lineTo(4, 11); ctx.lineTo(12, 5); ctx.stroke();
   ctx.restore();
 }
 
@@ -994,27 +996,8 @@ function drawReward(ctx, state, now) {
   shade.addColorStop(1, '#05080dcc');
   ctx.fillStyle = shade;
   ctx.fillRect(0, 0, WORLD.width, WORLD.height);
-  const qBotX = Math.min(WORLD.width - 170, state.player.x + 55);
-  const qBotY = 300;
-  ctx.fillStyle = '#171e29';
-  ctx.fillRect(qBotX - 255, qBotY + 100, 510, 38);
-  ctx.fillRect(qBotX - 205, qBotY + 138, 24, 165);
-  ctx.fillRect(qBotX + 181, qBotY + 138, 24, 165);
-  ctx.strokeStyle = '#64e9ff';
-  ctx.lineWidth = 4;
-  ctx.shadowColor = '#64e9ff';
-  ctx.shadowBlur = 22;
-  ctx.beginPath(); ctx.arc(qBotX, qBotY, 64 + Math.sin(now / 800) * 3, 0, Math.PI * 2); ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#64e9ff';
-  ctx.fillRect(qBotX - 23, qBotY - 10, 12, 8);
-  ctx.fillRect(qBotX + 11, qBotY - 10, 12, 8);
-  ctx.fillStyle = '#e9e3d5';
-  ctx.font = '700 18px ui-monospace, monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('Q-BOT // EMPTY SHELL', qBotX, qBotY + 180);
-  ctx.fillStyle = '#ffc857';
-  ctx.fillText(`ЗАРАБОТАНО: $ ${state.warehouse.wage}`, qBotX, qBotY + 215);
+  // The one live companion is screen-space DOM, independent of the warehouse camera.
+  // Wages remain in the bottom wallet rather than behind the central ending panel.
 }
 
 function drawCollapse(ctx, state) {

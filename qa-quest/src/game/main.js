@@ -1,4 +1,5 @@
 import { createInput } from './input.js';
+import { createCompanion } from './companion.js?v=center-virus-1';
 import { createAudioBus } from './audio.js?v=novice-1';
 import { getInteractionTarget, navigateToTarget, placeWorldButton, buildWakeFragment } from './wayfinding.js?v=novice-1';
 import { createFutureComic } from './future-comic.js?v=novice-1';
@@ -17,7 +18,7 @@ import {
   getNearbyAction,
   stepGame,
 } from './model.js?v=novice-1';
-import { renderGame } from './render.js?v=novice-1';
+import { renderGame } from './render.js?v=center-virus-1';
 import { getWakeFailureGuidance } from './wake-help.js?v=2';
 import { createCheckpointPersistence, loadCheckpoint } from './save.js?v=2';
 import { createTelemetry } from './telemetry.js';
@@ -77,6 +78,7 @@ let machineRunning = false;
 let gameGeneration = 0;
 let wakeAttempts = 0;
 const input = createInput(canvas);
+const companion = createCompanion(game, document.querySelector('#cursorCompanion'), hud.ending, prefersReducedMotion);
 const audio = createAudioBus();
 let lastAutoDelivered = state.warehouse.autoDelivered;
 let lastThreats = state.prologue.threats;
@@ -348,12 +350,12 @@ function updateHud(now = performance.now()) {
   incomeToast.hidden = now >= incomeNoticeUntil;
 
   if (state.scene === 'prologue') {
-    hud.chapter.textContent = 'ПРОЛОГ · ДО ПАДЕНИЯ';
-    hud.mission.textContent = firstMovementSeen ? 'Верни контроль' : 'Ты всё умел. Теперь вспомни.';
+    hud.chapter.textContent = 'ПРОЛОГ · ВНУТРИ АНТИВИРУСА';
+    hud.mission.textContent = firstMovementSeen ? 'Вычисти заражение' : 'Уничтожай вирусы';
     hud.message.textContent = 'WASD · МАНЕВРИРУЙ · ОРУДИЕ СТРЕЛЯЕТ САМО';
     hud.progress.style.width = `${(state.prologue.threats / 24) * 100}%`;
-    hud.system.textContent = 'БОЕВАЯ';
-    hud.sector.textContent = '00-А';
+    hud.system.textContent = 'ЗАЩИТА';
+    hud.sector.textContent = 'ТВОЙ ПК';
     hud.targets.textContent = `${state.prologue.threats}/24`;
   } else if (state.scene === 'collapse') {
     hud.chapter.textContent = 'СЕТЬ · СОЕДИНЕНИЕ ПОТЕРЯНО';
@@ -491,13 +493,14 @@ function frame(now) {
     incomeNoticeUntil = now + 1850;
     document.querySelector('#incomeSource').textContent = state.warehouse.incomeSource === 'robot' ? 'Рука заработала. Ты не таскал.' : 'Ящик доставлен. Ты заработал!';
     incomeToast.getAnimations().forEach(animation => animation.cancel());
-    incomeToast.animate([{ opacity: 0, transform: 'translate(-50%, 20px) scale(.8)' }, { opacity: 1, transform: 'translate(-50%, 0) scale(1.08)', offset: .2 }, { opacity: 1, transform: 'translate(-50%, -12px) scale(1)', offset: .85 }, { opacity: 0, transform: 'translate(-50%, -25px)' }], { duration: prefersReducedMotion ? 1 : 1850 });
+    incomeToast.animate([{ opacity: 0, transform: 'translate(-50%, -50%) scale(.8)' }, { opacity: 1, transform: 'translate(-50%, -50%) scale(1.08)', offset: .2 }, { opacity: 1, transform: 'translate(-50%, -50%) scale(1)', offset: .85 }, { opacity: 0, transform: 'translate(-50%, -50%) scale(.96)' }], { duration: prefersReducedMotion ? 1 : 1850 });
   }
   if (state.prologue.threats > lastThreats) {
     if (started) { audio.play('cannon'); audio.play('impact'); }
     lastThreats = state.prologue.threats;
   }
   updateHud(now);
+  companion.update(state.scene === 'reward' && !storyActive && !exitOpen && document.querySelector('#friendSandbox').hidden && document.querySelector('#futureComic').hidden, now);
   const wakeProgress = state.otherMind.phase === 'waking' && otherMindWakingAt !== null
     ? Math.min(1, Math.max(0, (now - otherMindWakingAt) / 1200))
     : (state.otherMind.phase === 'awake' ? 1 : 0);
