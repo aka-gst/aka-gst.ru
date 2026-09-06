@@ -636,14 +636,17 @@ const practicumSwitch = `
             <div class="quequest-copy">
               <div class="quequest-left">
                 <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
-                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+                <p class="tagline">Из ручной работы рождается собственная система.</p>
               </div>
               <h3 id="quequest-title">QueQuest</h3>
             </div>
           </article>
           <div class="practicum-more">
             <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы: LLM и агенты <b aria-hidden="true">↓</b></button>
-            <div class="practicum-more-body" id="practicum-more-body">
+            <div class="practicum-more-teaser" aria-hidden="true">
+              <span>LLM-практика</span><span>Агентные системы</span>
+            </div>
+            <div class="practicum-more-body" id="practicum-more-body" hidden inert aria-hidden="true">
               <aside class="practicum-side" aria-label="Дополнительные практикумы">
                 <div class="practicum-detail-stage">
                   ${practicumProjects.map((project) => practicumCard(project, true)).join('').trim()}
@@ -733,7 +736,7 @@ const workLead = `
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
           </div>
           <div class="work-col work-col--dharma">
-          <div class="work-put">
+          <article class="work-put work-system work-comics">
             <p class="kicker">Путь</p>
             <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
             <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
@@ -741,7 +744,7 @@ const workLead = `
               <a class="work-put-alt" href="/put/">та же история текстом →</a>
               <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
             </p>
-          </div>
+          </article>
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
@@ -1114,7 +1117,7 @@ ${сборникиПоказ.map((collection) => `
         <div class="story-collections">
 ${сборникиПоказ.map(storyCollectionPanel).join('\n')}
         </div>
-        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑ <span>Наверх</span></button></article>
+        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 tabindex="-1" data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑</button></article>
         <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
       </section>`;
 

@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="aka-gst — Архитектор AI-продуктов и агентных систем">
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=28da6ea1">
+    <link rel="stylesheet" href="/assets/site.css?v=9740e985">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -177,7 +177,7 @@
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя</p>
           </div>
           <div class="work-col work-col--dharma">
-          <div class="work-put">
+          <article class="work-put work-system work-comics">
             <p class="kicker">Путь</p>
             <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
             <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню</p>
@@ -185,7 +185,7 @@
               <a class="work-put-alt" href="/put/">та же история текстом →</a>
               <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
             </p>
-          </div>
+          </article>
           <a class="work-system work-dharma" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">
             <div class="work-dharma-shot">
               <img src="/assets/shots/anigma-magazin.jpg?v=d36d19d5" alt="Витрина магазина ANIGMA: корзина, кнопка «Shop the drop», фильтры и три товара с ценами — каталог, который ведут агенты" width="1200" height="750" decoding="async">
@@ -219,14 +219,17 @@
             <div class="quequest-copy">
               <div class="quequest-left">
                 <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=efbcb86e" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
-                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+                <p class="tagline">Из ручной работы рождается собственная система</p>
               </div>
               <h3 id="quequest-title">QueQuest</h3>
             </div>
           </article>
           <div class="practicum-more">
             <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы: LLM и агенты <b aria-hidden="true">↓</b></button>
-            <div class="practicum-more-body" id="practicum-more-body">
+            <div class="practicum-more-teaser" aria-hidden="true">
+              <span>LLM-практика</span><span>Агентные системы</span>
+            </div>
+            <div class="practicum-more-body" id="practicum-more-body" hidden inert aria-hidden="true">
               <aside class="practicum-side" aria-label="Дополнительные практикумы">
                 <div class="practicum-detail-stage">
                   <article class="practicum-detail" id="practicum-panel-praktikum-testing"
@@ -722,7 +725,7 @@
             <div><p class="kicker">Сборник · 2018</p><h2>Соляночка</h2><p class="story-collection-count">7 рассказов. Выбери из оглавления — текст раскроется здесь же.</p><ol><li><button type="button" data-story-open="solyanochka--myasnaya-konserva">Мясная консерва</button></li><li><button type="button" data-story-open="solyanochka--letuny">Летуны</button></li><li><button type="button" data-story-open="solyanochka--bag-v-sudbe">Баг в судьбе</button></li><li><button type="button" data-story-open="solyanochka--materinskaya-plata">Материнская плата</button></li><li><button type="button" data-story-open="solyanochka--blizorukiy-toropyga">Близорукий торопыга</button></li><li><button type="button" data-story-open="solyanochka--teplovaya-lovushka">Тепловая ловушка</button></li><li><button type="button" data-story-open="solyanochka--prosto-ya-zabyla-kakovo-eto">Просто я забыла, каково это</button></li></ol></div>
           </section>
         </div>
-        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑ <span>Наверх</span></button></article>
+        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 tabindex="-1" data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑</button></article>
         <div class="story-source" hidden><article data-story-source="solyanochka--myasnaya-konserva" data-story-book="Соляночка" data-story-title="Мясная консерва"><p>– Я могу сделать тебя богом. Хочешь?</p>
 <p>Пожалуй, это не самый предсказуемый вопрос от человека, которого ты знаешь всего пару часов. Тем более, что до этого я только молча подливал кислого пива, слушая твои пьяные бредни. Так себе из меня получился бармен, конечно. Но иначе было нельзя.</p>
 <hr class="story-break">
@@ -1671,6 +1674,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=d72789ef" defer></script>
+    <script src="/assets/app.js?v=462a77fa" defer></script>
   </body>
 </html>

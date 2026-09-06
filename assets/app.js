@@ -59,10 +59,19 @@
   for (const кнопка of document.querySelectorAll('[data-more-open]')) {
     const цель = document.getElementById(кнопка.dataset.moreOpen);
     if (!цель) { console.warn('[app] нет блока с id', кнопка.dataset.moreOpen); continue; }
+    const тизер = кнопка.parentElement?.querySelector('.practicum-more-teaser');
     кнопка.addEventListener('click', () => {
       const открыто = цель.toggleAttribute('data-open');
       кнопка.setAttribute('aria-expanded', String(открыто));
+      if (тизер) тизер.hidden = открыто;
+      цель.inert = !открыто;
+      цель.setAttribute('aria-hidden', String(!открыто));
+      цель.hidden = !открыто;
     });
+    цель.inert = true;
+    цель.setAttribute('aria-hidden', 'true');
+    цель.hidden = true;
+    if (тизер) тизер.hidden = false;
   }
 
   const ВКЛАДОЧНЫЕ = ['#work', '#games', '#stories'];
@@ -514,7 +523,24 @@
   const source = panel.querySelector('.story-source');
   const all = panel.querySelector('[data-story-all]');
   let currentCollection = null;
-  const closeReader = () => { if (reader) reader.hidden = true; };
+  let originButton = null;
+  let transitionToken = 0;
+  const closeReader = () => {
+    if (!reader || reader.hidden) return Promise.resolve();
+    const token = ++transitionToken;
+    reader.classList.remove('is-entering'); reader.classList.add('is-exiting');
+    return new Promise((resolve) => setTimeout(() => {
+      if (token !== transitionToken) return resolve();
+      reader.hidden = true; reader.classList.remove('is-exiting');
+      if (originButton?.isConnected) originButton.focus();
+      resolve();
+    }, window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 120 : 200));
+  };
+  reader?.addEventListener('animationend', (event) => {
+    if (reader.classList.contains('is-entering') && event.animationName !== 'story-reader-out') {
+      reader.classList.remove('is-entering');
+    }
+  });
   // Мгновенный перенос к элементу. Плавную прокрутку сюда возвращать нельзя:
   // владелец 31 августа 2026 — «уберите его вообще отовсюду и чтоб он больше
   // не появлялся!!». Убрано именно ощущение самовольного скольжения, а не сам
@@ -562,8 +588,10 @@
     reader.querySelector('[data-story-reader-title]').textContent = story.dataset.storyTitle;
     reader.querySelector('[data-story-reader-copy]').innerHTML = story.innerHTML;
     collections.forEach((collection) => { collection.hidden = true; });
+    originButton = button;
     reader.hidden = false;
-    кПередвижению(reader);
+    reader.classList.remove('is-exiting'); void reader.offsetWidth; reader.classList.add('is-entering');
+    requestAnimationFrame(() => { reader.querySelector('[data-story-reader-title]')?.focus(); кПередвижению(reader); });
   }));
   panel.querySelector('[data-story-back]')?.addEventListener('click', () => {
     if (currentCollection) showCollection(currentCollection);

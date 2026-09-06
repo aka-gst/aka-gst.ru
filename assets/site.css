@@ -235,7 +235,14 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .story-collection button:hover, .story-collection button:focus-visible { color:var(--accent); outline:0; }
 .story-reader-inline { grid-column:1 / -1; margin-top:4px; padding:24px; border:1px solid var(--line); border-radius:12px; background:rgba(0,0,0,.11); }
 .story-reader-inline > button { padding:0; border:0; background:none; color:var(--accent); font:700 13px var(--sans); cursor:pointer; }
-.story-reader-copy { max-width:760px; color:var(--text); font-size:17px; line-height:1.72; }
+.story-reader-inline > .story-to-top { font-size:24px; line-height:1; }
+.story-reader-inline.is-entering { animation: story-reader-in 280ms cubic-bezier(.2,.8,.2,1) both; }
+.story-reader-inline.is-exiting { animation: story-reader-out 200ms ease both; }
+@keyframes story-reader-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@keyframes story-reader-out { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(-6px); } }
+.story-reader-copy { max-width:780px; color:var(--text); font:20px/1.75 Georgia,serif; letter-spacing:.005em; }
+.story-reader-copy, .story-reader-inline > h2, .story-reader-inline > .kicker { margin-inline:auto; width:100%; max-width:780px; }
+.story-reader-copy p { margin:0 0 .82em; text-align:left; }
 .story-reader-copy .story-break { width:38%; margin:28px 0; border:0; border-top:1px solid var(--line); }
 /* Короткая страница: подвал к низу окна.
    Мерено 4 сентября на /praktikum/, десктоп 1440x900: содержимое кончалось
@@ -249,11 +256,16 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .course-shot { display:block; width:100%; height:auto; margin:0 0 12px; border:1px solid var(--line); border-radius:8px; }
 .course-stack { margin: 10px 0 0; color: var(--muted, #97968f); font-size: 12px; line-height: 1.5; }
 
-.story-to-top { position:fixed; right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); z-index:30; display:flex; align-items:center; gap:7px; min-height:44px; padding:10px 14px; border:1px solid var(--accent); border-radius:999px; background:rgba(15,12,25,.92); box-shadow:0 10px 34px #0009; color:var(--text); font:700 12px var(--sans); cursor:pointer; backdrop-filter:blur(10px); }
+.story-to-top { position:fixed; right:max(32px,env(safe-area-inset-right)); bottom:max(32px,env(safe-area-inset-bottom)); z-index:30; width:48px; height:48px; display:grid; place-items:center; padding:0; border:1px solid var(--accent); border-radius:50%; background:rgba(15,12,25,.92); box-shadow:0 10px 34px #0009; color:var(--text); font:700 24px/1 var(--sans); cursor:pointer; backdrop-filter:blur(10px); }
 .story-to-top:hover, .story-to-top:focus-visible { background:var(--accent-dim); outline:2px solid var(--accent); outline-offset:2px; }
 .story-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 24px; margin-top:14px; padding:13px 18px; border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:13px; }
 .story-bar b { color:var(--accent); font-size:16px; }.story-bar a { margin-left:auto; color:var(--text); font-weight:700; text-decoration:none; }
-@media (max-width:640px){.story-lead{grid-template-columns:1fr; padding:20px;}.story-all-link{justify-self:start;}.story-shelves{grid-template-columns:1fr;}.story-lead-book{grid-template-columns:76px 1fr;min-height:104px;}.story-lead-book img{width:76px;height:94px;}.story-collection{grid-template-columns:86px 1fr;gap:14px;padding:14px;}.story-collection > img{width:86px;height:128px;}.story-collection ol{columns:1;margin-top:14px;}.story-reader-inline{padding:18px;}.story-reader-copy{font-size:16px;}.story-to-top span{display:none;}.story-to-top{width:44px;justify-content:center;padding:0;}.story-bar a{margin-left:0;}}
+@media (max-width:640px){.story-lead{grid-template-columns:1fr; padding:20px;}.story-all-link{justify-self:start;}.story-shelves{grid-template-columns:1fr;}.story-lead-book{grid-template-columns:76px 1fr;min-height:104px;}.story-lead-book img{width:76px;height:94px;}.story-collection{grid-template-columns:86px 1fr;gap:14px;padding:14px;}.story-collection > img{width:86px;height:128px;}.story-collection ol{columns:1;margin-top:14px;}.story-reader-inline{margin-inline:-36px;padding:18px;}.story-reader-copy{font-size:18px;line-height:1.72;}.story-to-top{right:max(24px,env(safe-area-inset-right));bottom:max(24px,env(safe-area-inset-bottom));}.story-bar a{margin-left:0;}}
+@media (prefers-reduced-motion:reduce){.work-comics .work-put-main::after{animation:none;display:none}}
+@media (prefers-reduced-motion:reduce){.story-reader-inline.is-entering,.story-reader-inline.is-exiting{animation-duration:120ms;animation-name:story-reader-fade}.story-reader-inline.is-exiting{animation-direction:reverse}@keyframes story-reader-fade{from{opacity:0}to{opacity:1}}}
+.practicum-more .practicum-detail { height:auto; min-height:150px; }
+.practicum-more-body:not([data-open]) { visibility:hidden; }
+.practicum-more-body[data-open] { visibility:visible; }
 
 /* ── Первый экран работы ──────────────────────────────────────────── */
 /* На первом экране две реальные системы: приватный AI-шлюз и продукт с
@@ -399,6 +411,13 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-put-alt { font: 12px/1.4 var(--mono); color: var(--muted); text-decoration: none;
   border-bottom: 1px solid var(--line); }
 .work-put-alt:hover { color: var(--text); }
+.work-comics { align-items: stretch; justify-content: center; gap: 12px; }
+.work-col--dharma > .work-comics { flex: 0 0 auto; min-height: 0; padding: 18px; }
+.work-comics:hover, .work-comics:focus-within { border-color: var(--accent); box-shadow: 0 0 24px #7356d933; }
+.work-comics .work-put-main { width: 100%; justify-content: space-between; }
+.work-comics .work-put-main::after { animation: comics-scan 9s ease-in-out infinite; }
+ .work-comics .work-put-main::after { background: linear-gradient(100deg, transparent, #b68bff 45%, transparent); }
+@keyframes comics-scan { 0%, 90% { transform: translateX(-160%); opacity: 0; } 92% { opacity: 1; } 100% { transform: translateX(360%); opacity: 0; } }
 
 /* Сигнал возвращается с прежней частотой, но не «режет» блок мгновенным взмахом. */
 @media (prefers-reduced-motion: no-preference) {
@@ -1579,6 +1598,10 @@ article.gcard .launch { color: var(--dim); }
 .practicum-more-btn:hover { background: var(--card-hover); border-color: var(--accent); }
 .practicum-more-btn b { color: var(--accent); transition: transform .2s ease; }
 .practicum-more-btn[aria-expanded="true"] b { transform: rotate(180deg); }
+.practicum-more-teaser { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; color:var(--muted); font:600 12px/1.2 var(--sans); }
+.practicum-more-teaser span { padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,.03); }
+.practicum-more-teaser[hidden] { display:none; }
+.practicum-more { min-height:140px; }
 .practicum-more-body {
   display: grid; grid-template-rows: 0fr;
   transition: grid-template-rows 280ms cubic-bezier(.22, .61, .36, 1);
@@ -1590,6 +1613,10 @@ article.gcard .launch { color: var(--dim); }
 @media (prefers-reduced-motion: reduce) {
   .practicum-more-body { transition: none; }
   .practicum-more-btn b { transition: none; }
+}
+@media (max-width:640px) {
+  .practicum-more-teaser { max-width:300px; }
+  .practicum-more { min-height:180px; }
 }
 
 /* Чип на кадре шлюза. Сергей выбрал вариант В: «запрос → обрыв → ответ всё
