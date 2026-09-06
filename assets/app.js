@@ -42,11 +42,58 @@
     });
   });
 
+  // ── Якорь на раздел ВНУТРИ вкладки ────────────────────────────────
+  // Дефект с экрана Сергея, 6 сентября: он открыл /#masterskaya, а увидел
+  // «Игры» — вкладку, запомненную с прошлого захода. Раздел лежал в скрытой
+  // панели, поэтому браузеру было некуда прыгать, и человек решил, что
+  // Мастерской нет вовсе.
+  //
+  // Скрипт в шапке теперь выбирает вкладку по карте якорей ещё до отрисовки,
+  // а здесь вторая половина: довезти до раздела и повторить то же при смене
+  // хеша, когда страница не перезагружается.
+  const ВКЛАДОЧНЫЕ = ['#work', '#games', '#stories'];
+  // Своя переменная, а не общая ниже: та объявляется позже по файлу, и
+  // обращение к ней отсюда упало бы на загрузке.
+  const плавностьРазрешена = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const кЯкорю = (хеш, { плавно = true } = {}) => {
+    if (!хеш || хеш.length < 2) return false;
+    let цель = null;
+    try {
+      цель = document.getElementById(decodeURIComponent(хеш.slice(1)));
+    } catch (e) {
+      console.warn('[app] негодный якорь в адресе, отброшен:', хеш);
+      return false;
+    }
+    if (!цель) return false;
+    const панель = цель.closest('[data-panel]');
+    if (панель && панель.dataset.panel !== root.dataset.track) {
+      setTrack(панель.dataset.panel, { push: false });
+    }
+    // Панель показалась только что: до следующего кадра её высота нулевая,
+    // и прокрутка уехала бы не туда. Два кадра — раскладка и отрисовка.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      // Цель может быть свёрнута по замыслу — сборники рассказов на главной
+      // раскрываются обложкой. Прыгать в невидимое некуда, поэтому везём к
+      // ближайшему видимому предку: человек окажется у нужного блока, а не
+      // наверху страницы, где он вообще не поймёт, куда попал.
+      let куда = цель;
+      while (куда && !куда.offsetParent && куда.parentElement) куда = куда.parentElement;
+      if (!куда) return;
+      куда.scrollIntoView({ behavior: плавно && плавностьРазрешена ? 'smooth' : 'auto', block: 'start' });
+    }));
+    return true;
+  };
+
   setTrack(root.dataset.track || 'work', { push: false });
+  // На загрузке прыгаем сразу, без плавности: человек пришёл по ссылке и
+  // ждёт раздел, а не поездку через всю страницу.
+  if (location.hash && !ВКЛАДОЧНЫЕ.includes(location.hash)) кЯкорю(location.hash, { плавно: false });
   addEventListener('hashchange', () => {
-    if (location.hash === '#games') setTrack('play', { push: false });
-    if (location.hash === '#work') setTrack('work', { push: false });
-    if (location.hash === '#stories') setTrack('stories', { push: false });
+    if (location.hash === '#games') { setTrack('play', { push: false }); return; }
+    if (location.hash === '#work') { setTrack('work', { push: false }); return; }
+    if (location.hash === '#stories') { setTrack('stories', { push: false }); return; }
+    кЯкорю(location.hash);
   });
 
   // ── Живые метрики прогона ─────────────────────────────────────────
