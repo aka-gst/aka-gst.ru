@@ -16,3 +16,18 @@ acid/
 
 # Временное: правило 30г. Не хранится и не выкладывается.
 trash/
+
+# Рабочие записки и копии страниц заказчика — репозиторий открыт всему миру
+# (решение Сергея 6.09.2026: репозиторий остаётся открытым, внутреннее уезжает).
+# Записки переехали в /Users/gst/dev/zakrytoe-aka-gst-ru/docs.
+# Страницы Орион-С остаются на диске — их шлёт выкладка, — но в открытый
+# исходник не попадают; пересобираются из снимка:
+#   node psy-admin/tools/build-orion-demo.mjs
+docs/
+psy-admin/index.html
+psy-admin/schedule/index.html
+psy-admin/psycluborion/index.html
+psy-admin/pweducation/index.html
+psy-admin/consultation/index.html
+psy-admin/services/index.html
+psy-admin/programs/index.html
