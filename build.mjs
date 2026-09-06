@@ -44,6 +44,41 @@ const датаФайла = (relative) => {
   return statSync(полный).mtime;
 };
 
+// ── Кривые и длительности из Аниматеки ───────────────────────────────
+// Сергей называет плавную анимацию нашей слабой стороной, и он прав по
+// числам: на сайте было 48 переходов и девять разных кривых, в основном
+// голый ease — то есть системы не было вовсе, каждый писал своё.
+//
+// Аниматека лежит отдельной библиотекой (~/dev/animateka), и её значения
+// читаются ОТСЮДА, а не переписываются руками: скопированное число живёт
+// своей жизнью и через месяц расходится с источником. Файл читается при
+// сборке, переменные уезжают в разметку — лишнего запроса из браузера нет.
+const АНИМАТЕКА = '/Users/gst/dev/animateka/animateka.json';
+const анимТокены = (() => {
+  if (!existsSync(АНИМАТЕКА)) {
+    console.warn('  ! аниматеки нет на месте — кривые останутся прежними');
+    return '';
+  }
+  const а = JSON.parse(readFileSync(АНИМАТЕКА, 'utf8'));
+  const имена = {
+    'мягкий_выход': 'vyhod', 'резкий_выход': 'vyhod-rezkiy', 'спокойный': 'spokoyno',
+    'уход': 'uhod', 'пружина': 'pruzhina', 'пружина_мягче': 'pruzhina-myagche',
+  };
+  const строки = [];
+  for (const [ключ, короткое] of Object.entries(имена)) {
+    const к = а.кривые[ключ];
+    if (к) строки.push(`--an-${короткое}: cubic-bezier(${к.bezier.join(', ')})`);
+  }
+  // Из вилки берём середину: библиотека задаёт класс, а не точное число,
+  // и выбирать внутри класса надо по размеру движущегося. Для сайта середина.
+  const серёдка = (пара) => Math.round((пара[0] + пара[1]) / 2);
+  for (const [ключ, короткое] of Object.entries({ 'микро': 'mikro', 'раскрытие': 'raskrytie', 'страница': 'stranica' })) {
+    const д = а.длительности[ключ];
+    if (д) строки.push(`--an-${короткое}: ${серёдка(д.мс)}ms`);
+  }
+  return `:root{${строки.join(';')}}`;
+})();
+
 const cssVersion = assetVersion('assets/site.css');
 const jsVersion = assetVersion('assets/app.js');
 
@@ -1151,6 +1186,7 @@ const html = `<!doctype html>
     <meta name="twitter:title" content="${esc(site.title)}">
     <meta name="twitter:description" content="${esc(site.description)}">
     <meta name="twitter:image" content="${esc(site.url)}${esc(site.ogImage)}">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
@@ -1319,6 +1355,7 @@ const praktikumPage = `<!doctype html>
     <link rel="canonical" href="${esc(site.url)}/praktikum/">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
   </head>
@@ -1392,6 +1429,7 @@ const enPage = `<!doctype html>
     <link rel="alternate" hreflang="en" href="${esc(site.url)}/en/">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
   </head>
@@ -1503,6 +1541,7 @@ const readerHead = (title, description, canonical) => `
     <link rel="canonical" href="${esc(canonical)}">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
     <script defer src="/assets/afterimage-scroll.js?v=${assetVersion('assets/afterimage-scroll.js')}"></script>
@@ -1985,6 +2024,7 @@ const notFound = `<!doctype html>
     <title>Страница не найдена — ${esc(site.handle)}</title>
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>
@@ -2033,6 +2073,7 @@ const unavailable = `<!doctype html>
     <title>Сервис недоступен — ${esc(site.handle)}</title>
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>

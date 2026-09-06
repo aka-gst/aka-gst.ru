@@ -236,8 +236,8 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .story-reader-inline { grid-column:1 / -1; margin-top:4px; padding:24px; border:1px solid var(--line); border-radius:12px; background:rgba(0,0,0,.11); }
 .story-reader-inline > button { padding:0; border:0; background:none; color:var(--accent); font:700 13px var(--sans); cursor:pointer; }
 .story-reader-inline > .story-to-top { font-size:24px; line-height:1; }
-.story-reader-inline.is-entering { animation: story-reader-in 280ms cubic-bezier(.2,.8,.2,1) both; }
-.story-reader-inline.is-exiting { animation: story-reader-out 200ms ease both; }
+.story-reader-inline.is-entering { animation: story-reader-in var(--an-raskrytie, 280ms) var(--an-vyhod, cubic-bezier(.2,.8,.2,1)) both; }
+.story-reader-inline.is-exiting { animation: story-reader-out var(--an-mikro, 150ms) var(--an-uhod, ease) both; }
 @keyframes story-reader-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 @keyframes story-reader-out { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(-6px); } }
 .story-reader-copy { max-width:780px; color:var(--text); font:20px/1.75 Georgia,serif; letter-spacing:.005em; }
@@ -341,7 +341,7 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .gw-live > summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center;
   gap: 7px; min-height: 44px; font: 600 13px/1.3 var(--sans); color: var(--text); }
 .gw-live > summary::-webkit-details-marker { display: none; }
-.gw-live > summary i { font-style: normal; color: var(--muted); transition: transform .18s ease; }
+.gw-live > summary i { font-style: normal; color: var(--muted); transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
 .gw-live[open] > summary i { transform: rotate(90deg); }
 .gw-live > summary:hover i { color: var(--text); }
 .gw-steps { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 7px; }
@@ -361,11 +361,11 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
    от трёх до пяти; список правил на каждый номер пришлось бы дописывать
    руками, и на шестом он бы кончился молча. */
 .gw-live.igraet .gw-run:not([hidden]) .gw-steps li {
-  opacity: 0; animation: gw-vhod .34s ease-out forwards;
+  opacity: 0; animation: gw-vhod var(--an-raskrytie, 280ms) var(--an-vyhod, ease-out) forwards;
   animation-delay: calc(var(--gw-i, 0) * .6s + .05s);
 }
 /* Уход перед сменой прогона: не мигание, а короткое затухание блока целиком. */
-.gw-live .gw-run.uhodit { animation: gw-uhod .4s ease-in forwards; }
+.gw-live .gw-run.uhodit { animation: gw-uhod var(--an-raskrytie, 280ms) var(--an-uhod, ease-in) forwards; }
 @keyframes gw-uhod { to { opacity: 0 } }
 .gw-case { margin: 9px 0 0; font: 11px/1.45 var(--mono); color: var(--muted); opacity: .85; }
 /* Кому движение мешает — шаги просто стоят на месте, и смены прогонов нет:
@@ -601,7 +601,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
    а не исчезнет навсегда. */
 [data-reveal] {
   opacity: 0; transform: translateY(14px);
-  transition: opacity .6s cubic-bezier(.22, .61, .36, 1), transform .6s cubic-bezier(.22, .61, .36, 1);
+  transition: opacity var(--an-stranica, 500ms) var(--an-vyhod, ease-out), transform var(--an-stranica, 500ms) var(--an-vyhod, ease-out);
 }
 [data-reveal].is-visible { opacity: 1; transform: none; }
 
@@ -1132,7 +1132,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   cursor: pointer; color: var(--text); font-size: 14px; font-weight: 650; list-style: none;
 }
 .project-index summary::-webkit-details-marker { display: none; }
-.project-index summary b { color: var(--accent); font-size: 17px; transition: transform .18s ease; }
+.project-index summary b { color: var(--accent); font-size: 17px; transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
 .project-index[open] summary { border-bottom: 1px solid var(--line); }
 .project-index[open] summary b { transform: rotate(180deg); }
 .project-index .list { border: 0; border-radius: 0 0 var(--r) var(--r); }
@@ -1604,7 +1604,7 @@ article.gcard .launch { color: var(--dim); }
 .practicum-more { min-height:140px; }
 .practicum-more-body {
   display: grid; grid-template-rows: 0fr;
-  transition: grid-template-rows 280ms cubic-bezier(.22, .61, .36, 1);
+  transition: grid-template-rows var(--an-raskrytie, 280ms) var(--an-vyhod, cubic-bezier(.22,.61,.36,1));
 }
 .practicum-more-body > * { overflow: hidden; min-height: 0; }
 .practicum-more-body[data-open] { grid-template-rows: 1fr; }
