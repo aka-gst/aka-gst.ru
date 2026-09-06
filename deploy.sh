@@ -68,6 +68,31 @@ echo "== PsyAdmin: защита от старой выкладки =="
 node psy-admin/tools/release-guard.mjs --live-base "${PSY_ADMIN_LIVE_BASE:-https://aka-gst.ru}"
 node build.mjs
 
+# Набор тестов — ВОРОТА выкладки, а не примечание в отчёте.
+#
+# 6 сентября я дважды выложил при одном красном тесте: прогонял набор,
+# видел «41 прошло, 1 упал» и всё равно шёл дальше — первый раз заметил
+# после выкладки, второй раз тоже. Оба раза сайт не пострадал, но полагаться
+# на то, что я замечу красную строку в потоке вывода, нельзя: внимательность
+# кончается вместе с контекстом, а ворота не кончаются.
+#
+# Пропустить осознанно можно: DEPLOY_BEZ_TESTOV=1 sh deploy.sh --go — но это
+# решение, которое надо принять руками, а не забыть.
+if [ "${DEPLOY_BEZ_TESTOV:-}" = "1" ]; then
+  echo "== тесты пропущены по требованию =="
+else
+  echo "== тесты =="
+  if node --test tests/*.mjs > /tmp/deploy-testy.$$ 2>&1; then
+    grep -E "(pass|fail) [0-9]+$" /tmp/deploy-testy.$$ | sed "s/^/  /"
+    rm -f /tmp/deploy-testy.$$
+  else
+    echo "!! набор тестов красный — выкладка остановлена" >&2
+    grep -E "^..? (not ok|✖|fail )" /tmp/deploy-testy.$$ | head -5 >&2
+    rm -f /tmp/deploy-testy.$$
+    exit 1
+  fi
+fi
+
 missing=""
 for item in $PAYLOAD; do
   [ -e "$item" ] || missing="$missing $item"

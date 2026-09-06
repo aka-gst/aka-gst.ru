@@ -323,6 +323,16 @@ aka-gst.ru, www.aka-gst.ru {
     reverse_proxy contact:8080
   }
 
+  # Дневник пути: бот кладёт событие, страница показывает его сразу.
+  # flush_interval -1 обязателен: без него Caddy копит поток событий в
+  # буфере, и «сразу» превращается в «когда наберётся», то есть цель в
+  # 300 мс не выполняется по устройству, а не по нагрузке.
+  handle_path /api/dnevnik/* {
+    reverse_proxy dnevnik:8080 {
+      flush_interval -1
+    }
+  }
+
   # Общий вход всего сайта. Сервис живёт на уровне сайта (ops/accounts), а не
   # внутри какого-то проекта: одна учётная запись обслуживает Лилу, QA Quest и
   # лидерборд. Префикс не срезается — сервис ждёт полный путь.
@@ -336,8 +346,15 @@ aka-gst.ru, www.aka-gst.ru {
 
   # Keep anonymous analytics collection on the trusted main origin. The Umami
   # admin UI remains isolated on stats.aka-gst.ru.
-  handle_path /pulse/* {
+  # Наружу открыты ровно два пути счётчика: файл скрипта и приём событий.
+  # Панель и форма входа доступны только на stats.aka-gst.ru (4 сентября 2026).
+  @pulse_public path /pulse/script.js /pulse/api/send
+  handle @pulse_public {
+    uri strip_prefix /pulse
     reverse_proxy umami:3000
+  }
+  handle /pulse/* {
+    respond "Not Found" 404
   }
 
   handle /_next/* {
