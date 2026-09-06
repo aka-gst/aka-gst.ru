@@ -61,6 +61,7 @@ qa-quest
 psy-admin
 photodata
 way
+torgash
 "
 
 echo "== сборка =="
