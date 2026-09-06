@@ -431,7 +431,7 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
     // n — порядковый номер живого приёмника. Два события в одну миллисекунду
     // одного вида без него слились бы в одно, и второе пропало бы молча.
     return {vid: String(vid), ts_ms: ts, minut: Number.isFinite(minut) ? minut : 0,
-            n: syroe.n};
+            n: syroe.n, server_ms: Number(syroe.server_ms)};
   }
 
   function dobavit(syroe, svezhee) {
@@ -476,11 +476,20 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
     // хочется на новую запись, а не на прыжок остальных.
     if (svezhee && !tihiy.matches) rastit(li);
 
-    if (svezhee && popravka !== null) {
-      // Время бота приведено к нашим часам поправкой из state, иначе
-      // разница часов устройств выдала бы себя за задержку доставки.
-      const seychas = Date.now() + popravka;
-      pokazatZaderzhku(Math.max(0, (seychas - s.ts_ms) / 1000));
+    if (svezhee) {
+      // Лучший случай: приёмник кладёт в событие server_ms — время приёма по
+      // СВОИМ часам. Тогда задержка считается двумя серверными числами, и
+      // часы браузера в неё не входят вовсе: ни сверять их, ни округлять до
+      // секунды не нужно.
+      if (Number.isFinite(s.server_ms) && s.server_ms > 0) {
+        chasyGrubo = false;
+        popravka = popravka === null ? 0 : popravka;   // плашка знает, что число есть
+        pokazatZaderzhku(Math.max(0, (s.server_ms - s.ts_ms) / 1000));
+      } else if (popravka !== null) {
+        // Запасной путь: время бота приведено к нашим часам поправкой, иначе
+        // разница часов устройств выдала бы себя за задержку доставки.
+        pokazatZaderzhku(Math.max(0, (Date.now() + popravka - s.ts_ms) / 1000));
+      }
     }
   }
 
