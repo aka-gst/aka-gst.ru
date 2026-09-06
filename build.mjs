@@ -636,7 +636,7 @@ const practicumSwitch = `
             <div class="quequest-copy">
               <div class="quequest-left">
                 <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
-                <p class="tagline">Из ручной работы рождается собственная система.</p>
+                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
               </div>
               <h3 id="quequest-title">QueQuest</h3>
             </div>
