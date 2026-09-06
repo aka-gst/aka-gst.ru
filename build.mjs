@@ -680,8 +680,21 @@ const gwПрогон = gwПрогоны.прогоны[0];
 // в репозиторий на день позже прогона — ровно так и вышло с первой записью.
 // Поэтому: есть «когда» из журнала — берём его, нет — дату файла. Руками не
 // пишем ни то, ни другое.
-const gwКогда = (gwПрогон.когда ? new Date(gwПрогон.когда) : датаФайла('data/gw-progony.json'))
-  .toLocaleString('ru-RU', { day: 'numeric', month: 'long', timeZone: 'Europe/Moscow' });
+// Время прогона, а не «съёмки»: это час, когда тест действительно бежал на
+// нашей машине, и подписано оно словом «прогон». Все девять записей сейчас
+// из одного прогона — тогда честнее сказать это один раз, чем повторить
+// девять; разойдутся по времени — покажем у каждой свою.
+const когдаПрогон = (iso) => {
+  const д = new Date(iso);
+  const дата = д.toLocaleString('ru-RU', { day: 'numeric', month: 'numeric', timeZone: 'Europe/Moscow' });
+  const час = д.toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
+  return `${дата} в ${час}`;
+};
+const времена = [...new Set(gwПрогоны.прогоны.map((п) => п.когда).filter(Boolean))];
+const gwОдинПрогон = времена.length === 1;
+const gwКогда = времена.length
+  ? (gwОдинПрогон ? `прогон ${когдаПрогон(времена[0])}` : `${времена.length} прогонов, последний ${когдаПрогон(времена.sort().at(-1))}`)
+  : датаФайла('data/gw-progony.json').toLocaleString('ru-RU', { day: 'numeric', month: 'long', timeZone: 'Europe/Moscow' });
 // Все прогоны лежат в разметке, показывается один. Так блок работает и без
 // скрипта — человек увидит первый прогон целиком, — а со скриптом они идут
 // по кругу. Просьба Сергея от 6 сентября: «не один сценарий, а 5-10 разных
@@ -690,13 +703,13 @@ const gwШаги = gwПрогоны.прогоны.map((прогон, i) => `<di
                 <ol class="gw-steps">
 ${прогон.шаги.map((ш) => `                  <li data-gw="${esc(ш.вид)}"><b>${esc(ш.что)}</b><span>${esc(ш.как)}</span></li>`).join('\n')}
                 </ol>
-                <p class="gw-case">${esc(прогон.имя)} · ${esc(прогон.примечание)}</p>
+                <p class="gw-case">${esc(прогон.имя)}${gwОдинПрогон || !прогон.когда ? '' : ` · прогон ${esc(когдаПрогон(прогон.когда))}`} · ${esc(прогон.примечание)}</p>
               </div>`).join('\n              ');
 
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
         <div class="work-duet">
-          <div class="work-col">
+          <div class="work-col work-col--gateway">
           <article class="work-system work-gateway">
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
@@ -711,13 +724,13 @@ const workLead = `
             <details class="gw-live">
               <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
 <div class="gw-runs">${gwШаги}</div>
-              <p class="gw-note">${gwПрогоны.прогоны.length} ${склонение(gwПрогоны.прогоны.length, 'запись', 'записи', 'записей')} прогонов из журналов, ${esc(gwКогда)}. Шлюз настоящий, отказы настоящие — поддельный только источник ответа. Повторяется одной командой из репозитория.</p>
+              <p class="gw-note">${gwПрогоны.прогоны.length} ${склонение(gwПрогоны.прогоны.length, 'запись', 'записи', 'записей')} из журналов, ${esc(gwКогда)}. Шлюз настоящий, отказы настоящие — поддельный только источник ответа. Повторяется одной командой из репозитория.</p>
             </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
           </div>
-          <div class="work-col">
+          <div class="work-col work-col--dharma">
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
