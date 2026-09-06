@@ -25,11 +25,16 @@ body{margin:0;background:var(--fon);color:var(--nadfon);
 .stolby{flex:1;display:flex;flex-direction:column}
 @media (min-width:900px){
   .stolby{display:grid;grid-template-columns:minmax(0,1fr) 330px;
-    grid-template-rows:auto auto 1fr;gap:16px 20px;align-items:start}
-  .lenta{grid-column:1;grid-row:1/4}
+    grid-template-rows:auto 1fr;gap:16px 20px;align-items:stretch}
+  /* Лента задаёт высоту строки и прокручивается внутри себя. Без этого
+     правая колонка обрывалась на 46% высоты, а под ней оставалось 54%
+     черноты — та же беда с пустым местом, только повёрнутая на бок. */
+  .lenta{grid-column:1;grid-row:1/3;max-height:calc(100vh - 128px);
+    overflow-y:auto;padding-right:6px}
   .pusto{grid-column:1;grid-row:1}
   .bok{grid-column:2;grid-row:1}
-  .nedelya{grid-column:2;grid-row:2}
+  .nedelya{grid-column:2;grid-row:2;display:flex;flex-direction:column}
+  .nedelya .dni{flex:1;height:auto;min-height:78px}
 }
 /* На телефоне неделя стоит ПОД лентой: наверху экрана должны быть число и
    первые отметки, а не сводная картинка. В боковой колонке ноутбука она,
@@ -50,22 +55,39 @@ body[data-svyaz=slom] .svyaz{color:var(--slom)}
 @keyframes puls{0%,100%{opacity:1}50%{opacity:.35}}
 .yazyki{margin-left:auto;display:flex;gap:2px;background:var(--panel);
   border:1px solid var(--liniya);border-radius:9px;padding:2px}
-.yazyki button{background:none;border:0;color:var(--tusklo);font:inherit;
-  font-size:12px;padding:5px 10px;border-radius:7px;cursor:pointer}
+/* Кнопка 37x28 под пальцем не нажимается: правило требует 44 точки.
+   По ширине растим саму кнопку — невидимая область у трёх кнопок подряд
+   перекрыла бы соседей, и нажатие между ними попадало бы не туда.
+   По высоте хватает невидимой области: сверху и снизу соседей нет. */
+.yazyki button{position:relative;background:none;border:0;color:var(--tusklo);
+  font:inherit;font-size:12px;padding:5px 0;min-width:44px;
+  border-radius:7px;cursor:pointer}
+.yazyki button::after{content:"";position:absolute;left:0;right:0;top:50%;
+  transform:translateY(-50%);height:44px}
 .yazyki button[aria-pressed=true]{background:var(--liniya);color:var(--tekst)}
 
 /* Число, ради которого всё: сколько прошло от нажатия в боте до появления
    здесь. Это и есть «синхронизация», которую видно глазом. */
 .zaderzhka{background:var(--panel);color:var(--tekst);border:1px solid var(--liniya);
   border-radius:14px;padding:14px 16px;margin-bottom:16px}
-.zaderzhka b{display:block;font:600 30px/1.05 ui-monospace,SFMono-Regular,Menlo,monospace;
+/* Высота строки одна и та же для числа и для слов. Иначе на ПЕРВОМ живом
+   событии слова сменяются числом, шрифт растёт 19 -> 30, плашка становится
+   выше, и вся лента прыгает вниз — ровно один раз, на первом впечатлении. */
+.zaderzhka b{display:flex;align-items:center;height:32px;overflow:hidden;
+  font:600 30px/1.05 ui-monospace,SFMono-Regular,Menlo,monospace;
   font-variant-numeric:tabular-nums}
+/* Слова в одну строку и высотой ровно с число. Двумя строками они делали
+   плашку выше на 8 точек, и на телефоне, где плашка стоит НАД лентой, это
+   двигало всю ленту при первом же событии. */
+body[data-zhdyot=da] .zaderzhka b,
+body[data-chasy=nesvereny] .zaderzhka b{white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;display:block;line-height:32px}
 .zaderzhka span{color:var(--tusklo);font-size:15px;line-height:1.35}
 body[data-chasy=nesvereny] .zaderzhka b{color:var(--zhdet);font-size:19px}
 /* До первой отметки в плашке стоял прочерк — а это буквально первый кадр,
    который видит человек: большая светлая плашка, а в ней тире. Пока число
    не измерено, плашка говорит словами. */
-body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
+body[data-zhdyot=da] .zaderzhka b{font-size:16px;color:var(--zhdet);
   font-family:inherit;font-weight:600}
 
 /* Счёт отметок. На широком экране он держит правую колонку, на узком стоит
@@ -83,6 +105,7 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
 .nedelya{background:var(--panel);color:var(--tekst);border:1px solid var(--liniya);
   border-radius:14px;padding:14px 16px 12px}
 .nedelya>span{color:var(--tusklo);font-size:13.5px;display:block;margin-bottom:12px}
+.nedelya>span b{font-weight:600;color:var(--tekst)}
 .dni{display:flex;align-items:flex-end;gap:8px;height:78px}
 .den{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;
   justify-content:flex-end}
@@ -138,7 +161,8 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
 @media (max-width:430px){
   .holst{padding:14px 12px 28px}
   h1{font-size:18px}
-  .zaderzhka b{font-size:26px}
+  .zaderzhka b{font-size:26px;height:28px}
+  body[data-zhdyot=da] .zaderzhka b{line-height:28px;font-size:15px}
   .otmetka{padding:11px 12px;gap:10px}
   .znak{width:34px;height:34px}
 }
@@ -171,7 +195,7 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
     <p class="pusto" data-pusto data-t="pusto">Отметок пока нет</p>
 
     <div class="nedelya">
-      <span data-t="nedelya">последние семь дней</span>
+      <span><span data-t="nedelya">последние семь дней</span><b data-minut-nedeli></b></span>
       <div class="dni" data-dni></div>
     </div>
   </div>
@@ -185,19 +209,19 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
   // Подписи короткие и без точек в конце: так во всех интерфейсных строках.
   const SLOVA = {
     ru: {zagolovok:'Дневник пути', zaderzhka_podpis:'время доставки · от телефона до этой страницы',
-         zhdyot:'ждёт первой отметки', nedelya:'последние семь дней', segodnya:'сегодня', vsego:'всего',
+         zhdyot:'ждёт первой отметки', zhdyot_novoy:'ждёт новой отметки', poslednyaya:'последняя', nedelya:'последние семь дней', segodnya:'сегодня', vsego:'всего',
          pusto:'Отметок пока нет', zhivo:'на связи', zhdet:'подключаемся',
          slom:'связь потеряна', nesvereny:'часы не сверены',
          meditation:'Медитация', yoga:'Йога', practice:'Практика',
          minut:'мин', sek:'с', tolko:'только что появилось'},
     en: {zagolovok:'Path Diary', zaderzhka_podpis:'delivery time · from phone to this page',
-         zhdyot:'waiting for the first entry', nedelya:'last seven days', segodnya:'today', vsego:'total',
+         zhdyot:'waiting for the first entry', zhdyot_novoy:'waiting for a new entry', poslednyaya:'last', nedelya:'last seven days', segodnya:'today', vsego:'total',
          pusto:'No entries yet', zhivo:'connected', zhdet:'connecting',
          slom:'connection lost', nesvereny:'clocks not synced',
          meditation:'Meditation', yoga:'Yoga', practice:'Practice',
          minut:'min', sek:'s', tolko:'just appeared'},
     de: {zagolovok:'Wegtagebuch', zaderzhka_podpis:'Zustellzeit · vom Handy bis zu dieser Seite',
-         zhdyot:'wartet auf den ersten Eintrag', nedelya:'letzte sieben Tage', segodnya:'heute', vsego:'gesamt',
+         zhdyot:'wartet auf den ersten Eintrag', zhdyot_novoy:'wartet auf einen neuen Eintrag', poslednyaya:'zuletzt', nedelya:'letzte sieben Tage', segodnya:'heute', vsego:'gesamt',
          pusto:'Noch keine Einträge', zhivo:'verbunden', zhdet:'verbinde',
          slom:'Verbindung verloren', nesvereny:'Uhren nicht synchron',
          meditation:'Meditation', yoga:'Yoga', practice:'Praxis',
@@ -256,7 +280,14 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
     // и прочерк рядом с ними так же нем.
     if (sek === null && !bylZamer) {
       document.body.dataset.zhdyot = 'da';
-      polePauzy.textContent = t('zhdyot');
+      // «Ждёт первой отметки» рядом с «13 всего» читается как поломка: как
+      // ждёт, если тринадцать уже есть. Технически верно — время доставки
+      // ещё не измеряли, — а человеку это невидно. Поэтому текст говорит о
+      // том, чего ждём, и не спорит со счётчиком.
+      const verhnyaya = lenta.querySelector('.otmetka');
+      polePauzy.textContent = verhnyaya
+        ? `${t('zhdyot_novoy')} · ${t('poslednyaya')} ${vremya(Number(verhnyaya.dataset.ts))}`
+        : t('zhdyot');
       return;
     }
     if (typeof sek === 'number') bylZamer = true;
@@ -357,6 +388,15 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
       const i = 6 - Math.max(0, nazad);
       if (i >= 0 && i < 7) schyot[i]++;
     }
+    // Минуты за неделю: колонка должна нести смысл, а не занимать место.
+    let minutNedeli = 0;
+    for (const el of vse) {
+      const ts = Number(el.dataset.ts), m = Number(el.dataset.minut);
+      if (Number.isFinite(ts) && ts >= nachaloSegodnya - 6 * den && Number.isFinite(m)) minutNedeli += m;
+    }
+    const podpis = document.querySelector('[data-minut-nedeli]');
+    if (podpis) podpis.textContent = minutNedeli ? ` · ${minutNedeli} ${t('minut')}` : '';
+
     const potolok = Math.max(1, ...schyot);
     const dni = document.querySelector('[data-dni]');
     dni.replaceChildren();
@@ -367,7 +407,9 @@ body[data-zhdyot=da] .zaderzhka b{font-size:19px;color:var(--zhdet);
       const i_ = document.createElement('i');
       // Пустой день оставляет тонкую полоску, а не исчезает: провал в череде
       // дней — тоже часть пути, и его должно быть видно.
-      i_.style.height = schyot[i] ? Math.round(12 + 46 * schyot[i] / potolok) + 'px' : '3px';
+      // Доля от высоты места, а не от жёстких точек: на ноутбуке колонка
+      // тянется на всю ленту, и столбики должны тянуться вместе с ней.
+      i_.style.height = schyot[i] ? Math.round(14 + 72 * schyot[i] / potolok) + '%' : '4px';
       i_.title = String(schyot[i]);
       const u = document.createElement('u');
       u.textContent = d.toLocaleDateString(yaz === 'ru' ? 'ru-RU' : yaz, {weekday: 'short'})
