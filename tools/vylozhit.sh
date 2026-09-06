@@ -45,6 +45,21 @@ for x in "$@"; do
   esac
 done
 
+# Та же калитка, что в deploy.sh: выкладка шлёт файлы С ДИСКА, а не из
+# коммита, значит уносит на бой чужую незакоммиченную работу. Здесь она
+# нужна не меньше — этот путь возит то, чего нет в PAYLOAD (zoo, leela,
+# puzzle-quest), и до 7 сентября 2026 стоял без всякой проверки: калитку
+# поставили на одну дверь из двух, а это то же самое, что ни на одну.
+# shellcheck disable=SC2086
+if ! sh tools/chuzhoe-v-dereve.sh $LIST; then
+  if [ "${DEPLOY_S_CHUZHIM:-}" = "1" ]; then
+    echo "== выкладываю вместе с незакоммиченным: DEPLOY_S_CHUZHIM=1 =="
+  else
+    echo "  выкладка остановлена. Разобрались — DEPLOY_S_CHUZHIM=1 sh tools/vylozhit.sh ..." >&2
+    exit 1
+  fi
+fi
+
 if [ "$needs_psy_admin_guard" -eq 1 ]; then
   echo "== PsyAdmin: защита от старой выкладки =="
   node psy-admin/tools/release-guard.mjs --live-base "$SITE"
