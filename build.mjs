@@ -636,7 +636,7 @@ const practicumSwitch = `
             <div class="quequest-copy">
               <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
               <h3 id="quequest-title">QueQuest</h3>
-              <p class="tagline">Таскаешь ящики за бабки. Хочешь запрограммировать, чтоб таскали за тебя?</p>
+              <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
             </div>
           </article>
           <div class="practicum-more">
@@ -685,9 +685,10 @@ const workLead = `
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
-              <p>Связывает AI-агентов с приложениями, держит работу стабильной и защищает данные — без передачи наружу.</p>
+              <p>Мост между твоими программами и нейросетью: пропускает запросы, держит связь при сбоях и не отдаёт данные наружу.</p>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
+              <span class="gw-journey dharma-journey" aria-hidden="true"><b>запрос</b><i></i><b>обрыв</b><i></i><b>ответ всё равно</b></span>
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
               <span><b data-metric="tests">66</b> проверок · живой LLM и браузер ↗</span>
             </a>

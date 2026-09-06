@@ -1561,3 +1561,16 @@ article.gcard .launch { color: var(--dim); }
   .practicum-more-body { transition: none; }
   .practicum-more-btn b { transition: none; }
 }
+
+/* Чип на кадре шлюза. Сергей выбрал вариант В: «запрос → обрыв → ответ всё
+   равно» — не про устройство, а про то, чем шлюз ценен. Вид тот же, что у
+   чипа Dharma (он ему нравится), поэтому класс переиспользован целиком, а
+   здесь только место: у Dharma чип справа внизу, у шлюза справа внизу лёг бы
+   на подпись «66 проверок». */
+.work-gateway-proof span.gw-journey {
+  display: flex; flex-wrap: nowrap; white-space: nowrap;
+  right: 10px; bottom: 10px; top: auto; left: auto; width: max-content;
+  padding: 7px 8px; font: 600 9px/1 var(--mono); color: #c8ffe9;
+}
+.work-gateway-proof span.gw-journey b { white-space: nowrap; }
+.work-gateway-proof:hover .gw-journey, .work-gateway-proof:focus-visible .gw-journey { opacity: 1; border-color: #65e5b5; box-shadow: 0 0 18px #46dca34d; }
