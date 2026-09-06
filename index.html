@@ -27,11 +27,11 @@
     <meta name="twitter:title" content="aka-gst — Архитектор AI-продуктов и агентных систем">
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=62a11688">
+    <link rel="stylesheet" href="/assets/site.css?v=a01f9f1d">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
-        var ЯКОРЯ = {"work-lead-title":"work","practicums-title":"work","quequest-title":"work","practicum-panel-praktikum-testing":"work","practicum-panel-ai-agent-service-lab":"work","masterskaya":"work","masterskaya-title":"work","products-title":"work","p-psy-ai-admin":"work","p-photo-meta-editor":"work","profile-title":"work","all-work-title":"work","other-games-title":"play","stories-lead-title":"stories","story-collection-a-potom":"stories","story-collection-tri-iznutri":"stories","story-collection-solyanochka":"stories"};
+        var ЯКОРЯ = {"work-lead-title":"work","practicums-title":"work","quequest-title":"work","practicum-more-body":"work","practicum-panel-praktikum-testing":"work","practicum-panel-ai-agent-service-lab":"work","masterskaya":"work","masterskaya-title":"work","products-title":"work","p-psy-ai-admin":"work","p-photo-meta-editor":"work","profile-title":"work","all-work-title":"work","other-games-title":"play","stories-lead-title":"stories","story-collection-a-potom":"stories","story-collection-tri-iznutri":"stories","story-collection-solyanochka":"stories"};
         var h = location.hash.slice(1);
         var t = h === 'games' ? 'play'
               : h === 'stories' ? 'stories'
@@ -77,6 +77,7 @@
     <main id="main">
       <div class="panel" data-panel="work"><section class="work-lead" aria-labelledby="work-lead-title">
         <div class="work-duet">
+          <div class="work-col">
           <article class="work-system work-gateway">
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
@@ -89,7 +90,7 @@
             </a>
             <details class="gw-live">
               <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
-              <ol class="gw-steps">
+<ol class="gw-steps">
                 <li data-gw="ok"><b>запрос к модели</b><span>ответ пришёл, 17 мс</span></li>
                 <li data-gw="warn"><b>модель замолчала</b><span>ждём… ждём… ответа нет</span></li>
                 <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
@@ -97,12 +98,13 @@
                 <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «поток прерван», закрыл корректно</span></li>
                 <li data-gw="ok"><b>восемь запросов разом</b><span>все 200 · p50 17.2 мс · p95 18.2 мс</span></li>
               </ol>
-              <p class="gw-note">Запись прогона стенда отказов, 5 сентября. Шлюз настоящий,
-              обрыв настоящий — поддельный только источник ответа. Модель получила 11 обращений,
-              ни один запрос не завис. Повторяется одной командой из репозитория.</p>
+              <p class="gw-note">Запись прогона: молчание модели и обрыв потока, 6 сентября. Шлюз настоящий, обрыв настоящий — поддельный только источник ответа. Модель получила 11 обращений, ни один запрос не завис. Повторяется одной командой из репозитория.</p>
             </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
+          </div>
+          <div class="work-col">
           <a class="work-system work-dharma" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">
             <div class="work-dharma-shot">
               <img src="/assets/shots/anigma.jpg?v=c7d10c9b" alt="Первый экран магазина ANIGMA: коллекция AFTERIMAGE PROTOCOL и артворк OBSERVER_01" width="1200" height="750" decoding="async">
@@ -115,20 +117,25 @@
             </div>
             <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Другой ведёт покупателя к заказу.</p>
+          <div class="work-put">
+            <p class="kicker">Путь</p>
+            <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
+            <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
+            <p class="work-put-links">
+              <a class="work-put-alt" href="/put/">та же история текстом →</a>
+              <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
+            </p>
+          </div>
+          </div>
         </div>
-        <p class="work-put">
-          <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
-          <a class="work-put-alt" href="/put/">та же история текстом →</a>
-          <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
-        </p>
-        <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>
 
 <section class="block practicum-switch" aria-labelledby="practicums-title">
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Главный маршрут — QueQuest. Два следующих помогают проверить локальную модель и собрать агента.</p>
+          <p>Учишься писать правила на Python — и работа начинает делаться без тебя.</p>
         </div>
         <div class="practicum-pilot-grid">
           <article class="quequest-card" aria-labelledby="quequest-title">
@@ -138,15 +145,17 @@
               <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
             </button>
             <div class="quequest-copy">
-              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=efbcb86e" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Квест · Python</p></div>
+              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=efbcb86e" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
               <h3 id="quequest-title">QueQuest</h3>
-              <p class="tagline">Сначала герой тащит груз сам. Потом пишет настоящее Python-правило — и механическая рука продолжает разрешённую работу.</p>
+              <p class="tagline">Таскаешь ящики за бабки. Хочешь запрограммировать, чтоб таскали за тебя?</p>
             </div>
           </article>
-          <aside class="practicum-side" aria-label="Дополнительные практикумы">
-            
-            <div class="practicum-detail-stage">
-              <article class="practicum-detail" id="practicum-panel-praktikum-testing"
+          <div class="practicum-more">
+            <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы: LLM и агенты <b aria-hidden="true">↓</b></button>
+            <div class="practicum-more-body" id="practicum-more-body">
+              <aside class="practicum-side" aria-label="Дополнительные практикумы">
+                <div class="practicum-detail-stage">
+                  <article class="practicum-detail" id="practicum-panel-praktikum-testing"
             data-practicum-panel="praktikum-testing">
             <div class="practicum-detail-shot"><img src="/assets/shots/praktikum-testing.jpg?v=b4612688" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов, 16 экспериментов, кнопки чтения, PDF и DOCX, список частей" width="1200" height="750" loading="lazy" decoding="async"></div>
             <div class="practicum-detail-copy">
@@ -174,8 +183,10 @@
               <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
             </div>
           </article>
+                </div>
+              </aside>
             </div>
-          </aside>
+          </div>
         </div>
       </section>
 
@@ -238,10 +249,10 @@
 }
 </style>
 <h2>Живой цех</h2>
-<p class="svezhest">снимок 05:05 · цех работал в эту минуту</p>
-<div class="plitki"><div class="plitka"><b>48%</b><span>Процессор</span></div><div class="plitka"><b>40%</b><span>Видеоядро</span></div><div class="plitka"><b>8 ГБ</b><span>Свободно памяти</span></div><div class="plitka"><b>24 ГБ</b><span>Всего памяти</span></div></div>
-<ol class="zadachi"><li class="completed"><div class="verh"><span class="kto">Рот</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 2</span><span class="skolko">43 событий · идёт 10 мин · mac · completed</span></div></li><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 27</span><span class="skolko">19 событий · идёт 1 мин · mac · running</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">5 мин назад</span></div><div class="niz"><span class="chto">задача 3</span><span class="skolko">13 событий · идёт 2 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">6 мин назад</span></div><div class="niz"><span class="chto">задача 20</span><span class="skolko">23 событий · идёт 4 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">10 мин назад</span></div><div class="niz"><span class="chto">задача 26</span><span class="skolko">22 событий · идёт 1 мин · mac · completed</span></div></li></ol>
-<details class="lenta"><summary>Лента событий — последние 40 из 120</summary><ol><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">только что</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">только что</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">только что</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 27</span><span class="kogda">1 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">1 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">2 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">3 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">4 мин назад</span></li><li><span class="kto">Рот</span><span class="chto">задача 2</span><span class="kogda">4 мин назад</span></li></ol></details>
+<p class="svezhest">снимок 05:18 · цех работал в эту минуту</p>
+<div class="plitki"><div class="plitka"><b>34%</b><span>Процессор</span></div><div class="plitka"><b>85%</b><span>Видеоядро</span></div><div class="plitka"><b>13 ГБ</b><span>Свободно памяти</span></div><div class="plitka"><b>24 ГБ</b><span>Всего памяти</span></div></div>
+<ol class="zadachi"><li class="running"><div class="verh"><span class="kto">сессия</span><span class="kogda">только что</span></div><div class="niz"><span class="chto">задача 28</span><span class="skolko">75 событий · идёт 4 мин · mac · running</span></div></li><li class="completed"><div class="verh"><span class="kto">Рот</span><span class="kogda">3 мин назад</span></div><div class="niz"><span class="chto">задача 2</span><span class="skolko">8 событий · идёт 1 мин · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">3 мин назад</span></div><div class="niz"><span class="chto">задача 3</span><span class="skolko">4 событий · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">сессия</span><span class="kogda">3 мин назад</span></div><div class="niz"><span class="chto">задача 20</span><span class="skolko">4 событий · mac · completed</span></div></li><li class="completed"><div class="verh"><span class="kto">Тестер</span><span class="kogda">4 мин назад</span></div><div class="niz"><span class="chto">задача 5</span><span class="skolko">29 событий · идёт 3 мин · mac · completed</span></div></li></ol>
+<details class="lenta"><summary>Лента событий — последние 40 из 120</summary><ol><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">только что</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">1 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">2 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li><li><span class="kto">сессия</span><span class="chto">задача 28</span><span class="kogda">3 мин назад</span></li></ol></details>
 </section>
         </div>
       </section>
@@ -1586,6 +1597,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=02c84e12" defer></script>
+    <script src="/assets/app.js?v=ab80a93c" defer></script>
   </body>
 </html>

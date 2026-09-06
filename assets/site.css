@@ -273,7 +273,10 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform .35s ease,filter .35s ease; }
 .work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
 .work-dharma-shot { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
-.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:center; transition:transform .35s ease,filter .35s ease; }
+/* object-position левее по просьбе Сергея 6 сентября: кадр магазина был
+   сдвинут вправо, а читают его слева, рядом с текстом. Пустая правая часть
+   там нормальна — это его слова. */
+.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left center; transition:transform .35s ease,filter .35s ease; }
 .dharma-journey { position:absolute; right:10px; bottom:10px; z-index:1; display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid #65e5b55c; border-radius:999px; background:#07120edd; color:#c8ffe9; font:600 9px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase; opacity:.78; }
 .dharma-journey i { display:block; width:12px; height:1px; background:linear-gradient(90deg,#65e5b5,#d3fff0); transform-origin:left center; }
 .work-dharma:hover .dharma-journey, .work-dharma:focus-visible .dharma-journey { opacity:1; border-color:#65e5b5; box-shadow:0 0 18px #46dca34d; }
@@ -285,7 +288,21 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-system-link { align-self:end; color:var(--accent); font-size:13px; font-weight:700; text-decoration:none; }
 .work-gateway-proof:hover, .work-gateway-proof:focus-visible, .work-dharma:hover, .work-dharma:focus-visible { border-color: var(--accent); outline: 0; }
 .work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-dharma:hover img, .work-dharma:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
-.work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
+/* ═══ Первый экран: две колонки одной высоты ═══════════════════════════
+   Правки Сергея 6 сентября 2026. Было: две карточки в ряд, справа под
+   текстом Dharma пустота на пол-экрана (карточка тянулась до высоты
+   соседа), а подпись под обеими читалась как относящаяся только к левой.
+   Стало: слева шлюз, справа Dharma и под ней блок комикса — он и добирает
+   остаток высоты, поэтому пустоты не остаётся по устройству, а не по
+   подгонке. Комикс заодно стал крупнее, о чём и была просьба.            */
+.work-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.work-col > .work-system { flex: 0 0 auto; }
+.work-col > .work-put { flex: 1 1 auto; }
+/* Подпись теперь у каждой карточки своя, со стрелкой вверх — к ней.
+   Третьего предложения («две разные рабочие системы, а не концепты») нет:
+   его слова — «уже можно открыть исходный код и пройти по сайту». */
+.work-duet-note { margin: 0; color: var(--muted); font: 12px/1.4 var(--mono); }
+.work-duet-note i { font-style: normal; color: var(--accent); margin-right: 5px; }
 .work-duet-note b { color: var(--text); }
 
 /* Живое окно шлюза в карточке первого проекта.
@@ -324,9 +341,14 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .gw-live.igraet .gw-steps li { opacity: 1; animation: none; }
 }
-.work-put { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 16px 0 0; }
-.work-put-main { font: 600 14px/1.3 var(--sans); color: var(--text); text-decoration: none;
-  border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; min-height: 44px;
+.work-put { display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 10px; margin: 0; padding: 18px; border: 1px solid var(--line); border-radius: 12px;
+  background: linear-gradient(135deg, var(--bg-soft), var(--panel)); }
+.work-put .kicker { margin: 0; }
+.work-put-sub { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.work-put-links { display: flex; gap: 14px; flex-wrap: wrap; margin: 0; }
+.work-put-main { font: 600 16px/1.25 var(--sans); color: var(--text); text-decoration: none;
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; min-height: 48px;
   display: inline-flex; align-items: center; }
 .work-put-main:hover { background: var(--card-hover); }
 /* Сергей: «выглядит как просто слова». Делаем настоящей кнопкой, по которой
@@ -781,10 +803,13 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
    QueQuest даём остаток экрана, картинка масштабируется внутрь (object-fit
    уже cover), практикумы под ней остаются нетронутыми. */
 @media (min-width: 901px) {
+  /* Потолок теперь на самой карточке QueQuest, а не на всей сетке. Причина:
+     под ней появилось раскрытие «ещё практикумы», и потолок на сетке резал
+     бы раскрытое содержимое — человек нажал бы кнопку и увидел обрезок. */
   .practicum-switch .practicum-pilot-grid {
-    grid-template-rows: minmax(320px, 1fr) minmax(0, auto);
-    max-height: calc(100dvh - 190px);
+    grid-template-rows: minmax(320px, auto) minmax(0, auto);
   }
+  .practicum-switch .quequest-card { max-height: calc(100dvh - 240px); }
   /* Практикумы жёстко заданы в 570 (строка 831), и при нехватке места весь
      дефицит съедал кадр: он падал до 120 пикселей — полоска вместо сцены.
      Здесь отпускаем их высоту и разрешаем прокрутку внутри: кадру гарантируем
@@ -1503,4 +1528,36 @@ article.gcard .launch { color: var(--dim); }
   .track-switch button { min-width: 0; padding: 12px 6px; font-size: 13px; gap: 0; }
   .track-switch button svg { display: none; }
   .topbar { padding: 12px 12px; }
+}
+
+/* ═══ «Ещё практикумы»: раскрытие без скачка ═════════════════════════════
+   Сергей 6 сентября 2026: «опять дохуя свободного места, бессмысленно; они
+   не сильно важные после QueQuest» — и выбрал спрятать за кнопку.
+
+   Высоту ведёт сетка: строка едет от 0fr к 1fr. У height:auto нет
+   анимируемого значения, поэтому раскрытие через него — это рывок; приём
+   взят из Аниматеки, где он и записан. Содержимое при этом не трогаем
+   вовсе, иначе внутренние карточки пересчитывали бы раскладку каждый кадр. */
+.practicum-more { display: grid; gap: 12px; }
+.practicum-more-btn {
+  justify-self: start; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 11px 16px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--panel); color: var(--text);
+  font: 600 14px/1.2 var(--sans); cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.practicum-more-btn:hover { background: var(--card-hover); border-color: var(--accent); }
+.practicum-more-btn b { color: var(--accent); transition: transform .2s ease; }
+.practicum-more-btn[aria-expanded="true"] b { transform: rotate(180deg); }
+.practicum-more-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms cubic-bezier(.22, .61, .36, 1);
+}
+.practicum-more-body > * { overflow: hidden; min-height: 0; }
+.practicum-more-body[data-open] { grid-template-rows: 1fr; }
+/* Кому движение мешает — состояние меняется мгновенно, а не «анимация без
+   анимации»: раскрытие происходит, движения нет. */
+@media (prefers-reduced-motion: reduce) {
+  .practicum-more-body { transition: none; }
+  .practicum-more-btn b { transition: none; }
 }

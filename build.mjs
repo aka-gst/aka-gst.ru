@@ -2,6 +2,7 @@
 // Генерирует index.html из data/site.json и data/projects.json.
 // Запуск: node build.mjs
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -21,6 +22,27 @@ const utro = read('utro.json');
 // поднять число.
 const assetVersion = (relative) =>
   createHash('sha256').update(readFileSync(join(root, relative))).digest('hex').slice(0, 8);
+
+// Дата файла — так, чтобы она пережила клон репозитория. Голое время
+// изменения врёт дважды: у свежесозданного файла это «сегодня» вместо дня
+// съёмки, а после git clone все файлы получают время выкачки, и все даты на
+// сайте стали бы одной. Поэтому: пока правка не закоммичена — время правки
+// (она и есть свежая), после коммита — дата коммита этого файла.
+// Требование Сергея от 6 сентября 2026: «дата должна быть датой файла/съёмки
+// и меняться сама», руками её не писать.
+const датаФайла = (relative) => {
+  const полный = join(root, relative);
+  try {
+    const грязный = execSync(`git status --porcelain -- ${JSON.stringify(relative)}`, { cwd: root }).toString().trim();
+    if (!грязный) {
+      const iso = execSync(`git log -1 --format=%cI -- ${JSON.stringify(relative)}`, { cwd: root }).toString().trim();
+      if (iso) return new Date(iso);
+    }
+  } catch (e) {
+    console.warn(`  ! дата файла ${relative}: git не ответил, беру время изменения`);
+  }
+  return statSync(полный).mtime;
+};
 
 const cssVersion = assetVersion('assets/site.css');
 const jsVersion = assetVersion('assets/app.js');
@@ -602,7 +624,7 @@ const practicumSwitch = `
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Главный маршрут — QueQuest. Два следующих помогают проверить локальную модель и собрать агента.</p>
+          <p>Учишься писать правила на Python — и работа начинает делаться без тебя.</p>
         </div>
         <div class="practicum-pilot-grid">
           <article class="quequest-card" aria-labelledby="quequest-title">
@@ -612,17 +634,21 @@ const practicumSwitch = `
               <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
             </button>
             <div class="quequest-copy">
-              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Квест · Python</p></div>
+              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
               <h3 id="quequest-title">QueQuest</h3>
-              <p class="tagline">Сначала герой тащит груз сам. Потом пишет настоящее Python-правило — и механическая рука продолжает разрешённую работу.</p>
+              <p class="tagline">Таскаешь ящики за бабки. Хочешь запрограммировать, чтоб таскали за тебя?</p>
             </div>
           </article>
-          <aside class="practicum-side" aria-label="Дополнительные практикумы">
-            
-            <div class="practicum-detail-stage">
-              ${practicumProjects.map((project) => practicumCard(project, true)).join('').trim()}
+          <div class="practicum-more">
+            <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы: LLM и агенты <b aria-hidden="true">↓</b></button>
+            <div class="practicum-more-body" id="practicum-more-body">
+              <aside class="practicum-side" aria-label="Дополнительные практикумы">
+                <div class="practicum-detail-stage">
+                  ${practicumProjects.map((project) => practicumCard(project, true)).join('').trim()}
+                </div>
+              </aside>
             </div>
-          </aside>
+          </div>
         </div>
       </section>`;
 
@@ -633,9 +659,28 @@ const leadImage = (file, alt) => {
   return `<img src="${shotSrc(file)}" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async">`;
 };
 
+// ── Записи прогонов шлюза ────────────────────────────────────────────
+// Сергей 6 сентября 2026: «дата должна быть датой файла/съёмки и меняться
+// сама». Здесь она и берётся из времени файла data/gw-progony.json: правишь
+// запись — дата на странице меняется сама, руками её больше никто не пишет.
+// Раньше в разметке стояло «5 сентября» строкой, и следующая запись оставила
+// бы её вчерашней навсегда.
+const gwПрогоны = read('gw-progony.json');
+const gwПрогон = gwПрогоны.прогоны[0];
+// У записи прогона своё время, и оно вернее файлового: файл могли положить
+// в репозиторий на день позже прогона — ровно так и вышло с первой записью.
+// Поэтому: есть «когда» из журнала — берём его, нет — дату файла. Руками не
+// пишем ни то, ни другое.
+const gwКогда = (gwПрогон.когда ? new Date(gwПрогон.когда) : датаФайла('data/gw-progony.json'))
+  .toLocaleString('ru-RU', { day: 'numeric', month: 'long', timeZone: 'Europe/Moscow' });
+const gwШаги = `<ol class="gw-steps">
+${gwПрогон.шаги.map((ш) => `                <li data-gw="${esc(ш.вид)}"><b>${esc(ш.что)}</b><span>${esc(ш.как)}</span></li>`).join('\n')}
+              </ol>`;
+
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
         <div class="work-duet">
+          <div class="work-col">
           <article class="work-system work-gateway">
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
@@ -648,20 +693,14 @@ const workLead = `
             </a>
             <details class="gw-live">
               <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
-              <ol class="gw-steps">
-                <li data-gw="ok"><b>запрос к модели</b><span>ответ пришёл, 17 мс</span></li>
-                <li data-gw="warn"><b>модель замолчала</b><span>ждём… ждём… ответа нет</span></li>
-                <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
-                <li data-gw="warn"><b>связь оборвалась посреди ответа</b><span>половина текста уже пришла</span></li>
-                <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «поток прерван», закрыл корректно</span></li>
-                <li data-gw="ok"><b>восемь запросов разом</b><span>все 200 · p50 17.2 мс · p95 18.2 мс</span></li>
-              </ol>
-              <p class="gw-note">Запись прогона стенда отказов, 5 сентября. Шлюз настоящий,
-              обрыв настоящий — поддельный только источник ответа. Модель получила 11 обращений,
-              ни один запрос не завис. Повторяется одной командой из репозитория.</p>
+${gwШаги}
+              <p class="gw-note">Запись прогона: ${esc(gwПрогон.имя)}, ${esc(gwКогда)}. ${esc(gwПрогон.примечание)} Повторяется одной командой из репозитория.</p>
             </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
+          </div>
+          <div class="work-col">
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
@@ -674,13 +713,18 @@ const workLead = `
             </div>
             <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Другой ведёт покупателя к заказу.</p>
+          <div class="work-put">
+            <p class="kicker">Путь</p>
+            <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
+            <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
+            <p class="work-put-links">
+              <a class="work-put-alt" href="/put/">та же история текстом →</a>
+              <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
+            </p>
+          </div>
+          </div>
         </div>
-        <p class="work-put">
-          <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
-          <a class="work-put-alt" href="/put/">та же история текстом →</a>
-          <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
-        </p>
-        <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>`;
 
 // На главной показываем один вход в обучение. Второй маршрут остаётся
