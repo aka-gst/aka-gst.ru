@@ -64,6 +64,20 @@ way
 torgash-gnjeev4lb7
 "
 
+echo "== незакоммиченное в выкладке =="
+# Выкладка шлёт файлы С ДИСКА, а не из коммита, поэтому «в main чисто» ничего
+# не значит: в общем дереве всегда кто-то работает. 6 сентября 2026 так уехала
+# чужая правка assets/app.js, сделанная за минуты до отправки. Стоп до слова
+# автора; своё — закоммитить, тогда видно, что именно уехало.
+if ! sh tools/chuzhoe-v-dereve.sh $PAYLOAD; then
+  if [ "${DEPLOY_S_CHUZHIM:-}" = "1" ]; then
+    echo "== выкладываю вместе с незакоммиченным: DEPLOY_S_CHUZHIM=1 =="
+  else
+    echo "!! выкладка остановлена. Разобрались — DEPLOY_S_CHUZHIM=1 sh deploy.sh --go" >&2
+    exit 1
+  fi
+fi
+
 echo "== сборка =="
 echo "== PsyAdmin: защита от старой выкладки =="
 node psy-admin/tools/release-guard.mjs --live-base "${PSY_ADMIN_LIVE_BASE:-https://aka-gst.ru}"
