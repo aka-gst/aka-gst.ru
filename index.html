@@ -28,11 +28,11 @@
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
     <style>:root{--an-vyhod: cubic-bezier(0.22, 0.61, 0.36, 1);--an-vyhod-rezkiy: cubic-bezier(0.16, 1, 0.3, 1);--an-spokoyno: cubic-bezier(0.4, 0, 0.2, 1);--an-uhod: cubic-bezier(0.4, 0, 1, 1);--an-pruzhina: cubic-bezier(0.34, 1.56, 0.64, 1);--an-pruzhina-myagche: cubic-bezier(0.3, 1.3, 0.6, 1);--an-mikro: 150ms;--an-raskrytie: 280ms;--an-stranica: 500ms}</style>
-    <link rel="stylesheet" href="/assets/site.css?v=00f3c45f">
+    <link rel="stylesheet" href="/assets/site.css?v=cef1b794">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
-        var ЯКОРЯ = {"work-lead-title":"work","practicums-title":"work","quequest-title":"work","practicum-more-body":"work","practicum-panel-praktikum-testing":"work","practicum-panel-ai-agent-service-lab":"work","masterskaya":"work","masterskaya-title":"work","products-title":"work","p-psy-ai-admin":"work","p-photo-meta-editor":"work","profile-title":"work","all-work-title":"work","other-games-title":"play","stories-lead-title":"stories","story-collection-a-potom":"stories","story-collection-tri-iznutri":"stories","story-collection-solyanochka":"stories"};
+        var ЯКОРЯ = {"work-lead-title":"work","practicums-title":"work","quequest-visual":"work","quequest-title":"work","practicum-more-body":"work","practicum-panel-praktikum-testing":"work","practicum-panel-ai-agent-service-lab":"work","masterskaya":"work","masterskaya-title":"work","products-title":"work","p-psy-ai-admin":"work","p-photo-meta-editor":"work","profile-title":"work","all-work-title":"work","other-games-title":"play","stories-lead-title":"stories","story-collection-a-potom":"stories","story-collection-tri-iznutri":"stories","story-collection-solyanochka":"stories"};
         var h = location.hash.slice(1);
         var t = h === 'games' ? 'play'
               : h === 'stories' ? 'stories'
@@ -212,17 +212,20 @@
         </div>
         <div class="practicum-pilot-grid">
           <article class="quequest-card" aria-labelledby="quequest-title">
-            <button class="quequest-visual" type="button" data-quequest-play aria-label="Показать путь QueQuest: от ручной работы к автоматике">
-              <img class="quequest-poster" loading="lazy" src="/assets/shots/quequest-automation.jpg?v=9bc4030f" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
-              <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=8a8d710e" aria-hidden="true"></video>
-              <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
-            </button>
+            <div class="quequest-stage">
+              <a class="quequest-visual" id="quequest-visual" href="/qa-quest/" data-quequest-play data-umami-event="project-open" data-umami-event-project="qa-quest" aria-label="Открыть игру QueQuest">
+                <img class="quequest-poster" loading="lazy" src="/assets/shots/quequest-automation.jpg?v=9bc4030f" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
+                <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=8a8d710e" aria-hidden="true"></video>
+              </a>
+              <button class="quequest-play-btn" type="button" data-quequest-play-for="quequest-visual">Показать переход <b aria-hidden="true">→</b></button>
+            </div>
             <div class="quequest-copy">
               <div class="quequest-left">
                 <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=efbcb86e" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
                 <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
               </div>
-              <h3 id="quequest-title">QueQuest</h3>
+              <h3 id="quequest-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QueQuest</a></h3>
+              <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть игру <b aria-hidden="true">↗</b></a>
             </div>
           </article>
           <div class="practicum-more">
@@ -1686,6 +1689,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=462a77fa" defer></script>
+    <script src="/assets/app.js?v=78ec0465" defer></script>
   </body>
 </html>

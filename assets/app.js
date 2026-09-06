@@ -502,11 +502,24 @@
       loading ? loading.then(start) : start();
     };
 
-    trigger.addEventListener('click', play);
+    // Сергей 6 сентября: «где ссылка? почему по картинке не переходит!!??»
+    // Картинка была кнопкой, и клик по ней играл ролик вместо того, чтобы
+    // открыть игру. Теперь это ссылка: клик уводит в игру, а ролик остаётся
+    // на наведении и на отдельной кнопке рядом.
+    //
+    // Поэтому клик по САМОЙ картинке ролик больше не запускает: иначе он
+    // начинал бы играть в тот момент, когда человек уже уходит со страницы.
+    if (trigger.tagName !== 'A') trigger.addEventListener('click', play);
     trigger.addEventListener('mouseenter', () => {
       if (window.matchMedia?.('(hover: hover)').matches) play();
     });
     trigger.addEventListener('focusin', play);
+    // Кнопка «показать переход» лежит РЯДОМ с картинкой, а не внутри неё:
+    // кнопка внутри ссылки — недопустимая разметка, и клик по ней достаётся
+    // то одному, то другому в зависимости от браузера.
+    for (const кнопка of document.querySelectorAll(`[data-quequest-play-for="${trigger.id}"]`)) {
+      кнопка.addEventListener('click', play);
+    }
     video.addEventListener('ended', () => {
       trigger.classList.remove('is-playing');
       trigger.classList.add('is-finished');
