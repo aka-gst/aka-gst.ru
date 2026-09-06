@@ -109,7 +109,7 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
   position: absolute; left: 12px; top: -60px; z-index: 20;
   padding: 10px 14px; border-radius: 8px;
   background: var(--accent); color: #08120c; font-weight: 700; text-decoration: none;
-  transition: top .15s ease;
+  transition: top var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease);
 }
 .skip:focus { top: 12px; }
 
@@ -156,7 +156,7 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
      полноцветная, и переключатель виден как переключатель. */
   color: var(--text);
   font: inherit; font-size: 13px; font-weight: 600;
-  transition: background .15s ease, color .15s ease;
+  transition: background var(--an-mikro, 150ms) linear, color var(--an-mikro, 150ms) linear;
 }
 /* Игры зовут ярче работы — за них и цепляется глаз. Значок геймпада
    светится акцентом даже когда вкладка не выбрана. */
@@ -197,7 +197,7 @@ html[data-track="play"] .track-switch button[aria-pressed="true"] {
 .social {
   display: grid; place-items: center; width: 34px; height: 34px;
   border-radius: 9px; color: var(--muted);
-  transition: color .15s ease, background .15s ease;
+  transition: color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear;
 }
 .social:hover { color: var(--text); background: var(--bg-soft); }
 .social svg { fill: currentColor; }
@@ -215,7 +215,7 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .story-lead p:not(.kicker) { max-width:560px; color:var(--muted); line-height:1.5; }
 .story-all-link { align-self:start; padding:0; border:0; background:none; color:var(--accent); font:700 13px var(--sans); white-space:nowrap; cursor:pointer; }
 .story-shelves { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-.story-lead-book { display:grid; grid-template-columns:94px minmax(0,1fr); gap:12px; align-items:center; min-height:138px; padding:10px; border:1px solid var(--line); border-radius:11px; background:none; color:var(--text); font:700 16px var(--sans); text-align:left; transition:border-color .15s ease, background .15s ease; cursor:pointer; }
+.story-lead-book { display:grid; grid-template-columns:94px minmax(0,1fr); gap:12px; align-items:center; min-height:138px; padding:10px; border:1px solid var(--line); border-radius:11px; background:none; color:var(--text); font:700 16px var(--sans); text-align:left; transition: border-color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear; cursor:pointer; }
 .story-lead-book:hover, .story-lead-book:focus-visible { border-color:var(--accent); background:var(--card-hover); outline:0; }
 .story-lead-book[aria-expanded="true"] { border-color:var(--accent); background:var(--accent-dim); box-shadow:0 0 22px rgba(255,115,181,.12); }
 .story-lead-book img { width:94px; height:116px; object-fit:cover; border:1px solid var(--line); border-radius:7px; box-shadow:0 10px 22px rgba(0,0,0,.3); }
@@ -282,13 +282,13 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-lead-fact { margin-top: 12px; color: var(--text) !important; font-size: 13px !important; }
 .work-lead-fact b { color: var(--accent); }
 .work-gateway-proof { position:relative; align-self:stretch; display:block; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); text-decoration:none; }
-.work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform .35s ease,filter .35s ease; }
+.work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform var(--an-raskrytie, 280ms) var(--an-spokoyno, ease), filter var(--an-raskrytie, 280ms) linear; }
 .work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
 .work-dharma-shot { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
 /* object-position левее по просьбе Сергея 6 сентября: кадр магазина был
    сдвинут вправо, а читают его слева, рядом с текстом. Пустая правая часть
    там нормальна — это его слова. */
-.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left center; transition:transform .35s ease,filter .35s ease; }
+.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left center; transition:transform var(--an-raskrytie, 280ms) var(--an-spokoyno, ease), filter var(--an-raskrytie, 280ms) linear; }
 .dharma-journey { position:absolute; right:10px; bottom:10px; z-index:1; display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid #65e5b55c; border-radius:999px; background:#07120edd; color:#c8ffe9; font:600 9px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase; opacity:.78; }
 .dharma-journey i { display:block; width:12px; height:1px; background:linear-gradient(90deg,#65e5b5,#d3fff0); transform-origin:left center; }
 .work-dharma:hover .dharma-journey, .work-dharma:focus-visible .dharma-journey { opacity:1; border-color:#65e5b5; box-shadow:0 0 18px #46dca34d; }
@@ -634,7 +634,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   background: var(--panel);
   /* Без overflow: hidden — иначе карточка обрезает всплывающую панель
      «чем покрыто». Скругление верха берёт на себя сама полоса чисел. */
-  transition: border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .15s ease;
+  transition: border-color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear, transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease), box-shadow var(--an-mikro, 150ms) linear;
 }
 /* Отклик на наведение. Было −2 точки без тени: Тестер померил наведением
    настоящей мыши, и на карточке высотой под 900 точек две точки глаз считает
@@ -655,7 +655,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   color: inherit; text-decoration: none;
   background-image: linear-gradient(var(--accent), var(--accent));
   background-size: 0 1px; background-position: 0 100%; background-repeat: no-repeat;
-  transition: background-size .18s ease, color .15s ease;
+  transition: background-size var(--an-mikro, 150ms) linear, color var(--an-mikro, 150ms) linear;
 }
 .card-title:hover { color: var(--accent); background-size: 100% 1px; }
 /* Ссылка — само название, а не вся карточка: растянутая на карточку
@@ -722,7 +722,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
      переход по opacity не отработал, панель осталась бы невидимой в
      «видимом» состоянии — отказ, который никто не заметит. */
   visibility: hidden; pointer-events: none; transform: translateY(-4px);
-  transition: transform .15s ease;
+  transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease);
 }
 .evidence:hover .evidence-panel,
 .evidence:focus-within .evidence-panel {
@@ -782,7 +782,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .card-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: auto; padding-top: 4px; }
 .link {
   font-size: 13px; font-weight: 600; text-decoration: none; color: var(--accent);
-  border-bottom: 1px solid transparent; transition: border-color .15s ease;
+  border-bottom: 1px solid transparent; transition: border-color var(--an-mikro, 150ms) linear;
 }
 .link:hover { border-bottom-color: currentColor; }
 .link b { font-weight: 400; }
@@ -879,7 +879,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .quequest-card { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--accent) 48%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, color-mix(in srgb, var(--accent-dim) 78%, #140d2a), var(--panel) 64%); }
 .quequest-visual { position:relative; display:block; min-height:0; overflow:hidden; border:0; border-right:1px solid var(--line); padding:0; background:#080a0f; cursor:pointer; text-align:left; }
 .quequest-poster, .quequest-video { display:block; width:100%; height:100%; min-height:390px; object-fit:cover; object-position:center; }
-.quequest-video { position:absolute; inset:0; opacity:0; transition:opacity .22s ease; }
+.quequest-video { position:absolute; inset:0; opacity:0; transition: opacity var(--an-mikro, 150ms) linear; }
 .quequest-visual.is-playing .quequest-video, .quequest-visual.is-finished .quequest-video { opacity:1; }
 .quequest-play-label { position:absolute; left:14px; bottom:14px; z-index:2; display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid #cbb9ff66; border-radius:999px; background:#0d0a1cdd; color:#f1edff; font:600 11px/1 var(--mono); letter-spacing:.04em; }
 .quequest-visual:hover .quequest-play-label, .quequest-visual:focus-visible .quequest-play-label { border-color:#cbb9ff; box-shadow:0 0 18px #8063e955; }
@@ -1014,10 +1014,8 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 /* У мест работы отклика не было вовсе: `transition: all` стоял, а правила
    :hover не существовало. Подъём тут ставить нельзя по двум причинам —
    карточка не ссылка (проверено: 7 из 7 карточек проектов это <a>, а из
-   шести мест работы ни одно), и лежат они плитками через зазор в 1 точку,
-   который подъём бы разорвал. Поэтому подсветка: она говорит «вот эта
-   строка», а не «сюда можно нажать» (правило 10). */
-.job { transition: background .15s ease; }
+   шести мест работы ни одно), и лежат они плитками через зазор в 1 точку, который подъём бы разорвал. Поэтому подсветка: она говорит «вот эта
+   строка», а var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
 .job:hover { background: var(--card-hover); }
 /* Снимок в строке опыта идёт во второй столбец, к тексту, а не в узкую
    колонку с датой: полоса журнала шириной 170 пикселей — марка, а не
@@ -1041,7 +1039,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
      подмены сдвигалась. */
   object-fit: cover; object-position: top center;
   opacity: 0; pointer-events: none;
-  transition: opacity .25s ease;
+  transition: opacity var(--an-mikro, 150ms) linear;
 }
 .shot .gclip.is-playing { opacity: 1; }
 
@@ -1068,7 +1066,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
    Выше 206 начинается «кричит» — это их граница, не наша догадка. */
 .job .shot img { max-height: 132px; width: auto; margin: 0 auto; }
 .job .shot a { display: block; border-radius: 8px; }
-.job .shot img { transition: transform .15s ease, box-shadow .15s ease; }
+.job .shot img { transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease), box-shadow var(--an-mikro, 150ms) linear; }
 .job .shot a:hover img, .job .shot a:focus-visible img {
   transform: scale(1.03); box-shadow: 0 8px 20px -6px #000a;
 }
@@ -1102,7 +1100,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   color: inherit; text-decoration: none;
   background-image: linear-gradient(var(--accent), var(--accent));
   background-size: 0 1px; background-position: 0 100%; background-repeat: no-repeat;
-  transition: background-size .18s ease, color .15s ease;
+  transition: background-size var(--an-mikro, 150ms) linear, color var(--an-mikro, 150ms) linear;
 }
 .job-site:hover, .job-site:focus-visible { color: var(--accent); background-size: 100% 1px; }
 .job-site b { font-weight: 400; font-size: .8em; color: var(--dim); }
@@ -1144,7 +1142,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   display: flex; align-items: center; gap: 14px;
   padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r);
   background: var(--panel); color: inherit; text-decoration: none;
-  transition: border-color .15s ease, background .15s ease;
+  transition: border-color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear;
 }
 .channel:hover { border-color: var(--accent); background: var(--card-hover); }
 .channel svg { flex: none; fill: currentColor; color: var(--muted); }
@@ -1174,7 +1172,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   border: 1px solid var(--line); border-radius: 16px;
   background: linear-gradient(160deg, var(--panel), var(--bg-soft));
   text-decoration: none; color: inherit;
-  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease), border-color var(--an-mikro, 150ms) linear, box-shadow var(--an-mikro, 150ms) linear;
 }
 a.gcard:focus-visible,
 a.gcard.is-lit {
@@ -1202,7 +1200,7 @@ a.gcard.is-lit {
 .gshot {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; opacity: .84; filter: saturate(1.1);
-  transition: opacity .25s ease, transform .35s ease;
+  transition: opacity var(--an-mikro, 150ms) linear, transform .35s ease;
 }
 a.gcard:focus-visible .gshot,
 a.gcard.is-lit .gshot { opacity: 1; transform: scale(1.06); }
@@ -1214,14 +1212,14 @@ a.gcard.is-lit .gshot { opacity: 1; transform: scale(1.06); }
 .gclip {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; opacity: 0; pointer-events: none;
-  transition: opacity .3s ease, transform .35s ease;
+  transition: opacity var(--an-raskrytie, 280ms) var(--an-vyhod, ease), transform var(--an-raskrytie, 280ms) var(--an-vyhod, ease);
 }
 a.gcard.is-lit .gclip { transform: scale(1.06); }
 .gclip.is-playing { opacity: 1; }
 
 .gart i {
   position: absolute; display: block;
-  transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;
+  transition: transform var(--an-raskrytie, 280ms) var(--an-vyhod, ease), opacity var(--an-raskrytie, 280ms) var(--an-vyhod, ease);
 }
 
 /* ACID UNO — веер карт. */
@@ -1390,7 +1388,7 @@ article.gcard .launch { color: var(--dim); }
   border: 1px solid transparent;
   color: var(--muted); text-decoration: none;
   font-size: 13px; white-space: nowrap;
-  transition: color .15s ease, border-color .15s ease;
+  transition: color var(--an-mikro, 150ms) linear, border-color var(--an-mikro, 150ms) linear;
 }
 .topbar-link:hover, .topbar-link:focus-visible { color: var(--text); border-color: var(--line); }
 
@@ -1522,7 +1520,7 @@ article.gcard .launch { color: var(--dim); }
 }
 .shot-full-close:hover, .shot-full-close:focus-visible { color: var(--fg); border-color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
-  .shot-full { animation: shot-full-in .18s ease-out; }
+  .shot-full { animation: shot-full-in var(--an-mikro, 150ms) var(--an-vyhod, ease-out); }
   @keyframes shot-full-in { from { opacity: 0; } to { opacity: 1; } }
 }
 
@@ -1593,10 +1591,10 @@ article.gcard .launch { color: var(--dim); }
   min-height: 44px; padding: 11px 16px; border: 1px solid var(--line);
   border-radius: 10px; background: var(--panel); color: var(--text);
   font: 600 13px/1.2 var(--sans); cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
+  transition: background var(--an-mikro, 150ms) linear, border-color var(--an-mikro, 150ms) linear;
 }
 .practicum-more-btn:hover { background: var(--card-hover); border-color: var(--accent); }
-.practicum-more-btn b { color: var(--accent); transition: transform .2s ease; }
+.practicum-more-btn b { color: var(--accent); transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
 .practicum-more-btn[aria-expanded="true"] b { transform: rotate(180deg); }
 .practicum-more-teaser { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; color:var(--muted); font:600 12px/1.2 var(--sans); }
 .practicum-more-teaser span { padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,.03); }
