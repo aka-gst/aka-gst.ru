@@ -6,6 +6,7 @@ import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { trustedQaRunUrl } from './lib/qa-run-url.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const read = (name) => JSON.parse(readFileSync(join(root, 'data', name), 'utf8'));
@@ -462,6 +463,7 @@ const suiteRows = qa.tests.suites
 
 const live = qa.evaluation.live;
 const det = qa.evaluation.deterministic;
+const qaRunUrl = trustedQaRunUrl(qa.commit.run_url);
 
 // Доказательство к числам выше: сам отчёт и консоль, которой их снимали.
 const reportProof = flagship.shots?.length
@@ -502,7 +504,7 @@ const reportScreen = `
                 <p class="card-links">
                   <a class="link link-repo" href="${esc(qa.project.repository)}" target="_blank" rel="noopener">Исходный код <b>↗</b></a>
                   <a class="link link-report" href="${esc(qa.project.report)}" target="_blank" rel="noopener">Allure-отчёт <b>↗</b></a>
-                  <a class="link link-run" data-metric-run href="${esc(qa.commit.run_url)}" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>
+                  ${qaRunUrl ? `<a class="link link-run" data-metric-run href="${esc(qaRunUrl)}" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>` : ''}
                 </p>
               </div>
               <div class="report-metrics" aria-label="Результаты последнего прогона">${headlineCards}</div>

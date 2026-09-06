@@ -10,17 +10,15 @@
 # Run it after rebuilding a practicum or after a gateway release.
 #
 #   sh sync-portfolio.sh            обновить локальное дерево
-#   sh sync-portfolio.sh --deploy   и выложить praktikum/ и data/ на сервер
+#   sh sync-portfolio.sh --deploy   и передать выкладку общему белому списку
 #
-# Выкладка трогает только эти два каталога. index.html, Caddyfile и остальной
-# сайт собираются и выкладываются отдельно — здесь они намеренно не участвуют.
+# data/ остаётся только источником сборки: наружу её не копируем. Раньше этот
+# скрипт обходил общий белый список и рекурсивно публиковал весь data/, включая
+# любой новый внутренний файл. Теперь единственная дверь наружу — deploy.sh.
 set -eu
 
 DEPLOY=no
 [ "${1:-}" = "--deploy" ] && DEPLOY=yes
-SSH_HOST="${SSH_HOST:-bonita}"
-SITE_ROOT="${SITE_ROOT:-/opt/zakriva/caddy/site}"
-
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DEV="${DEV_ROOT:-$HOME/dev}"
 
@@ -54,30 +52,5 @@ done
 [ "$DEPLOY" = yes ] || exit 0
 
 echo
-echo "выкладка на $SSH_HOST:$SITE_ROOT"
-
-# BatchMode: без tty ssh иначе ждёт ввода и рвёт соединение по таймауту.
-REMOTE_SHELL="ssh -o BatchMode=yes -o ConnectTimeout=15"
-
-if ! rsync -az --delete -e "$REMOTE_SHELL" "$HERE/praktikum/" "$SSH_HOST:$SITE_ROOT/praktikum/"; then
-  echo "ОШИБКА: praktikum не выложен" >&2
-  exit 1
-fi
-if ! rsync -az -e "$REMOTE_SHELL" "$HERE/data/" "$SSH_HOST:$SITE_ROOT/data/"; then
-  echo "ОШИБКА: data не выложена" >&2
-  exit 1
-fi
-if ! rsync -az -e "$REMOTE_SHELL" "$HERE/robots.txt" "$HERE/sitemap.xml" "$SSH_HOST:$SITE_ROOT/"; then
-  echo "ОШИБКА: robots.txt и sitemap.xml не выложены" >&2
-  exit 1
-fi
-
-failed=0
-for path in /praktikum/testirovanie/ /praktikum/llm/ /data/qa-metrics.json /robots.txt /sitemap.xml; do
-  # Таймаут curl не должен ронять скрипт через set -e: он тут проверяющий,
-  # а не исполнитель. Пустой ответ трактуем как провал проверки.
-  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "https://aka-gst.ru$path" || echo "нет ответа")
-  printf "  %-32s %s\n" "$path" "$code"
-  [ "$code" = 200 ] || failed=1
-done
-[ "$failed" = 0 ] || { echo "ОШИБКА: не все страницы отвечают 200" >&2; exit 1; }
+echo "выкладка только через общий белый список deploy.sh"
+exec sh "$HERE/deploy.sh" --go

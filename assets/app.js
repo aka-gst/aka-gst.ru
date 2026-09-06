@@ -131,6 +131,41 @@
   // опубликовать более свежий отчёт — заменяем значения на месте.
   const FEED = 'https://aka-gst.github.io/local-agent-gateway/qa-metrics.json';
 
+  // BEGIN_QA_RUN_URL_POLICY
+  // GitHub Pages управляет содержимым живого отчёта, но не тем, куда сайт
+  // уводит человека. Разрешён только HTTPS-запуск Actions ровно нашего
+  // репозитория; схема, хост, соседний repo и другой раздел GitHub отвергаются.
+  // Браузерная копия build-политики из lib/qa-run-url.mjs. Тест прогоняет
+  // обе реализации по одним векторам, чтобы они не разошлись молча.
+  const trustedQaRunUrl = (value) => {
+    if (typeof value !== 'string') return null;
+    try {
+      const url = new URL(value);
+      if (
+        url.protocol !== 'https:' ||
+        url.hostname !== 'github.com' ||
+        url.port || url.username || url.password ||
+        !/^\/aka-gst\/local-agent-gateway\/actions\/runs\/[1-9]\d*\/?$/.test(url.pathname)
+      ) return null;
+      // Параметры и фрагмент отчёту не нужны: ссылка всегда ведёт на сам run.
+      url.search = '';
+      url.hash = '';
+      return url.href;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const applyTrustedQaRunUrl = (link, liveValue) => {
+    if (!link) return;
+    const initialRunUrl = trustedQaRunUrl(link.getAttribute('href'));
+    const liveRunUrl = trustedQaRunUrl(liveValue);
+    const runUrl = liveRunUrl || initialRunUrl;
+    if (runUrl) link.href = runUrl;
+    else link.removeAttribute('href');
+  };
+  // END_QA_RUN_URL_POLICY
+
   const formatMoment = (iso) => {
     const date = new Date(iso);
     if (Number.isNaN(date.valueOf())) return iso;
@@ -163,7 +198,7 @@
     if (version && report.project?.version) version.textContent = `v${report.project.version}`;
 
     const run = document.querySelector('[data-metric-run]');
-    if (run && report.commit?.run_url) run.href = report.commit.run_url;
+    applyTrustedQaRunUrl(run, report.commit?.run_url);
 
     if (stamp && report.generated_at) {
       stamp.setAttribute('datetime', report.generated_at);
