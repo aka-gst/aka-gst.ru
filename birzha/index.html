@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Биржа для начинающих · две игры</title>
+<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
+<style>
+:root{--фон:#0a0c11;--плитка:#131722;--кромка:#242a38;--текст:#e9ecf3;--тихий:#8b93a7;--зел:#4ade80;--лил:#a78bfa}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--фон);color:var(--текст);font:15px/1.45 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+nav{display:flex;gap:8px;padding:8px 10px;background:var(--плитка);border-bottom:1px solid var(--кромка);align-items:center;flex-wrap:wrap;flex:none}
+nav b{font-size:12px;letter-spacing:.08em;color:var(--тихий);margin-right:4px}
+.вкл{min-height:44px;padding:6px 14px;border-radius:11px;border:1px solid var(--кромка);background:transparent;color:var(--текст);font:inherit;font-weight:700;cursor:pointer;text-align:left}
+.вкл.акт{background:var(--зел);color:#06210f;border-color:var(--зел)}
+.вкл small{display:block;font-size:10px;font-weight:400;opacity:.8}
+.право{margin-left:auto;font-size:12px}
+.право a{color:var(--лил)}
+main{flex:1;min-height:0;position:relative}
+/* На телефоне меню не должно съедать первый экран: три вкладки в одну прокручиваемую строку,
+   подписи прячем — на 375 px они занимали треть высоты, и игра начиналась за сгибом. */
+@media (max-width:700px){
+  nav{flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:6px 8px}
+  nav b{display:none}
+  .вкл{white-space:nowrap;padding:6px 12px;font-size:14px}
+  .вкл small{display:none}
+  .право{margin-left:6px;white-space:nowrap}
+}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--фон)}
+iframe[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<nav>
+  <b>БИРЖА ДЛЯ НАЧИНАЮЩИХ</b>
+  <button class="вкл акт" data-v="chas">Первый час<small>с чего начать: пять шагов, три траты, комната растёт</small></button>
+  <button class="вкл" data-v="igra">Сто долларов и Олег<small>ставка на компанию, новости, учитель, четыре тактики</small></button>
+  <button class="вкл" data-v="lab">Почему бот проиграл<small>разбор на настоящих свечах</small></button>
+  <span class="право"><a href="https://aka-gst.ru/">на сайт</a></span>
+</nav>
+<main>
+  <iframe id="chas" data-src="pervyy-chas.html" title="Первый час"></iframe>
+  <iframe id="igra" data-src="igra.html" title="Сто долларов и Олег" hidden></iframe>
+  <iframe id="lab" data-src="index.html" title="Почему бот проиграл" hidden></iframe>
+</main>
+<script>
+(() => {
+  const рамки = [...document.querySelectorAll('iframe')];
+  const открыть = имя => {
+    for (const р of рамки) {
+      const своя = р.id === имя;
+      if (своя && !р.src) р.src = р.dataset.src; // грузим только то, что открыли: телефон и трафик
+      р.hidden = !своя;
+    }
+    for (const к of document.querySelectorAll('.вкл')) к.classList.toggle('акт', к.dataset.v === имя);
+    location.hash = имя;
+  };
+  for (const к of document.querySelectorAll('.вкл')) к.onclick = () => открыть(к.dataset.v);
+  открыть(рамки.some(р => р.id === location.hash.slice(1)) ? location.hash.slice(1) : 'chas');
+})();
+</script>
+</body>
+</html>

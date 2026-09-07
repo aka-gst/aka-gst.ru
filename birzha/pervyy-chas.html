@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Первый час · торговая игра</title>
+<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
+<style>
+:root{
+  --фон:#0a0c11; --плитка:#131722; --кромка:#242a38; --текст:#e9ecf3; --тихий:#8b93a7;
+  --зел:#4ade80; --крас:#f87171; --жёлт:#f5c451; --лил:#a78bfa; --лента:#5ba3f5;
+  --комната:#1a1410;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--фон);color:var(--текст);font:15px/1.45 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;
+  display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--кромка);background:var(--плитка);
+  border-radius:11px;min-height:44px;padding:0 14px}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.главная{background:var(--зел);color:#06210f;border-color:var(--зел);font-weight:700}
+button.лента{background:var(--лента);color:#04121f;border-color:var(--лента);font-weight:700}
+
+/* шапка */
+header{display:flex;gap:12px;align-items:center;padding:8px 12px;background:var(--плитка);
+  border-bottom:1px solid var(--кромка);flex-wrap:wrap;flex:none}
+.часы{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px}
+.фаза{color:var(--тихий);font-size:12px;flex:1 1 160px;min-width:0}
+.деньги{font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}
+.наверх{margin-left:auto;display:flex;gap:8px}
+.полоска{height:4px;background:#1b2130;flex:none}
+.полоска i{display:block;height:100%;background:linear-gradient(90deg,var(--лил),var(--зел));transition:width .4s}
+
+/* тело: комната слева и справа, терминал в середине */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(120px,1fr) minmax(0,3fr) minmax(120px,1fr);gap:10px;padding:10px;overflow:hidden}
+.стена{background:var(--комната);border:1px solid var(--кромка);border-radius:14px;padding:12px;
+  display:flex;flex-direction:column;gap:8px;overflow:hidden;min-height:0}
+.стена h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--тихий);font-weight:600}
+.вещи{flex:1;display:flex;flex-wrap:wrap;gap:8px;align-content:space-around;justify-content:center;
+  border-radius:12px;background:linear-gradient(180deg,#0000 60%,#ffffff08 100%);padding:8px 4px}
+.вещь{font-size:40px;line-height:1;opacity:.9;filter:saturate(.85)}
+.что-дальше{font-size:12px;color:var(--тихий);border-top:1px solid var(--кромка);padding-top:8px;margin-top:4px}
+.вещь.нет{opacity:.18}
+.комната-имя{font-weight:700}
+.центр{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
+.карта{background:var(--плитка);border:1px solid var(--кромка);border-radius:14px;padding:12px}
+.ярлык{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--тихий);margin-bottom:8px;font-weight:600}
+.активы{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.актив{background:#0f131c;border:1px solid var(--кромка);border-radius:12px;padding:10px;text-align:left;min-height:76px;
+  display:flex;flex-direction:column;gap:2px}
+.актив:hover:not(:disabled){border-color:var(--лил)}
+.актив b{font-size:15px}
+.актив .ц{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px}
+.актив small{color:var(--тихий);font-size:11px}
+.вверх{color:var(--зел)}.вниз{color:var(--крас)}
+.советы{display:grid;gap:6px}
+.совет{display:flex;gap:8px;align-items:flex-start;background:#0f131c;border:1px solid var(--кромка);border-radius:10px;padding:8px 10px}
+.совет b{flex:none}
+.новость{display:flex;gap:8px;padding:6px 0;border-top:1px solid var(--кромка);font-size:14px}
+.новость:first-of-type{border-top:0}
+.новость .мин{color:var(--тихий);font-variant-numeric:tabular-nums;flex:none;width:56px}
+.закрыто{color:var(--тихий);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.траты{display:flex;gap:8px;flex-wrap:wrap}
+.журнал{font-size:13px;display:grid;gap:8px;max-height:180px;overflow:auto}
+.запись{border-left:3px solid var(--кромка);padding-left:10px}
+.запись .и{font-weight:700}
+.низ{display:flex;gap:8px;padding:10px;border-top:1px solid var(--кромка);background:var(--плитка);flex:none;flex-wrap:wrap;align-items:center}
+.низ .подпись{color:var(--тихий);font-size:12px;flex:1 1 200px}
+dialog{border:1px solid var(--кромка);background:var(--плитка);color:var(--текст);border-radius:16px;padding:18px;max-width:520px;width:calc(100% - 28px);margin:auto}
+dialog::backdrop{background:#000a}
+dialog h2{font-size:20px;margin-bottom:8px}
+dialog p{margin-bottom:10px;color:var(--тихий);font-size:14px}
+textarea{width:100%;min-height:72px;background:#0f131c;color:var(--текст);border:1px solid var(--кромка);
+  border-radius:10px;padding:10px;font:inherit;resize:vertical}
+.строка-итог{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--кромка)}
+
+@media (max-width:860px){
+  main{grid-template-columns:1fr;padding:8px;gap:8px}
+  .стена{display:none}
+  body.комната-видна .стена{display:flex}
+  body.комната-видна .центр{display:none}
+  .активы{grid-template-columns:repeat(2,1fr)}
+  /* на телефоне имя советчика встаёт над репликой: иначе текст ужимается в узкую колонку и читается по два слова */
+  .совет{flex-direction:column;gap:2px}
+  .совет b{color:var(--тихий);font-size:12px}
+}
+@media (min-width:861px){ .на-телефоне{display:none} }
+</style>
+</head>
+<body>
+<header>
+  <span class="часы" id="часы">0:00</span>
+  <span class="фаза" id="фаза">—</span>
+  <span class="деньги" id="деньги">$100</span>
+  <span class="наверх">
+    <button class="на-телефоне" id="кн-комната">Комната</button>
+    <button id="кн-выход">НА САЙТ</button>
+  </span>
+</header>
+<div class="полоска"><i id="полоска" style="width:0"></i></div>
+
+<main>
+  <aside class="стена" id="стена-л">
+    <h3>Где ты живёшь</h3>
+    <div class="комната-имя" id="комната-имя">Дешёвая общага</div>
+    <div class="вещи" id="вещи"><span class="вещь">🛏</span><span class="вещь" id="в2">🪟</span><span class="вещь" id="в3">🪴</span><span class="вещь" id="в4">🖼</span></div>
+    <div class="что-дальше" id="что-дальше"></div>
+    <div style="margin-top:auto;color:var(--тихий);font-size:12px" id="стена-подпись">Богатство должно быть видно вокруг терминала, а не только в числе.</div>
+  </aside>
+
+  <div class="центр">
+    <div class="карта">
+      <div class="ярлык">Терминал · выбери, куда поставить</div>
+      <div class="активы" id="активы"></div>
+      <div id="позиция" style="margin-top:8px;color:var(--тихий);font-size:13px"></div>
+    </div>
+
+    <div class="карта">
+      <div class="ярлык">Кому верить</div>
+      <div class="советы" id="советы"></div>
+    </div>
+
+    <div class="карта">
+      <div class="ярлык">Новости и календарь</div>
+      <div id="лента"></div>
+    </div>
+
+    <div class="карта" id="карта-журнал" hidden>
+      <div class="ярлык">Журнал решений · что ты выбрал и чем кончилось</div>
+      <div class="журнал" id="журнал"></div>
+    </div>
+  </div>
+
+  <aside class="стена" id="стена-п">
+    <h3>Три траты первого часа</h3>
+    <div class="траты" id="траты" style="flex-direction:column;flex:1;justify-content:flex-start"></div>
+    <div style="margin-top:auto;color:var(--тихий);font-size:12px">Машины, статус и команда ботов — потом. Сначала старт должен держать человека.</div>
+  </aside>
+</main>
+
+<div class="низ">
+  <button class="главная" id="кн-время">Промотать 5 минут</button>
+  <button id="кн-подушка" hidden>Подняться на подушке</button>
+  <span class="подпись" id="подпись">Ставки в первый час маленькие: важно не сколько выиграл, а понял ли почему.</span>
+</div>
+
+<dialog id="окно">
+  <h2 id="окно-заголовок"></h2>
+  <div id="окно-тело"></div>
+  <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+    <button id="окно-ок" class="главная">Понял</button>
+  </div>
+</dialog>
+
+<script src="src/pervyy-chas.js"></script>
+<script>
+(() => {
+  'use strict';
+  const И = PervyyChas;
+  const $ = id => document.getElementById(id);
+  const семя = Number(new URLSearchParams(location.search).get('семя')) || (Date.now() % 100000);
+  let с = И.новая ? И.новая(семя) : И.novaya(семя);
+  let показанныеФазы = new Set();
+
+  const деньги = x => (x < 0 ? '−$' : '$') + Math.abs(x).toFixed(2).replace(/\.00$/, '');
+  const времяСтрокой = м => `${Math.floor(м / 60)}:${String(м % 60).padStart(2, '0')}`;
+
+  function окно(заголовок, тело) {
+    $('окно-заголовок').textContent = заголовок;
+    $('окно-тело').innerHTML = тело;
+    $('окно').showModal();
+  }
+
+  function действие(д) {
+    try { с = И.deystvie(с, д); }
+    catch (e) { $('подпись').textContent = String(e.message).replace(/^!!\s*/, ''); return; }
+    нарисовать();
+  }
+
+  function нарисоватьАктивы() {
+    $('активы').innerHTML = '';
+    for (const а of с.aktivy) {
+      const ц = И.tsena(с, а.id);
+      const рост = ц >= 100;
+      const кн = document.createElement('button');
+      кн.className = 'актив';
+      кн.disabled = !!с.pozitsiya || с.konchilos;
+      кн.innerHTML = `<b>${а.e} ${а.imya}</b><span class="ц ${рост ? 'вверх' : 'вниз'}">${ц.toFixed(2)}</span><small>${а.chto}</small>`;
+      кн.onclick = () => поставить(а);
+      $('активы').appendChild(кн);
+    }
+  }
+
+  function поставить(а) {
+    const макс = Math.max(1, Math.floor(с.dengi * 0.5));
+    const свояТрактовка = с.kupleno.includes('lenta');
+    окно(`Поставить на ${а.imya}?`, `
+      <p>${свояТрактовка ? 'У тебя есть лента: реши сам, что значит ближайшее событие — или послушай советчика.' : 'Ленты пока нет: решаешь вслепую или по совету.'}</p>
+      <p>Свободно ${деньги(с.dengi)}. Больше половины денег на одну ставку в первый час не ставим.</p>
+      <div style="display:grid;gap:8px">
+        ${[10, 25, макс].filter((v, i, m) => v <= с.dengi && m.indexOf(v) === i).map(v =>
+          `<button data-сумма="${v}" style="width:100%">Поставить ${деньги(v)}</button>`).join('')}
+      </div>`);
+    for (const b of $('окно-тело').querySelectorAll('[data-сумма]')) {
+      b.onclick = () => {
+        $('окно').close();
+        действие({ tip: 'stavka', aktiv: а.id, summa: Number(b.dataset.сумма), svoya_traktovka: свояТрактовка, sovetnik: свояТрактовка ? null : 'gromkiy' });
+      };
+    }
+  }
+
+  function нарисоватьСоветы() {
+    const ц = с.aktivy.map(а => ({ а, ц: И.tsena(с, а.id) })).sort((x, y) => y.ц - x.ц);
+    const верх = ц[0].а, низ = ц[ц.length - 1].а;
+    const советы = [
+      { кто: И.SOVETNIKI[0], текст: `Все берут ${верх.imya}! Не тормози, поезд уходит.` },
+      { кто: И.SOVETNIKI[1], текст: `${верх.imya} уже вырос — событие в цене. Я бы смотрел на ${низ.imya}.` },
+      { кто: И.SOVETNIKI[2], текст: `Фундаментально ${верх.imya} в порядке. Ничего не меняется за час.` },
+    ];
+    $('советы').innerHTML = советы.map(s => `<div class="совет"><b>${s.кто.imya}:</b><span>${s.текст}</span></div>`).join('')
+      + `<div style="color:var(--тихий);font-size:12px;margin-top:2px">Совет — не истина. Проверить его можно только исходом.</div>`;
+  }
+
+  function нарисоватьЛенту() {
+    if (!с.kupleno.includes('lenta')) {
+      $('лента').innerHTML = `<div class="закрыто">Ленты нет: ты видишь цену, но не знаешь, что её двигает.
+        <button class="лента" id="кн-лента">Купить ленту за $${И.TRATY.lenta.tsena}</button></div>`;
+      $('кн-лента').onclick = () => действие({ tip: 'kupit', chto: 'lenta' });
+      return;
+    }
+    const строки = с.sobytiya.slice().sort((a, b) => a.minuta - b.minuta).map(e => {
+      const было = с.minuta >= e.minuta;
+      const имя = с.aktivy.find(a => a.id === e.aktiv).imya;
+      return `<div class="новость"><span class="мин">${времяСтрокой(e.minuta)}</span>
+        <span><b>${имя}</b> · ${e.zagolovok} <span style="color:var(--тихий)">— ждут ${e.ozhidanie}, действует ${e.gorizont} мин</span>
+        ${было ? `<div style="color:var(--тихий);font-size:12px;margin-top:2px">${e.pochemu}</div>` : ''}</span></div>`;
+    }).join('');
+    $('лента').innerHTML = строки + `<div style="color:var(--тихий);font-size:12px;margin-top:6px">У события есть дата и горизонт. Цена двигается не в момент новости, а пока событие отрабатывает.</div>`;
+  }
+
+  function нарисоватьТраты() {
+    $('траты').innerHTML = Object.entries(И.TRATY).map(([ключ, т]) => {
+      const есть = с.kupleno.includes(ключ);
+      return `<button data-трата="${ключ}" ${есть || с.kupleno.length >= 3 || с.dengi < т.tsena ? 'disabled' : ''} style="width:100%;text-align:left;min-height:56px;padding:8px 10px">
+        <b>${есть ? '✓ ' : ''}${т.imya}</b><br><small style="color:var(--тихий)">${есть ? т.chto : '$' + т.tsena + ' · ' + т.chto}</small></button>`;
+    }).join('');
+    for (const b of $('траты').querySelectorAll('[data-трата]')) b.onclick = () => действие({ tip: 'kupit', chto: b.dataset.трата });
+  }
+
+  function нарисоватьЖурнал() {
+    $('карта-журнал').hidden = !с.zhurnal.length;
+    $('журнал').innerHTML = с.zhurnal.slice().reverse().map(з => {
+      const имя = с.aktivy.find(a => a.id === з.aktiv).imya;
+      return `<div class="запись"><span class="и ${з.dohod >= 0 ? 'вверх' : 'вниз'}">${з.dohod >= 0 ? '+' : ''}${деньги(з.dohod)}</span>
+        · ${имя}, ${деньги(з.summa)} ${з.doverilsya ? '· поверил советчику' : з.svoya_traktovka ? '· решил сам по календарю' : '· наугад'}
+        <div style="color:var(--тихий)">${з.pochemu}</div></div>`;
+    }).join('');
+  }
+
+  function нарисоватьКомнату() {
+    $('комната-имя').textContent = И.KOMNATY[с.komnata];
+    for (const [id, нужно] of [['в2', 1], ['в3', 1], ['в4', 1]]) $(id).className = с.komnata >= нужно ? 'вещь' : 'вещь нет';
+    $('что-дальше').textContent = с.komnata >= 1
+      ? 'Дальше — квартира, обстановка, машины и статус. Но это уже не первый час.'
+      : 'Пока это общага: койка и голая стена. Улучшение комнаты — одна из трёх трат часа.';
+    document.getElementById('стена-л').style.background = с.komnata >= 1 ? '#171b24' : 'var(--комната)';
+  }
+
+  function фазаСменилась() {
+    const ф = И.faza(с.minuta);
+    $('фаза').textContent = ф.имя;
+    if (показанныеФазы.has(ф.ключ)) return;
+    показанныеФазы.add(ф.ключ);
+    if (с.minuta === 0) return; // первую фазу не объясняем окном: пусть сначала попробует
+    окно(ф.имя, `<p>${ф.новое}</p>`);
+  }
+
+  function конец() {
+    const о = И.ocenka(с);
+    окно('Час прошёл', `
+      <p>Ты встретил ${о.prichin} из ${о.iz} причин думать и принял ${о.resheniy} решений.</p>
+      <div class="строка-итог"><span>Было</span><b>${деньги(с.nachalo)}</b></div>
+      <div class="строка-итог"><span>Стало</span><b class="${о.itog >= 0 ? 'вверх' : 'вниз'}">${деньги(с.dengi)} (${(о.itog * 100).toFixed(1)}%)</b></div>
+      <div class="строка-итог"><span>Где живёшь</span><b>${И.KOMNATY[с.komnata]}</b></div>
+      <p style="margin-top:12px">Последнее за этот час: запиши правило, которое ты бы теперь себе сказал. Оно и есть капитал, который ты вынес.</p>
+      <textarea id="поле-правило" placeholder="Например: не ставить на событие, которого ждут все"></textarea>`);
+    $('окно-ок').textContent = 'Записать правило';
+    $('окно-ок').onclick = () => {
+      const т = $('поле-правило') ? $('поле-правило').value : '';
+      try { с = И.deystvie(с, { tip: 'pravilo', text: т }); } catch (e) { return; }
+      $('окно').close();
+      окно('Правило записано', `<p>«${с.pravilo}»</p><p>Со следующего часа игра начнёт его проверять: событиями, которые ему соответствуют, и теми, что ему противоречат.</p>`);
+      $('окно-ок').onclick = () => $('окно').close();
+    };
+  }
+
+  function нарисовать() {
+    $('часы').textContent = времяСтрокой(с.minuta);
+    $('деньги').textContent = деньги(с.dengi);
+    $('деньги').className = 'деньги ' + (с.dengi >= с.nachalo ? 'вверх' : 'вниз');
+    $('полоска').style.width = (с.minuta / И.ЧАС * 100) + '%';
+    $('позиция').textContent = с.pozitsiya
+      ? `В деле: ${деньги(с.pozitsiya.summa)} на ${с.aktivy.find(a => a.id === с.pozitsiya.aktiv).imya}. Промотай время, чтобы увидеть, что вышло.`
+      : с.konchilos ? 'Час закончился.' : '';
+    $('кн-подушка').hidden = !(с.razoren && с.kupleno.includes('podushka') && !с.podushka_ispolzovana);
+    $('кн-время').disabled = с.konchilos;
+    нарисоватьАктивы(); нарисоватьСоветы(); нарисоватьЛенту(); нарисоватьТраты(); нарисоватьЖурнал(); нарисоватьКомнату();
+    фазаСменилась();
+    if (с.konchilos && !с.pravilo) конец();
+  }
+
+  $('кн-время').onclick = () => действие({ tip: 'promotat', minut: 5 });
+  $('кн-подушка').onclick = () => действие({ tip: 'podnyatsya' });
+  $('окно-ок').onclick = () => $('окно').close();
+  $('кн-комната').onclick = () => document.body.classList.toggle('комната-видна');
+  $('кн-выход').onclick = () => {
+    if (с.minuta > 0 && !с.konchilos) {
+      if ($('кн-выход').dataset.точно !== 'да') { $('кн-выход').dataset.точно = 'да'; $('кн-выход').textContent = 'ТОЧНО? ЧАС ПРОПАДЁТ'; return; }
+    }
+    location.href = 'https://aka-gst.ru/';
+  };
+  нарисовать();
+})();
+</script>
+</body>
+</html>

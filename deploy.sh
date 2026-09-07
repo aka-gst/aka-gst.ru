@@ -63,6 +63,7 @@ photodata
 way
 torgash-gnjeev4lb7
 flow
+birzha
 "
 
 echo "== незакоммиченное в выкладке =="

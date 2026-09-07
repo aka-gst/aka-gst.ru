@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>Поставь 100 $</title>
+<script>
+  if (location.protocol !== 'file:' && !/^(localhost|127\.)/.test(location.hostname) && !/claude\.ai$/.test(location.hostname)) {
+    document.write('<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"><\/script>');
+  }
+</script>
+<style>
+  :root{--фон:#0c0e13;--плитка:#14171f;--кромка:#232733;--текст:#e8eaf0;--тихий:#7e8598;--зелёный:#4ade80;--красный:#f87171;--жёлтый:#fbbf24;--лиловый:#a78bfa}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#05060a;color:var(--текст);font:16px/1.4 -apple-system,"SF Pro Text",Roboto,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+  .экран{min-height:100dvh;margin:auto;background:var(--фон);padding:10px 14px 0;display:flex;flex-direction:column;gap:10px;max-width:430px}
+  [hidden]{display:none!important}
+  .шапка{display:flex;justify-content:space-between;align-items:center;min-height:44px;gap:10px}
+  .шапка b{font-size:13px;letter-spacing:.06em;color:var(--тихий);font-weight:600}
+  .назад{min-height:44px;padding:0 10px;border:1px solid var(--кромка);background:transparent;color:var(--текст);border-radius:10px;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .шапка>b,.шапка>div{flex:1;text-align:center}
+  .насайт{white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 12px;border:1px solid var(--кромка);border-radius:10px;color:var(--текст);text-decoration:none;font-size:11px;letter-spacing:.06em}
+  h1{font-size:30px;line-height:1.1;font-weight:800}
+  .под{color:var(--тихий);font-size:15px}
+  .карточки{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:12px}
+  /* комната и старый монитор */
+  .комната{background:radial-gradient(ellipse at 50% 0%,#1d1a2e 0,#0b0a12 60%,#050409 100%)}
+  .комната .шапка{color:var(--тихий)}
+  .стол{display:flex;flex-direction:column;align-items:center;padding:6px 0 0}
+  .монитор{width:100%;max-width:980px}
+  .рамка{background:linear-gradient(#3a3b40,#1f2024);border-radius:14px 14px 0 0;padding:10px 14px 0;display:flex;justify-content:space-between;align-items:center;border:1px solid #4a4b52;border-bottom:0}
+  .лампочка{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80}
+  .марка{font-size:10px;letter-spacing:.14em;color:#9a9ca6;font-weight:700}
+  .матрица{background:#0a1a2c;border:14px solid #24252b;border-top-width:8px;border-bottom-width:18px;padding:10px;position:relative;box-shadow:inset 0 0 60px rgba(0,0,0,.6)}
+  .матрица::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+  .окно{background:#0c0e13;border:1px solid #2a3140;border-radius:6px;padding:0 12px 8px}
+  .заголовок-окна{display:flex;justify-content:space-between;font-size:11px;color:var(--тихий);padding:6px 0;border-bottom:1px solid #2a3140;margin-bottom:8px}
+  .сцена-текст{color:#c9d0dc;font-size:14px;line-height:1.35;max-width:820px}
+  .окно h1{font-size:22px;margin:6px 0 8px}
+  #выбор .карточки{padding-bottom:4px;gap:8px}#выбор .карточка{padding:10px}#выбор .карточка .э{font-size:26px}#выбор .карточка b{font-size:15px;margin-top:4px}#выбор .карточка span{font-size:11.5px;margin-top:1px}#выбор .карточка .купить{margin-top:4px;font-size:12px}
+  #выбор.экран{min-height:100dvh;height:100dvh;overflow:hidden;padding-bottom:0}
+  .подставка{height:26px;width:160px;margin:auto;background:linear-gradient(#2b2c31,#15161a);border-radius:0 0 10px 10px}
+  .стол-край{width:100%;max-width:1040px;height:34px;background:linear-gradient(#5a3b23,#3b2616);border-radius:6px;position:relative;margin-top:-2px}
+  .кружка{position:absolute;right:8%;top:-16px;font-size:24px}.мышь{position:absolute;left:12%;top:-6px;width:34px;height:20px;border-radius:12px;background:#8d8f97}
+  .карточка .купить{display:block;width:100%;margin-top:6px;color:var(--зелёный);font-weight:700;font-size:13px;background:transparent;border:1px solid #1f4a2c;border-radius:8px;padding:6px 8px;text-align:left;cursor:pointer;font-family:inherit;min-height:40px}
+  .карточка .купить:hover{background:#0f1a12}
+  #выбор .карточка{cursor:default}#выбор .карточка:hover{border-color:var(--кромка)}
+  .карточка .верх{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}.искра{width:110px;height:34px;flex:none;background:transparent;border:0;border-radius:0}
+  .карточка .тик{font-style:normal;font-size:12px;font-variant-numeric:tabular-nums}
+  .карточка .рейтинг{color:var(--жёлтый)!important;font-size:11px!important}
+  .слухи{display:flex;gap:6px;align-items:center;margin-top:5px}.слух{width:26px;height:26px;border-radius:50%;border:1px solid var(--кромка);background:transparent;color:var(--текст);font-weight:800;cursor:pointer;font-family:inherit;flex:none}
+  .слух.плюс{color:var(--зелёный);border-color:#1f4a2c}.слух.минус{color:var(--красный);border-color:#6b2a33}.слух-текст{font-size:11px;color:var(--тихий);line-height:1.25;min-height:28px;display:block}
+  #выбор .карточка span{font-size:11.5px}#выбор .карточка b{font-size:15px;margin-top:2px}
+  @media(max-width:759px){.окно h1{font-size:22px}.карточки{grid-template-columns:1fr 1fr}.стол-край{display:none}.подставка{display:none}.матрица{border-width:8px}}
+  .карточка{background:var(--плитка);border:1px solid var(--кромка);border-radius:16px;padding:12px;text-align:left;color:var(--текст);font-family:inherit;cursor:pointer;min-height:44px}
+  .карточка:hover{border-color:var(--тихий)}
+  .карточка .э{font-size:30px;line-height:1}.карточка b{display:block;font-size:16px;margin-top:6px}.карточка span{display:block;color:var(--тихий);font-size:12px;margin-top:2px;line-height:1.3}
+  .деньги{background:var(--плитка);border:1px solid var(--кромка);border-radius:16px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+  .деньги .к{color:var(--тихий);font-size:12px;letter-spacing:.06em}.деньги .з{font-size:38px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .деньги .д{font-size:15px;font-weight:700;text-align:right}
+  .деньги.выведено{border-color:var(--жёлтый)}
+  .фокус-события{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,.75fr) 12px minmax(0,1.5fr) 12px minmax(54px,.65fr);align-items:stretch;gap:4px;background:#17121a;border:1px solid #6b2a33;border-radius:16px;padding:10px;isolation:isolate}
+  .фокус-события.рост{background:#0f1a12;border-color:#1f4a2c}.фокус-события::before{content:"";position:absolute;inset:-35%;z-index:-1;background:radial-gradient(circle at 50% 50%,rgba(248,113,113,.22),transparent 42%);opacity:.72}.фокус-события.рост::before{background:radial-gradient(circle at 50% 50%,rgba(74,222,128,.19),transparent 42%)}
+  .фокус-шаг{min-width:0;padding:5px 2px;opacity:.48}.фокус-шаг b{display:block;font-size:10px;letter-spacing:.08em;color:var(--тихий)}.фокус-шаг span{display:block;margin-top:4px;font-size:13px;line-height:1.2;font-weight:700}.фокус-шаг.факт span{font-size:14px}.фокус-шаг.деньги span{font-size:18px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .фокус-стрелка{display:flex;align-items:center;justify-content:center;color:var(--тихий);font-weight:800;opacity:.35;transform:translateX(-5px)}
+  .фокус-действие{grid-column:1/-1;min-height:36px;margin-top:5px;padding:6px 0 0;border:0;border-top:1px solid var(--кромка);background:transparent;color:var(--текст);font:700 12px/1.2 inherit;text-align:left;cursor:pointer}
+  .фокус-события.взрыв .фокус-шаг{animation:фокус-вход 420ms var(--плавно) both}.фокус-события.взрыв .фокус-стрелка{animation:фокус-стрелка 360ms var(--плавно) both}.фокус-события.взрыв .фокус-шаг.факт{animation-delay:120ms}.фокус-события.взрыв .фокус-шаг.деньги{animation-delay:270ms}.фокус-события.взрыв .вторая-стрелка{animation-delay:190ms}
+  @keyframes фокус-вход{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}@keyframes фокус-стрелка{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+  :root{--плавно:cubic-bezier(.2,.8,.2,1)}
+  @media(prefers-reduced-motion: reduce){.фокус-события.взрыв .фокус-шаг,.фокус-события.взрыв .фокус-стрелка{animation:фокус-тишина 120ms linear both}@keyframes фокус-тишина{from{opacity:0}to{opacity:1}}}
+  @media(max-width:430px){.фокус-события{grid-template-columns:minmax(0,.85fr) 14px minmax(0,1.55fr)}.фокус-события .вторая-стрелка{display:none}.фокус-шаг.деньги{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;border-top:1px solid var(--кромка);padding-top:8px}.фокус-шаг.деньги span{margin-top:0;font-size:22px}.фокус-шаг.деньги b{flex:none}}
+  svg{width:100%;height:170px;display:block;background:var(--плитка);border:1px solid var(--кромка);border-radius:16px}
+  .лента{background:var(--плитка);border:1px solid var(--кромка);border-radius:16px;padding:8px 6px;overflow-y:auto;min-height:0;flex:1 1 120px;max-height:38dvh}
+  .лента .к{color:var(--тихий);font-size:11px;letter-spacing:.06em;padding:2px 8px 6px}
+  .н{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:12px;border:1px solid transparent;cursor:pointer;min-height:44px}
+  .н+.н{margin-top:4px}
+  .н b{flex:none;font-size:11px;color:var(--тихий);font-weight:700;width:52px;padding-top:2px}
+  .н span{font-size:14px;line-height:1.3;color:var(--тихий);flex:1}
+  .н.плохо{background:#1d1216;border-color:#6b2a33}.н.плохо span{color:var(--красный);font-weight:700;font-size:15px}
+  .н.хорошо{background:#0f1a12;border-color:#1f4a2c}.н.хорошо span{color:var(--зелёный);font-weight:700;font-size:15px}
+  .н.мелко-{background:#17121a}.н.мелко- span{color:#f5a3a3}.н.мелко\+{background:#10171a}.н.мелко\+ span{color:#9fe3b6}
+  .н.выбрана{border-color:var(--текст)}.н.вывод{background:#1b1608;border-color:#4a3a10}.н.вывод span{color:var(--жёлтый);font-weight:700}
+  .н i{font-style:normal;flex:none;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;padding-top:1px}
+  .низ{margin-top:auto;position:sticky;bottom:0;background:var(--фон);padding:8px 0 12px;display:flex;flex-direction:column;gap:8px}
+  .кнопки{display:flex;gap:8px}
+  .кнопка{flex:1;text-align:center;min-height:52px;padding:12px;border-radius:14px;font-size:16px;font-weight:700;border:0;cursor:pointer;font-family:inherit}
+  .кнопка.главная{background:var(--зелёный);color:#06210f}.кнопка.вторая{background:transparent;border:1px solid var(--кромка);color:var(--текст);font-size:15px}
+  .кнопка.вывод{background:transparent;border:2px solid var(--жёлтый);color:var(--жёлтый)}
+  .кнопка:disabled{opacity:.4;cursor:default}
+  .итог{background:var(--плитка);border:1px solid var(--кромка);border-radius:16px;padding:14px}
+  .итог .б{font-size:14px;color:var(--тихий)}.итог .ч{font-size:40px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+  .итог h2{font-size:12px;letter-spacing:.08em;color:var(--тихий);margin-top:12px}.итог p{font-size:15px;margin-top:3px;line-height:1.4}
+  .итог.учитель{border-color:var(--лиловый)}.итог.учитель h2{color:var(--лиловый)}
+  .цз{color:var(--зелёный)}.цк{color:var(--красный)}.цж{color:var(--жёлтый)}
+  .мелко{font-size:11px;color:var(--тихий);line-height:1.3}
+  .подсказка{font-size:13px;color:var(--тихий);padding:0 2px}
+  .таблица{background:var(--плитка);border:1px solid var(--кромка);border-radius:16px;overflow:hidden}
+  .т{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 12px;border-top:1px solid var(--кромка);align-items:center}
+  .т:first-child{border-top:0}.т b{font-size:15px}.т .с{font-size:12px;color:var(--тихий);grid-column:1/3}
+  .т .д{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+  .т.лидер{background:#0f1a12}.т.лидер b::after{content:' · лидер';color:var(--зелёный);font-size:12px}
+  .копилка{font-size:12px;color:var(--тихий);background:var(--плитка);border:1px solid var(--кромка);border-radius:12px;padding:8px 12px;line-height:1.5}
+  .копилка b{color:var(--текст)}
+  .лев,.прав{display:contents}
+  .вар{cursor:pointer}.вар:hover{background:#1a1e29}.вар .с{color:var(--текст);font-size:14px}.вар .д{font-size:12px;color:var(--лиловый);font-weight:700}
+  @media(min-width:760px){
+    .экран{max-width:1100px;display:grid;grid-template-columns:1.1fr .9fr;grid-template-rows:auto 1fr auto;column-gap:18px;padding:14px 24px 0;align-content:start}
+    .экран>.шапка{grid-column:1/3}
+    .лев{display:flex;flex-direction:column;gap:10px;grid-column:1;grid-row:2}
+    .прав{display:flex;flex-direction:column;gap:10px;grid-column:2;grid-row:2;min-height:0}
+    .лента{max-height:none;flex:1 1 auto;min-height:320px}
+    svg{height:260px}
+    .экран>.низ{grid-column:1/3}
+    .карточки{grid-template-columns:repeat(5,1fr)}
+    #выбор.экран{display:flex;flex-direction:column}
+    h1{font-size:40px}
+  }
+</style>
+</head>
+<body>
+
+<section class="экран комната" id="выбор">
+  <div class="шапка" style="min-height:0;padding:0"><span></span><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="стол">
+    <div class="монитор">
+      <div class="рамка"><div class="лампочка"></div><span class="марка">LG FLATRON · 2009</span></div>
+      <div class="матрица">
+        <div class="окно">
+          <div class="заголовок-окна"><span>● ● ●</span><span>brokerlite.exe — счёт 100 $ · рынок открыт</span><span class="мелко">игра · шаг 1 из 3</span></div>
+          <p class="сцена-текст">Час ночи. Ты у старого компа, на карте последние сто баксов. Друг с завода говорил: «купи акции чего-нибудь, что знаешь». Ты знаешь игры, телефоны и музыку. Площадка расставила звёздочки и подсказки: наведи на <b class="цз">+</b> и <b class="цк">−</b>. Верить ли им — узнаешь через две недели.</p>
+          <h1>Что покупаем?</h1>
+          <div class="карточки" id="карточки"></div>
+          <p class="мелко">Учебная игра: цены и новости условные, деньги ненастоящие. Это не совет по сделкам.</p>
+        </div>
+      </div>
+      <div class="подставка"></div>
+    </div>
+    <div class="стол-край"><span class="кружка">☕</span><span class="мышь"></span></div>
+  </div>
+</section>
+
+<section class="экран" id="день" hidden>
+  <div class="шапка"><button class="назад" data-nazad>← Компании</button><b id="д-шапка">ДЕНЬ 0 ИЗ 14</b><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="лев">
+    <div class="деньги" id="д-блок"><div><div class="к" id="д-к">ТВОИ ДЕНЬГИ</div><div class="з" id="д-деньги">100 $</div></div><div class="д" id="д-дельта">пока 0 $</div></div>
+    <div class="фокус-события" id="фокус-события" hidden aria-live="polite">
+      <div class="фокус-шаг"><b>СТАВКА</b><span id="ф-ставка"></span></div><div class="фокус-стрелка" aria-hidden="true">→</div>
+      <div class="фокус-шаг факт"><b>ФАКТ</b><span id="ф-факт"></span></div><div class="фокус-стрелка вторая-стрелка" aria-hidden="true">→</div>
+      <div class="фокус-шаг деньги"><b>ДЕНЬГИ</b><span id="ф-деньги"></span></div>
+      <button class="фокус-действие" id="ф-награфик">Показать этот поворот на графике ↓</button>
+    </div>
+    <svg id="граф" viewBox="0 0 400 170" preserveAspectRatio="none"></svg>
+  </div>
+  <div class="прав">
+    <div class="лента" id="д-лента"><div class="к">НОВОСТИ · свежие сверху · нажми, чтобы увидеть день на графике</div><div id="д-список"></div></div>
+  </div>
+  <div class="низ">
+    <div class="кнопки"><button class="кнопка вывод" id="к-вывести">Вывести деньги: 100 $</button></div>
+    <div class="кнопки"><button class="кнопка главная" id="к-день">Следующий день →</button><button class="кнопка вторая" id="к-доконца">До конца ▶▶</button></div>
+  </div>
+</section>
+
+<section class="экран" id="итог" hidden>
+  <div class="шапка"><button class="назад" data-nazad>← Компании</button><b>ИГРА · ИТОГ</b><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="лев">
+    <div class="итог">
+      <div class="б" id="и-было">Было 100 $</div>
+      <div class="ч" id="и-стало">стало 87 $</div>
+      <p id="и-если" class="под" style="margin-top:6px"></p>
+      <h2>ПОЧЕМУ</h2><p id="и-почему"></p>
+      <h2>ЧТО ИЗ ЭТОГО ПОНЯТЬ</h2><p id="и-урок"></p>
+    </div>
+    <svg id="граф2" viewBox="0 0 400 170" preserveAspectRatio="none"></svg>
+  </div>
+  <div class="прав">
+    <p class="подсказка">Полистай новости и найди момент, где всё поменялось. Нажми на новость — точка встанет на тот день.</p>
+    <div class="лента" id="и-лента" style="max-height:26dvh"><div id="и-список"></div></div>
+    <div class="итог учитель" id="и-промо" style="padding:10px 14px"><h2 style="margin-top:0" id="друг-имя">ОЛЕГ, СО СМЕНЫ</h2><p id="друг-реплика"></p></div>
+  </div>
+  <div class="низ">
+    <div class="кнопки"><button class="кнопка главная" id="к-уровень2">Верю, показывай →</button><button class="кнопка вторая" id="к-сам">Сам разберусь</button></div>
+    <div class="кнопки" id="к-ещё-блок"><button class="кнопка вторая" id="к-ещё">Ещё раз</button><button class="кнопка вторая" id="к-другая">Другая компания</button></div>
+    <div class="кнопки" id="к-раунд-блок" hidden><button class="кнопка главная" id="к-раунд">Следующий раунд →</button></div>
+    <a class="мелко" href="urok.html" style="color:var(--тихий)">Уровень 4: боты и комиссии на настоящих свечах →</a>
+  </div>
+</section>
+
+<section class="экран" id="вступление2" hidden>
+  <div class="шапка"><button class="назад" data-nazad>← Компании</button><b>УРОВЕНЬ 2 · ЧЕТЫРЕ ТАКТИКИ</b><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="лев">
+    <h1 id="в2-заголовок">Та же история.<br>Четыре бота.</h1>
+    <p class="под" id="в2-под">Каждый начинает со 100 $ и играет ту же историю, что ты только что видел. Разница только в правиле, по которому он действует. Комиссия за любую сделку 0.5 $.</p>
+  </div>
+  <div class="прав"><div class="таблица" id="в2-тактики"></div></div>
+  <div class="низ">
+    <p class="мелко">Универсальной тактики не существует. Смысл уровня — увидеть, какая цена у защиты и какая у жадности.</p>
+    <div class="кнопки"><button class="кнопка главная" id="в2-поехали">Поехали →</button><button class="кнопка вторая" id="в2-назад">Назад</button></div>
+  </div>
+</section>
+
+<section class="экран" id="тактики" hidden>
+  <div class="шапка"><button class="назад" data-nazad>← Компании</button><div><b id="т-шапка">УРОВЕНЬ 2 · ДЕНЬ 0 ИЗ 14</b><br><span class="мелко" id="т-под"></span></div><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="лев">
+    <svg id="граф3" viewBox="0 0 400 150" preserveAspectRatio="none" style="height:150px"></svg>
+    <div class="таблица" id="т-таблица"></div>
+  </div>
+  <div class="прав"><div class="лента" id="т-лента"><div class="к">НОВОСТИ · свежие сверху</div><div id="т-список"></div></div></div>
+  <div class="низ"><div class="кнопки"><button class="кнопка главная" id="т-день">Следующий день →</button><button class="кнопка вторая" id="т-доконца">До конца ▶▶</button></div></div>
+</section>
+
+<section class="экран" id="итог2" hidden>
+  <div class="шапка"><button class="назад" data-nazad>← Компании</button><b>УРОВЕНЬ 2 · ИТОГ</b><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="лев">
+    <div class="итог"><div class="б" id="и2-история"></div><div class="ч" id="и2-победитель"></div><h2>ПОЧЕМУ</h2><p id="и2-почему"></p></div>
+    <div class="итог учитель" id="и2-друг" style="padding:10px 14px"><h2 style="margin-top:0" id="и2-друг-имя">ОЛЕГ</h2><p id="и2-друг-текст"></p></div>
+    <div class="таблица" id="и2-таблица"></div>
+  </div>
+  <div class="прав">
+    <div class="итог"><h2 style="margin-top:0">ЧТО ИЗ ЭТОГО ПОНЯТЬ</h2><p id="и2-урок"></p></div>
+    <div class="копилка" id="и2-копилка"></div>
+  </div>
+  <div class="низ">
+    <div class="кнопки"><button class="кнопка главная" id="и2-другая-история">Те же тактики, другая история →</button></div>
+    <div class="кнопки"><button class="кнопка вторая" id="и2-выбор">К выбору компании</button><button class="кнопка вторая" id="и2-уровень3">Уровень 3: сначала новости →</button></div>
+  </div>
+</section>
+
+<section class="экран" id="вступление3" hidden>
+  <div class="шапка"><button class="назад" data-nazad>← Компании</button><b>УРОВЕНЬ 3 · СНАЧАЛА НОВОСТИ</b><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="лев">
+    <h1>Сначала читаешь.<br>Потом ставишь.</h1>
+    <p class="под">Четыре раунда. В каждом — три новости дня про разные компании. Выбираешь, на какую поставить 100 $, и смотришь неделю. Между раундами деньги не переносятся: каждый раз заново 100 $.</p>
+  </div>
+  <div class="прав"><div class="итог учитель"><h2 style="margin-top:0">ЗАЧЕМ</h2><p>Так и работает настоящая торговля: не «нравится компания», а «что сегодня известно и что из этого ещё не в цене». Уровень покажет, когда это работает, а когда подводит.</p></div></div>
+  <div class="низ"><div class="кнопки"><button class="кнопка главная" id="в3-поехали">Поехали →</button><button class="кнопка вторая" id="в3-назад">Назад</button></div></div>
+</section>
+
+<section class="экран" id="новости3" hidden>
+  <div class="шапка"><button class="назад" data-nazad>← Компании</button><b id="н3-шапка">РАУНД 1 ИЗ 4 · НОВОСТИ ДНЯ</b><a class="насайт" href="https://aka-gst.ru/" target="_blank" rel="noopener">НА САЙТ</a></div>
+  <div class="лев">
+    <h1 style="font-size:24px">Что сегодня в новостях</h1>
+    <p class="под" id="н3-под">Прочитай три новости и поставь 100 $ на одну компанию.</p>
+    <div class="копилка" id="н3-счёт" hidden></div>
+  </div>
+  <div class="прав"><div class="таблица" id="н3-варианты"></div></div>
+  <div class="низ"><p class="мелко">Нажми на новость, чтобы поставить на эту компанию. Дальше — неделя день за днём, вывести деньги можно в любой момент.</p></div>
+</section>
+
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const testRun = new URLSearchParams(location.search).has('test');
+  const track = (name, data) => { if (testRun) return false; try { const u = window.umami; if (typeof u?.track !== 'function') return false; u.track(name, data); return true; } catch { return false; } };
+
+  const ОБЩИЕ = ['Курс доллара за день почти не изменился', 'Аналитики спорят, что будет с рынком', 'В Токио прошёл сильный дождь', 'Илон Маск написал что-то в X', 'Биткоин снова качнуло на 3%', 'Amazon открыл новый склад', 'Тейлор Свифт объявила ещё три концерта', 'Индекс S&P 500 закрылся без изменений', 'Центробанк оставил ставку на месте', 'В Калифорнии жара, кондиционеры нарасхват', 'Очередной стартап обещает заменить всех ИИ', 'Цены на нефть чуть подросли'];
+  const КОМПАНИИ = [
+    { id: 'ttwo', имя: 'Take-Two', э: '🎮', что: 'делает GTA', крючок: 'Скоро покажут геймплей GTA 6. Все ждут роста.', рейтинг: '★★★★★ площадка: очень перспективно', плюс: 'Геймплей GTA 6 покажут вот-вот, предзаказы открыты, аналитики единодушны: рост.', минус: 'Ходят слухи, что геймплей уже украли и он утечёт раньше премьеры — тогда вниз.',
+      свои: ['Take-Two подтвердила дату показа GTA 6', 'Фанаты GTA считают дни до премьеры', 'Инсайдер: Rockstar довольна сборкой', 'Магазины открыли предзаказы на GTA 6'],
+      сценарии: [
+        { дней: 14, события: [{ день: 3, вид: 'мелко+', заголовок: 'Аналитик поднял прогноз по Take-Two перед показом', сдвиг: 0.03 }, { день: 6, вид: 'мелко-', заголовок: 'Слух: показ GTA 6 могут перенести на неделю', сдвиг: -0.02 }, { день: 9, вид: 'плохо', главное: true, заголовок: 'Геймплей GTA 6 утёк в сеть за неделю до премьеры', сдвиг: -0.13, почему: 'Показ, которого все ждали, сорвался. Событие, ради которого ты ставил, обесценилось за одно утро, и владельцы акций начали продавать.' }, { день: 12, вид: 'мелко+', заголовок: 'Rockstar: официальный показ всё равно состоится', сдвиг: 0.02 }],
+          урок: 'Цену двигает новость, которую нельзя знать заранее. Всё, что было до неё, было ожиданием. Заметь: слух на шестой день уже намекал.' },
+        { дней: 14, события: [{ день: 4, вид: 'мелко-', заголовок: 'Инвесторы фиксируют прибыль перед показом', сдвиг: -0.03 }, { день: 10, вид: 'хорошо', главное: true, заголовок: 'Take-Two показала геймплей GTA 6, рекорд просмотров', сдвиг: 0.09, почему: 'Ожидание сбылось. Чем больше людей верят, что игра станет хитом, тем дороже стоит компания.' }],
+          урок: 'Ты угадал. Но до самого показа график почти не двигался, а на четвёртый день даже пугал. Деньги сделала одна новость, а не «тренд».' } ] },
+    { id: 'sony', имя: 'Sony', э: '🕹️', что: 'PlayStation, кино, музыка', крючок: 'Слухи про PlayStation 6. Может выстрелить.', рейтинг: '★★★★ площадка: перспективно', плюс: 'Слухи о PlayStation 6, кино собирает кассу, Sony Music подписывает артистов.', минус: 'Цену на PS5 могут поднять — продажи просядут; японская иена шатается.',
+      свои: ['Sony намекнула на новую консоль', 'PlayStation 5 продаётся ровно', 'Sony Music подписала ещё одного артиста', 'Выставка игр пройдёт в конце недели'],
+      сценарии: [
+        { дней: 14, события: [{ день: 3, вид: 'мелко+', заголовок: 'Sony Pictures: новый фильм собрал кассу', сдвиг: 0.02 }, { день: 8, вид: 'плохо', главное: true, заголовок: 'Sony подняла цену PlayStation 5, продажи просели', сдвиг: -0.08, почему: 'Дороже консоль — меньше покупателей. Инвесторы пересчитали будущие продажи и решили, что компания стоит меньше.' }, { день: 11, вид: 'мелко-', заголовок: 'Магазины сообщают о возвратах PS5', сдвиг: -0.02 }],
+          урок: 'Плохая новость необязательно катастрофа: минус 8% за день. Но следом пришла вторая, мелкая, и добила. Одна новость редко ходит одна.' },
+        { дней: 14, события: [{ день: 5, вид: 'мелко-', заголовок: 'Слухи о PS6 назвали преждевременными', сдвиг: -0.03 }, { день: 11, вид: 'хорошо', главное: true, заголовок: 'Sony показала PlayStation 6 раньше, чем ждали', сдвиг: 0.07, почему: 'Сюрприз в хорошую сторону. Кто держал акции до анонса, получил рост за один день.' }],
+          урок: 'Слухи иногда сбываются. На пятый день их опровергали, и продать тогда было бы ошибкой.' } ] },
+    { id: 'ntdo', имя: 'Nintendo', э: '🍄', что: 'Switch и Марио', крючок: 'Switch 2 только вышла. Продажи покажут скоро.', рейтинг: '★★ площадка: скучно, консервативно', плюс: 'Switch 2 разлетается в Японии, очереди, дефицит.', минус: 'Nintendo не даёт цифр продаж; новый Марио могут перенести.',
+      свои: ['Очереди за Switch 2 в Японии', 'Nintendo молчит про цифры продаж', 'Новый Марио выйдет к праздникам', 'Аналитик: спрос на Switch 2 выше ожиданий'],
+      сценарии: [
+        { дней: 14, события: [{ день: 2, вид: 'мелко+', заголовок: 'В Японии Switch 2 раскупили за выходные', сдвиг: 0.03 }, { день: 7, вид: 'хорошо', главное: true, заголовок: 'Switch 2: рекордные продажи за первый месяц', сдвиг: 0.11, почему: 'Цифры оказались лучше, чем ждали. Компания заработает больше, значит и стоит больше.' }, { день: 11, вид: 'мелко-', заголовок: 'Дефицит чипов может замедлить поставки Switch 2', сдвиг: -0.03 }],
+          урок: 'Ты угадал. Но посмотри на одиннадцатый день: даже после победы новость про чипы откусила кусок. Прибыль не бывает окончательной.' },
+        { дней: 14, события: [{ день: 4, вид: 'мелко+', заголовок: 'Nintendo показала трейлер нового Марио', сдвиг: 0.02 }, { день: 9, вид: 'плохо', главное: true, заголовок: 'Nintendo перенесла нового Марио на следующий год', сдвиг: -0.09, почему: 'Главная игра для новой консоли уехала на год. Инвесторы ждали её продаж в этом году, и эти деньги пропали из расчётов.' }],
+          урок: 'Трейлер на четвёртый день радовал, перенос на девятый всё отменил. Перенос одной игры двинул цену сильнее, чем неделя хороших слухов.' } ] },
+    { id: 'umg', имя: 'Universal Music', э: '🎵', что: 'крупнейший лейбл', крючок: 'Мировой тур большой звезды. Деньги льются.', рейтинг: '★★★★ площадка: стабильный доход', плюс: 'Мировой тур главной звезды, стадионы полные, каталог в чартах.', минус: 'Стриминги давят на выплаты лейблам; один Spotify может испортить квартал.',
+      свои: ['Тур собирает полные стадионы', 'Universal договаривается со Spotify', 'Старый каталог снова в чартах', 'Лейбл выпустил три альбома за неделю'],
+      сценарии: [
+        { дней: 14, события: [{ день: 3, вид: 'мелко+', заголовок: 'Билеты на тур распроданы за час', сдвиг: 0.02 }, { день: 8, вид: 'плохо', главное: true, заголовок: 'Spotify снизил выплаты лейблам', сдвиг: -0.10, почему: 'Лейбл живёт на выплатах от стримингов. Меньше выплат, меньше доход, и цена компании пошла вниз, хотя тур идёт отлично.' }],
+          урок: 'Хорошая новость про тур ничего не значила. Деньги компании зависят от другого, и об этом ты не думал.' },
+        { дней: 14, события: [{ день: 6, вид: 'мелко-', заголовок: 'Артист лейбла отменил концерты', сдвиг: -0.02 }, { день: 10, вид: 'хорошо', главное: true, заголовок: 'Universal продлила контракт со Spotify на лучших условиях', сдвиг: 0.08, почему: 'Главный источник дохода стал надёжнее и больше. Такое инвесторы любят.' }],
+          урок: 'Рост случился не из-за тура, за которым ты следил, а из-за контракта, о котором в ленте не писали.' } ] },
+    { id: 'nvda', имя: 'Nvidia', э: '🟩', что: 'чипы для игр и ИИ', крючок: 'Все покупают их чипы под ИИ. Отчёт через неделю.', рейтинг: '★★★★★ площадка: лидер рынка', плюс: 'Все покупают чипы под ИИ, отчёт через неделю, ждут рекорд.', минус: 'Рекорд уже в цене: если прогноз окажется чуть слабее мечты — падение.',
+      свои: ['Очередь на чипы Nvidia растянулась на месяцы', 'Nvidia показала новую видеокарту', 'Дата-центры закупают ещё', 'Игровые студии переходят на новые карты'],
+      сценарии: [
+        { дней: 14, события: [{ день: 4, вид: 'мелко+', заголовок: 'Крупный облачный сервис удвоил заказ у Nvidia', сдвиг: 0.03 }, { день: 9, вид: 'плохо', главное: true, заголовок: 'Отчёт Nvidia: рекорд, но прогноз слабее ожиданий', сдвиг: -0.07, почему: 'Компания заработала больше, чем когда-либо, но обещала на будущее меньше, чем все надеялись. Для цены важно не «сколько», а «сколько против ожиданий».' }],
+          урок: 'Самое обидное поражение: компания отчиталась рекордом, а акции упали. Цена уже включала мечты, и мечты оказались больше факта.' },
+        { дней: 14, события: [{ день: 5, вид: 'мелко-', заголовок: 'Конкурент показал свой чип для ИИ', сдвиг: -0.03 }, { день: 9, вид: 'хорошо', главное: true, заголовок: 'Отчёт Nvidia: выручка вдвое, прогноз ещё выше', сдвиг: 0.08, почему: 'Рекорд плюс обещание ещё большего. Ожидания были высокими, и компания их перепрыгнула.' }],
+          урок: 'Тот же день отчёта, что и в плохом варианте. Разница только в том, оказался ли факт выше мечты.' } ] },
+    { id: 'aapl', имя: 'Apple', э: '🍎', что: 'iPhone и всё вокруг', крючок: 'Презентация нового iPhone на следующей неделе.', рейтинг: '★★★ площадка: надёжно', плюс: 'Презентация нового iPhone на следующей неделе, утечки обещают складной экран.', минус: 'Все, кто хотел купить «под презентацию», уже купили; в день показа продавать будут.',
+      свои: ['Apple разослала приглашения на презентацию', 'Утечка: у нового iPhone другая камера', 'Магазины Apple готовятся к очередям', 'Apple обновила часы'],
+      сценарии: [
+        { дней: 14, события: [{ день: 2, вид: 'мелко+', заголовок: 'Аналитики ждут рекордных продаж iPhone', сдвиг: 0.02 }, { день: 8, вид: 'плохо', главное: true, заголовок: 'Презентация iPhone: ничего нового, только цвета', сдвиг: -0.05, почему: 'Люди ждали прорыва, а увидели прошлогодний телефон в новых цветах. Разочарование продаётся быстрее, чем радость.' }, { день: 12, вид: 'мелко+', заголовок: 'Предзаказы iPhone всё же идут неплохо', сдвиг: 0.02 }],
+          урок: 'Минус 5% — не катастрофа, и к двенадцатому дню часть вернулась. У больших компаний плохие новости мельче, чем у маленьких.' },
+        { дней: 14, события: [{ день: 8, вид: 'хорошо', главное: true, заголовок: 'Новый iPhone с ИИ-помощником, предзаказы бьют рекорд', сдвиг: 0.06, почему: 'Показали то, чего ждали, и даже больше. Очереди на предзаказ — это будущая выручка, которую инвесторы считают сразу.' }, { день: 11, вид: 'мелко-', заголовок: 'Регулятор в Европе снова спорит с Apple', сдвиг: -0.02 }],
+          урок: 'Apple большая: даже хорошая новость двигает её на 6%, а не на 13%, как маленькую игровую компанию. Размер — это и защита, и потолок.' } ] },
+    { id: 'msft', имя: 'Microsoft', э: '🪟', что: 'Windows, Xbox, облако', крючок: 'Ходят слухи о покупке большой игровой студии.', рейтинг: '★★★ площадка: надёжно', плюс: 'Покупка большой игровой студии на подходе, Xbox получит игры.', минус: 'Регулятор может заблокировать сделку — тогда ставка на неё сгорит.',
+      свои: ['Microsoft обновила Windows', 'Xbox добавил игры в подписку', 'Облако Microsoft растёт', 'Microsoft показала новый ноутбук'],
+      сценарии: [
+        { дней: 14, события: [{ день: 3, вид: 'мелко+', заголовок: 'Слухи о покупке студии подтверждают инсайдеры', сдвиг: 0.02 }, { день: 9, вид: 'плохо', главное: true, заголовок: 'Регулятор заблокировал покупку студии Microsoft', сдвиг: -0.04, почему: 'Сделка, на которую ставили, не состоится. Для гиганта это минус 4%, для маленькой студии было бы минус 30.' }],
+          урок: 'Ставка на слух о сделке — ставка на то, что кто-то третий разрешит. Регулятор был третьим, и о нём ты не думал.' },
+        { дней: 14, события: [{ день: 6, вид: 'мелко-', заголовок: 'Сбой в облаке Microsoft на два часа', сдвиг: -0.02 }, { день: 10, вид: 'хорошо', главное: true, заголовок: 'Microsoft закрыла сделку по студии, Xbox получил новые игры', сдвиг: 0.04, почему: 'Сделка прошла, подписка Xbox станет привлекательнее, инвесторы посчитали будущих подписчиков.' }],
+          урок: 'Плюс 4% за две недели у гиганта — это нормальный хороший исход. Кто ждал удвоения, тот выбрал не ту компанию.' } ] },
+    { id: 'nflx', имя: 'Netflix', э: '🎬', что: 'сериалы и кино', крючок: 'Выходит финальный сезон главного хита.', рейтинг: '★★★★ площадка: хит сезона', плюс: 'Финал главного хита, рекламный тариф набирает людей.', минус: 'Хит смотрят те, кто и так платит: подписчиков может не прибавиться.',
+      свои: ['Netflix показал трейлер финала', 'Подписчики Netflix ждут премьеру', 'Netflix добавил игры в приложение', 'Рекламный тариф Netflix набирает людей'],
+      сценарии: [
+        { дней: 14, события: [{ день: 5, вид: 'мелко+', заголовок: 'Премьера финала: рекорд просмотров за день', сдвиг: 0.03 }, { день: 10, вид: 'плохо', главное: true, заголовок: 'Отчёт Netflix: подписчиков меньше, чем ждали', сдвиг: -0.09, почему: 'Хит посмотрели, но новых подписчиков он не привёл. Сериал был для тех, кто и так платил.' }],
+          урок: 'Громкая премьера и деньги компании — разные вещи. Пятый день радовал, десятый показал, что радость не превратилась в подписки.' },
+        { дней: 14, события: [{ день: 4, вид: 'мелко-', заголовок: 'Критики разругали финал', сдвиг: -0.03 }, { день: 10, вид: 'хорошо', главное: true, заголовок: 'Отчёт Netflix: рекорд подписчиков благодаря рекламному тарифу', сдвиг: 0.08, почему: 'Дешёвый тариф с рекламой привёл людей, которые раньше не платили. Это новые деньги, и рынок их посчитал.' }],
+          урок: 'Критики ругали финал на четвёртый день, а деньги принёс тариф, о котором в ленте была одна скучная строчка.' } ] },
+    { id: 'dis', имя: 'Disney', э: '🏰', что: 'кино, парки, Marvel', крючок: 'Летом выходит большой фильм Marvel.', рейтинг: '★★★★ площадка: летний блокбастер', плюс: 'Предпродажи на Marvel идут бодро, парки полные.', минус: 'Marvel устал: предпродажи от фанатов, а обычный зритель может не пойти.',
+      свои: ['Disney показала трейлер нового Marvel', 'Парки Disney заполнены', 'Disney+ поднял цену', 'Disney готовит ремейк классики'],
+      сценарии: [
+        { дней: 14, события: [{ день: 3, вид: 'мелко+', заголовок: 'Предпродажи билетов на Marvel идут бодро', сдвиг: 0.02 }, { день: 8, вид: 'плохо', главное: true, заголовок: 'Marvel провалился в первый уикенд', сдвиг: -0.06, почему: 'Фильм, на который ставили, собрал меньше половины ожидаемого. Инвесторы усомнились и в следующих фильмах.' }, { день: 12, вид: 'мелко-', заголовок: 'Disney пересматривает планы на следующие фильмы', сдвиг: -0.02 }],
+          урок: 'Предпродажи на третий день обманули: билеты купили фанаты, а обычные зрители не пошли. Ранние сигналы врут чаще поздних.' },
+        { дней: 14, события: [{ день: 8, вид: 'хорошо', главное: true, заголовок: 'Marvel собрал рекордную кассу за уикенд', сдвиг: 0.05, почему: 'Фильм окупился за три дня, и рынок посчитал будущие игрушки, парки и продолжения.' }, { день: 12, вид: 'мелко+', заголовок: 'Парки Disney отчитались о рекордной посещаемости', сдвиг: 0.02 }],
+          урок: 'Здесь хорошая новость потянула за собой вторую. Так бывает, когда компания зарабатывает на одном сразу в нескольких местах.' } ] },
+    { id: 'ea', имя: 'Electronic Arts', э: '⚽', что: 'FIFA, Battlefield, The Sims', крючок: 'Новый Battlefield выходит через две недели.', рейтинг: '★★★★★ площадка: горячий релиз', плюс: 'Бета Battlefield собрала миллион игроков, релиз через две недели.', минус: 'Релиз может выйти сырым — у игровых компаний один плохой релиз бьёт на десять процентов.',
+      свои: ['EA открыла предзаказы на Battlefield', 'Бета Battlefield собрала миллион игроков', 'EA Sports FC снова в топе', 'EA анонсировала новых Sims'],
+      сценарии: [
+        { дней: 14, события: [{ день: 4, вид: 'мелко+', заголовок: 'Бета Battlefield понравилась игрокам', сдвиг: 0.03 }, { день: 10, вид: 'плохо', главное: true, заголовок: 'Battlefield вышел с багами, оценки игроков 3 из 10', сдвиг: -0.11, почему: 'Игра вышла сырой, и продажи первой недели, которые все считали, не случились. Игровая компания живёт релизами, и один плохой релиз бьёт сильно.' }],
+          урок: 'Бета на четвёртый день хвалили, релиз на десятый разругали. У игровых компаний цена ходит резче, чем у Apple: релиз это всё.' },
+        { дней: 14, события: [{ день: 6, вид: 'мелко-', заголовок: 'Конкурент выпустил свой шутер за неделю до Battlefield', сдвиг: -0.03 }, { день: 10, вид: 'хорошо', главное: true, заголовок: 'Battlefield: лучший старт в истории серии', сдвиг: 0.10, почему: 'Релиз удался, продажи первой недели выше плана. Игровая компания получает годовую выручку за несколько дней, и цена это отражает сразу.' }],
+          урок: 'Ты угадал, и заработал 10% за день. Именно поэтому игровые компании и интересно, и опасно: тот же релиз мог дать минус 11.' } ] },
+  ];
+
+  // уровень 3: три новости дня, ставка по новости. Первые два раунда новость сбывается и цена идёт куда ждали,
+  // третий — новость сбывается, а цена идёт в другую сторону (все ждали того же), четвёртый — как в жизни, вразнобой.
+  const РАУНДЫ = [
+    { подсказка: 'Раунд для разогрева: выбери, что кажется самым верным.', варианты: [
+      { к: 'ttwo', новость: 'Завтра Take-Two показывает первый геймплей GTA 6', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 2, вид: 'хорошо', главное: true, заголовок: 'Геймплей GTA 6 показан, рекорд просмотров за сутки', сдвиг: 0.09, почему: 'Новость сбылась ровно так, как все ждали, и ожидание ещё не было полностью в цене: показ оказался лучше слухов.' }], урок: 'Здесь всё честно: новость известна, событие сбылось, цена пошла куда ждали. Так бывает, когда факт оказывается лучше ожиданий.' } },
+      { к: 'nvda', новость: 'Nvidia завтра отчитывается, аналитики ждут рекорд', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 2, вид: 'хорошо', главное: true, заголовок: 'Отчёт Nvidia: выручка вдвое, прогноз ещё выше', сдвиг: 0.08, почему: 'Рекорд плюс обещание ещё большего. Ожидания были высокими, и компания их перепрыгнула.' }], урок: 'Отчёт оказался выше даже высоких ожиданий. Заметь слово «выше»: цена двигается не фактом, а разницей между фактом и тем, что ждали.' } },
+      { к: 'ea', новость: 'Через два дня выходит новый Battlefield, бета собрала миллион игроков', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 3, вид: 'хорошо', главное: true, заголовок: 'Battlefield: лучший старт в истории серии', сдвиг: 0.10, почему: 'Релиз удался, продажи первой недели выше плана.' }], урок: 'Игровые релизы — самая резкая история на рынке: тот же релиз мог дать минус 11. В этот раз повезло по-честному.' } },
+    ] },
+    { подсказка: 'Второй раунд. Пока всё идёт как по учебнику.', варианты: [
+      { к: 'ntdo', новость: 'Nintendo завтра объявит продажи Switch 2 за первый месяц, очереди были по всей Японии', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 2, вид: 'хорошо', главное: true, заголовок: 'Switch 2: рекордные продажи за первый месяц', сдвиг: 0.11, почему: 'Цифры оказались лучше, чем ждали.' }], урок: 'Очереди были видны всем, но точных цифр не знал никто. Ты поставил на то, что факт окажется лучше слухов, и угадал.' } },
+      { к: 'dis', новость: 'В пятницу премьера большого фильма Marvel, предпродажи идут бодро', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 3, вид: 'хорошо', главное: true, заголовок: 'Marvel собрал рекордную кассу за уикенд', сдвиг: 0.05, почему: 'Фильм окупился за три дня, рынок посчитал игрушки, парки и продолжения.' }], урок: 'Disney большая, и даже рекордная касса дала только +5%. Размер компании — это и защита от падений, и потолок для роста.' } },
+      { к: 'nflx', новость: 'Netflix отчитывается послезавтра, рекламный тариф набирает людей', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 3, вид: 'хорошо', главное: true, заголовок: 'Отчёт Netflix: рекорд подписчиков благодаря рекламному тарифу', сдвиг: 0.08, почему: 'Дешёвый тариф привёл людей, которые раньше не платили.' }], урок: 'Скучная новость про тариф оказалась важнее громких премьер. Деньги компании часто делает не то, о чём пишут крупно.' } },
+    ] },
+    { подсказка: 'Третий раунд. Внимательно: новости те же по духу.', варианты: [
+      { к: 'aapl', новость: 'Завтра презентация нового iPhone, утечки обещают складной экран', ожидание: 'все ждут рост', сц: { дней: 7, события: [{ день: 2, вид: 'плохо', главное: true, заголовок: 'Apple показала складной iPhone. Акции −5%', сдвиг: -0.05, почему: 'Событие произошло ровно так, как обещали утечки. Но именно поэтому: все, кто хотел купить «под презентацию», уже купили за неделю до неё. В день показа покупать было некому, а продавать — всем, кто хотел зафиксировать прибыль.' }], урок: 'Это называется «покупай на слухах, продавай на фактах». Когда новость ждут все, она уже в цене. Событие сбылось, а ты проиграл — и это не несправедливость, а правило.' } },
+      { к: 'nvda', новость: 'Nvidia завтра отчитывается, все ждут очередной рекорд', ожидание: 'все ждут рост', сц: { дней: 7, события: [{ день: 2, вид: 'плохо', главное: true, заголовок: 'Отчёт Nvidia: рекорд, но прогноз слабее ожиданий. Акции −7%', сдвиг: -0.07, почему: 'Компания заработала больше, чем когда-либо, но обещала на будущее меньше, чем все мечтали. Мечты были уже в цене.' }], урок: 'Самое обидное поражение: компания отчиталась рекордом, а акции упали. Цена включала мечты, и мечты оказались больше факта.' } },
+      { к: 'msft', новость: 'Microsoft завтра закрывает покупку большой игровой студии, все в предвкушении', ожидание: 'все ждут рост', сц: { дней: 7, события: [{ день: 2, вид: 'плохо', главное: true, заголовок: 'Сделка Microsoft закрыта. Акции −3%: «дорого заплатили»', сдвиг: -0.03, почему: 'Сделка прошла, как и ждали. Но в день закрытия рынок посчитал цену покупки и решил, что переплатили. Ожидание было праздником, факт — счётом.' }], урок: 'Даже когда всё сбылось, рынок в день события пересчитывает не «случилось ли», а «сколько это стоило». Ждать события и знать его цену — разные вещи.' } },
+    ] },
+    { подсказка: 'Четвёртый раунд, как в жизни: одна новость сыграет, другие нет. Заранее не видно, какая.', варианты: [
+      { к: 'umg', новость: 'Universal объявляет мировой тур своей главной звезды', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 3, вид: 'плохо', главное: true, заголовок: 'Spotify снизил выплаты лейблам', сдвиг: -0.10, почему: 'Тур идёт отлично, но лейбл живёт на выплатах от стримингов, и они упали. Ты следил не за той новостью.' }], урок: 'Хорошая новость сбылась, а деньги компании зависели от другого. Прежде чем ставить, спроси: на чём эта компания на самом деле зарабатывает?' } },
+      { к: 'sony', новость: 'Sony намекает на PlayStation 6 в конце недели', ожидание: 'слухи, ждут рост', сц: { дней: 7, события: [{ день: 4, вид: 'хорошо', главное: true, заголовок: 'Sony показала PlayStation 6 раньше, чем ждали', сдвиг: 0.07, почему: 'Слух сбылся, и сюрприз оказался в хорошую сторону.' }], урок: 'Слухи иногда сбываются. Но заметь: ты поставил на слух, а не на факт, и в этот раз повезло. В прошлых раундах ставили на факты — и тоже не всегда выигрывали.' } },
+      { к: 'ttwo', новость: 'Take-Two открывает предзаказы GTA 6 в понедельник', ожидание: 'ждут рост', сц: { дней: 7, события: [{ день: 2, вид: 'мелко+', заголовок: 'Предзаказы GTA 6 открыты, серверы легли от спроса', сдвиг: 0.02 }, { день: 5, вид: 'плохо', главное: true, заголовок: 'Rockstar перенесла GTA 6 на полгода', сдвиг: -0.12, почему: 'Предзаказы прошли отлично, а через три дня пришла новость, которой никто не ждал. Её нельзя было прочитать заранее.' }], урок: 'Самая честная история: новость, на которую ты ставил, сбылась и дала +2%, а потом пришла другая, из ниоткуда, и забрала 12. Читать новости помогает, но не защищает от тех, которых ещё нет.' } },
+    ] },
+  ];
+  let ур3 = null;
+
+  // Друг со смены: когда-то разбогател на бирже, потом всё потерял, вы перестали общаться, теперь работаете рядом.
+  // Каждый урок — его старый провал и то, что на него похоже сейчас.
+  const ДРУГ = {
+    имя: 'Олег',
+    знакомство: (стало, к) => стало < 100
+      ? `Слил на ${к.имя}? Знакомо. В двадцать первом я так слил сумму с четырьмя нулями — тоже был уверен, что новость известна и всё пойдёт вверх. Мы тогда с тобой и перестали общаться, я никому в глаза смотреть не мог. Дай десять баксов из того, что осталось. Покажу, что я тогда не понимал, а сейчас понимаю.`
+      : `Выиграл на ${к.имя}? Поздравляю. Я в двадцать первом три раза подряд так выигрывал и решил, что понял рынок. Четвёртый раз стоил мне квартиры. Дай десять баксов. Покажу, чем угадывание отличается от тактики, пока ты ещё не квартиру ставишь.`,
+    урок: {
+      'плохо': 'Тогда: я держал до конца, потому что «всё же известно». Сейчас на это похоже каждое «все ждут отчёта» в ленте. Правило простое — новость, которую знают все, уже в цене.',
+      'хорошо': 'Тогда: я забирал прибыль на плюс пяти и смотрел, как без меня растёт ещё на двадцать. Сейчас так выглядит любая история про «показали и рекорд просмотров». Прибыль не бывает окончательной, но и жадность стоит денег.',
+    },
+    тактика: {
+      derzhat: 'Тогда я держал, потому что не знал, что ещё делать. Работает на росте, убивает на падении.',
+      stop: 'Стоп-лосс — это то, чего у меня не было в двадцать первом. Он продаёт после того, как больно, но до того, как смертельно.',
+      pribyl: 'Забирать прибыль я научился поздно. Это согласие на меньшее заранее — и это нормально, если ты заранее об этом договорился с собой.',
+      rezerv: 'Резерв — единственное, что оставило бы мне квартиру. Половина в кэше — это не трусость, это второй шанс.',
+    },
+    сравнение: [
+      'Похоже на сегодняшние новости про отчёты Nvidia: рекорд есть, а акции вниз — все уже посчитали мечты.',
+      'Похоже на любой релиз большой игры сейчас: бета хвалят, релиз ругают, цена ходит на десять процентов за день.',
+      'Похоже на презентации Apple последних лет: «показали, всё как ждали» — и минус.',
+    ],
+  };
+
+  const фмт = x => Math.round(x) + ' $';
+  let игра = null, ур2 = null, таймер = null; const сыграно = {};
+  const ЭКРАНЫ = ['выбор', 'день', 'итог', 'вступление2', 'тактики', 'итог2', 'вступление3', 'новости3'];
+  if (window.top !== window) document.querySelectorAll('.насайт').forEach(a => a.style.display = 'none'); // внутри общей шапки своя навигация
+  function экран(id) { ЭКРАНЫ.forEach(k => $(k).hidden = k !== id); window.scrollTo(0, 0); if (id === 'выбор') requestAnimationFrame(вписать); }
+  function стоп() { clearInterval(таймер); таймер = null; }
+
+  // вписать сцену в высоту окна: меряем, что не влезает, и уменьшаем масштабом — первый экран без прокрутки на любом экране
+  function вписать() {
+    const стол = document.querySelector('#выбор .стол'); if (!стол || $('выбор').hidden) return;
+    стол.style.transform = ''; стол.style.marginBottom = '';
+    const шапка = document.querySelector('#выбор .шапка').getBoundingClientRect().height;
+    const доступно = window.innerHeight - шапка - 24;
+    const надо = стол.scrollHeight;
+    const k = Math.min(1, доступно / надо);
+    if (k < 1) { стол.style.transformOrigin = 'top center'; стол.style.transform = `scale(${k.toFixed(3)})`; стол.style.marginBottom = `${-(1 - k) * надо}px`; }
+  }
+  window.addEventListener('resize', вписать);
+  $('карточки').innerHTML = КОМПАНИИ.map(k => `<div class="карточка" data-id="${k.id}">
+      <div class="верх"><div class="э">${k.э}</div><svg class="искра" viewBox="0 0 120 34" preserveAspectRatio="none"></svg></div>
+      <b>${k.имя} <i class="тик">+0.0%</i></b><span>${k.что}</span><span class="рейтинг">${k.рейтинг}</span>
+      <div class="слухи"><button class="слух плюс" data-s="плюс" title="что говорят хорошего">+</button><button class="слух минус" data-s="минус" title="что говорят плохого">−</button><span class="слух-текст">наведи на + или −</span></div>
+      <button class="купить" data-kupit="${k.id}">Купить акции ${k.имя} на 100 $ →</button></div>`).join('');
+  // подсказки площадки: наведение (компьютер) и нажатие (телефон)
+  document.querySelectorAll('#карточки .слух').forEach(b => { const показ = () => { const к = КОМПАНИИ.find(x => x.id === b.closest('.карточка').dataset.id); const т = b.closest('.карточка').querySelector('.слух-текст'); т.textContent = к[b.dataset.s]; т.className = 'слух-текст ' + (b.dataset.s === 'плюс' ? 'цз' : 'цк'); }; b.onmouseenter = показ; b.onclick = e => { e.stopPropagation(); показ(); }; });
+  // живая биржа: мини-графики дёргаются, тик меняется
+  const искры = [...document.querySelectorAll('#карточки .искра')].map(svg => ({ svg, ряд: Array.from({ length: 30 }, () => 100), тик: svg.closest('.карточка').querySelector('.тик') }));
+  function биржаТик() {
+    if ($('выбор').hidden) return;
+    for (const и of искры) { const посл = и.ряд[и.ряд.length - 1]; и.ряд.push(посл * (1 + (Math.random() - 0.5) * 0.02)); и.ряд.shift(); const mn = Math.min(...и.ряд), mx = Math.max(...и.ряд) || 1; const d = и.ряд.map((v, i) => (i ? 'L' : 'M') + (i * 4).toFixed(1) + ' ' + (32 - (v - mn) / (mx - mn || 1) * 28).toFixed(1)).join(''); const вверх = и.ряд[и.ряд.length - 1] >= и.ряд[0]; и.svg.innerHTML = `<path d="${d}" stroke="${вверх ? '#4ade80' : '#f87171'}" fill="none" stroke-width="1.5"/>`; const изм = (и.ряд[и.ряд.length - 1] / и.ряд[0] - 1) * 100; и.тик.textContent = (изм >= 0 ? '+' : '') + изм.toFixed(1) + '%'; и.тик.className = 'тик ' + (изм >= 0 ? 'цз' : 'цк'); }
+  }
+  setInterval(биржаТик, 700); биржаТик();
+  document.querySelectorAll('[data-nazad]').forEach(b => b.onclick = () => {
+    const идёт = игра && игра.день > 0 && игра.день < игра.сц.дней && !$('день').hidden;
+    const идёт2 = ур2 && ур2.день > 0 && ур2.день < ур2.сц.дней && !$('тактики').hidden;
+    if ((идёт || идёт2) && !confirm('Точно к выбору компании? Эта партия пропадёт.')) return;
+    стоп(); экран('выбор');
+  });
+  $('карточки').addEventListener('click', e => { const b = e.target.closest('[data-kupit]'); if (b) начать(b.dataset.kupit); });
+
+  function построить(сц) {
+    const цены = [100]; const главное = сц.события.find(e => e.главное);
+    for (let д = 1; д <= сц.дней; д++) {
+      const е = сц.события.find(x => x.день === д);
+      let ш = (Math.random() - 0.5) * 0.02 + 0.0015;
+      if (е) ш = е.сдвиг + (Math.random() - 0.5) * 0.006;
+      else if (д > главное.день) ш += главное.сдвиг * 0.04;
+      цены.push(цены[д - 1] * (1 + ш));
+    }
+    return цены;
+  }
+  function собратьНовости(к, сц) {
+    const пул = к.свои.concat(ОБЩИЕ).sort(() => Math.random() - 0.5); const новости = [];
+    for (let д = 1; д <= сц.дней; д++) { const е = сц.события.find(x => x.день === д); новости.push(е ? { день: д, вид: е.вид, текст: е.заголовок, главное: !!е.главное } : { день: д, вид: '', текст: пул[д % пул.length] }); }
+    return новости;
+  }
+
+  // ---------- уровень 1 ----------
+  function начать(id) {
+    стоп();
+    const к = КОМПАНИИ.find(k => k.id === id);
+    сыграно[id] = (сыграно[id] || 0) + 1;
+    const сц = сыграно[id] === 1 ? к.сценарии[0] : к.сценарии[Math.floor(Math.random() * к.сценарии.length)];
+    игра = { к, сц, цены: построить(сц), новости: собратьНовости(к, сц), день: 0, выбран: null, выведено: null };
+    track('igra-vybor', { kompaniya: id });
+    $('д-список').innerHTML = ''; $('д-блок').className = 'деньги'; $('д-к').textContent = 'ТВОИ ДЕНЬГИ';
+    $('к-день').disabled = false; $('к-доконца').disabled = false; $('к-вывести').disabled = false;
+    обновить(); экран('день');
+  }
+  function деньгиСейчас() { const { цены, день, выведено } = игра; return выведено == null ? цены[день] : выведено.сумма; }
+  function обновить() {
+    const { сц, цены, день, выведено } = игра;
+    const сумма = деньгиСейчас(), д = сумма - 100;
+    $('д-деньги').textContent = фмт(сумма);
+    $('д-дельта').innerHTML = день === 0 ? '<span style="color:var(--тихий)">пока 0 $</span>' : `<span class="${д >= 0 ? 'цз' : 'цк'}">${д >= 0 ? '+' : '−'}${Math.abs(Math.round(д))} $</span>`;
+    $('д-шапка').textContent = `ДЕНЬ ${день} ИЗ ${сц.дней} · ${игра.к.имя.toUpperCase()}`;
+    $('к-вывести').textContent = выведено ? `Выведено на день ${выведено.день}: ${фмт(выведено.сумма)}` : `Вывести деньги: ${фмт(цены[день])}`;
+    if (день >= сц.дней) { $('к-день').textContent = 'Смотреть итог →'; $('к-день').onclick = итог; $('к-доконца').disabled = true; $('к-вывести').disabled = true; }
+    else { $('к-день').textContent = 'Следующий день →'; $('к-день').onclick = следующий; }
+    рисовать($('граф'), день, игра.выбран);
+    показатьФокусСобытия();
+  }
+  function показатьФокусСобытия() {
+    const событие = игра.сц.события.find(e => e.главное && e.день === игра.день);
+    const фокус = $('фокус-события');
+    if (!событие) { фокус.hidden = true; фокус.classList.remove('взрыв'); return; }
+    const разница = Math.round(игра.цены[игра.день] - игра.цены[игра.день - 1]);
+    $('ф-ставка').textContent = `100 $ на ${игра.к.имя}`;
+    $('ф-факт').textContent = событие.заголовок;
+    $('ф-деньги').textContent = `${разница >= 0 ? '+' : '−'}${Math.abs(разница)} $`;
+    фокус.classList.toggle('рост', разница >= 0); фокус.hidden = false;
+    фокус.classList.remove('взрыв'); requestAnimationFrame(() => фокус.classList.add('взрыв'));
+  }
+  function рисовать(svgEl, доДня, выбран) {
+    const { цены, сц, новости, выведено } = игра;
+    const W = 400, H = 170, n = сц.дней;
+    const x = i => 14 + i / n * (W - 28);
+    const mn = Math.min(...цены) * 0.99, mx = Math.max(...цены) * 1.01;
+    const y = v => H - 14 - (v - mn) / (mx - mn) * (H - 34);
+    let svg = `<line x1="14" y1="${y(100).toFixed(1)}" x2="${W - 14}" y2="${y(100).toFixed(1)}" stroke="#232733" stroke-dasharray="4 4"/><text x="16" y="${(y(100) - 4).toFixed(1)}" font-size="10" fill="#7e8598">твои 100 $</text>`;
+    let путь = ''; for (let i = 0; i <= доДня; i++) путь += (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(цены[i]).toFixed(1);
+    const цвет = цены[доДня] >= 100 ? '#4ade80' : '#f87171';
+    if (доДня > 0) svg += `<path d="${путь}" stroke="${цвет}" fill="none" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"${выведено && выведено.день < доДня ? ' opacity=".45"' : ''}/>`;
+    for (let i = 1; i <= доДня; i++) { const н = новости[i - 1]; if (!н.вид) continue; const c = н.вид.startsWith('мелко') ? (н.вид.endsWith('+') ? '#9fe3b6' : '#f5a3a3') : (н.вид === 'плохо' ? '#f87171' : '#4ade80'); svg += `<circle cx="${x(i).toFixed(1)}" cy="${y(цены[i]).toFixed(1)}" r="${н.главное ? 6 : 4}" fill="${c}"/>`; if (н.главное) svg += `<text x="${x(i).toFixed(1)}" y="${(y(цены[i]) + (н.вид === 'плохо' ? 20 : -12)).toFixed(1)}" font-size="11" fill="${c}" text-anchor="middle" font-weight="700">новость</text>`; }
+    if (выведено && выведено.день <= доДня) { svg += `<line x1="${x(выведено.день).toFixed(1)}" y1="6" x2="${x(выведено.день).toFixed(1)}" y2="${H - 6}" stroke="#fbbf24" stroke-dasharray="3 3"/><text x="${(x(выведено.день) + 4).toFixed(1)}" y="16" font-size="10" fill="#fbbf24">вывел ${фмт(выведено.сумма)}</text>`; }
+    const т = выбран != null ? выбран : доДня;
+    svg += `<circle cx="${x(т).toFixed(1)}" cy="${y(цены[т]).toFixed(1)}" r="7" fill="none" stroke="#e8eaf0" stroke-width="2"/><circle cx="${x(т).toFixed(1)}" cy="${y(цены[т]).toFixed(1)}" r="3" fill="#e8eaf0"/>`;
+    svg += `<text x="${W - 14}" y="${H - 2}" font-size="10" fill="#7e8598" text-anchor="end">${выбран != null ? `день ${т}: ${фмт(цены[т])}` : `день ${доДня} из ${n}`}</text>`;
+    svgEl.innerHTML = svg;
+  }
+  function строкаНовости(н) {
+    const { цены } = игра; const д = цены[н.день] - цены[н.день - 1];
+    const дельта = н.вид ? `<i class="${д >= 0 ? 'цз' : 'цк'}">${д >= 0 ? '+' : '−'}${Math.abs(Math.round(д))} $</i>` : '';
+    return `<div class="н ${н.вид}" data-day="${н.день}"><b>день ${н.день}</b><span>${н.текст}</span>${дельта}</div>`;
+  }
+  function выбратьДень(списокEl, svgEl, доДня, д) { игра.выбран = д; списокEl.querySelectorAll('.н').forEach(e => e.classList.toggle('выбрана', +e.dataset.day === д)); рисовать(svgEl, доДня, д); }
+  $('д-список').addEventListener('click', e => { const н = e.target.closest('.н'); if (н && н.dataset.day) выбратьДень($('д-список'), $('граф'), игра.день, +н.dataset.day); });
+  $('ф-награфик').onclick = () => { if (!игра) return; выбратьДень($('д-список'), $('граф'), игра.день, игра.день); $('граф').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' }); };
+  $('и-список').addEventListener('click', e => { const н = e.target.closest('.н'); if (н && н.dataset.day) выбратьДень($('и-список'), $('граф2'), игра.сц.дней, +н.dataset.day); });
+
+  function следующий() {
+    if (!игра || игра.день >= игра.сц.дней) return;
+    игра.день++; игра.выбран = null;
+    const { день, новости } = игра;
+    $('д-список').insertAdjacentHTML('afterbegin', строкаНовости(новости[день - 1]));
+    $('д-лента').scrollTop = 0;
+    обновить();
+    if (игра.день >= игра.сц.дней) стоп();
+  }
+  function доКонца(шагФн, готово, мс) { стоп(); таймер = setInterval(() => { if (готово()) { стоп(); return; } шагФн(); }, мс || 220); }
+  function вывести() {
+    if (!игра || игра.выведено || игра.день >= игра.сц.дней) return;
+    игра.выведено = { день: игра.день, сумма: игра.цены[игра.день] };
+    $('д-блок').className = 'деньги выведено'; $('д-к').textContent = `ВЫВЕДЕНО НА ДЕНЬ ${игра.день}`;
+    $('к-вывести').disabled = true;
+    $('д-список').insertAdjacentHTML('afterbegin', `<div class="н вывод"><b>день ${игра.день}</b><span>Ты вывел деньги: ${фмт(игра.выведено.сумма)}. Дальше смотрим, что было бы.</span></div>`);
+    track('igra-vyvel', { kompaniya: игра.к.id, den: игра.день, summa: Math.round(игра.выведено.сумма) });
+    обновить();
+    доКонца(следующий, () => игра.день >= игра.сц.дней, 260);
+  }
+  function итог() {
+    стоп();
+    const { сц, цены, к, новости, выведено } = игра; const главное = сц.события.find(e => e.главное);
+    const доКонцаСумма = цены[сц.дней]; const стало = выведено ? выведено.сумма : доКонцаСумма;
+    экран('итог'); игра.выбран = null;
+    $('и-стало').innerHTML = `<span class="${стало >= 100 ? 'цз' : 'цк'}">стало ${фмт(стало)}</span>`;
+    if (выведено) {
+      const разн = выведено.сумма - доКонцаСумма;
+      $('и-если').innerHTML = `Ты вывел на день ${выведено.день}${выведено.день < главное.день ? ', до главной новости' : ', после главной новости'}. Если бы держал до конца — <b>${фмт(доКонцаСумма)}</b>: ${разн >= 0 ? `<span class="цз">ты выиграл ${Math.round(разн)} $ у тех, кто держал</span>` : `<span class="цк">ты недобрал ${Math.round(-разн)} $</span>`}.`;
+    } else $('и-если').textContent = 'Ты держал до конца и не выводил.';
+    $('и-почему').textContent = `${главное.заголовок}. ${главное.почему}`;
+    let урок = сц.урок;
+    const мелкоМинусДо = сц.события.some(e => e.вид === 'мелко-' && e.день < главное.день);
+    if (!выведено && главное.сдвиг > 0 && мелкоМинусДо) урок += ' Обрати внимание: до хорошей новости была маленькая просадка, и ты её пересидел. Если знаешь, что новость впереди, мелкие падения до неё не страшны.';
+    if (главное.сдвиг < 0 && к.id === 'nvda') урок += ' Здесь событие случилось ровно так, как ты ждал, — и всё равно сыграло в другую сторону. Так бывает: важно не событие, а насколько оно лучше или хуже того, что уже заложили в цену.';
+    if (игра.уровень3) {
+      урок = игра.уровень3.вариант.сц.урок + (выведено && выведено.день < главное.день ? ' А ты вывел деньги до события — значит, не поверил новости до конца. Иногда это и есть лучшая тактика.' : '');
+      ур3.итоги.push({ компания: к.имя, стало });
+      const последний = ур3.раунд >= РАУНДЫ.length - 1;
+      $('к-раунд').textContent = последний ? `Все ${РАУНДЫ.length} раунда сыграны · итог: ${ур3.итоги.map(и => фмт(и.стало)).join(', ')} · заново →` : `Раунд ${ур3.раунд + 2} из ${РАУНДЫ.length} →`;
+    }
+    if (!игра.уровень3) { $('друг-имя').textContent = ДРУГ.имя.toUpperCase() + ', СО СМЕНЫ'; $('друг-реплика').textContent = ДРУГ.знакомство(стало, к); }
+    $('к-раунд-блок').hidden = !игра.уровень3;
+    $('к-уровень2').parentElement.hidden = !!игра.уровень3; $('и-промо').hidden = !!игра.уровень3; $('к-ещё-блок').hidden = !!игра.уровень3;
+    $('и-урок').textContent = урок;
+    рисовать($('граф2'), сц.дней, null);
+    $('и-список').innerHTML = новости.slice().reverse().map(строкаНовости).join('');
+    track('igra-itog', { kompaniya: к.id, delta: Math.round(стало - 100), vyvel: !!выведено });
+    $('к-ещё').onclick = () => начать(к.id);
+    window.IGRA = { kompaniya: к.id, stalo: стало, glavnoe: главное.заголовок, vyvel: выведено };
+  }
+  $('к-день').onclick = следующий;
+  $('к-доконца').onclick = () => доКонца(следующий, () => игра.день >= игра.сц.дней);
+  $('к-вывести').onclick = вывести;
+  $('к-другая').onclick = () => { стоп(); экран('выбор'); };
+
+  // ---------- уровень 2 ----------
+  const КОМИССИЯ = 0.5;
+  const ТАКТИКИ = [
+    { id: 'derzhat', имя: 'Держать до конца', что: 'купил и не трогает, что бы ни случилось' },
+    { id: 'stop', имя: 'Стоп-лосс 5%', что: 'как только денег стало меньше 95 $, продаёт всё и сидит в кэше' },
+    { id: 'pribyl', имя: 'Забрать прибыль 5%', что: 'как только стало больше 105 $, продаёт всё и сидит в кэше' },
+    { id: 'rezerv', имя: 'Половина в резерве', что: 'вкладывает 50 $, а вторые 50 $ докупает, если цена упала на 5%' },
+  ];
+  let копилка = { истории: [] };
+  try { const c = localStorage.getItem('igra-kopilka'); if (c) копилка = JSON.parse(c); } catch {}
+  function сохранитьКопилку() { try { localStorage.setItem('igra-kopilka', JSON.stringify(копилка)); } catch {} }
+
+  function показатьВступление2() {
+    const веришь = игра && игра.веришь;
+    $('в2-заголовок').innerHTML = веришь ? `${ДРУГ.имя}: «Смотри. <br>Та же история, четыре способа».` : 'Та же история.<br>Четыре бота.';
+    $('в2-под').textContent = веришь ? `«Я в двадцать первом знал только первый. Возьми свои десять баксов обратно — здесь у каждого бота по сотне, и я расскажу, что каждый из них сделал бы со мной тогда. Комиссия за сделку 0.5 $, её никто не отменял.»` : 'Каждый начинает со 100 $ и играет ту же историю, что ты только что видел. Разница только в правиле, по которому он действует. Комиссия за любую сделку 0.5 $.';
+    $('в2-тактики').innerHTML = ТАКТИКИ.map(т => `<div class="т"><b>${т.имя}</b><div class="д"></div><div class="с">${т.что}${веришь ? `<br><span style="color:var(--лиловый)">${ДРУГ.имя}: ${ДРУГ.тактика[т.id]}</span>` : ''}</div></div>`).join('');
+  }
+  $('к-уровень2').onclick = () => { стоп(); игра.веришь = true; показатьВступление2(); экран('вступление2'); track('igra-drug', { verish: true }); };
+  $('к-сам').onclick = () => { стоп(); игра.веришь = false; показатьВступление2(); экран('вступление2'); track('igra-drug', { verish: false }); };
+  $('в2-назад').onclick = () => экран('итог');
+  $('в2-поехали').onclick = () => начатьУровень2(игра.сц, false);
+
+  function ботСостояние(т, p0) {
+    const б = { т, кэш: 100, акций: 0, сделок: 0, статус: 'в акциях', закрыт: false, p0 };
+    б.купить = (сумма, цена) => { б.кэш -= сумма + КОМИССИЯ; б.акций += сумма / цена; б.сделок++; };
+    if (т.id === 'rezerv') б.купить(50, p0); else б.купить(100 - КОМИССИЯ, p0);
+    return б;
+  }
+  function ботДень(б, д, цена) {
+    const стоимость = б.кэш + б.акций * цена;
+    const продать = () => { б.кэш += б.акций * цена - КОМИССИЯ; б.акций = 0; б.сделок++; б.закрыт = true; };
+    if (!б.закрыт) {
+      if (б.т.id === 'stop' && стоимость < 95) { продать(); б.статус = `продал на день ${д}: стало меньше 95 $`; }
+      else if (б.т.id === 'pribyl' && стоимость > 105) { продать(); б.статус = `продал на день ${д}: забрал ${Math.round(стоимость)} $`; }
+      else if (б.т.id === 'rezerv' && б.кэш > 10 && цена <= б.p0 * 0.95) { б.купить(б.кэш - КОМИССИЯ, цена); б.статус = `докупил на день ${д}: цена упала на 5%`; }
+    }
+  }
+  function начатьУровень2(сц, другая) {
+    стоп();
+    const к = игра.к;
+    const цены = построить(сц), новости = собратьНовости(к, сц);
+    ур2 = { к, сц, цены, новости, день: 0, боты: ТАКТИКИ.map(т => ботСостояние(т, цены[0])), прошлая: другая ? ур2 && ур2.итог : null };
+    игра = Object.assign(игра, { сц, цены, новости, день: 0, выбран: null, выведено: null });
+    $('т-под').textContent = `${к.имя}${другая ? ' · другая история: та же компания, другой поворот' : ' · та же история, что ты только что видел'}`;
+    $('т-список').innerHTML = `<div class="н"><b>старт</b><span>Каждый бот начал со 100 $. Комиссия за любую сделку 0.5 $.</span></div>`;
+    $('т-день').textContent = 'Следующий день →'; $('т-день').onclick = день2; $('т-доконца').disabled = false;
+    обновить2(); экран('тактики');
+    track('igra-uroven2', { kompaniya: к.id, drugaya: !!другая });
+  }
+  function обновить2() {
+    const { цены, день, боты, сц } = ур2;
+    $('т-шапка').textContent = `УРОВЕНЬ 2 · ДЕНЬ ${день} ИЗ ${сц.дней}`;
+    рисовать($('граф3'), день, null);
+    const стоимости = боты.map(б => б.кэш + б.акций * цены[день]); const макс = Math.max(...стоимости);
+    $('т-таблица').innerHTML = боты.map((б, i) => `<div class="т ${день > 0 && стоимости[i] === макс ? 'лидер' : ''}"><b>${б.т.имя}</b><div class="д ${стоимости[i] >= 100 ? 'цз' : 'цк'}">${фмт(стоимости[i])}</div><div class="с">${б.статус === 'в акциях' ? б.т.что : б.статус} · сделок ${б.сделок}</div></div>`).join('');
+    if (день >= сц.дней) { $('т-день').textContent = 'Смотреть итог →'; $('т-день').onclick = итог2; $('т-доконца').disabled = true; }
+  }
+  function день2() {
+    if (!ур2 || ур2.день >= ур2.сц.дней) return;
+    ур2.день++; игра.день = ур2.день;
+    const { день, цены, новости, боты } = ур2;
+    for (const б of боты) ботДень(б, день, цены[день]);
+    $('т-список').insertAdjacentHTML('afterbegin', строкаНовости(новости[день - 1]));
+    $('т-лента').scrollTop = 0;
+    обновить2();
+    if (ур2.день >= ур2.сц.дней) стоп();
+  }
+  function итог2() {
+    стоп();
+    const { цены, боты, сц, к, прошлая } = ур2; const p = цены[сц.дней]; const главное = сц.события.find(e => e.главное);
+    const строки = боты.map(б => ({ б, стоимость: б.кэш + б.акций * p })).sort((a, b) => b.стоимость - a.стоимость);
+    const поб = строки[0], худ = строки[строки.length - 1];
+    ур2.итог = { история: главное.заголовок, победитель: поб.б.т.имя, худший: худ.б.т.имя };
+    копилка.истории.push({ компания: к.имя, история: главное.заголовок, победитель: поб.б.т.id, худший: худ.б.т.id, знак: главное.сдвиг > 0 ? 'плюс' : 'минус' });
+    сохранитьКопилку();
+    экран('итог2');
+    $('и2-история').innerHTML = (прошлая ? `<span class="цж">Это была другая история.</span> Прошлая: «${прошлая.история}», победил ${прошлая.победитель}.<br>` : '') + `${к.имя}: ${главное.заголовок}`;
+    $('и2-победитель').innerHTML = `<span class="${поб.стоимость >= 100 ? 'цз' : 'цк'}">${поб.б.т.имя}: ${фмт(поб.стоимость)}</span>`;
+    const почему = {
+      derzhat: главное.сдвиг < 0 ? 'Он не дёргался, но и не защитился: получил всё падение целиком, зато не платил лишних комиссий.' : 'Он просто был в акциях, когда пришла хорошая новость. Самая скучная тактика чаще всего и есть самая выгодная на росте.',
+      stop: главное.сдвиг < 0 ? 'Продал, когда стало меньше 95 $, и дальнейшего падения не увидел. Стоп-лосс спасает от большой беды, но продаёт уже после того, как больно.' : 'Мелкая просадка выбила его в кэш, а рост прошёл без него. Стоп-лосс на хорошей истории — это плата за страховку, которая не пригодилась.',
+      pribyl: главное.сдвиг < 0 ? 'Успел взять свои +5% до плохой новости. Это везение по дате, а не заслуга тактики, но иногда везение и есть результат.' : 'Забрал +5% и вышел, а дальше цена выросла ещё. Забирать прибыль — значит соглашаться на меньшее заранее.',
+      rezerv: главное.сдвиг < 0 ? 'Половину держал в кэше и докупил после падения: пострадал вдвое меньше и вошёл дешевле. Если бы падение продолжилось, докупка удвоила бы боль.' : 'Половина денег пролежала без дела и рост дала только половина. Резерв — это плата за спокойствие.',
+    };
+    $('и2-почему').textContent = почему[поб.б.т.id];
+    $('и2-друг-имя').textContent = ДРУГ.имя.toUpperCase() + (игра.веришь === false ? ' ВСЁ РАВНО ПОДОШЁЛ' : '');
+    $('и2-друг-текст').textContent = `${ДРУГ.тактика[поб.б.т.id]} ${ДРУГ.урок[главное.сдвиг < 0 ? 'плохо' : 'хорошо']} ${ДРУГ.сравнение[копилка.истории.length % ДРУГ.сравнение.length]}`;
+    $('и2-таблица').innerHTML = строки.map((x, i) => `<div class="т ${i === 0 ? 'лидер' : ''}"><b>${x.б.т.имя}</b><div class="д ${x.стоимость >= 100 ? 'цз' : 'цк'}">${фмт(x.стоимость)}</div><div class="с">${x.б.статус === 'в акциях' ? 'досидел до конца' : x.б.статус} · сделок ${x.б.сделок} · комиссий ${(x.б.сделок * КОМИССИЯ).toFixed(1)} $</div></div>`).join('');
+    $('и2-урок').textContent = `Разница между лучшим и худшим — ${Math.round(поб.стоимость - худ.стоимость)} $ на одной и той же истории. Тактика решает не меньше, чем угадывание компании. Нажми «другая история»: победитель, скорее всего, поменяется. Универсальной тактики нет, есть цена за защиту и цена за жадность.`;
+    // копилка: сколько раз каждая тактика побеждала и проигрывала
+    const счёт = {}; for (const т of ТАКТИКИ) счёт[т.id] = { п: 0, х: 0 };
+    for (const и of копилка.истории) { if (счёт[и.победитель]) счёт[и.победитель].п++; if (счёт[и.худший]) счёт[и.худший].х++; }
+    $('и2-копилка').innerHTML = `<b>Твоя копилка, ${копилка.истории.length} ${копилка.истории.length === 1 ? 'история' : копилка.истории.length < 5 ? 'истории' : 'историй'}:</b><br>` + ТАКТИКИ.map(т => `${т.имя}: <span class="цз">побед ${счёт[т.id].п}</span>, <span class="цк">последних мест ${счёт[т.id].х}</span>`).join('<br>') + (копилка.истории.length >= 3 ? '<br><b>Видишь?</b> Ни одна тактика не выигрывает всегда. Хорошая тактика — та, чьи проигрыши ты заранее согласен терпеть.' : '');
+    подписатьДругую();
+    track('igra-uroven2-itog', { kompaniya: к.id, pobeditel: поб.б.т.id });
+    window.IGRA2 = { pobeditel: поб.б.т.id, stoimosti: строки.map(x => [x.б.т.id, Math.round(x.стоимость)]), kopilka: копилка.истории.length };
+  }
+  $('т-день').onclick = день2;
+  $('т-доконца').onclick = () => доКонца(день2, () => ур2.день >= ур2.сц.дней);
+  $('и2-другая-история').onclick = () => { const к = ур2.к; const др = к.сценарии.find(x => x !== ур2.сц) || к.сценарии[0]; начатьУровень2(др, true); };
+  function подписатьДругую() { const обе = ур2 && ур2.прошлая; $('и2-другая-история').textContent = обе ? 'Обе истории этой компании сыграны · ещё раз с другой →' : 'Те же тактики, другая история этой компании →'; }
+  $('и2-выбор').onclick = () => { стоп(); экран('выбор'); };
+  // ---------- уровень 3 ----------
+  function начатьУровень3() { стоп(); ур3 = { раунд: 0, итоги: [] }; экран('вступление3'); track('igra-uroven3', {}); }
+  function показатьРаунд() {
+    const р = РАУНДЫ[ур3.раунд];
+    $('н3-шапка').textContent = `РАУНД ${ур3.раунд + 1} ИЗ ${РАУНДЫ.length} · НОВОСТИ ДНЯ`;
+    $('н3-под').textContent = р.подсказка;
+    $('н3-варианты').innerHTML = р.варианты.map((в, i) => { const к = КОМПАНИИ.find(k => k.id === в.к); return `<div class="т вар" data-i="${i}"><b>${к.э} ${к.имя}</b><div class="д">${в.ожидание}</div><div class="с">${в.новость}</div></div>`; }).join('');
+    if (ур3.итоги.length) { $('н3-счёт').hidden = false; $('н3-счёт').innerHTML = '<b>Прошлые раунды:</b> ' + ур3.итоги.map((и, i) => `${i + 1}) ${и.компания} <span class="${и.стало >= 100 ? 'цз' : 'цк'}">${фмт(и.стало)}</span>`).join(' · '); } else $('н3-счёт').hidden = true;
+    экран('новости3');
+  }
+  $('н3-варианты').addEventListener('click', e => {
+    const эл = e.target.closest('.вар'); if (!эл) return;
+    const в = РАУНДЫ[ур3.раунд].варианты[+эл.dataset.i]; const к = КОМПАНИИ.find(k => k.id === в.к);
+    стоп();
+    игра = { к, сц: в.сц, цены: построить(в.сц), новости: собратьНовости(к, в.сц), день: 0, выбран: null, выведено: null, уровень3: { вариант: в } };
+    track('igra-uroven3-stavka', { raund: ур3.раунд + 1, kompaniya: к.id });
+    $('д-список').innerHTML = `<div class="н"><b>ставка</b><span>${в.новость}. Ты поставил 100 $ на ${к.имя}.</span></div>`;
+    $('д-блок').className = 'деньги'; $('д-к').textContent = 'ТВОИ ДЕНЬГИ';
+    $('к-день').disabled = false; $('к-доконца').disabled = false; $('к-вывести').disabled = false;
+    обновить(); экран('день');
+  });
+  $('в3-поехали').onclick = показатьРаунд;
+  $('в3-назад').onclick = () => экран('итог2');
+  $('и2-уровень3').onclick = начатьУровень3;
+  $('к-раунд').onclick = () => { ур3.раунд++; if (ур3.раунд >= РАУНДЫ.length) { ур3.раунд = 0; ур3.итоги = []; } показатьРаунд(); };
+
+  // для съёмки кадров: ?ekran=itog — сыграть Take-Two до конца и показать итог с другом
+  if (new URLSearchParams(location.search).get('ekran') === 'itog') { начать('ttwo'); while (игра.день < игра.сц.дней) следующий(); итог(); }
+  requestAnimationFrame(вписать); setTimeout(вписать, 300);
+  window.IGRA_NACHAT = начать; window.IGRA_DEN = следующий; window.IGRA_ITOG = итог; window.IGRA_VYVESTI = вывести; window.IGRA_UR2 = начатьУровень2; window.IGRA_DEN2 = день2; window.IGRA_ITOG2 = итог2;
+})();
+</script>
+</body>
+</html>
