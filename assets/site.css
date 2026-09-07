@@ -266,7 +266,8 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 @media (max-width:640px){.story-lead{grid-template-columns:1fr; padding:20px;}.story-all-link{justify-self:start;}.story-shelves{grid-template-columns:1fr;}.story-lead-book{grid-template-columns:76px 1fr;min-height:104px;}.story-lead-book img{width:76px;height:94px;}.story-collection{grid-template-columns:86px 1fr;gap:14px;padding:14px;}.story-collection > img{width:86px;height:128px;}.story-collection ol{columns:1;margin-top:14px;}.story-reader-inline{margin-inline:-36px;padding:18px;}.story-reader-copy{font-size:18px;line-height:1.72;}.story-to-top{right:max(24px,env(safe-area-inset-right));bottom:max(24px,env(safe-area-inset-bottom));}.story-bar a{margin-left:0;}}
 @media (prefers-reduced-motion:reduce){.work-comics .work-put-main::after{animation:none;display:none}}
 @media (prefers-reduced-motion:reduce){.story-reader-inline.is-entering,.story-reader-inline.is-exiting{animation-duration:120ms;animation-name:story-reader-fade}.story-reader-inline.is-exiting{animation-direction:reverse}@keyframes story-reader-fade{from{opacity:0}to{opacity:1}}}
-.practicum-more .practicum-detail { height:auto; min-height:150px; }
+.practicum-more .practicum-detail { height:auto; min-height:76px; }
+.practicum-more-body[hidden] { display:none; }
 .practicum-more-body:not([data-open]) { visibility:hidden; }
 .practicum-more-body[data-open] { visibility:visible; }
 
@@ -1583,12 +1584,9 @@ article.gcard .launch { color: var(--dim); }
    анимируемого значения, поэтому раскрытие через него — это рывок; приём
    взят из Аниматеки, где он и записан. Содержимое при этом не трогаем
    вовсе, иначе внутренние карточки пересчитывали бы раскладку каждый кадр. */
-.practicum-more { display: grid; gap: 12px; }
-/* Вдвое ниже по слову Сергея: «я же просил». Была 44 точки — стала 22.
-   Но 22 точки под пальцем не нажать, а смотрел он с десктопа. Поэтому вдвое
-   ниже там, где ведут мышью, и пальцевый размер там, где ведут пальцем.
-   Разница названа вслух в отчёте: если он захочет 22 и на телефоне — одна
-   правка. */
+.practicum-more { display: grid; gap: 0; min-height: 0; }
+/* Кнопка встроена в нижнюю зону главной карточки. 44 точки оставляем и мыши,
+   и пальцу: уменьшаем раскрываемые карточки, а не честную область нажатия. */
 .practicum-more-btn {
   justify-self: start; display: inline-flex; align-items: center; gap: 8px;
   min-height: 44px; padding: 11px 16px; border: 1px solid var(--line);
@@ -1599,10 +1597,6 @@ article.gcard .launch { color: var(--dim); }
 .practicum-more-btn:hover { background: var(--card-hover); border-color: var(--accent); }
 .practicum-more-btn b { color: var(--accent); transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
 .practicum-more-btn[aria-expanded="true"] b { transform: rotate(180deg); }
-.practicum-more-teaser { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; color:var(--muted); font:600 12px/1.2 var(--sans); }
-.practicum-more-teaser span { padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,.03); }
-.practicum-more-teaser[hidden] { display:none; }
-.practicum-more { min-height:140px; }
 .practicum-more-body {
   display: grid; grid-template-rows: 0fr;
   transition: grid-template-rows var(--an-raskrytie, 280ms) var(--an-vyhod, cubic-bezier(.22,.61,.36,1));
@@ -1614,10 +1608,6 @@ article.gcard .launch { color: var(--dim); }
 @media (prefers-reduced-motion: reduce) {
   .practicum-more-body { transition: none; }
   .practicum-more-btn b { transition: none; }
-}
-@media (max-width:640px) {
-  .practicum-more-teaser { max-width:300px; }
-  .practicum-more { min-height:180px; }
 }
 
 /* Чип на кадре шлюза. Сергей выбрал вариант В: «запрос → обрыв → ответ всё
@@ -1641,19 +1631,21 @@ article.gcard .launch { color: var(--dim); }
    её держит текст, а не остаётся дырой под названием.                     */
 @media (min-width: 761px) {
   .quequest-copy {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end; gap: 16px 24px;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .72fr);
+    align-items: stretch; gap: 20px 32px;
   }
-  .quequest-left { display: grid; align-content: center; gap: 8px; min-width: 0; }
+  .quequest-left { display: grid; align-content: center; justify-items:start; gap: 8px; min-width: 0; }
+  .quequest-cta { display:grid; align-content:end; justify-items:end; gap:12px; min-width:0; }
   .quequest-copy h3 {
-    margin: 0; align-self: end; text-align: right;
-    font-size: clamp(30px, 3.4vw, 52px); line-height: .95; letter-spacing: -.01em;
+    margin: 0; text-align: right;
+    font-size: clamp(48px, 6vw, 76px); line-height: .88; letter-spacing: -.035em;
   }
 }
 /* На телефоне колонок нет: имя над текстом, как и было. */
 @media (max-width: 760px) {
   .quequest-left { display: grid; gap: 8px; }
-  .quequest-copy h3 { margin: 8px 0 0; }
+  .quequest-cta { display:grid; gap:10px; margin-top:10px; }
+  .quequest-copy h3 { margin: 0; font-size:clamp(42px, 15vw, 58px); }
 }
 
 /* Разделение «22 мышью, 44 пальцем» снято 6 сентября по решению Рота:
@@ -1684,8 +1676,8 @@ article.gcard .launch { color: var(--dim); }
 .quequest-play-btn b { color: var(--accent); }
 .quequest-stage { position: relative; display: grid; min-height: 0; }
 .quequest-open {
-  justify-self: start; display: inline-flex; align-items: center; gap: 8px;
-  min-height: 44px; padding: 11px 18px; margin-top: 12px;
+  justify-self: end; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 12px 20px;
   border: 1px solid var(--accent); border-radius: 10px;
   background: var(--accent); color: #08120c;
   font: 700 15px/1 var(--sans); text-decoration: none;
@@ -1693,6 +1685,26 @@ article.gcard .launch { color: var(--dim); }
 .quequest-open:hover { box-shadow: var(--glow); }
 .quequest-copy h3 a { color: inherit; text-decoration: none; }
 .quequest-copy h3 a:hover { color: var(--accent); }
+
+/* Дополнительные практикумы — короткая справка, а не второй главный экран.
+   На десктопе две карточки остаются в ряд; на телефоне — две плотные строки.
+   Метрики уже есть внутри самих практикумов и здесь только раздували блок. */
+.practicum-more .practicum-detail { grid-template-columns:52px minmax(0,1fr); gap:10px; padding:10px; }
+.practicum-more .practicum-detail-shot { width:52px; height:52px; aspect-ratio:1; }
+.practicum-more .practicum-detail-copy { align-content:center; gap:4px; }
+.practicum-more .practicum-detail-copy h3 { font-size:16px; }
+.practicum-more .practicum-detail-copy .kicker,
+.practicum-more .practicum-detail-copy .tagline { display:none; }
+.practicum-more .practicum-detail-copy .metric-chips,
+.practicum-more .practicum-detail-copy .chips { display:none; }
+.practicum-more .card-links { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.practicum-more .card-links a:not(:first-child) { display:none; }
+@media (max-width:760px) {
+  .quequest-copy { padding:16px; }
+  .quequest-open { justify-self:stretch; justify-content:center; }
+  .practicum-more .practicum-detail { grid-template-columns:56px minmax(0,1fr); min-height:82px; }
+  .practicum-more .practicum-detail-shot { width:56px; height:56px; }
+}
 
 /* Строка терминала рядом с названием сайта: фразы, которые Сергей ловил и
    записывал сам. Его правка: «рядом с названием сайта, а не отдельной полосой

@@ -30,8 +30,12 @@ try {
   const снять = async () => JSON.parse(await о(`(() => {
     const b = document.querySelector('.practicum-more-btn');
     const тело = document.getElementById('practicum-more-body');
-    if (!b || !тело) return JSON.stringify({ ошибка: 'кнопки или тела нет' });
+    const open = document.querySelector('.quequest-open');
+    const title = document.querySelector('.quequest-copy h3');
+    const copy = document.querySelector('.quequest-copy');
+    if (!b || !тело || !open || !title || !copy) return JSON.stringify({ ошибка: 'неполная карточка QueQuest' });
     const rb = b.getBoundingClientRect(), rt = тело.getBoundingClientRect();
+    const ro = open.getBoundingClientRect(), rc = copy.getBoundingClientRect();
     const карточки = [...тело.querySelectorAll('.practicum-detail')];
     const видно = карточки.filter((c) => {
       const r = c.getBoundingClientRect();
@@ -43,6 +47,9 @@ try {
       видно, всего: карточки.length,
       скрытоОтКлавиатуры: тело.hasAttribute('inert') || тело.hasAttribute('hidden'),
       страница: document.documentElement.scrollHeight,
+      заголовок: Math.round(parseFloat(getComputedStyle(title).fontSize)),
+      вНижнейЗоне: rb.top >= rc.top && rb.bottom <= rc.bottom + 1 && ro.top >= rc.top && ro.bottom <= rc.bottom + 1,
+      стороны: { ещё: Math.round(rb.left + rb.width / 2), открыть: Math.round(ro.left + ro.width / 2), середина: Math.round(rc.left + rc.width / 2) },
     });
   })()`));
   const до = await снять();
@@ -52,16 +59,21 @@ try {
   await о(`document.querySelector('.practicum-more-btn').click()`);
   await sleep(900);
   const обратно = await снять();
+  const прирост = после.страница - до.страница;
   const проверки = [
     ['свёрнуто по умолчанию', до.раскрыто === 'false' && до.видно === 0],
     ['в свёрнутом виде не доступно и с клавиатуры', до.скрытоОтКлавиатуры === true],
     ['кнопка не меньше 44 точек', Number(до.кнопка.split('x')[1]) >= 44],
     ['раскрылось, видны все', после.раскрыто === 'true' && после.видно === после.всего && после.всего >= 2],
     ['страница выросла', после.страница > до.страница],
+    ['раскрытие не раздувает страницу', прирост <= (ш < 700 ? 240 : 90)],
+    ['обе кнопки живут в нижней зоне', до.вНижнейЗоне === true],
+    ['QueQuest занимает главный акцент', до.заголовок >= (ш < 700 ? 42 : 48)],
+    ['действия разведены по сторонам', ш < 700 || (до.стороны.ещё < до.стороны.середина && до.стороны.открыть > до.стороны.середина)],
     ['свернулось обратно', обратно.раскрыто === 'false' && обратно.видно === 0],
   ];
   for (const [имя, ок] of проверки) { if (!ок) плохо += 1; console.log(`  ${ок ? 'ok  ' : 'ПЛОХО'} ${имя}`); }
-  console.log(`  до ${JSON.stringify(до)}\n  после ${JSON.stringify(после)}`);
+  console.log(`  до ${JSON.stringify(до)}\n  после ${JSON.stringify(после)}\n  прирост ${прирост}px`);
   send.закрыть();
 } finally { chrome.kill(); }
 console.log(плохо ? `ПЛОХО: ${плохо}` : 'раскрытие работает обоими исходами');

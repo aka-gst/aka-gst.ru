@@ -695,20 +695,19 @@ const practicumSwitch = `
               </a>
               <button class="quequest-play-btn" type="button" data-quequest-play-for="quequest-visual">Показать переход <b aria-hidden="true">→</b></button>
             </div>
-            <div class="quequest-copy">
+            <div class="quequest-copy quequest-actions">
               <div class="quequest-left">
                 <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
                 <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+                <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы <b aria-hidden="true">↓</b></button>
               </div>
-              <h3 id="quequest-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QueQuest</a></h3>
-              <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть игру <b aria-hidden="true">↗</b></a>
+              <div class="quequest-cta">
+                <h3 id="quequest-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QueQuest</a></h3>
+                <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть игру <b aria-hidden="true">↗</b></a>
+              </div>
             </div>
           </article>
           <div class="practicum-more">
-            <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы: LLM и агенты <b aria-hidden="true">↓</b></button>
-            <div class="practicum-more-teaser" aria-hidden="true">
-              <span>LLM-практика</span><span>Агентные системы</span>
-            </div>
             <div class="practicum-more-body" id="practicum-more-body" hidden inert aria-hidden="true">
               <aside class="practicum-side" aria-label="Дополнительные практикумы">
                 <div class="practicum-detail-stage">
@@ -1000,8 +999,6 @@ const workPanel = `
       ${workLead}
 
 ${practicumSwitch.trim()}
-
-${masterskaya.trim()}
 
       <section class="block" aria-labelledby="products-title">
         <div class="block-head">
