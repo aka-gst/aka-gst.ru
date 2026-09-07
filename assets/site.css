@@ -1735,7 +1735,10 @@ article.gcard .launch { color: var(--dim); }
    Ставится скриптом только при ?vid=b — вариант выбирает Сергей, не мы. */
 .brand { position: relative; }
 .brand-robot {
-  position: absolute; right: -3px; bottom: -2px;
+  /* На самой метке, а не в правом нижнем углу всей ссылки: метка 34 точки,
+     значок садится на её угол. Иначе робот оказывается ПОСЛЕ надписи
+     «aka-gst» и читается как случайный артефакт, а не как часть логотипа. */
+  position: absolute; left: 22px; bottom: -1px; right: auto;
   display: inline-flex; padding: 2px; border-radius: 6px;
   background: var(--bg); color: var(--accent); line-height: 0;
 }
