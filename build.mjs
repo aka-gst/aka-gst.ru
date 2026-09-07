@@ -834,7 +834,6 @@ const workLead = `
             <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
             <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
             <p class="work-put-links">
-              <a class="work-put-alt" href="/put/">та же история текстом →</a>
               <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
             </p>
           </article>
