@@ -813,39 +813,17 @@
 
   const текст = полоса.querySelector('.hero-term-tekst');
   const знак = полоса.querySelector('.hero-term-znak');
-  if (!текст || !знак) return;
+  const значокС = полоса.querySelector('.hero-term-c');
+  if (!текст || !знак || !значокС) return;
 
-  const РОБОТ = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="none" '
-    + 'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
-    + '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5"/><circle cx="12" cy="3.4" r="1.3"/>'
-    + '<path d="M9 13h.01M15 13h.01M9.5 16.2h5"/></svg>';
-
-  const вид = new URLSearchParams(location.search).get('vid') || 'a';
-  if (вид === 'v') {
-    знак.textContent = 'ии:';
-  } else if (вид === 'b') {
-    знак.textContent = '';
-    // Робот встаёт в сам логотип, строка идёт без значка.
-    const марка = document.querySelector('.brand');
-    if (марка && !марка.querySelector('.brand-robot')) {
-      const б = document.createElement('span');
-      б.className = 'brand-robot';
-      б.innerHTML = РОБОТ;
-      марка.appendChild(б);
-    }
-  } else {
-    знак.innerHTML = РОБОТ;
-  }
+  // Сергей выбрал приставку «ии:» — вариант «в», навсегда. Робота в логотипе
+  // и значок слева не берём, поэтому и переключателя вариантов больше нет:
+  // мёртвые ветки в коде живут до первой правки и врут следующему читателю.
+  знак.textContent = 'ии:';
 
   const тихо = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // «Злее всего то, что…» — начало фразы, а не фраза. Сергей разрешил её
-  // словами «да, когда понятно, что это мне так пишет ИИ»: значит она идёт
-  // только там, где признак ИИ стоит В САМОЙ СТРОКЕ — со значком робота (а)
-  // или с приставкой «ии:» (в). В варианте «б» робот сидит на логотипе, а
-  // строка голая, и обрывок повиснет непонятно от чьего имени.
-  const ТОЛЬКО_СО_ЗНАКОМ = ['«Злее всего то, что…»'];
-  if (вид === 'b') фразы = фразы.filter((ф) => !ТОЛЬКО_СО_ЗНАКОМ.includes(ф));
-  if (!фразы.length) return;
+  // «Злее всего то, что…» теперь идёт наравне с прочими: его условие «когда
+  // понятно, что это пишет ИИ» выполнено приставкой «ии:».
 
   const БУКВА = 45;          // мс на символ: длинная фраза набирается за ~2.7 с
   const ЖИЗНЬ = 30000;       // столько фраза живёт целиком, вместе с набором
@@ -862,15 +840,22 @@
   };
   let печать = null;
 
+  // «(с)» — шутка Сергея: как будто фразы патентованные. Печатается ВМЕСТЕ с
+  // фразой, последними символами набора, а не появляется отдельно готовым:
+  // отдельное появление читалось бы как подпись, а не как часть строки.
+  const ЗНАЧОК = ' (с)';
   const напечатать = (строка) => {
     clearInterval(печать);
-    if (тихо) { текст.textContent = строка; return; }
+    const всё = строка + ЗНАЧОК;
+    if (тихо) { текст.textContent = строка; значокС.textContent = ЗНАЧОК; return; }
     текст.textContent = '';
+    значокС.textContent = '';
     let к = 0;
     печать = setInterval(() => {
       к += 1;
-      текст.textContent = строка.slice(0, к);
-      if (к >= строка.length) clearInterval(печать);
+      текст.textContent = строка.slice(0, Math.min(к, строка.length));
+      значокС.textContent = к > строка.length ? ЗНАЧОК.slice(0, к - строка.length) : '';
+      if (к >= всё.length) clearInterval(печать);
     }, БУКВА);
   };
 

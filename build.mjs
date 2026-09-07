@@ -776,7 +776,7 @@ const фразыСергея = (() => {
 
 const polosaFraz = фразыСергея.length
   ? `<div class="hero-term" data-term aria-hidden="true">
-        <span class="hero-term-znak"></span><span class="hero-term-tekst"></span><span class="hero-term-kursor"></span>
+        <span class="hero-term-znak"></span><span class="hero-term-tekst"></span><span class="hero-term-c"></span><span class="hero-term-kursor"></span>
       </div>
           <script type="application/json" data-term-frazy>${JSON.stringify(фразыСергея).replace(/</g, '\\u003c')}</script>`
   : '';

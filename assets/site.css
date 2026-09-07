@@ -1731,17 +1731,6 @@ article.gcard .launch { color: var(--dim); }
   .hero-term { flex-basis: 100%; order: 9; height: calc(1.45em * 2); align-items: flex-start; }
 }
 
-/* Вариант «б»: робот в самом логотипе, строка идёт без значка.
-   Ставится скриптом только при ?vid=b — вариант выбирает Сергей, не мы. */
-.brand { position: relative; }
-.brand-robot {
-  /* На самой метке, а не в правом нижнем углу всей ссылки: метка 34 точки,
-     значок садится на её угол. Иначе робот оказывается ПОСЛЕ надписи
-     «aka-gst» и читается как случайный артефакт, а не как часть логотипа. */
-  position: absolute; left: 22px; bottom: -1px; right: auto;
-  display: inline-flex; padding: 2px; border-radius: 6px;
-  background: var(--bg); color: var(--accent); line-height: 0;
-}
 
 /* Полоска пути у Gateway оживает так же, как у Dharma: Сергею нравится, как
    у Dharma «выбор — агент — заказ» проявляется по шагам, и он попросил тот же
@@ -1755,3 +1744,8 @@ article.gcard .launch { color: var(--dim); }
   .work-gateway-proof:hover .gw-journey i:nth-of-type(2),
   .work-gateway-proof:focus-visible .gw-journey i:nth-of-type(2) { animation-delay: .38s; }
 }
+
+/* «(с)» после фразы — шутка Сергея про патентованные фразы ИИ. Чуть тусклее
+   самой фразы и не разрывается внутри себя: на узком экране переносится
+   целиком, а не по одной скобке. */
+.hero-term-c { flex: none; white-space: nowrap; opacity: .55; }
