@@ -2,7 +2,7 @@ import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidge
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260905-02", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260905-02&theme=orion-blue-20260907", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");

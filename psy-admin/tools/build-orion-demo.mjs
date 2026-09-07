@@ -82,6 +82,13 @@ function sanitise(html, widgetPath) {
     html,body{max-width:100%;overflow-x:hidden}
     .t-records,.t-records_animated,.t-rec,.t396__elem,.t396__group,.t-animate{opacity:1!important;visibility:visible!important}
     #psy-demo-notice{position:fixed;z-index:2147482990;left:12px;bottom:12px;max-width:min(390px,calc(100vw - 24px));padding:10px 12px;border-radius:8px;background:#171420e8;color:#fff;font:12px/1.35 Arial,sans-serif;box-shadow:0 8px 28px #0005}#psy-demo-notice b{display:block;margin-bottom:2px}.psy-demo-form{opacity:.58;pointer-events:none}
+    /* В статической копии Tilda feed не запускается. Пустой контейнер не
+       должен оставлять вместо новостей экран пустоты; реальные карточки,
+       если они появятся в разметке, автоматически вернут блок. */
+    #rec288715564:has(.js-feed-container:empty){display:none}
+    /* Экспортная сетка T522 подтягивает первую линию на 10px внутрь текста.
+       Отступ относится только к списку расписания, не меняя сам текст. */
+    #rec1773853311 .t522>.t-container:not(.t-section__container){padding-top:26px}
   </style></head>`);
   page = page.replace(/<body\b([^>]*)>/i, `<body$1><aside id="psy-demo-notice"><b>Тестовая версия PsyAdmin</b>Не официальный сайт «Орион-С». Заявки поступают в тестовую панель; оплата и личный кабинет отключены.</aside>`);
   // Счётчик страниц. Он БЫЛ здесь (коммит f565a17) и пропал, когда страницу
