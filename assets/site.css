@@ -1698,7 +1698,9 @@ article.gcard .launch { color: var(--dim); }
    Высота фиксирована НАРОЧНО: фразы разной длины, и без этого соседние
    блоки прыгали бы при каждой смене. Кривые и длительности — из аниматеки. */
 .hero-term {
-  display: flex; gap: 9px; align-items: flex-start;
+  /* По центру, а не сверху: высота под три строки зарезервирована всегда,
+     и короткая фраза, прижатая к верху, выглядит забытой в пустой коробке. */
+  display: flex; gap: 9px; align-items: center;
   margin: 0 0 16px; padding: 9px 12px;
   border: 1px solid var(--line-soft); border-radius: 10px;
   background: var(--bg-soft);
