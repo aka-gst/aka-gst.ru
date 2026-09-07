@@ -619,8 +619,31 @@ const listRow = (project) => {
 
 const allWork = db.projects.filter((p) => p.tracks.includes('work'));
 const allPlay = db.projects.filter((p) => p.tracks.includes('play') && p.kind === 'game');
-const playable = db.projects.filter((p) => p.groups.includes('playable'));
-const otherGames = allPlay.filter((p) => !p.groups.includes('playable'));
+// Порядок карточек назвал Сергей 7 сентября, дословно и целиком. Прежде
+// список делился на «Играбельное» и «Остальное» — деление он попросил убрать:
+// «пусть будет просто список игр карточками, все подряд, без деления».
+const ПОРЯДОК_ИГР = [
+  'acid-uno', 'tetcolor', 'neon-lines', 'technomagic', 'puzzle-quest', 'stealth',
+  'neon-claw', 'worm', 'odin-udar', 'knb', 'perelom', 'coin-flip',
+];
+{
+  // Падаем громко, если названа игра, которой нет в данных: молча пропущенная
+  // игра — это игра, исчезнувшая с витрины, и заметит это он, а не мы.
+  const есть = new Set(db.projects.map((p) => p.id));
+  const пропали = ПОРЯДОК_ИГР.filter((id) => !есть.has(id));
+  if (пропали.length) throw new Error(`в порядке игр названы несуществующие: ${пропали.join(', ')}`);
+}
+const игрыПоПорядку = [...allPlay].sort((а, б) => {
+  const иа = ПОРЯДОК_ИГР.indexOf(а.id);
+  const иб = ПОРЯДОК_ИГР.indexOf(б.id);
+  // Не названные уходят в конец, а не исчезают: новая игра встанет последней
+  // и будет видна, а не потеряется молча.
+  return (иа < 0 ? 999 : иа) - (иб < 0 ? 999 : иб);
+});
+const неНазванные = allPlay.filter((p) => !ПОРЯДОК_ИГР.includes(p.id));
+if (неНазванные.length) {
+  console.warn(`  ! игры вне порядка Сергея, встали в конец: ${неНазванные.map((p) => p.id).join(', ')}`);
+}
 const projectById = (id) => db.projects.find((project) => project.id === id);
 const qaQuest = projectById('qa-quest');
 const dharmaAi = projectById('dharma-ai');
@@ -1150,15 +1173,7 @@ const storyCollectionPanel = (collection) => {
 const playPanel = `
         <section class="block block--lead" aria-label="Играбельное">
 ${playBar}
-          <div class="ggrid">${playable.map(gameCard).join('')}
-          </div>
-        </section>
-
-        <section class="block" aria-labelledby="other-games-title">
-          <div class="block-head">
-            <h2 id="other-games-title">Остальное</h2>
-          </div>
-          <div class="ggrid">${otherGames.map(gameCard).join('')}
+          <div class="ggrid">${игрыПоПорядку.map(gameCard).join('')}
           </div>
         </section>
 
