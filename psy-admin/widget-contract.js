@@ -29,8 +29,8 @@ export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoic
   if (!voiceCapabilities) return presentation;
 
   const inputAvailable = Boolean(voiceCapabilities.recognitionAvailable);
-  // Пока Qwen3-TTS не поднят отдельным сервисом, не подменяем обещанный
-  // естественный голос системной браузерной озвучкой.
+  // Пока Qwen3-TTS не поднят отдельным сервисом, не подменяем выбранный
+  // записанный пример системной браузерной озвучкой.
   const outputAvailable = false;
   return {
     ...presentation,
@@ -38,7 +38,7 @@ export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoic
       inputAvailable,
       outputAvailable,
       fallbackMessage: inputAvailable
-        ? (outputAvailable ? "" : "Ответ пока придёт коротким текстом: выбираем естественный голос A, Б или В.")
+        ? (outputAvailable ? "" : "Ответ пока придёт коротким текстом. Озвучивание ответов ещё не подключено.")
         : "Голосовой ввод недоступен в этом браузере. Напишите вопрос текстом.",
       shouldSpeakReply: false,
     },
@@ -69,11 +69,12 @@ export function reduceWidgetState(state, action) {
   return state;
 }
 
-export function demoHandoffOutcome() {
+export function demoHandoffOutcome(marker = "PSY-TEST") {
   return {
     kind: "demo-only",
     networkRequest: null,
-    message: "Демо: заявка никуда не отправляется. Канал связи с центром ещё не утверждён.",
+    marker,
+    message: `${marker}: заявка добавлена только в локальный тестовый стенд; в центр ничего не отправлено.`,
   };
 }
 

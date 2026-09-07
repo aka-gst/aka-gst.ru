@@ -1,4 +1,4 @@
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260905-02";
+import { createWidgetState, demoHandoffOutcome, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260905-02";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
@@ -7,14 +7,15 @@ document.head.append(stylesheet);
 
 const mount = document.createElement("div");
 mount.innerHTML = `
-  <section class="psy-widget" data-psy-widget data-open="false" aria-label="Помощник сайта">
+  <section class="psy-widget" data-psy-widget data-assistant-host="candidate" data-open="false" aria-label="Помощник сайта">
     <button class="psy-widget-trigger" type="button" aria-label="Спросить помощника" aria-controls="psy-widget-panel" aria-expanded="false">
       <span aria-hidden="true">✦</span><span>Спросить помощника</span>
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
-        <div><b>Голосовой AI-администратор</b><span>Можно спросить голосом. Выберите естественный голос: A, Б или В.</span></div>
+        <div><b>AI-администратор</b><span>Можно спросить голосом или написать. Для прослушивания доступен голос A.</span></div>
         <div class="psy-widget-head-actions">
+          <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить голос" title="Остановить голос: пробел">■ Стоп</button>
           <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
         </div>
@@ -22,9 +23,6 @@ mount.innerHTML = `
       <div class="psy-widget-voice-preview" aria-label="Предварительные варианты голоса">
         <span>Голос:</span>
         <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-A.wav" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
-        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-B.wav" data-voice-volume="0.72">Б</button>
-        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-C.wav" data-voice-volume="0.72">В</button>
-        <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить пример голоса" title="Остановить голос: пробел">■ Стоп</button>
       </div>
       <div class="psy-widget-evaluation">
         <button class="psy-widget-evaluation-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-evaluation-content">Проверить помощника</button>
@@ -37,17 +35,33 @@ mount.innerHTML = `
         </div>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
-      <section class="psy-widget-booking-area" aria-label="Запись в центр Орион-С">
-        <p><b>Запись в центр «Орион‑С»</b><span>Заявка уйдёт администратору на подтверждение.</span></p>
-        <div class="psy-widget-actions">
-          <a class="psy-widget-booking" href="/psy-admin/booking/?kind=specialist">Записаться к специалисту</a>
-          <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=seminar">Записаться на семинар</a>
-          <a class="psy-widget-booking psy-widget-booking-secondary" href="/psy-admin/booking/?kind=rental">Оставить заявку на аренду</a>
-          <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
-            <span>Оплатить ↗</span>
-            <small>Официальный сайт</small>
-          </a>
-        </div>
+      <section class="psy-widget-handoff-area" aria-label="Тестовая заявка в центр Орион-С">
+        <button class="psy-widget-handoff-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-handoff">Оставить заявку администратору</button>
+        <form class="psy-widget-handoff" id="psy-widget-handoff" hidden>
+          <p><b>Запись в центр «Орион‑С»</b><span>Администратор уточнит время у психолога и подтвердит запись.</span></p>
+          <label>К кому вы хотите пойти?
+            <select name="specialist" required>
+              <option value="">Выберите вариант</option>
+              <option value="help-me-choose">Не знаю, помогите выбрать</option>
+              <option value="specific">К конкретному психологу — укажу в комментарии</option>
+            </select>
+          </label>
+          <label>Желаемое время
+            <input name="requestedTime" maxlength="120" placeholder="Например: будни после 18:00" required>
+          </label>
+          <label>Комментарий
+            <textarea name="comment" maxlength="500" rows="2" placeholder="Что важно учесть"></textarea>
+          </label>
+          <label>Телефон или e-mail
+            <input name="contact" maxlength="160" autocomplete="email" placeholder="Как с вами связаться" required>
+          </label>
+          <button type="submit">Добавить в тестовый стенд</button>
+          <p class="psy-widget-handoff-status" aria-live="polite"></p>
+        </form>
+        <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
+          <span>Оплатить ↗</span>
+          <small>Официальный сайт</small>
+        </a>
       </section>
       <form class="psy-widget-form">
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
@@ -89,6 +103,9 @@ const evaluationSelect = root.querySelector(".psy-widget-evaluation-select");
 const evaluationStatus = root.querySelector(".psy-widget-evaluation-status");
 const evaluationToggle = root.querySelector(".psy-widget-evaluation-toggle");
 const evaluationContent = root.querySelector("#psy-widget-evaluation-content");
+const handoffToggle = root.querySelector(".psy-widget-handoff-toggle");
+const handoffForm = root.querySelector(".psy-widget-handoff");
+const handoffStatus = root.querySelector(".psy-widget-handoff-status");
 let previewAudio = null;
 let previewAudioContext = null;
 let recognition = null;
@@ -336,6 +353,30 @@ evaluationSelect.addEventListener("change", () => {
   }
   evaluationStatus.textContent = `Ожидается: ${option.dataset.expected}.`;
   void ask(option.dataset.question);
+});
+handoffToggle.addEventListener("click", () => {
+  const expanded = handoffToggle.getAttribute("aria-expanded") !== "true";
+  handoffToggle.setAttribute("aria-expanded", String(expanded));
+  handoffForm.hidden = !expanded;
+  handoffToggle.textContent = expanded ? "Скрыть форму заявки" : "Оставить заявку администратору";
+  if (expanded) handoffForm.querySelector("select")?.focus({ preventScroll: true });
+});
+handoffForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const fields = new FormData(handoffForm);
+  const marker = `PSY-TEST-${Date.now().toString(36).toUpperCase()}`;
+  const testEntry = {
+    marker,
+    specialist: String(fields.get("specialist") || ""),
+    requestedTime: String(fields.get("requestedTime") || ""),
+    comment: String(fields.get("comment") || ""),
+    contact: String(fields.get("contact") || ""),
+  };
+  window.__psyAdminTestInbox ||= [];
+  window.__psyAdminTestInbox.push(testEntry);
+  const outcome = demoHandoffOutcome(marker);
+  handoffStatus.textContent = outcome.message;
+  handoffForm.reset();
 });
 if (!voiceCapabilities.recognitionAvailable) {
   mic.addEventListener("click", () => {
