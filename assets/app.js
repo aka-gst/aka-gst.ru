@@ -795,49 +795,90 @@
   });
 })();
 
-// Полоска терминала: фразы, которые Сергей ловил и записывал сам.
-// Тихо, а не мигает: пауза достаточная, чтобы прочитать, высота полосы
-// фиксирована стилями, соседние блоки не двигаются. Прокрутку не трогаем,
-// ничего не запускаем.
+// Строка терминала рядом с названием сайта: фразы, которые Сергей ловил и
+// записывал сам. Его правки: печатать по букве («как будто это программистская
+// такая штука»), слегка глитчить, менять реже — около полуминуты на фразу.
+//
+// Три варианта «видно, что пишет ИИ» переключаются адресом (?vid=a|b|v) —
+// чтобы снять кадры для выбора, не выкладывая сайт трижды. Выбирает Сергей,
+// не мы; до его слова живёт вариант «а».
 (() => {
   const полоса = document.querySelector('[data-term]');
   const данные = document.querySelector('[data-term-frazy]');
   if (!полоса || !данные) return;
 
   let фразы = [];
-  try {
-    фразы = JSON.parse(данные.textContent);
-  } catch {
-    return;                       // испорченные данные — молча без полосы
-  }
+  try { фразы = JSON.parse(данные.textContent); } catch { return; }
   if (!Array.isArray(фразы) || !фразы.length) return;
 
-  const узел = полоса.querySelector('.hero-term-tekst');
-  if (!узел) return;
+  const текст = полоса.querySelector('.hero-term-tekst');
+  const знак = полоса.querySelector('.hero-term-znak');
+  if (!текст || !знак) return;
 
-  // Порядок его, но начинаем с любой: иначе большинство посетителей увидит
-  // только первые две-три фразы из семнадцати.
-  let i = Math.floor(Math.random() * фразы.length);
-  узел.textContent = фразы[i];
+  const РОБОТ = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="none" '
+    + 'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+    + '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5"/><circle cx="12" cy="3.4" r="1.3"/>'
+    + '<path d="M9 13h.01M15 13h.01M9.5 16.2h5"/></svg>';
+
+  const вид = new URLSearchParams(location.search).get('vid') || 'a';
+  if (вид === 'v') {
+    знак.textContent = 'ии:';
+  } else if (вид === 'b') {
+    знак.textContent = '';
+    // Робот встаёт в сам логотип, строка идёт без значка.
+    const марка = document.querySelector('.brand');
+    if (марка && !марка.querySelector('.brand-robot')) {
+      const б = document.createElement('span');
+      б.className = 'brand-robot';
+      б.innerHTML = РОБОТ;
+      марка.appendChild(б);
+    }
+  } else {
+    знак.innerHTML = РОБОТ;
+  }
 
   const тихо = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const ПОКАЗ = 7000;             // столько фраза висит: хватает прочитать длинную
-  const УХОД = 240;               // столько уходит и приходит
+  const БУКВА = 45;          // мс на символ: длинная фраза набирается за ~2.7 с
+  const ЖИЗНЬ = 30000;       // столько фраза живёт целиком, вместе с набором
+  const ГЛИТЧ_НЕ_ЧАЩЕ = 4500;
 
-  const дальше = () => {
-    i = (i + 1) % фразы.length;
-    if (тихо) { узел.textContent = фразы[i]; return; }
-    узел.dataset.uhodit = '1';
-    setTimeout(() => {
-      узел.textContent = фразы[i];
-      delete узел.dataset.uhodit;
-    }, УХОД);
+  let i = Math.floor(Math.random() * фразы.length);
+  let печать = null;
+
+  const напечатать = (строка) => {
+    clearInterval(печать);
+    if (тихо) { текст.textContent = строка; return; }
+    текст.textContent = '';
+    let к = 0;
+    печать = setInterval(() => {
+      к += 1;
+      текст.textContent = строка.slice(0, к);
+      if (к >= строка.length) clearInterval(печать);
+    }, БУКВА);
   };
 
-  let таймер = setInterval(дальше, ПОКАЗ);
-  // Вкладку убрали — не крутим впустую и не тратим батарею.
+  напечатать(фразы[i]);
+
+  const дальше = () => { i = (i + 1) % фразы.length; напечатать(фразы[i]); };
+  let часы = setInterval(дальше, ЖИЗНЬ);
+
+  // Глитч: короткий сдвиг раз в несколько секунд, и только когда строка
+  // допечатана — дёргать текст во время набора значит мешать читать.
+  let глитч = тихо ? null : setInterval(() => {
+    if (печать && текст.textContent.length < фразы[i].length) return;
+    полоса.dataset.glitch = '1';
+    setTimeout(() => delete полоса.dataset.glitch, 220);
+  }, ГЛИТЧ_НЕ_ЧАЩЕ + Math.random() * 2500);
+
   document.addEventListener('visibilitychange', () => {
-    clearInterval(таймер);
-    if (!document.hidden) таймер = setInterval(дальше, ПОКАЗ);
+    clearInterval(часы); clearInterval(печать); if (глитч) clearInterval(глитч);
+    if (!document.hidden) {
+      часы = setInterval(дальше, ЖИЗНЬ);
+      напечатать(фразы[i]);
+      if (!тихо) глитч = setInterval(() => {
+        полоса.dataset.glitch = '1';
+        setTimeout(() => delete полоса.dataset.glitch, 220);
+      }, ГЛИТЧ_НЕ_ЧАЩЕ + Math.random() * 2500);
+    }
   });
 })();

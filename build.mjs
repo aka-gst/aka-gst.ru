@@ -771,16 +771,14 @@ const фразыСергея = (() => {
 })();
 
 const polosaFraz = фразыСергея.length
-  ? `<div class="hero-term" data-term>
-            <span class="hero-term-znak" aria-hidden="true">&gt;</span>
-            <span class="hero-term-tekst"></span>
-          </div>
+  ? `<div class="hero-term" data-term aria-hidden="true">
+        <span class="hero-term-znak"></span><span class="hero-term-tekst"></span><span class="hero-term-kursor"></span>
+      </div>
           <script type="application/json" data-term-frazy>${JSON.stringify(фразыСергея).replace(/</g, '\\u003c')}</script>`
   : '';
 
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
-        ${polosaFraz}
         <div class="work-duet">
           <div class="work-col work-col--gateway">
           <article class="work-system work-gateway">
@@ -1239,6 +1237,7 @@ const html = `<!doctype html>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
       ${brand('work', { switchable: true })}
+      ${polosaFraz}
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
           'work'

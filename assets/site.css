@@ -1691,35 +1691,51 @@ article.gcard .launch { color: var(--dim); }
 .quequest-copy h3 a { color: inherit; text-decoration: none; }
 .quequest-copy h3 a:hover { color: var(--accent); }
 
-/* Полоска терминала с фразами, которые Сергей ловил и записывал сам.
-   Его слова: «мож пусть на сайте будет полоска терминала, куда иногда
-   вылезают прикольные фразы такие?» — смысл в том, чтобы человек увидел,
-   что ИИ бывает живым и смешным, а не только полезным.
-   Высота фиксирована НАРОЧНО: фразы разной длины, и без этого соседние
-   блоки прыгали бы при каждой смене. Кривые и длительности — из аниматеки. */
+/* Строка терминала рядом с названием сайта: фразы, которые Сергей ловил и
+   записывал сам. Его правка: «рядом с названием сайта, а не отдельной полосой
+   ниже… пусть читается как строка терминала возле логотипа, а не как баннер» —
+   поэтому ни рамки, ни подложки, только знак, текст и курсор.
+   Высота фиксирована: фразы разной длины и набираются по букве, а без
+   фиксации шапка дышала бы на каждом символе. */
 .hero-term {
-  /* По центру, а не сверху: высота под три строки зарезервирована всегда,
-     и короткая фраза, прижатая к верху, выглядит забытой в пустой коробке. */
-  display: flex; gap: 9px; align-items: center;
-  margin: 0 0 16px; padding: 9px 12px;
-  border: 1px solid var(--line-soft); border-radius: 10px;
-  background: var(--bg-soft);
-  font: 500 13px/1.5 var(--mono); color: var(--muted);
-  min-height: calc(1.5em * 2 + 18px);
+  display: flex; align-items: center; gap: 6px;
+  flex: 1 1 auto; min-width: 0;
+  font: 500 11.5px/1.45 var(--mono); color: var(--dim);
+  height: 1.45em; overflow: hidden;
 }
-.hero-term-znak { flex: none; color: var(--accent); }
-.hero-term-tekst {
-  min-width: 0;
-  transition: opacity var(--an-raskrytie, 220ms) var(--an-vyhod, ease),
-              transform var(--an-raskrytie, 220ms) var(--an-vyhod, ease);
+.hero-term-znak { flex: none; color: var(--accent); opacity: .8; }
+.hero-term-tekst { min-width: 0; white-space: pre-wrap; }
+.hero-term-kursor {
+  flex: none; width: .55em; height: 1em; background: var(--accent); opacity: .75;
+  animation: term-migat 1.05s steps(1, end) infinite;
 }
-.hero-term-tekst[data-uhodit] { opacity: 0; transform: translateY(-3px); }
+@keyframes term-migat { 0%, 49% { opacity: .75 } 50%, 100% { opacity: 0 } }
+/* Глитч: короткий сдвиг, а не рябь. Высоту не трогает — только по горизонтали
+   и на доли секунды, иначе строка мельтешит и мешает читать. */
+.hero-term[data-glitch] .hero-term-tekst { animation: term-glitch 180ms steps(2, end) 1; }
+@keyframes term-glitch {
+  0% { transform: translateX(0) }
+  25% { transform: translateX(-1.5px); opacity: .75 }
+  50% { transform: translateX(1.5px) }
+  75% { transform: translateX(-.5px); opacity: .9 }
+  100% { transform: translateX(0) }
+}
 @media (prefers-reduced-motion: reduce) {
-  .hero-term-tekst { transition: none; }
-  .hero-term-tekst[data-uhodit] { opacity: 1; transform: none; }
+  .hero-term-kursor { animation: none; opacity: .45; }
+  .hero-term[data-glitch] .hero-term-tekst { animation: none; }
 }
-@media (max-width: 700px) {
-  /* На телефоне фразы длиннее в строках, поэтому место под три строки:
-     «текст не режется» важнее пары лишних пикселей первого экрана. */
-  .hero-term { font-size: 12.5px; padding: 8px 10px; min-height: calc(1.5em * 3 + 16px); }
+@media (max-width: 900px) {
+  /* Уходит на вторую строку шапки: рядом с названием места уже нет, а резать
+     фразу нельзя. Две строки высоты — самая длинная фраза помещается целиком. */
+  .topbar { flex-wrap: wrap; }
+  .hero-term { flex-basis: 100%; order: 9; height: calc(1.45em * 2); align-items: flex-start; }
+}
+
+/* Вариант «б»: робот в самом логотипе, строка идёт без значка.
+   Ставится скриптом только при ?vid=b — вариант выбирает Сергей, не мы. */
+.brand { position: relative; }
+.brand-robot {
+  position: absolute; right: -3px; bottom: -2px;
+  display: inline-flex; padding: 2px; border-radius: 6px;
+  background: var(--bg); color: var(--accent); line-height: 0;
 }
