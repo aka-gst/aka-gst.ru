@@ -767,7 +767,11 @@ const фразыСергея = (() => {
     return [];
   }
   const д = JSON.parse(readFileSync(путь, 'utf8'));
-  return Array.isArray(д.frazy) ? д.frazy : [];
+  const все = Array.isArray(д.frazy) ? д.frazy : [];
+  // Решения Сергея от 7 сентября, по фразам поимённо. В его файле они
+  // остаются все — на витрину идут не все, и это его отбор, не наш.
+  const НЕ_НА_САЙТ = ['Перед показом заказчику не забудь написать боту хоть /start.'];
+  return все.filter((ф) => !НЕ_НА_САЙТ.includes(ф));
 })();
 
 const polosaFraz = фразыСергея.length

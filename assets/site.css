@@ -1742,3 +1742,16 @@ article.gcard .launch { color: var(--dim); }
   display: inline-flex; padding: 2px; border-radius: 6px;
   background: var(--bg); color: var(--accent); line-height: 0;
 }
+
+/* Полоска пути у Gateway оживает так же, как у Dharma: Сергею нравится, как
+   у Dharma «выбор — агент — заказ» проявляется по шагам, и он попросил тот же
+   ритм у «запрос — обрыв — ответ всё равно». Кривая, длительность и задержка
+   второго отрезка взяты у Dharma один в один — иначе карточки на одном экране
+   вели бы себя по-разному, и это читалось бы как недоделка.
+   Высоту не трогаем: анимируется только масштаб по горизонтали. */
+@media (prefers-reduced-motion: no-preference) {
+  .work-gateway-proof:hover .gw-journey i,
+  .work-gateway-proof:focus-visible .gw-journey i { animation: dharma-route .8s ease-in-out both; }
+  .work-gateway-proof:hover .gw-journey i:nth-of-type(2),
+  .work-gateway-proof:focus-visible .gw-journey i:nth-of-type(2) { animation-delay: .38s; }
+}
