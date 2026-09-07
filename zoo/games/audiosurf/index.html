@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#17312f" />
     <title>Аудиосёрф — Zoo</title>
     <link rel="stylesheet" href="../../styles.css" />
-    <link rel="stylesheet" href="surf.css" />
+    <link rel="stylesheet" href="surf.css?v=20260907-1" />
   </head>
   <body class="surf-body">
     <main class="surf">
@@ -17,8 +17,8 @@
       </header>
 
       <section class="surf-intro" id="intro">
-        <p class="surf-lead">Трасса строится из вашей музыки: ритм становится поворотами,
-          громкие места — плотностью блоков. Каждый трек даёт свою трассу.</p>
+        <p class="surf-lead">Трасса строится из вашей музыки: удары становятся блоками,
+          а громкие места — их плотными сериями. Каждый трек даёт свою трассу.</p>
         <p class="surf-privacy"><b>Файл никуда не отправляется.</b> Он разбирается прямо в браузере
           и остаётся на устройстве. Ни загрузки, ни сохранения на сервере.</p>
         <label class="surf-pick">
@@ -32,6 +32,9 @@
       </section>
 
       <section class="surf-stage" id="stage" hidden>
+        <p class="surf-guide"><b>Цель:</b> ведите светлый корабль по трём полосам.
+          Цветные блоки собирайте, серые — пропускайте.</p>
+        <p class="surf-status" id="status" aria-live="polite">Трасса готова</p>
         <canvas id="road" width="720" height="960"></canvas>
         <div class="surf-hud">
           <div><span>Очки</span><strong id="score">0</strong></div>
@@ -55,6 +58,6 @@
       </section>
     </main>
     <script src="../../karma.js"></script>
-    <script src="surf.js"></script>
+    <script src="surf.js?v=20260907-1"></script>
   </body>
 </html>

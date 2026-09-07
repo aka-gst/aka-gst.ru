@@ -7,6 +7,8 @@
 (() => {
   const $ = id => document.getElementById(id);
   const LANES = 3;
+  const AHEAD = 2.6;
+  const START_DELAY = AHEAD;
   const canvas = $('road'), ctx = canvas.getContext('2d');
 
   const COLORS = ['#c65e42', '#d39a3c', '#4f9d8a'];
@@ -14,8 +16,17 @@
 
   let audio = null, buffer = null, source = null, startedAt = 0, pausedAt = 0;
   let blocks = [], lane = 1, score = 0, combo = 0, picked = 0, running = false, raf = null;
+  const pickLabel = document.querySelector('.surf-pick span');
+  const pickNote = $('pickNote');
+  const originalPickNote = pickNote.textContent;
+
+  function setLoading(loading) {
+    pickLabel.textContent = loading ? 'Разбираю трек…' : 'Выбрать трек с устройства';
+    pickNote.textContent = loading ? 'Файл остаётся на устройстве. Сейчас появится трасса.' : originalPickNote;
+  }
 
   function fail(message) {
+    setLoading(false);
     const box = $('error');
     box.textContent = message;
     box.hidden = false;
@@ -79,13 +90,13 @@
       ctx.stroke();
     }
 
-    const AHEAD = 2.6;                        // сколько секунд трассы видно
+    const playerY = h - 58;                   // удар и блок встречаются у корабля
     for (const block of blocks) {
       const dt = block.time - now;
       if (dt < -0.15 || dt > AHEAD) continue;
       const p = 1 - dt / AHEAD;               // 0 у горизонта, 1 у игрока
       const depth = p * p;                    // перспектива
-      const y = horizon + (h - horizon) * depth;
+      const y = horizon + (playerY - horizon) * depth;
       const spread = 0.18 + 0.82 * depth;
       const cx = w / 2 + (block.lane - (LANES - 1) / 2) * laneW * spread;
       const size = 10 + 54 * depth;
@@ -123,6 +134,8 @@
   function loop() {
     if (!running) return;
     const now = audio.currentTime - startedAt;
+    if (now < 0 && $('status').dataset.mode !== 'move') $('status').textContent = `Старт через ${Math.max(1, Math.ceil(-now))}… Уже можно выбрать полосу`;
+    else if ($('status').dataset.mode !== 'move') $('status').textContent = '← → меняют полосу';
     collide(now);
     draw(now);
     if (buffer && now > buffer.duration + 0.4) return finish();
@@ -143,6 +156,7 @@
 
   async function play(file) {
     $('error').hidden = true;
+    setLoading(true);
     try {
       audio = audio || new (window.AudioContext || window.webkitAudioContext)();
       await audio.resume();
@@ -158,18 +172,28 @@
     $('score').textContent = '0'; $('combo').textContent = '0';
     $('trackName').textContent = file.name.replace(/\.[^.]+$/, '');
     $('intro').hidden = true; $('done').hidden = true; $('stage').hidden = false;
+    $('status').dataset.mode = 'countdown';
+    setLoading(false);
 
     source = audio.createBufferSource();
     source.buffer = buffer;
     source.connect(audio.destination);
-    startedAt = audio.currentTime;
-    source.start();
+    startedAt = audio.currentTime + START_DELAY;
+    source.start(startedAt);
     running = true;
     ZooKarma.start('audiosurf');
     loop();
   }
 
-  const move = delta => { lane = Math.min(LANES - 1, Math.max(0, lane + delta)); };
+  const move = delta => {
+    lane = Math.min(LANES - 1, Math.max(0, lane + delta));
+    const names = ['левая', 'центральная', 'правая'];
+    $('status').dataset.mode = 'move';
+    $('status').textContent = `Полоса: ${names[lane]} — корабль переместился`;
+    setTimeout(() => {
+      if (running) $('status').dataset.mode = audio.currentTime < startedAt ? 'countdown' : 'play';
+    }, 650);
+  };
   $('left').onclick = () => move(-1);
   $('right').onclick = () => move(1);
   addEventListener('keydown', event => {
