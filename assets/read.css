@@ -2,25 +2,33 @@
    ничем не обязана карточкам проектов — у прозы своя мера. */
 
 .reader {
-  /* Грунты. Тёмный тут теплее общесайтового: чистый #0b0c0d под три тысячи
-     слов режет глаза, а бумажный нужен потому, что читают и при свете. */
-  --ink: #e6e3dd;
-  --ink-soft: #97968f;
-  --ground: #0d0d0e;
-  --ground-soft: #17171a;
-  --rule: #282a2e;
-  --accent-read: #7ad9a4;
+  /* Та же ночная палитра, что у вкладки рассказов на главной: розовый
+     обозначает чтение, фиолетовый даёт глубину, мятный остаётся связью с
+     общим знаком сайта. Чисто серый прежний грунт выглядел отдельной старой
+     страницей, хотя шапка уже была новой. */
+  --ink: #f0ebf3;
+  --ink-soft: #aaa3b3;
+  --ground: #0b0911;
+  --ground-soft: #15101d;
+  --rule: #352c46;
+  --accent-read: #ff72b8;
+  --accent-read-alt: #a77bff;
+  --accent-read-third: #70e0b1;
   --read-size: 19px;
-  background: var(--ground);
+  background:
+    radial-gradient(circle at 86% 0, rgba(167, 123, 255, .09), transparent 34rem),
+    var(--ground);
   color: var(--ink);
 }
 html[data-ground="paper"] .reader {
   --ink: #1b1e1c;
   --ink-soft: #5e6461;
   --ground: #f2f1ee;
-  --ground-soft: #e6e7e4;
-  --rule: #d3d6d3;
-  --accent-read: #1f7a4d;
+  --ground-soft: #eae5ed;
+  --rule: #d7ccdc;
+  --accent-read: #8f295e;
+  --accent-read-alt: #6842a4;
+  --accent-read-third: #1f7658;
 }
 html[data-size="s"] .reader { --read-size: 17px; }
 html[data-size="l"] .reader { --read-size: 21px; }
@@ -285,27 +293,37 @@ html[data-size="xl"] .reader { --read-size: 24px; }
      ЗАЗОР и общая ширина, а не длина строки до бесконечности. */
   .reader-main--wide {
     max-width: min(1400px, 100% - 48px);
-    display: grid; grid-template-columns: 240px minmax(0, 860px); gap: 56px;
+    display: grid; grid-template-columns: 252px minmax(0, 860px); gap: 48px;
     justify-content: center;
     align-items: start;
   }
   .reader-side {
-    display: block; position: sticky; top: 18px;
+    display: grid; position: sticky; top: 18px; gap: 12px;
     max-height: calc(100vh - 40px); overflow-y: auto;
     padding-right: 8px; font-size: 13px;
   }
-  .reader-side-book {
-    position: relative;
-    margin: 32px 0 8px; padding: 7px 9px;
-    border-left: 2px solid var(--accent-read); border-radius: 6px;
-    background: var(--ground-soft);
-    font-family: var(--mono); font-size: 10px;
-    letter-spacing: .1em; text-transform: uppercase; color: var(--ink);
+  .reader-side-group {
+    --group-accent: var(--accent-read);
+    overflow: hidden; padding: 8px 9px 10px;
+    border: 1px solid var(--rule); border-radius: 12px;
+    background: linear-gradient(145deg, rgba(255, 114, 184, .07), transparent 58%), var(--ground-soft);
+    box-shadow: inset 3px 0 0 var(--group-accent);
   }
-  .reader-side-book:first-child { margin-top: 0; }
-  .reader-side ul + .reader-side-book::before {
-    content: ""; position: absolute; top: -17px; left: 0; right: 0;
-    height: 1px; background: var(--rule);
+  .reader-side-group:nth-child(2) { --group-accent: var(--accent-read-alt); }
+  .reader-side-group:nth-child(3) { --group-accent: var(--accent-read-third); }
+  .reader-side-group.is-current {
+    border-color: var(--group-accent);
+    box-shadow: inset 3px 0 0 var(--group-accent), 0 10px 28px rgba(0, 0, 0, .2);
+  }
+  .reader-side-book {
+    display: grid; gap: 3px;
+    margin: 0 0 5px; padding: 3px 6px 8px;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--group-accent);
+  }
+  .reader-side-meta {
+    color: var(--ink-soft); font-size: 9px; letter-spacing: .06em;
   }
   .reader-side ul { list-style: none; margin: 0; padding: 0; }
   .reader-side li { margin: 0; }
@@ -317,7 +335,7 @@ html[data-size="xl"] .reader { --read-size: 24px; }
   /* Текущий помечен полосой слева, а не цветом: цвет здесь уже занят. */
   .reader-side a[aria-current] {
     color: var(--ink); background: var(--ground-soft);
-    box-shadow: inset 2px 0 0 var(--accent-read);
+    box-shadow: inset 2px 0 0 var(--group-accent);
   }
   .reader .topbar, .reader-top { max-width: var(--maxw); }
 }

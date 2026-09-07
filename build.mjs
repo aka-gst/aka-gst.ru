@@ -1621,7 +1621,8 @@ const readerSide = (current) => `
       <nav class="reader-side" aria-label="Все рассказы">
 ${сборникиПоказ
   .map(
-    (c) => `        <p class="reader-side-book">${esc(c.title)}</p>
+    (c) => `        <section class="reader-side-group${c.stories.some((st) => st.slug === current) ? ' is-current' : ''}" aria-labelledby="reader-side-${esc(c.id)}">
+          <p class="reader-side-book" id="reader-side-${esc(c.id)}"><span>${esc(c.title)}</span><span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span></p>
         <ul>
 ${c.stories
   .map(
@@ -1630,7 +1631,8 @@ ${c.stories
     }>${esc(st.title)}</a></li>`
   )
   .join('\n')}
-        </ul>`
+        </ul>
+        </section>`
   )
   .join('\n')}
       </nav>`;

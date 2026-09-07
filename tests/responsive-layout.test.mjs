@@ -336,19 +336,30 @@ test('рассказы разбиты на абзацы и подписаны', 
 test('боковое оглавление явно разделяет три сборника', () => {
   const css = site('assets/read.css');
   const page = site('rasskazy/pulya-v-stakane/index.html');
+  const правилоГруппы = css.match(/\.reader-side-group\s*\{([^}]+)\}/)?.[1] || '';
   const правилоЗаголовка = css.match(/\.reader-side-book\s*\{([^}]+)\}/)?.[1] || '';
-  const правилоРазделителя = css.match(/\.reader-side ul \+ \.reader-side-book::before\s*\{([^}]+)\}/)?.[1] || '';
 
   assert.equal((page.match(/class="reader-side-book"/g) || []).length, 3);
-  assert.match(правилоЗаголовка, /border-left:\s*2px solid var\(--accent-read\)/);
-  assert.match(правилоРазделителя, /background:\s*var\(--rule\)/);
+  assert.equal((page.match(/class="reader-side-group(?: is-current)?"/g) || []).length, 3);
+  assert.equal((page.match(/class="reader-side-meta"/g) || []).length, 3);
+  assert.equal((page.match(/class="reader-side-group is-current"/g) || []).length, 1);
+  assert.match(правилоГруппы, /border:\s*1px solid var\(--rule\)/);
+  assert.match(правилоГруппы, /background:/);
+  assert.match(правилоЗаголовка, /border-bottom:\s*1px solid var\(--rule\)/);
+  assert.match(css, /\.reader-side-group:nth-child\(2\)\s*\{[^}]*--group-accent:\s*var\(--accent-read-alt\)/);
+  assert.match(css, /\.reader-side-group:nth-child\(3\)\s*\{[^}]*--group-accent:\s*var\(--accent-read-third\)/);
+  assert.match(css, /--accent-read:\s*#ff72b8/, 'отдельная читалка должна быть в палитре раздела рассказов');
+  assert.match(css, /html\[data-ground="paper"\] \.reader\s*\{[^}]*--accent-read-alt:\s*#6842a4[^}]*--accent-read-third:\s*#1f7658/s,
+    'у трёх корешков должны оставаться контрастные варианты на бумажном фоне');
 
-  // Отрицательный контроль: старая версия без маркера и разделителя обязана
-  // провалить ту же проверку, иначе тест стережёт только наличие заголовков.
-  const старыйЗаголовок = правилоЗаголовка.replace(/border-left:\s*2px solid var\(--accent-read\);?/, '');
-  const старыйРазделитель = '';
-  assert.doesNotMatch(старыйЗаголовок, /border-left:\s*2px solid var\(--accent-read\)/);
-  assert.doesNotMatch(старыйРазделитель, /background:\s*var\(--rule\)/);
+  // Отрицательный контроль: прежняя плоская колонка с одними p + ul не
+  // проходит — наличие трёх названий само по себе не доказывает разделение.
+  const старыйHtml = page
+    .replace(/<section class="reader-side-group(?: is-current)?"[^>]*>/g, '')
+    .replace(/<\/section>/g, '')
+    .replace(/<span class="reader-side-meta">[^<]*<\/span>/g, '');
+  assert.equal((старыйHtml.match(/class="reader-side-group(?: is-current)?"/g) || []).length, 0);
+  assert.equal((старыйHtml.match(/class="reader-side-meta"/g) || []).length, 0);
 });
 
 test('на главной обложка раскрывает один сборник, затем рассказ', () => {
