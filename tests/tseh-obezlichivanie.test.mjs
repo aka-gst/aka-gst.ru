@@ -21,7 +21,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, existsSync, mkdtempSync, copyFileSync, appendFileSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, copyFileSync, appendFileSync, readdirSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -61,6 +61,18 @@ test('проверка краснеет на подсаженном личном
 test('сборка не дописала в ленту своего', { skip: !existsSync(лентаHtml) && 'ленты в дереве нет' }, () => {
   const лента = readFileSync(лентаHtml, 'utf8').trim();
   const страница = readFileSync(join(корень, 'index.html'), 'utf8');
+  // Ленту переписывают Руки, непрерывно и без нас. Если она НОВЕЕ собранной
+  // страницы — страница просто старее, и сказать про конвейер нечего: это
+  // цикл пересборки, а не поломка. Проверка имеет смысл только когда страница
+  // собрана ПОСЛЕ ленты.
+  //
+  // Без этой оговорки тест краснел случайно — поймано 7 сентября: набор дал
+  // 52 из 53 и на следующем прогоне снова 53. Мигающий тест хуже
+  // отсутствующего: к нему привыкают и его отключают вместе с тем, что он
+  // стерёг.
+  if (statSync(лентаHtml).mtimeMs > statSync(join(корень, 'index.html')).mtimeMs) {
+    return;   // лента свежее страницы — сравнивать нечего
+  }
   assert.ok(лента.length > 500, `лента подозрительно короткая: ${лента.length} символов`);
   assert.ok(
     страница.includes(лента),
