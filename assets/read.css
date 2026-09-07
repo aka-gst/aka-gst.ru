@@ -276,9 +276,17 @@ html[data-size="xl"] .reader { --read-size: 24px; }
 .reader-side { display: none; }
 
 @media (min-width: 1180px) {
+  /* Ширина растёт вместе с экраном, а не стоит на 1060. Сергей сказал дважды:
+     «всё ещё всё жмётся к левому краю» — на широком мониторе колонка занимала
+     0.55 ширины, и текст стоял правее центра, потому что слева 240 точек
+     оглавления, а справа пусто.
+     Строку прозы при этом не удлиняем без предела: 860 точек это примерно
+     восемьдесят знаков, дальше глаз теряет начало следующей строки. Растёт
+     ЗАЗОР и общая ширина, а не длина строки до бесконечности. */
   .reader-main--wide {
-    max-width: 1060px;
-    display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px;
+    max-width: min(1400px, 100% - 48px);
+    display: grid; grid-template-columns: 240px minmax(0, 860px); gap: 56px;
+    justify-content: center;
     align-items: start;
   }
   .reader-side {
