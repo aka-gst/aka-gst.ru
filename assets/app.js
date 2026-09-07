@@ -794,3 +794,50 @@
     играть(текущий);
   });
 })();
+
+// Полоска терминала: фразы, которые Сергей ловил и записывал сам.
+// Тихо, а не мигает: пауза достаточная, чтобы прочитать, высота полосы
+// фиксирована стилями, соседние блоки не двигаются. Прокрутку не трогаем,
+// ничего не запускаем.
+(() => {
+  const полоса = document.querySelector('[data-term]');
+  const данные = document.querySelector('[data-term-frazy]');
+  if (!полоса || !данные) return;
+
+  let фразы = [];
+  try {
+    фразы = JSON.parse(данные.textContent);
+  } catch {
+    return;                       // испорченные данные — молча без полосы
+  }
+  if (!Array.isArray(фразы) || !фразы.length) return;
+
+  const узел = полоса.querySelector('.hero-term-tekst');
+  if (!узел) return;
+
+  // Порядок его, но начинаем с любой: иначе большинство посетителей увидит
+  // только первые две-три фразы из семнадцати.
+  let i = Math.floor(Math.random() * фразы.length);
+  узел.textContent = фразы[i];
+
+  const тихо = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ПОКАЗ = 7000;             // столько фраза висит: хватает прочитать длинную
+  const УХОД = 240;               // столько уходит и приходит
+
+  const дальше = () => {
+    i = (i + 1) % фразы.length;
+    if (тихо) { узел.textContent = фразы[i]; return; }
+    узел.dataset.uhodit = '1';
+    setTimeout(() => {
+      узел.textContent = фразы[i];
+      delete узел.dataset.uhodit;
+    }, УХОД);
+  };
+
+  let таймер = setInterval(дальше, ПОКАЗ);
+  // Вкладку убрали — не крутим впустую и не тратим батарею.
+  document.addEventListener('visibilitychange', () => {
+    clearInterval(таймер);
+    if (!document.hidden) таймер = setInterval(дальше, ПОКАЗ);
+  });
+})();

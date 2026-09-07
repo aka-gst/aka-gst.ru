@@ -751,8 +751,36 @@ ${прогон.шаги.map((ш) => `                  <li data-gw="${esc(ш.в�
                 <p class="gw-case">${esc(прогон.имя)}${gwОдинПрогон || !прогон.когда ? '' : ` · прогон ${esc(когдаПрогон(прогон.когда))}`} · ${esc(прогон.примечание)}</p>
               </div>`).join('\n              ');
 
+// Полоска терминала с фразами, которые Сергей ловил и записывал сам.
+// Его задумка: «мож пусть на сайте будет полоска терминала, куда иногда
+// вылезают прикольные фразы такие?» — чтобы человек увидел, что ИИ бывает
+// живым и смешным, а не только полезным.
+//
+// Фразы переносятся ДОСЛОВНО из его коллекции (правило 35а): ни сокращать,
+// ни приглаживать нельзя. Поводы и пометки, лежащие рядом в его файле, на
+// сайт не идут — только сама фраза. Источник — data/frazy.json, копия в
+// репозитории, чтобы страница не зависела от файла в личной папке.
+const фразыСергея = (() => {
+  const путь = join(root, 'data/frazy.json');
+  if (!existsSync(путь)) {
+    console.warn('  ! data/frazy.json нет — полоска терминала не выводится');
+    return [];
+  }
+  const д = JSON.parse(readFileSync(путь, 'utf8'));
+  return Array.isArray(д.frazy) ? д.frazy : [];
+})();
+
+const polosaFraz = фразыСергея.length
+  ? `<div class="hero-term" data-term>
+            <span class="hero-term-znak" aria-hidden="true">&gt;</span>
+            <span class="hero-term-tekst"></span>
+          </div>
+          <script type="application/json" data-term-frazy>${JSON.stringify(фразыСергея).replace(/</g, '\\u003c')}</script>`
+  : '';
+
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
+        ${polosaFraz}
         <div class="work-duet">
           <div class="work-col work-col--gateway">
           <article class="work-system work-gateway">

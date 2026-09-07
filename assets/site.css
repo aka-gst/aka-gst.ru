@@ -1690,3 +1690,34 @@ article.gcard .launch { color: var(--dim); }
 .quequest-open:hover { box-shadow: var(--glow); }
 .quequest-copy h3 a { color: inherit; text-decoration: none; }
 .quequest-copy h3 a:hover { color: var(--accent); }
+
+/* Полоска терминала с фразами, которые Сергей ловил и записывал сам.
+   Его слова: «мож пусть на сайте будет полоска терминала, куда иногда
+   вылезают прикольные фразы такие?» — смысл в том, чтобы человек увидел,
+   что ИИ бывает живым и смешным, а не только полезным.
+   Высота фиксирована НАРОЧНО: фразы разной длины, и без этого соседние
+   блоки прыгали бы при каждой смене. Кривые и длительности — из аниматеки. */
+.hero-term {
+  display: flex; gap: 9px; align-items: flex-start;
+  margin: 0 0 16px; padding: 9px 12px;
+  border: 1px solid var(--line-soft); border-radius: 10px;
+  background: var(--bg-soft);
+  font: 500 13px/1.5 var(--mono); color: var(--muted);
+  min-height: calc(1.5em * 2 + 18px);
+}
+.hero-term-znak { flex: none; color: var(--accent); }
+.hero-term-tekst {
+  min-width: 0;
+  transition: opacity var(--an-raskrytie, 220ms) var(--an-vyhod, ease),
+              transform var(--an-raskrytie, 220ms) var(--an-vyhod, ease);
+}
+.hero-term-tekst[data-uhodit] { opacity: 0; transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-term-tekst { transition: none; }
+  .hero-term-tekst[data-uhodit] { opacity: 1; transform: none; }
+}
+@media (max-width: 700px) {
+  /* На телефоне фразы длиннее в строках, поэтому место под три строки:
+     «текст не режется» важнее пары лишних пикселей первого экрана. */
+  .hero-term { font-size: 12.5px; padding: 8px 10px; min-height: calc(1.5em * 3 + 16px); }
+}
