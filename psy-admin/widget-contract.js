@@ -1,5 +1,5 @@
-import { quickQuestions } from "./content.js?v=psy-widget-20260908-02";
-import { answerQuestion } from "./router.js?v=psy-widget-20260908-02";
+import { quickQuestions } from "./content.js?v=psy-widget-20260908-03";
+import { answerQuestion } from "./router.js?v=psy-widget-20260908-03";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",

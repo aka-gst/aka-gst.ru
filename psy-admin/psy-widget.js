@@ -1,12 +1,11 @@
-import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-02";
+import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-03";
 
-const voicePreviewUrl = new URL("./audio/voices/psyadmin-A.wav?v=psy-widget-20260908-02", import.meta.url).href;
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-02&theme=orion-blue-20260907", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-03&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -19,30 +18,22 @@ mount.innerHTML = `
       <header class="psy-widget-head">
         <div><b>AI-администратор</b><span>Можно спросить голосом или написать. Ответ помощника будет озвучен.</span></div>
         <div class="psy-widget-head-actions">
-          <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить голос" title="Остановить голос: пробел">■ Стоп</button>
-          <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
+          <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить голос" title="Остановить голос: пробел">Остановить голос</button>
+          <button class="psy-widget-fullscreen" type="button" aria-label="Увеличить окно помощника">↗</button>
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
         </div>
       </header>
-      <div class="psy-widget-voice-preview" aria-label="Предварительные варианты голоса">
-        <span>Голос:</span>
-        <button type="button" data-voice-preview="${voicePreviewUrl}" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
-      </div>
       <div class="psy-widget-evaluation">
-        <button class="psy-widget-evaluation-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-evaluation-content">Проверить помощника</button>
-        <div id="psy-widget-evaluation-content" hidden>
-        <label for="psy-widget-evaluation-select">60 проверочных вопросов</label>
-        <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select" aria-describedby="psy-widget-evaluation-status">
-          <option value="">Выбери вопрос для проверки</option>
+        <label for="psy-widget-evaluation-select">Частые вопросы</label>
+        <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select">
+          <option value="">Выберите вопрос</option>
         </select>
-        <p class="psy-widget-evaluation-status" id="psy-widget-evaluation-status" aria-live="polite"></p>
-        </div>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
       <section class="psy-widget-handoff-area" aria-label="Заявка в центр Орион-С">
-        <button class="psy-widget-handoff-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-handoff">Запись, аренда и оплата</button>
+        <button class="psy-widget-handoff-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-handoff">Оставить заявку</button>
         <form class="psy-widget-handoff" id="psy-widget-handoff" hidden>
-          <p><b>Запись, семинары и аренда</b><span>Пока точного расписания нет. Укажите, что вам нужно, желаемые дату и время — администратор всё уточнит и свяжется с вами. После согласования услугу можно оплатить на официальной странице.</span></p>
+          <p><b>Запись, семинары и аренда</b><span>Расписание мероприятий уже опубликовано. Для личных консультаций пока нет общего календаря свободных окон: укажите желаемые дату и время — администратор согласует их со специалистом и свяжется с вами.</span></p>
           <label>Что вас интересует?
             <select name="requestKind" required>
               <option value="specialist">Консультация психолога</option>
@@ -51,9 +42,9 @@ mount.innerHTML = `
             </select>
           </label>
           <label><span data-handoff-subject-label>К кому или на что хотите записаться?</span>
-            <input name="subject" list="psy-widget-specialists" maxlength="160" placeholder="Имя психолога или «помогите выбрать»" required>
+            <input name="subject" list="psy-widget-specialists" maxlength="160" placeholder="Выберите психолога или попросите администратора подобрать" required>
             <datalist id="psy-widget-specialists">
-              <option value="Помогите выбрать специалиста"></option>
+              <option value="Не знаю — администратор поможет подобрать"></option>
               <option value="Смирнова Юлия Сергеевна"></option>
               <option value="Сербина Людмила Николаевна"></option>
               <option value="Белозеров Евгений Владимирович"></option>
@@ -127,17 +118,12 @@ const mic = root.querySelector(".psy-widget-mic");
 const previewStopButton = root.querySelector("[data-voice-stop]");
 const voiceStatus = root.querySelector(".psy-widget-voice-status");
 const evaluationSelect = root.querySelector(".psy-widget-evaluation-select");
-const evaluationStatus = root.querySelector(".psy-widget-evaluation-status");
-const evaluationToggle = root.querySelector(".psy-widget-evaluation-toggle");
-const evaluationContent = root.querySelector("#psy-widget-evaluation-content");
 const handoffToggle = root.querySelector(".psy-widget-handoff-toggle");
 const handoffForm = root.querySelector(".psy-widget-handoff");
 const handoffStatus = root.querySelector(".psy-widget-handoff-status");
 const handoffKind = handoffForm.querySelector("[name='requestKind']");
 const handoffSubject = handoffForm.querySelector("[name='subject']");
 const handoffSubjectLabel = handoffForm.querySelector("[data-handoff-subject-label]");
-let previewAudio = null;
-let previewAudioContext = null;
 let recognition = null;
 let listening = false;
 let finalizedTranscript = "";
@@ -199,7 +185,7 @@ function render() {
   root.style.setProperty("--psy-widget-touch-target", `${presentation.minTouchTarget}px`);
   panel.hidden = !state.panelVisible;
   trigger.setAttribute("aria-expanded", String(state.open));
-  fullScreenButton.setAttribute("aria-label", state.fullScreen ? "Вернуть обычный размер" : "Развернуть чат на весь экран");
+  fullScreenButton.setAttribute("aria-label", state.fullScreen ? "Вернуть обычный размер" : "Увеличить окно помощника");
   fullScreenButton.setAttribute("aria-pressed", String(state.fullScreen));
   if (state.open && document.activeElement === trigger) questionInput.focus({ preventScroll: true });
   if (state.returnFocusToTrigger) trigger.focus();
@@ -263,15 +249,6 @@ function stopListening() {
 
 function stopVoice({ announce = true } = {}) {
   stopListening();
-  if (previewAudio) {
-    previewAudio.pause();
-    previewAudio.currentTime = 0;
-    previewAudio = null;
-  }
-  if (previewAudioContext) {
-    void previewAudioContext.close();
-    previewAudioContext = null;
-  }
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   setVoicePlaying(false);
   if (announce) setVoiceStatus("Голос остановлен.");
@@ -283,26 +260,6 @@ function voiceIsPlaying() {
 
 function voiceIsActive() {
   return listening || voiceIsPlaying();
-}
-
-function softenPreviewTone(button) {
-  const gain = Number(button.dataset.voiceEqGain || 0);
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!previewAudio || !gain || !AudioContext) return;
-  try {
-    previewAudioContext = new AudioContext();
-    const source = previewAudioContext.createMediaElementSource(previewAudio);
-    const filter = previewAudioContext.createBiquadFilter();
-    filter.type = "peaking";
-    filter.frequency.value = 520;
-    filter.Q.value = 0.75;
-    filter.gain.value = gain;
-    source.connect(filter).connect(previewAudioContext.destination);
-    if (previewAudioContext.state === "suspended") void previewAudioContext.resume();
-  } catch {
-    // Браузер всё равно проиграет пример без эквалайзера.
-    previewAudioContext = null;
-  }
 }
 
 function speakReply(text) {
@@ -317,7 +274,7 @@ function speakReply(text) {
   if (russianVoice) utterance.voice = russianVoice;
   utterance.addEventListener("start", () => {
     setVoicePlaying(true);
-    setVoiceStatus("Помощник отвечает. Выключить звук можно кнопкой 🔇 или «Стоп».");
+    setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
   }, { once: true });
   utterance.addEventListener("end", () => {
     setVoicePlaying(false);
@@ -349,7 +306,9 @@ async function ask(question, askedByVoice = false) {
   appendMessage("user", { text: value });
   const fallback = routeWidgetQuestion(value);
   let result = fallback;
+  const scheduleAnswer = /orion-center\.ru\/schedule/.test(fallback.url || fallback.action?.url || "");
   try {
+    if (scheduleAnswer) throw new Error("use-published-schedule");
     const response = await fetch(assistantApiUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -358,8 +317,10 @@ async function ask(question, askedByVoice = false) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Помощник временно недоступен.");
     result = normalizeAssistantResult(data, fallback);
-  } catch {
-    setVoiceStatus("Сервер временно недоступен — показан проверенный ответ из резервной базы.");
+  } catch (error) {
+    if (error?.message !== "use-published-schedule") {
+      setVoiceStatus("Сервер временно недоступен — показан проверенный ответ из резервной базы.");
+    }
   }
   appendMessage("assistant", result);
   speakReply(result.spokenText || result.text);
@@ -408,49 +369,23 @@ questionForm.addEventListener("submit", (event) => {
   void ask(questionInput.value, false);
 });
 root.querySelectorAll("[data-question]").forEach((button) => button.addEventListener("click", () => void ask(button.dataset.question)));
-root.querySelectorAll("[data-voice-preview]").forEach((button) => button.addEventListener("click", () => {
-  stopVoice({ announce: false });
-  previewAudio = new Audio();
-  previewAudio.crossOrigin = "anonymous";
-  previewAudio.src = button.dataset.voicePreview;
-  previewAudio.volume = Number(button.dataset.voiceVolume || 1);
-  softenPreviewTone(button);
-  previewAudio.addEventListener("ended", () => {
-    setVoicePlaying(false);
-  }, { once: true });
-  setVoicePlaying(true);
-  previewAudio.play().then(() => setVoiceStatus(`Включён голос ${button.textContent}. Стоп — кнопкой или пробелом.`)).catch(() => {
-    setVoicePlaying(false);
-    setVoiceStatus("Не удалось включить пример голоса. Проверьте звук в браузере.");
-  });
-}));
 previewStopButton.addEventListener("click", () => stopVoice());
-evaluationToggle.addEventListener("click", () => {
-  const expanded = evaluationToggle.getAttribute("aria-expanded") !== "true";
-  evaluationToggle.setAttribute("aria-expanded", String(expanded));
-  evaluationContent.hidden = !expanded;
-  evaluationToggle.textContent = expanded ? "Скрыть проверочные вопросы" : "Проверить помощника";
-});
 evaluationSelect.addEventListener("change", () => {
   const option = evaluationSelect.selectedOptions[0];
-  if (!option?.dataset.question) {
-    evaluationStatus.textContent = "";
-    return;
-  }
-  evaluationStatus.textContent = `Ожидается: ${option.dataset.expected}.`;
+  if (!option?.dataset.question) return;
   void ask(option.dataset.question);
 });
 handoffToggle.addEventListener("click", () => {
   const expanded = handoffToggle.getAttribute("aria-expanded") !== "true";
   handoffToggle.setAttribute("aria-expanded", String(expanded));
   handoffForm.hidden = !expanded;
-  handoffToggle.textContent = expanded ? "Скрыть форму" : "Запись, аренда и оплата";
+  handoffToggle.textContent = expanded ? "Скрыть форму" : "Оставить заявку";
   if (expanded) handoffKind.focus({ preventScroll: true });
 });
 const handoffModes = {
   specialist: {
-    label: "К кому или на что хотите записаться?",
-    placeholder: "Имя психолога или «помогите выбрать»",
+    label: "К какому психологу хотите записаться?",
+    placeholder: "Выберите имя или попросите администратора подобрать",
   },
   seminar: {
     label: "Какой семинар или программа вас интересует?",
@@ -492,10 +427,13 @@ handoffForm.addEventListener("submit", async (event) => {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "Не удалось отправить заявку.");
-    handoffStatus.dataset.state = "success";
-    handoffStatus.textContent = `Заявка отправлена. Номер: ${result.publicCode}. ${result.message || "Администратор свяжется с вами."}`;
+    const successText = `Заявка отправлена. Номер: ${result.publicCode}. ${result.message || "Администратор центра проверит возможность записи и свяжется с вами."}`;
     handoffForm.reset();
     renderHandoffMode();
+    handoffForm.hidden = true;
+    handoffToggle.setAttribute("aria-expanded", "false");
+    handoffToggle.textContent = "Оставить заявку";
+    appendMessage("assistant", { kind: "success", text: successText });
   } catch (error) {
     handoffStatus.dataset.state = "error";
     handoffStatus.textContent = error?.message || "Сервис записи временно недоступен. Попробуйте ещё раз позже.";
