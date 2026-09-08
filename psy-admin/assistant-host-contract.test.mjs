@@ -139,10 +139,18 @@ try {
   await evaluate("document.querySelector('.psy-widget-trigger').click()");
   const initial = await evaluate(`(() => {
     const root = document.querySelector('[data-psy-widget]');
+    const launcher = root.querySelector('.psy-widget-trigger');
     const voiceButtons = [...root.querySelectorAll('[data-voice-preview]')];
     const stop = root.querySelector('[data-voice-stop]');
     return {
       marker: root.dataset.assistantHost,
+      launcherText: launcher?.textContent.replace(/\\s+/g, ''),
+      launcherLabel: launcher?.getAttribute('aria-label'),
+      launcherCount: root.querySelectorAll('.psy-widget-trigger').length,
+      launcherInsideActions: Boolean(root.querySelector('.psy-widget-actions .psy-widget-trigger, .psy-widget-handoff-area .psy-widget-trigger')),
+      launcherTextVisible: getComputedStyle(launcher.querySelector('span:last-child')).display !== 'none',
+      launcherWidth: launcher.getBoundingClientRect().width,
+      launcherHeight: launcher.getBoundingClientRect().height,
       voiceLabels: voiceButtons.map((button) => button.textContent.trim()),
       stopText: stop?.textContent.trim(),
       stopVisible: Boolean(stop && stop.getBoundingClientRect().width && stop.getBoundingClientRect().height),
@@ -152,6 +160,13 @@ try {
     };
   })()`);
   assert.equal(initial.marker, "live");
+  assert.equal(initial.launcherText, "✦Вампомочь?");
+  assert.equal(initial.launcherLabel, "Вам помочь?");
+  assert.equal(initial.launcherCount, 1);
+  assert.equal(initial.launcherInsideActions, false);
+  assert.equal(initial.launcherTextVisible, true);
+  assert.ok(initial.launcherWidth >= 44 && initial.launcherWidth <= 160);
+  assert.ok(initial.launcherHeight >= 44);
   assert.deepEqual(initial.voiceLabels, []);
   assert.equal(initial.stopText, "Остановить голос");
   assert.equal(initial.stopVisible, true);
@@ -267,11 +282,24 @@ try {
     const root = document.querySelector('[data-psy-widget]');
     const stop = root.querySelector('[data-voice-stop]').getBoundingClientRect();
     const mic = root.querySelector('.psy-widget-mic').getBoundingClientRect();
-    return { overflow: document.documentElement.scrollWidth - innerWidth, stopWidth: stop.width, stopHeight: stop.height, micWidth: mic.width, micHeight: mic.height };
+    const launcher = root.querySelector('.psy-widget-trigger');
+    return {
+      overflow: document.documentElement.scrollWidth - innerWidth,
+      stopWidth: stop.width,
+      stopHeight: stop.height,
+      micWidth: mic.width,
+      micHeight: mic.height,
+      launcherWidth: launcher.getBoundingClientRect().width,
+      launcherHeight: launcher.getBoundingClientRect().height,
+      launcherTextVisible: getComputedStyle(launcher.querySelector('span:last-child')).display !== 'none',
+    };
   })()`);
   assert.ok(mobile.overflow <= 1);
   assert.ok(mobile.stopWidth >= 44 && mobile.stopHeight >= 44);
   assert.ok(mobile.micWidth >= 44 && mobile.micHeight >= 44);
+  assert.ok(mobile.launcherWidth >= 44 && mobile.launcherWidth <= 160);
+  assert.ok(mobile.launcherHeight >= 44);
+  assert.equal(mobile.launcherTextVisible, true);
   console.log("psy-admin assistant host contract: passed desktop and 390px mobile");
 } finally {
   socket.close();

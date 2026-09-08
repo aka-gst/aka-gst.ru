@@ -1,5 +1,5 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260908-04";
-import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260908-04";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260908-05";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260908-05";
 
 const normalize = (value) => value
   .toLocaleLowerCase("ru-RU")

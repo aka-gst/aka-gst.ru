@@ -5,7 +5,7 @@ import { quickQuestions } from "./content.js";
 import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 import * as widgetContract from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260908-04";
+const widgetVersion = "psy-widget-20260908-05";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -61,6 +61,9 @@ assert.equal(createHandoffPayload({ requestKind: "rental" }).kind, "rental");
 assert.equal(createHandoffPayload({ requestKind: "seminar" }).kind, "seminar");
 assert.equal(createHandoffPayload({ requestKind: "unexpected" }).kind, "specialist");
 assert.match(widgetSource, /data-assistant-host="live"/);
+assert.match(widgetSource, /aria-label="Вам помочь\?"/);
+assert.match(widgetSource, /<span aria-hidden="true">✦<\/span><span>Вам помочь\?<\/span>/);
+assert.doesNotMatch(widgetSource, /Спросить помощника/);
 assert.match(widgetSource, />Оставить заявку<\/button>/);
 assert.match(widgetSource, /<a class="psy-widget-payment" href="https:\/\/orion-center\.ru\/payment" target="_blank" rel="noopener noreferrer">/);
 assert.match(widgetSource, /Перейти к оплате ↗/);
@@ -71,8 +74,7 @@ assert.match(widgetCss, /\.psy-widget-handoff \{ display: grid;/);
 assert.match(widgetCss, /\.psy-widget-handoff-area/);
 assert.match(widgetCss, /\.psy-widget-panel \{[^}]*width: min\(520px, calc\(100vw - 32px\)\);/);
 assert.match(widgetCss, /\.psy-widget\[data-fullscreen="true"\] \.psy-widget-panel \{[^}]*width: min\(760px, calc\(100vw - 48px\)\);/);
-assert.match(widgetCss, /@media \(max-width: 1320px\), \(max-height: 800px\)/);
-assert.match(widgetCss, /\.psy-widget-trigger span:last-child \{ display: none; \}/);
+assert.doesNotMatch(widgetCss, /\.psy-widget-trigger span:last-child \{ display: none; \}/);
 assert.doesNotMatch(widgetCss, /data-fullscreen="true"[^}]*inset:\s*0/);
 assert.match(widgetCss, /\.psy-widget-handoff-area > \.psy-widget-payment \{[^}]*min-height: 44px;/);
 assert.match(widgetCss, /\.psy-widget-voice-status \{[^}]*min-height: 1\.35em;[^}]*white-space: nowrap;/);
@@ -202,6 +204,17 @@ const bareDomainSpeech = sanitizeSpokenText(
 );
 assert.doesNotMatch(bareDomainSpeech, /backspace|orion-center|\.com|\.ru|https?|[\\/]|\]\(/i);
 assert.equal(sanitizeSpokenText("Первая суть. Вторая подробность, которую говорить не нужно."), "Первая суть.");
+assert.equal(
+  sanitizeSpokenText("Ближайшее мероприятие → открыть ↗ \\ служебный хвост."),
+  "Ближайшее мероприятие открыть служебный хвост.",
+);
+
+const routedNearestEvent = routeWidgetQuestion("Какие мероприятия ближайшие?");
+assert.equal(
+  routedNearestEvent.spokenText,
+  "Ближайшее опубликованное мероприятие — «Теория и практика работы с измененными и экстремальными состояниями сознания».",
+);
+assert.doesNotMatch(routedNearestEvent.spokenText, /https?:\/\/|www\.|[\\/]|[→↗]|\.(?:html?|php)\b/i);
 
 const routedClub = routeWidgetQuestion("Сколько стоит психологический клуб?");
 assert.match(routedClub.text, /1\s*000\s*(руб|₽)/i); // Полный ответ остаётся видимым.

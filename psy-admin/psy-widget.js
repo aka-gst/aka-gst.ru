@@ -1,18 +1,18 @@
-import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-04";
+import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-05";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-04&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-05&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
 mount.innerHTML = `
   <section class="psy-widget" data-psy-widget data-assistant-host="live" data-open="false" aria-label="Помощник сайта">
-    <button class="psy-widget-trigger" type="button" aria-label="Спросить помощника" aria-controls="psy-widget-panel" aria-expanded="false">
-      <span aria-hidden="true">✦</span><span>Спросить помощника</span>
+    <button class="psy-widget-trigger" type="button" aria-label="Вам помочь?" aria-controls="psy-widget-panel" aria-expanded="false">
+      <span aria-hidden="true">✦</span><span>Вам помочь?</span>
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
