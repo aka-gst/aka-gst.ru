@@ -355,8 +355,8 @@ test('боковое оглавление явно разделяет три с�
   // Отрицательный контроль: прежняя плоская колонка с одними p + ul не
   // проходит — наличие трёх названий само по себе не доказывает разделение.
   const старыйHtml = page
-    .replace(/<section class="reader-side-group(?: is-current)?"[^>]*>/g, '')
-    .replace(/<\/section>/g, '')
+    .replace(/<details class="reader-side-group(?: is-current)?"[^>]*>/g, '')
+    .replace(/<\/details>/g, '')
     .replace(/<span class="reader-side-meta">[^<]*<\/span>/g, '');
   assert.equal((старыйHtml.match(/class="reader-side-group(?: is-current)?"/g) || []).length, 0);
   assert.equal((старыйHtml.match(/class="reader-side-meta"/g) || []).length, 0);
