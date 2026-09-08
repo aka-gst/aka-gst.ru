@@ -1,11 +1,11 @@
-import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-05";
+import { createHandoffPayload, createWidgetState, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-06";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-05&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-06&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -143,6 +143,12 @@ const voiceCapabilities = {
 function appendMessage(role, answer) {
   const article = document.createElement("article");
   article.className = `psy-widget-message ${role} ${answer.kind || ""}`;
+  if (answer.leadIn) {
+    const leadIn = document.createElement("p");
+    leadIn.setAttribute("data-supportive-lead-in", "");
+    leadIn.textContent = answer.leadIn;
+    article.append(leadIn);
+  }
   if (answer.title) {
     const title = document.createElement("b");
     title.textContent = answer.title;
@@ -172,6 +178,14 @@ function appendMessage(role, answer) {
       links.append(action);
     }
     article.append(links);
+  }
+  if (answer.followUp) {
+    const followUp = document.createElement("p");
+    followUp.setAttribute("data-supportive-followup", "");
+    const question = document.createElement("strong");
+    question.textContent = answer.followUp;
+    followUp.append(question);
+    article.append(followUp);
   }
   messages.append(article);
   article.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -285,19 +299,6 @@ function speakReply(text) {
     setVoiceStatus("Ответ показан текстом: браузеру не удалось включить озвучивание.");
   }, { once: true });
   window.speechSynthesis.speak(utterance);
-}
-
-function normalizeAssistantResult(result, fallback) {
-  if (!result?.text) return fallback;
-  return {
-    kind: result.kind || "route",
-    text: result.text,
-    spokenText: sanitizeSpokenText(result.text),
-    sources: (result.sources || []).map((source) => ({
-      ...source,
-      url: new URL(source.url || "/", "https://orion-center.ru/").href,
-    })),
-  };
 }
 
 async function ask(question, askedByVoice = false) {

@@ -1,5 +1,5 @@
-import { quickQuestions } from "./content.js?v=psy-widget-20260908-05";
-import { answerQuestion } from "./router.js?v=psy-widget-20260908-05";
+import { quickQuestions } from "./content.js?v=psy-widget-20260908-06";
+import { answerQuestion } from "./router.js?v=psy-widget-20260908-06";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",
@@ -100,6 +100,21 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
 
   const sentences = text.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) || [];
   return (sentences[0] || text).trim().slice(0, 160);
+}
+
+export function normalizeAssistantResult(result, fallback) {
+  if (!result?.text) return fallback;
+  return {
+    kind: result.kind || "route",
+    text: result.text,
+    spokenText: sanitizeSpokenText(result.text),
+    sources: (result.sources || []).map((source) => ({
+      ...source,
+      url: new URL(source.url || "/", "https://orion-center.ru/").href,
+    })),
+    leadIn: fallback.leadIn,
+    followUp: fallback.followUp,
+  };
 }
 
 export function routeWidgetQuestion(question) {

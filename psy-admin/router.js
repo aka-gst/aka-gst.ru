@@ -1,5 +1,5 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260908-05";
-import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260908-05";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260908-06";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260908-06";
 
 const normalize = (value) => value
   .toLocaleLowerCase("ru-RU")
@@ -12,6 +12,25 @@ const crisisPattern = /(самоубий|суицид|убить себя|пок
 const diagnosisPattern = /(диагноз|диагностируй|назначь лечение|какие таблетки|антидепрессант|паническ|тревог|травм|упражнен|что мне лечить|проведи терапию|лечи меня)/i;
 const sensitivePattern = /(номер карты|данные карты|картой|карту|оплатить в чате|cvv|cvc|парол|паспорт|снилс)/i;
 const currentFactPattern = /(сколько стоит|цена|стоимость|когда|дата|места|свободн|сегодня|завтра|сейчас проходит)/i;
+
+const supportiveFollowUps = Object.freeze({
+  answer: "Что уточнить дальше: содержание программы, формат участия или контакты?",
+  curated: "Что показать дальше: программу, расписание или контакты?",
+  offer: "Что уточнить дальше: формат, программу или способ записи?",
+  unconfirmed: "Что открыть дальше: официальные контакты или другие программы центра?",
+  fallback: "Что вас интересует: консультации, мероприятия, обучение или аренда?",
+  boundary: "Что показать дальше: профили специалистов или официальные контакты центра?",
+  crisis: "Если опасность непосредственная, вы можете сейчас позвонить 112 или попросить человека рядом сделать это?",
+});
+
+const supportiveLeadIns = Object.freeze({
+  answer: "Хороший вопрос — вот что удалось подтвердить по материалам центра.",
+  curated: "Хороший вопрос — вот подтверждённая информация центра.",
+  offer: "Интерес к актуальным возможностям понятен — вот что сейчас подтверждено.",
+  unconfirmed: "Здесь особенно важно сверить актуальные данные.",
+  fallback: "Давайте уточним тему — так получится найти нужный раздел.",
+  boundary: "Здесь особенно важно дать безопасный и точный ориентир.",
+});
 
 function scoreItem(query, item) {
   if (item.id.endsWith("-practicum") && !query.includes("практикум")) return 0;
@@ -62,7 +81,7 @@ function findApprovedOffering(query) {
     .sort((a, b) => b.score - a.score)[0];
 }
 
-export function answerQuestion(rawQuestion) {
+function routeQuestion(rawQuestion) {
   const question = String(rawQuestion || "").trim();
   const query = normalize(question);
 
@@ -218,4 +237,11 @@ export function answerQuestion(rawQuestion) {
     url: CENTER_URL,
     linkText: "Открыть сайт центра"
   };
+}
+
+export function answerQuestion(rawQuestion) {
+  const answer = routeQuestion(rawQuestion);
+  const followUp = supportiveFollowUps[answer.kind];
+  const leadIn = supportiveLeadIns[answer.kind];
+  return followUp ? { ...answer, ...(leadIn ? { leadIn } : {}), followUp } : answer;
 }
