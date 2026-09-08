@@ -857,7 +857,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   .practicum-switch .practicum-pilot-grid {
     grid-template-rows: minmax(320px, auto) minmax(0, auto);
   }
-  .practicum-switch .quequest-card { max-height: calc(100dvh - 240px); }
+  .practicum-switch .quequest-card { max-height: min(560px, calc(100dvh - 360px)); }
   /* Практикумы жёстко заданы в 570 (строка 831), и при нехватке места весь
      дефицит съедал кадр: он падал до 120 пикселей — полоска вместо сцены.
      Здесь отпускаем их высоту и разрешаем прокрутку внутри: кадру гарантируем
@@ -880,7 +880,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .practicum-switch .practicum-detail-stage { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
 @media (max-width:760px) { .practicum-switch .practicum-detail-stage { grid-template-columns:1fr; } }
 
-.quequest-card { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--accent) 48%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, color-mix(in srgb, var(--accent-dim) 78%, #140d2a), var(--panel) 64%); }
+.quequest-card { --quequest-neon:#9b5cff; --quequest-pale:#d9c9ff; display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--quequest-neon) 72%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, #1b1030, var(--panel) 64%); box-shadow:0 0 0 1px color-mix(in srgb, var(--quequest-neon) 14%, transparent), 0 18px 54px rgba(33, 15, 65, .32); }
 .quequest-visual { position:relative; display:block; min-height:0; overflow:hidden; border:0; border-right:1px solid var(--line); padding:0; background:#080a0f; cursor:pointer; text-align:left; }
 .quequest-poster, .quequest-video { display:block; width:100%; height:100%; min-height:390px; object-fit:cover; object-position:center; }
 .quequest-video { position:absolute; inset:0; opacity:0; transition: opacity var(--an-mikro, 150ms) linear; }
@@ -889,7 +889,6 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .quequest-visual:hover .quequest-play-label, .quequest-visual:focus-visible .quequest-play-label { border-color:#cbb9ff; box-shadow:0 0 18px #8063e955; }
 .quequest-copy { display:grid; align-content:center; gap:12px; padding:26px; }
 .quequest-heading { display:flex; align-items:center; gap:9px; }
-.quequest-heading img { width:34px; height:34px; object-fit:contain; filter:drop-shadow(0 0 12px #8d6cff88); }
 .quequest-heading .kicker { margin:0; }
 .quequest-copy h3 { margin:0; font-size:clamp(31px, 4vw, 48px); line-height:1; }
 .quequest-copy .tagline { margin:0; color:var(--text); font-size:16px; line-height:1.48; }
@@ -1629,7 +1628,7 @@ article.gcard .launch { color: var(--dim); }
    Две колонки: слева знак, кикер и фраза про ящики; справа внизу — имя,
    крупно. Имя прижато к нижней кромке, поэтому пустота уходит вверх, где
    её держит текст, а не остаётся дырой под названием.                     */
-@media (min-width: 761px) {
+@media (min-width: 901px) {
   .quequest-copy {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .72fr);
     align-items: stretch; gap: 20px 32px;
@@ -1642,10 +1641,11 @@ article.gcard .launch { color: var(--dim); }
   }
 }
 /* На телефоне колонок нет: имя над текстом, как и было. */
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .quequest-left { display: grid; gap: 8px; }
   .quequest-cta { display:grid; gap:10px; margin-top:10px; }
-  .quequest-copy h3 { margin: 0; font-size:clamp(42px, 15vw, 58px); }
+  .quequest-copy h3 { margin: 0; font-size:clamp(36px, 6vw, 48px); }
+  .quequest-brand img { width:60px; height:60px; }
 }
 
 /* Разделение «22 мышью, 44 пальцем» снято 6 сентября по решению Рота:
@@ -1678,13 +1678,16 @@ article.gcard .launch { color: var(--dim); }
 .quequest-open {
   justify-self: end; display: inline-flex; align-items: center; gap: 8px;
   min-height: 48px; padding: 12px 20px;
-  border: 1px solid var(--accent); border-radius: 10px;
-  background: var(--accent); color: #08120c;
+  border: 1px solid var(--quequest-neon); border-radius: 10px;
+  background: var(--quequest-neon); color: #0b0712;
   font: 700 15px/1 var(--sans); text-decoration: none;
 }
-.quequest-open:hover { box-shadow: var(--glow); }
+.quequest-open:hover { background:#ab75ff; box-shadow:0 0 28px rgba(155,92,255,.5); }
 .quequest-copy h3 a { color: inherit; text-decoration: none; }
-.quequest-copy h3 a:hover { color: var(--accent); }
+.quequest-copy h3 a:hover { color: var(--quequest-pale); }
+.quequest-brand { display:inline-flex; align-items:center; justify-content:flex-end; gap:14px; }
+.quequest-brand img { width:72px; height:72px; flex:none; object-fit:contain; filter:drop-shadow(0 0 18px rgba(155,92,255,.58)); }
+.quequest-brand span { white-space:nowrap; }
 
 /* Дополнительные практикумы — короткая справка, а не второй главный экран.
    На десктопе две карточки остаются в ряд; на телефоне — две плотные строки.
@@ -1699,9 +1702,11 @@ article.gcard .launch { color: var(--dim); }
 .practicum-more .practicum-detail-copy .chips { display:none; }
 .practicum-more .card-links { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .practicum-more .card-links a:not(:first-child) { display:none; }
-@media (max-width:760px) {
+@media (max-width:900px) {
   .quequest-copy { padding:16px; }
   .quequest-open { justify-self:stretch; justify-content:center; }
+  .quequest-brand { justify-content:flex-start; gap:10px; }
+  .quequest-brand img { width:60px; height:60px; }
   .practicum-more .practicum-detail { grid-template-columns:56px minmax(0,1fr); min-height:82px; }
   .practicum-more .practicum-detail-shot { width:56px; height:56px; }
 }

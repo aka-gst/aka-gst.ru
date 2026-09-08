@@ -22,6 +22,25 @@ test('обе кнопки QueQuest живут в одной нижней зон�
   assert.doesNotMatch(section, /practicum-more-teaser/);
 });
 
+test('QueQuest читается как отдельный фиолетовый продукт, а не зелёная карточка раздела', () => {
+  const brand = section.match(/<h3 id="quequest-title">([\s\S]*?)<\/h3>/)?.[1] || '';
+
+  assert.match(brand, /class="quequest-brand"/,
+    'у названия нет собственного знака и оно снова выглядит голой надписью');
+  assert.match(brand, /assets\/quequest-mark\.svg/,
+    'знак QueQuest должен быть чётким вектором, а не мелкой картинкой возле кикера');
+  assert.match(section, />Автоматизировать рутину <b aria-hidden="true">↗<\/b><\/a>/,
+    'главная кнопка должна называть результат для человека');
+  assert.match(css, /\.quequest-card\s*\{[^}]*--quequest-neon:\s*#9b5cff[^}]*border:[^;]*var\(--quequest-neon\)/s,
+    'карточка не должна наследовать зелёный акцент раздела работы');
+  assert.match(css, /\.quequest-brand img\s*\{[^}]*width:\s*72px/s,
+    'знак снова стал незаметной иконкой');
+  assert.match(css, /@media \(min-width:\s*901px\) \{\n\s*\.quequest-copy\s*\{/,
+    'две колонки QueQuest включаются раньше 901px и режут название в горизонтальном телефоне');
+  assert.match(css, /@media \(max-width:\s*900px\) \{[\s\S]*?\.quequest-copy h3\s*\{[^}]*48px\)/,
+    'на ширинах до 900px название остаётся десктопным и режет правый край');
+});
+
 test('заголовок крупный, дополнительные карточки компактны и hidden не протекает', () => {
   assert.match(css, /\.quequest-copy h3\s*\{[^}]*font-size:\s*clamp\(48px,\s*6vw,\s*76px\)/s);
   assert.match(css, /\.practicum-more-body\[hidden\]\s*\{\s*display:\s*none/);
