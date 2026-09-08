@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-28",
+  "updated": "2026-09-08",
   "site": {
     "handle": "aka-gst",
     "domain": "aka-gst.ru",
@@ -53,6 +53,24 @@
     }
   },
   "projects": [
+    {
+      "id": "maketchik",
+      "title": "Макетчик",
+      "kicker": "Инструмент · браузер",
+      "tagline": "Собрать схему страницы из блоков и передать дизайнеру — без сложной программы и регистрации",
+      "summary": "Блоки двигаются и растягиваются прямо на рабочем столе. Схема хранится только в браузере, выгружается картинкой для обсуждения или JSON-файлом для дальнейших правок",
+      "role": "Продуктовая идея, интерфейс, реализация и проверка",
+      "kind": "tool",
+      "tracks": ["work"],
+      "groups": ["misc"],
+      "feature": {"work": 10},
+      "status": {"state": "live", "label": "работает"},
+      "year": 2026,
+      "stack": ["JavaScript", "SVG", "localStorage"],
+      "links": [{"type": "demo", "label": "Открыть", "url": "/maketchik/"}],
+      "accent": "paper",
+      "analytics": {"event": "project-open", "slug": "maketchik"}
+    },
     {
       "id": "local-agent-gateway",
       "title": "Local Agent Gateway",
