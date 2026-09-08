@@ -197,6 +197,10 @@ const unsafeSpeech = sanitizeSpokenText(
 assert.doesNotMatch(unsafeSpeech, /https?:\/\/|www\.|[\\/]|\.(?:html?|php)\b|Открыть файл|Записаться на встречу клуба/i);
 assert.match(unsafeSpeech, /Подробный ответ/i);
 assert.ok(unsafeSpeech.length <= 160);
+const bareDomainSpeech = sanitizeSpokenText(
+  "Ответ на backspace.com/path и orion-center.ru/schedule. [Открыть расписание](https://orion-center.ru/schedule) \\ служебный хвост.",
+);
+assert.doesNotMatch(bareDomainSpeech, /backspace|orion-center|\.com|\.ru|https?|[\\/]|\]\(/i);
 assert.equal(sanitizeSpokenText("Первая суть. Вторая подробность, которую говорить не нужно."), "Первая суть.");
 
 const routedClub = routeWidgetQuestion("Сколько стоит психологический клуб?");

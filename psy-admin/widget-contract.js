@@ -89,9 +89,12 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
     text = text.replaceAll(label, "");
   }
   text = text
+    .replace(/\[([^\]]+)\]\((?:https?:\/\/|www\.)[^)]+\)/gi, "$1")
     .replace(/\b(?:https?:\/\/|www\.)\S+/gi, "")
+    .replace(/\b(?:[a-z0-9а-яё-]+\.)+(?:[a-z]{2,24}|рф)(?:\/[^\s]*)?/giu, "")
     .replace(/\b[\w.-]+\.(?:html?|php)\b/gi, "")
     .replace(/[\\/]+/g, " ")
+    .replace(/[→↗]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 

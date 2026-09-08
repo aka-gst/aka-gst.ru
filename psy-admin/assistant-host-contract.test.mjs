@@ -13,10 +13,14 @@ const fixture = `<!doctype html><html><head><meta charset="utf-8"><meta name="vi
 <script>
 window.__audioStops = 0;
 window.__speechStops = 0;
+window.__spokenTexts = [];
 window.__handoffNetworkRequests = [];
 window.__handoffResponseStatus = 201;
 window.fetch = async (url, init = {}) => {
   window.__handoffNetworkRequests.push({ url: String(url), method: init.method, body: init.body });
+  if (String(url).endsWith("/booking/api/ask")) {
+    return new Response(JSON.stringify({ text: "Ответ на backspace.com/path и orion-center.ru/schedule \\\\ служебный хвост.", kind: "route" }), { status: 200, headers: { "content-type": "application/json" } });
+  }
   const status = window.__handoffResponseStatus;
   return new Response(JSON.stringify(status === 201
     ? { publicCode: "ORION-RECEIPT", status: "pending", message: "Администратор свяжется с вами." }
@@ -45,7 +49,17 @@ class TestRecognition {
   abort() {}
 }
 window.SpeechRecognition = TestRecognition;
-Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { speaking: true, cancel() { window.__speechStops += 1; this.speaking = false; } } });
+class TestUtterance {
+  constructor(text) { this.text = text; }
+  addEventListener() {}
+}
+window.SpeechSynthesisUtterance = TestUtterance;
+Object.defineProperty(window, "speechSynthesis", { configurable: true, value: {
+  speaking: true,
+  cancel() { window.__speechStops += 1; this.speaking = false; },
+  getVoices() { return []; },
+  speak(utterance) { window.__spokenTexts.push(utterance.text); },
+} });
 </script>
 <script type="module" src="/psy-admin/psy-widget.js"></script></body></html>`;
 
@@ -171,6 +185,19 @@ try {
   assert.ok(Math.abs(listeningGeometry.widthDelta) < 0.01);
   assert.ok(Math.abs(listeningGeometry.heightDelta) < 0.01);
   assert.ok(Math.abs(listeningGeometry.xDelta) < 0.01);
+
+  const spokenAnswer = await evaluate(`(async () => {
+    const root = document.querySelector('[data-psy-widget]');
+    const input = root.querySelector('#psy-widget-question');
+    input.value = 'Неподготовленный вопрос';
+    input.form.requestSubmit();
+    for (let attempt = 0; attempt < 40 && !window.__spokenTexts.length; attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
+    const spoken = window.__spokenTexts.at(-1) || '';
+    window.__handoffNetworkRequests = [];
+    return spoken;
+  })()`);
+  assert.match(spokenAnswer, /Ответ на/i);
+  assert.doesNotMatch(spokenAnswer, /backspace|orion-center|\.com|\.ru|https?|[\\/]/i, "В объект озвучивания не должны попадать домены и slash/backslash");
 
   const handoff = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
