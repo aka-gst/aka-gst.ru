@@ -12,8 +12,15 @@ const fixture = `<!doctype html><html><head><meta charset="utf-8"><meta name="vi
 <script>
 window.__audioStops = 0;
 window.__speechStops = 0;
-window.__handoffNetworkRequests = 0;
-window.fetch = (...args) => { window.__handoffNetworkRequests += 1; return Promise.reject(new Error("network disabled in contract")); };
+window.__handoffNetworkRequests = [];
+window.__handoffResponseStatus = 201;
+window.fetch = async (url, init = {}) => {
+  window.__handoffNetworkRequests.push({ url: String(url), method: init.method, body: init.body });
+  const status = window.__handoffResponseStatus;
+  return new Response(JSON.stringify(status === 201
+    ? { publicCode: "ORION-RECEIPT", status: "pending", message: "Администратор свяжется с вами." }
+    : { error: "Сервис записи временно недоступен." }), { status, headers: { "content-type": "application/json" } });
+};
 class TestXHR { open() { window.__handoffNetworkRequests += 1; } send() {} }
 window.XMLHttpRequest = TestXHR;
 class TestAudio {
@@ -120,18 +127,19 @@ try {
       stopText: stop?.textContent.trim(),
       stopVisible: Boolean(stop && stop.getBoundingClientRect().width && stop.getBoundingClientRect().height),
       text: root.textContent,
-      labels: [...root.querySelectorAll('.psy-widget-handoff label')].map((label) => label.firstChild.textContent.trim()),
+      labels: [...root.querySelectorAll('.psy-widget-handoff label')].map((label) => label.firstChild.textContent.trim()).filter(Boolean),
       timeOptions: [...root.querySelectorAll('[name="requestedTime"] option')].length,
     };
   })()`);
-  assert.equal(initial.marker, "candidate");
+  assert.equal(initial.marker, "live");
   assert.deepEqual(initial.voiceLabels, ["A"]);
   assert.equal(initial.stopText, "■ Стоп");
   assert.equal(initial.stopVisible, true);
   assert.doesNotMatch(initial.text, /естественный голос|голос B|голос Б|голос C|голос В/i);
-  assert.deepEqual(initial.labels, ["К кому вы хотите пойти?", "Желаемое время", "Комментарий", "Телефон или e-mail"]);
+  assert.deepEqual(initial.labels, ["Желаемый специалист", "Желаемое время", "Комментарий", "Телефон или e-mail"]);
+  assert.match(initial.text, /Я согласен передать указанный контакт администратору центра только для обработки этой заявки\./);
   assert.equal(initial.timeOptions, 0, "Желаемое время не должно изображать расписание слотами");
-  assert.match(initial.text, /Администратор уточнит время у психолога и подтвердит запись\./);
+  assert.match(initial.text, /Скоро здесь появятся актуальные расписания специалистов и свободные окна для записи\./);
 
   const stopResult = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
@@ -159,21 +167,47 @@ try {
   assert.ok(Math.abs(listeningGeometry.heightDelta) < 0.01);
   assert.ok(Math.abs(listeningGeometry.xDelta) < 0.01);
 
-  const handoff = await evaluate(`(() => {
+  const handoff = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
     root.querySelector('.psy-widget-handoff-toggle').click();
-    root.querySelector('[name="specialist"]').value = "help-me-choose";
+    root.querySelector('[name="specialist"]').value = "Помогите выбрать специалиста";
     root.querySelector('[name="requestedTime"]').value = "будни после 18:00";
     root.querySelector('[name="comment"]').value = "Первая консультация";
     root.querySelector('[name="contact"]').value = "+7 900 000-00-00";
+    root.querySelector('[name="consent"]').checked = true;
     root.querySelector('.psy-widget-handoff').requestSubmit();
+    for (let attempt = 0; attempt < 40 && !root.querySelector('.psy-widget-handoff-status').textContent.includes('ORION-RECEIPT'); attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
     return { receipt: root.querySelector('.psy-widget-handoff-status').textContent, inbox: window.__psyAdminTestInbox, networkRequests: window.__handoffNetworkRequests };
   })()`);
-  assert.match(handoff.receipt, /PSY-TEST-/);
-  assert.match(handoff.receipt, /ничего не отправлено/i);
-  assert.equal(handoff.inbox.length, 1);
-  assert.equal(handoff.inbox[0].specialist, "help-me-choose");
-  assert.equal(handoff.networkRequests, 0);
+  assert.match(handoff.receipt, /Заявка отправлена/);
+  assert.match(handoff.receipt, /ORION-RECEIPT/);
+  assert.equal(handoff.inbox, undefined);
+  assert.equal(handoff.networkRequests.length, 1);
+  assert.equal(handoff.networkRequests[0].method, "POST");
+  assert.match(handoff.networkRequests[0].url, /\/psy-admin\/booking\/api\/requests$/);
+  assert.deepEqual(JSON.parse(handoff.networkRequests[0].body), {
+    kind: "specialist",
+    subject: "Помогите выбрать специалиста",
+    requestedDateTime: "будни после 18:00",
+    details: "Первая консультация",
+    contact: "+7 900 000-00-00",
+    consent: true,
+  });
+
+  const rejectedHandoff = await evaluate(`(async () => {
+    const root = document.querySelector('[data-psy-widget]');
+    window.__handoffResponseStatus = 503;
+    root.querySelector('[name="specialist"]').value = "Смирнова Юлия Сергеевна";
+    root.querySelector('[name="requestedTime"]').value = "завтра утром";
+    root.querySelector('[name="contact"]').value = "client@example.test";
+    root.querySelector('[name="consent"]').checked = true;
+    root.querySelector('.psy-widget-handoff').requestSubmit();
+    for (let attempt = 0; attempt < 40 && !root.querySelector('.psy-widget-handoff-status').textContent.includes('недоступен'); attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
+    return { receipt: root.querySelector('.psy-widget-handoff-status').textContent, specialist: root.querySelector('[name="specialist"]').value, networkCount: window.__handoffNetworkRequests.length };
+  })()`);
+  assert.match(rejectedHandoff.receipt, /временно недоступен/i);
+  assert.equal(rejectedHandoff.specialist, "Смирнова Юлия Сергеевна");
+  assert.equal(rejectedHandoff.networkCount, 2);
 
   const stickyStop = await evaluate(`(() => {
     const panel = document.querySelector('.psy-widget-panel');

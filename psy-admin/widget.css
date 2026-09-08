@@ -85,7 +85,11 @@
 .psy-widget-handoff input,
 .psy-widget-handoff select,
 .psy-widget-handoff textarea { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #c9c5bc; border-radius: 8px; background: #fff; color: #292537; resize: vertical; }
+.psy-widget-handoff .psy-widget-consent { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; line-height: 1.35; }
+.psy-widget-handoff .psy-widget-consent input { width: 20px; min-width: 20px; min-height: 20px; margin: 1px 0 0; padding: 0; }
 .psy-widget-handoff-status { color: #5d526e; font-size: .76rem !important; font-weight: 600; }
+.psy-widget-handoff-status[data-state="success"] { color: #126c50; }
+.psy-widget-handoff-status[data-state="error"] { color: #a43131; }
 .psy-widget-handoff-area > .psy-widget-payment { min-height: 44px; margin-top: 8px; text-align: center; }
 @media (max-width: 620px) {
   .psy-widget-trigger { right: 16px; bottom: 16px; min-width: var(--psy-widget-touch-target); padding: 12px; }

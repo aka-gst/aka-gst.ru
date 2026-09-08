@@ -97,7 +97,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260905-02&theme=orion-blue-20260907"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260908-01&theme=orion-blue-20260907"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }

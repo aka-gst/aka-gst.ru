@@ -1,5 +1,5 @@
-import { quickQuestions } from "./content.js";
-import { answerQuestion } from "./router.js?v=psy-widget-20260905-02";
+import { quickQuestions } from "./content.js?v=psy-widget-20260908-01";
+import { answerQuestion } from "./router.js?v=psy-widget-20260908-01";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",
@@ -69,12 +69,14 @@ export function reduceWidgetState(state, action) {
   return state;
 }
 
-export function demoHandoffOutcome(marker = "PSY-TEST") {
+export function createHandoffPayload(fields) {
   return {
-    kind: "demo-only",
-    networkRequest: null,
-    marker,
-    message: `${marker}: заявка добавлена только в локальный тестовый стенд; в центр ничего не отправлено.`,
+    kind: "specialist",
+    subject: String(fields.specialist || "").trim(),
+    requestedDateTime: String(fields.requestedTime || "").trim(),
+    details: String(fields.comment || "").trim(),
+    contact: String(fields.contact || "").trim(),
+    consent: fields.consent === true,
   };
 }
 

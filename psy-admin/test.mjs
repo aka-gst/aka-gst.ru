@@ -2,14 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
+import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260905-02";
+const widgetVersion = "psy-widget-20260908-01";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
 const widgetCss = await readFile(new URL("./widget.css", import.meta.url), "utf8");
 const homePage = await readFile(new URL("./index.html", import.meta.url), "utf8");
+const caddyfile = await readFile(new URL("../Caddyfile", import.meta.url), "utf8");
 const officialHero = "https://static.tildacdn.com/tild6564-6339-4335-b465-333932373236/WhatsApp_Image_2024-.jpeg";
 assert.equal((homePage.match(new RegExp(officialHero.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) || []).length, 3);
 assert.match(homePage, /linear-gradient\(to bottom, rgba\(0,0,0,0\.60\), rgba\(51,51,51,0\.30\)\)/);
@@ -36,14 +37,21 @@ assert.match(widgetSource, /id="psy-widget-evaluation-content" hidden/);
 assert.match(widgetSource, /preparedQuestionCases/);
 assert.doesNotMatch(widgetSource, /Только открытые источники|Демо по открытым страницам|Демо-передача/);
 assert.match(widgetSource, /Запись в центр «Орион‑С»/);
-assert.match(widgetSource, /Администратор уточнит время у психолога и подтвердит запись\./);
-assert.match(widgetSource, /К кому вы хотите пойти\?/);
-assert.match(widgetSource, /Не знаю, помогите выбрать/);
+assert.match(widgetSource, /Скоро здесь появятся актуальные расписания специалистов и свободные окна для записи\./);
+assert.match(widgetSource, /администратор всё уточнит и свяжется с вами\./);
+assert.match(widgetSource, /Желаемый специалист/);
+for (const specialist of ["Смирнова Юлия Сергеевна", "Сербина Людмила Николаевна", "Белозеров Евгений Владимирович", "Бутусова Елена Сергеевна", "Андреева Татьяна Владимировна", "Гайнулина Оксана Владимировна", "Извекова Ирина Владимировна", "Сатикова Светлана Валентиновна"]) {
+  assert.match(widgetSource, new RegExp(specialist));
+}
 assert.match(widgetSource, /name="requestedTime"/);
 assert.match(widgetSource, /name="comment"/);
 assert.match(widgetSource, /name="contact"/);
-assert.match(widgetSource, /data-assistant-host="candidate"/);
-assert.match(widgetSource, /__psyAdminTestInbox/);
+assert.match(widgetSource, /name="consent"/);
+assert.doesNotMatch(widgetSource, /__psyAdminTestInbox|PSY-TEST|Добавить в тестовый стенд/);
+assert.deepEqual(createHandoffPayload({ specialist: "Юлия Смирнова", requestedTime: "будни вечером", comment: "Первичная встреча", contact: "+7 900 000-00-00", consent: true }), {
+  kind: "specialist", subject: "Юлия Смирнова", requestedDateTime: "будни вечером", details: "Первичная встреча", contact: "+7 900 000-00-00", consent: true,
+});
+assert.match(widgetSource, /data-assistant-host="live"/);
 assert.match(widgetSource, /<a class="psy-widget-payment" href="https:\/\/orion-center\.ru\/payment" target="_blank" rel="noopener noreferrer">/);
 assert.match(widgetSource, /Оплатить ↗/);
 assert.match(widgetSource, /Официальный сайт/);
@@ -57,6 +65,16 @@ assert.match(widgetCss, /\.psy-widget-voice-status \{[^}]*min-height: 1\.35em;[^
 assert.match(widgetCss, /\.psy-widget-message\.assistant \{[^}]*justify-self: end;[^}]*width: fit-content;/);
 assert.doesNotMatch(widgetSource, /\/psy-admin\/payment/);
 assert.match(widgetSource, /psyadmin-A\.wav/);
+assert.match(widgetSource, /new URL\("\.\/audio\/voices\/psyadmin-A\.wav\?v=psy-widget-20260908-01", import\.meta\.url\)\.href/);
+assert.match(widgetSource, /previewAudio\.crossOrigin = "anonymous"/);
+const widgetCorsStart = caddyfile.indexOf("@orion_widget_assets");
+const widgetCors = caddyfile.slice(widgetCorsStart, caddyfile.indexOf("root * /srv", widgetCorsStart));
+assert.match(widgetCors, /header Origin https:\/\/orion-center\.ru/);
+assert.match(widgetCors, /Access-Control-Allow-Origin "https:\/\/orion-center\.ru"/);
+assert.match(widgetCors, /\/psy-admin\/psy-widget\.js/);
+assert.match(widgetCors, /\/psy-admin\/audio\/voices\/psyadmin-A\.wav/);
+assert.doesNotMatch(widgetCors, /\/psy-admin\/(?:admin|booking)/);
+assert.doesNotMatch(widgetCors.replaceAll("https://orion-center.ru", "https://attacker.invalid"), /https:\/\/orion-center\.ru/);
 assert.doesNotMatch(widgetSource, /psyadmin-B\.wav/);
 assert.doesNotMatch(widgetSource, /psyadmin-C\.wav/);
 assert.doesNotMatch(widgetSource, /psyadmin-D\.ogg/);

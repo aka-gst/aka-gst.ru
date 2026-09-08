@@ -1,13 +1,16 @@
-import { createWidgetState, demoHandoffOutcome, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260905-02";
+import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-01";
+
+const voicePreviewUrl = new URL("./audio/voices/psyadmin-A.wav?v=psy-widget-20260908-01", import.meta.url).href;
+const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260905-02&theme=orion-blue-20260907", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-01&theme=orion-blue-20260907", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
 mount.innerHTML = `
-  <section class="psy-widget" data-psy-widget data-assistant-host="candidate" data-open="false" aria-label="Помощник сайта">
+  <section class="psy-widget" data-psy-widget data-assistant-host="live" data-open="false" aria-label="Помощник сайта">
     <button class="psy-widget-trigger" type="button" aria-label="Спросить помощника" aria-controls="psy-widget-panel" aria-expanded="false">
       <span aria-hidden="true">✦</span><span>Спросить помощника</span>
     </button>
@@ -22,7 +25,7 @@ mount.innerHTML = `
       </header>
       <div class="psy-widget-voice-preview" aria-label="Предварительные варианты голоса">
         <span>Голос:</span>
-        <button type="button" data-voice-preview="/psy-admin/audio/voices/psyadmin-A.wav" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
+        <button type="button" data-voice-preview="${voicePreviewUrl}" data-voice-volume="0.55" data-voice-eq-gain="-5">A</button>
       </div>
       <div class="psy-widget-evaluation">
         <button class="psy-widget-evaluation-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-evaluation-content">Проверить помощника</button>
@@ -35,16 +38,23 @@ mount.innerHTML = `
         </div>
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
-      <section class="psy-widget-handoff-area" aria-label="Тестовая заявка в центр Орион-С">
+      <section class="psy-widget-handoff-area" aria-label="Заявка в центр Орион-С">
         <button class="psy-widget-handoff-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-handoff">Оставить заявку администратору</button>
         <form class="psy-widget-handoff" id="psy-widget-handoff" hidden>
-          <p><b>Запись в центр «Орион‑С»</b><span>Администратор уточнит время у психолога и подтвердит запись.</span></p>
-          <label>К кому вы хотите пойти?
-            <select name="specialist" required>
-              <option value="">Выберите вариант</option>
-              <option value="help-me-choose">Не знаю, помогите выбрать</option>
-              <option value="specific">К конкретному психологу — укажу в комментарии</option>
-            </select>
+          <p><b>Запись в центр «Орион‑С»</b><span>Скоро здесь появятся актуальные расписания специалистов и свободные окна для записи. Пока укажите, к кому хотите записаться, желаемые дату и время — администратор всё уточнит и свяжется с вами.</span></p>
+          <label>Желаемый специалист
+            <input name="specialist" list="psy-widget-specialists" maxlength="120" placeholder="Имя психолога или «помогите выбрать»" required>
+            <datalist id="psy-widget-specialists">
+              <option value="Помогите выбрать специалиста"></option>
+              <option value="Смирнова Юлия Сергеевна"></option>
+              <option value="Сербина Людмила Николаевна"></option>
+              <option value="Белозеров Евгений Владимирович"></option>
+              <option value="Бутусова Елена Сергеевна"></option>
+              <option value="Андреева Татьяна Владимировна"></option>
+              <option value="Гайнулина Оксана Владимировна"></option>
+              <option value="Извекова Ирина Владимировна"></option>
+              <option value="Сатикова Светлана Валентиновна"></option>
+            </datalist>
           </label>
           <label>Желаемое время
             <input name="requestedTime" maxlength="120" placeholder="Например: будни после 18:00" required>
@@ -55,7 +65,11 @@ mount.innerHTML = `
           <label>Телефон или e-mail
             <input name="contact" maxlength="160" autocomplete="email" placeholder="Как с вами связаться" required>
           </label>
-          <button type="submit">Добавить в тестовый стенд</button>
+          <label class="psy-widget-consent">
+            <input name="consent" type="checkbox" value="yes" required>
+            <span>Я согласен передать указанный контакт администратору центра только для обработки этой заявки.</span>
+          </label>
+          <button type="submit">Отправить заявку</button>
           <p class="psy-widget-handoff-status" aria-live="polite"></p>
         </form>
         <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
@@ -326,7 +340,9 @@ questionForm.addEventListener("submit", (event) => {
 root.querySelectorAll("[data-question]").forEach((button) => button.addEventListener("click", () => void ask(button.dataset.question)));
 root.querySelectorAll("[data-voice-preview]").forEach((button) => button.addEventListener("click", () => {
   stopVoice({ announce: false });
-  previewAudio = new Audio(button.dataset.voicePreview);
+  previewAudio = new Audio();
+  previewAudio.crossOrigin = "anonymous";
+  previewAudio.src = button.dataset.voicePreview;
   previewAudio.volume = Number(button.dataset.voiceVolume || 1);
   softenPreviewTone(button);
   previewAudio.addEventListener("ended", () => {
@@ -359,24 +375,39 @@ handoffToggle.addEventListener("click", () => {
   handoffToggle.setAttribute("aria-expanded", String(expanded));
   handoffForm.hidden = !expanded;
   handoffToggle.textContent = expanded ? "Скрыть форму заявки" : "Оставить заявку администратору";
-  if (expanded) handoffForm.querySelector("select")?.focus({ preventScroll: true });
+  if (expanded) handoffForm.querySelector("[name='specialist']")?.focus({ preventScroll: true });
 });
-handoffForm.addEventListener("submit", (event) => {
+handoffForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const fields = new FormData(handoffForm);
-  const marker = `PSY-TEST-${Date.now().toString(36).toUpperCase()}`;
-  const testEntry = {
-    marker,
+  const payload = createHandoffPayload({
     specialist: String(fields.get("specialist") || ""),
     requestedTime: String(fields.get("requestedTime") || ""),
     comment: String(fields.get("comment") || ""),
     contact: String(fields.get("contact") || ""),
-  };
-  window.__psyAdminTestInbox ||= [];
-  window.__psyAdminTestInbox.push(testEntry);
-  const outcome = demoHandoffOutcome(marker);
-  handoffStatus.textContent = outcome.message;
-  handoffForm.reset();
+    consent: fields.get("consent") === "yes",
+  });
+  const submitButton = handoffForm.querySelector("button[type='submit']");
+  submitButton.disabled = true;
+  handoffStatus.dataset.state = "pending";
+  handoffStatus.textContent = "Отправляем заявку…";
+  try {
+    const response = await fetch(bookingApiUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "Не удалось отправить заявку.");
+    handoffStatus.dataset.state = "success";
+    handoffStatus.textContent = `Заявка отправлена. Номер: ${result.publicCode}. ${result.message || "Администратор свяжется с вами."}`;
+    handoffForm.reset();
+  } catch (error) {
+    handoffStatus.dataset.state = "error";
+    handoffStatus.textContent = error?.message || "Сервис записи временно недоступен. Попробуйте ещё раз позже.";
+  } finally {
+    submitButton.disabled = false;
+  }
 });
 if (!voiceCapabilities.recognitionAvailable) {
   mic.addEventListener("click", () => {
