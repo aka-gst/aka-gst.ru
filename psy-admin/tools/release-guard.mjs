@@ -27,10 +27,13 @@ export function auditRelease({ release, widget, contract, css }) {
   if (!widget.includes(`widget-contract.js?v=${release}`)) errors.push("метка ассетов не совпадает с виджетом");
   if (!widget.includes(`widget.css?v=${release}`)) errors.push("метка CSS не совпадает с виджетом");
   if (!contract?.includes(`router.js?v=${release}`)) errors.push("метка router не совпадает с контрактом");
-  if (!widget.includes('class="psy-widget-evaluation-toggle"') || !widget.includes('aria-expanded="false"')) {
-    errors.push("кнопка проверочных вопросов не закрыта по умолчанию");
+  if (!widget.includes('<label for="psy-widget-evaluation-select">Частые вопросы</label>')) {
+    errors.push("нет единственного списка «Частые вопросы»");
   }
-  if (!widget.includes('id="psy-widget-evaluation-content" hidden')) errors.push("60 вопросов не скрыты до нажатия");
+  if (!widget.includes('class="psy-widget-evaluation-select"')) errors.push("не подключён список частых вопросов");
+  if (/psy-widget-evaluation-toggle|psy-widget-evaluation-content|60 проверочных вопросов/.test(widget)) {
+    errors.push("в виджете остался старый проверочный интерфейс");
+  }
   if (!widget.includes("preparedQuestionCases")) errors.push("виджет не подключает 60 подготовленных вопросов");
   if (!css.includes("width: min(520px, calc(100vw - 32px));")) errors.push("панель должна быть шириной 520px на десктопе");
   if (css.includes("width: min(360px, calc(100vw - 32px));")) errors.push("в CSS осталась устаревшая панель 360px");

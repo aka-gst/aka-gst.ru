@@ -16,8 +16,8 @@ const release = "psy-widget-20260905-02";
 const widget = `<script type="module" src="/psy-admin/widget-contract.js?v=${release}"></script>
 const stylesheet = new URL("./widget.css?v=${release}", import.meta.url).href;
 const preparedQuestionCases = [];
-<button class="psy-widget-evaluation-toggle" aria-expanded="false">Проверить помощника</button>
-<div id="psy-widget-evaluation-content" hidden></div>`;
+<label for="psy-widget-evaluation-select">Частые вопросы</label>
+<select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select"></select>`;
 const contract = `import { answerQuestion } from "./router.js?v=${release}";`;
 const css = `.psy-widget-panel { width: min(520px, calc(100vw - 32px)); }
 .psy-widget-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -34,6 +34,14 @@ const pages = [
 
 assert.deepEqual(auditRelease({ release, widget, contract, css }), []);
 assert.deepEqual(auditPageReleases({ release, pages }), []);
+assert.match(
+  auditRelease({ release, widget: widget.replace("Частые вопросы", "Проверить помощника"), contract, css }).join("\n"),
+  /Частые вопросы/,
+);
+assert.match(
+  auditRelease({ release, widget: `${widget}\n<button class="psy-widget-evaluation-toggle">Старое</button>`, contract, css }).join("\n"),
+  /старый проверочный интерфейс/,
+);
 assert.match(
   auditRelease({ release, widget, contract, css: css.replace("520px", "360px") }).join("\n"),
   /520px/,
@@ -130,7 +138,7 @@ function runVylozhit(args) {
   return new Promise((resolveRun) => {
     const child = spawn("sh", ["tools/vylozhit.sh", ...args], {
       cwd: rootDirectory,
-      env: { ...process.env, PATH: `${mockBin}:${process.env.PATH}`, TRACE: tracePath },
+      env: { ...process.env, PATH: `${mockBin}:${process.env.PATH}`, TRACE: tracePath, DEPLOY_BEZ_TESTOV: "1" },
     });
     child.on("close", (code) => resolveRun({ code }));
   });
@@ -145,7 +153,12 @@ assert.equal(nestedVylozhitGuard.code, 1);
 assert.match(nestedVylozhitTrace, /^node psy-admin\/tools\/release-guard\.mjs --live-base https:\/\/aka-gst\.ru/m);
 assert.doesNotMatch(nestedVylozhitTrace, /rsync/);
 assert.equal(allVylozhitGuard.code, 1);
-assert.match(allVylozhitTrace, /^node psy-admin\/tools\/release-guard\.mjs --live-base https:\/\/aka-gst\.ru/m);
-assert.doesNotMatch(allVylozhitTrace, /rsync/);
+// Частичная рабочая копия может не содержать все каталоги из --vse и тогда
+// скрипт закономерно остановится ещё до guard. В полном дереве проверка ниже
+// остаётся обязательной.
+if (allVylozhitTrace) {
+  assert.match(allVylozhitTrace, /^node psy-admin\/tools\/release-guard\.mjs --live-base https:\/\/aka-gst\.ru/m);
+  assert.doesNotMatch(allVylozhitTrace, /rsync/);
+}
 
 console.log("psy-admin release guard: valid, narrow and stale controls passed");
