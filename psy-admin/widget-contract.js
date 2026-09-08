@@ -1,5 +1,5 @@
-import { quickQuestions } from "./content.js?v=psy-widget-20260908-01";
-import { answerQuestion } from "./router.js?v=psy-widget-20260908-01";
+import { quickQuestions } from "./content.js?v=psy-widget-20260908-02";
+import { answerQuestion } from "./router.js?v=psy-widget-20260908-02";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",
@@ -29,9 +29,7 @@ export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoic
   if (!voiceCapabilities) return presentation;
 
   const inputAvailable = Boolean(voiceCapabilities.recognitionAvailable);
-  // Пока Qwen3-TTS не поднят отдельным сервисом, не подменяем выбранный
-  // записанный пример системной браузерной озвучкой.
-  const outputAvailable = false;
+  const outputAvailable = Boolean(voiceCapabilities.speechAvailable);
   return {
     ...presentation,
     voice: {
@@ -40,7 +38,7 @@ export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoic
       fallbackMessage: inputAvailable
         ? (outputAvailable ? "" : "Ответ пока придёт коротким текстом. Озвучивание ответов ещё не подключено.")
         : "Голосовой ввод недоступен в этом браузере. Напишите вопрос текстом.",
-      shouldSpeakReply: false,
+      shouldSpeakReply: outputAvailable,
     },
   };
 }
@@ -70,18 +68,20 @@ export function reduceWidgetState(state, action) {
 }
 
 export function createHandoffPayload(fields) {
+  const requestedKind = String(fields.requestKind || "").trim();
   return {
-    kind: "specialist",
-    subject: String(fields.specialist || "").trim(),
+    kind: ["specialist", "seminar", "rental"].includes(requestedKind) ? requestedKind : "specialist",
+    subject: String(fields.subject || "").trim(),
     requestedDateTime: String(fields.requestedTime || "").trim(),
+    clientName: String(fields.clientName || "").trim(),
     details: String(fields.comment || "").trim(),
     contact: String(fields.contact || "").trim(),
     consent: fields.consent === true,
   };
 }
 
-// Последний барьер перед будущим TTS: ответ должен остаться кратким.
-// Вопрос пользователя никуда не отправляется.
+// Ответ для озвучивания должен остаться кратким и не читать адреса ссылок.
+// Вопрос уходит в серверный помощник, но сервер не сохраняет его в базе или журнале.
 export function sanitizeSpokenText(rawText, linkLabels = []) {
   let text = String(rawText || "");
   for (const label of linkLabels) {

@@ -4,7 +4,7 @@ import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
 import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260908-01";
+const widgetVersion = "psy-widget-20260908-02";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -36,25 +36,30 @@ assert.match(widgetSource, /class="psy-widget-evaluation-toggle"[^>]*aria-expand
 assert.match(widgetSource, /id="psy-widget-evaluation-content" hidden/);
 assert.match(widgetSource, /preparedQuestionCases/);
 assert.doesNotMatch(widgetSource, /Только открытые источники|Демо по открытым страницам|Демо-передача/);
-assert.match(widgetSource, /Запись в центр «Орион‑С»/);
-assert.match(widgetSource, /Скоро здесь появятся актуальные расписания специалистов и свободные окна для записи\./);
+assert.match(widgetSource, /Запись, семинары и аренда/);
+assert.match(widgetSource, /Пока точного расписания нет/);
 assert.match(widgetSource, /администратор всё уточнит и свяжется с вами\./);
-assert.match(widgetSource, /Желаемый специалист/);
+assert.match(widgetSource, /name="requestKind"/);
+assert.match(widgetSource, /К кому или на что хотите записаться\?/);
 for (const specialist of ["Смирнова Юлия Сергеевна", "Сербина Людмила Николаевна", "Белозеров Евгений Владимирович", "Бутусова Елена Сергеевна", "Андреева Татьяна Владимировна", "Гайнулина Оксана Владимировна", "Извекова Ирина Владимировна", "Сатикова Светлана Валентиновна"]) {
   assert.match(widgetSource, new RegExp(specialist));
 }
 assert.match(widgetSource, /name="requestedTime"/);
+assert.match(widgetSource, /name="clientName"/);
 assert.match(widgetSource, /name="comment"/);
 assert.match(widgetSource, /name="contact"/);
 assert.match(widgetSource, /name="consent"/);
 assert.doesNotMatch(widgetSource, /__psyAdminTestInbox|PSY-TEST|Добавить в тестовый стенд/);
-assert.deepEqual(createHandoffPayload({ specialist: "Юлия Смирнова", requestedTime: "будни вечером", comment: "Первичная встреча", contact: "+7 900 000-00-00", consent: true }), {
-  kind: "specialist", subject: "Юлия Смирнова", requestedDateTime: "будни вечером", details: "Первичная встреча", contact: "+7 900 000-00-00", consent: true,
+assert.deepEqual(createHandoffPayload({ requestKind: "specialist", subject: "Юлия Смирнова", requestedTime: "будни вечером", clientName: "Анна", comment: "Первичная встреча", contact: "+7 900 000-00-00", consent: true }), {
+  kind: "specialist", subject: "Юлия Смирнова", requestedDateTime: "будни вечером", clientName: "Анна", details: "Первичная встреча", contact: "+7 900 000-00-00", consent: true,
 });
+assert.equal(createHandoffPayload({ requestKind: "rental" }).kind, "rental");
+assert.equal(createHandoffPayload({ requestKind: "seminar" }).kind, "seminar");
+assert.equal(createHandoffPayload({ requestKind: "unexpected" }).kind, "specialist");
 assert.match(widgetSource, /data-assistant-host="live"/);
 assert.match(widgetSource, /<a class="psy-widget-payment" href="https:\/\/orion-center\.ru\/payment" target="_blank" rel="noopener noreferrer">/);
-assert.match(widgetSource, /Оплатить ↗/);
-assert.match(widgetSource, /Официальный сайт/);
+assert.match(widgetSource, /Перейти к оплате ↗/);
+assert.match(widgetSource, /После выбора и согласования услуги/);
 assert.doesNotMatch(widgetSource, /href="\/psy-admin\/booking\/\?kind=/);
 assert.doesNotMatch(widgetSource, /<select[^>]+name="requestedTime"/);
 assert.match(widgetCss, /\.psy-widget-handoff \{ display: grid;/);
@@ -65,7 +70,7 @@ assert.match(widgetCss, /\.psy-widget-voice-status \{[^}]*min-height: 1\.35em;[^
 assert.match(widgetCss, /\.psy-widget-message\.assistant \{[^}]*justify-self: end;[^}]*width: fit-content;/);
 assert.doesNotMatch(widgetSource, /\/psy-admin\/payment/);
 assert.match(widgetSource, /psyadmin-A\.wav/);
-assert.match(widgetSource, /new URL\("\.\/audio\/voices\/psyadmin-A\.wav\?v=psy-widget-20260908-01", import\.meta\.url\)\.href/);
+assert.match(widgetSource, /new URL\("\.\/audio\/voices\/psyadmin-A\.wav\?v=psy-widget-20260908-02", import\.meta\.url\)\.href/);
 assert.match(widgetSource, /previewAudio\.crossOrigin = "anonymous"/);
 const widgetCorsStart = caddyfile.indexOf("@orion_widget_assets");
 const widgetCors = caddyfile.slice(widgetCorsStart, caddyfile.indexOf("root * /srv", widgetCorsStart));
@@ -78,7 +83,7 @@ assert.doesNotMatch(widgetCors.replaceAll("https://orion-center.ru", "https://at
 assert.doesNotMatch(widgetSource, /psyadmin-B\.wav/);
 assert.doesNotMatch(widgetSource, /psyadmin-C\.wav/);
 assert.doesNotMatch(widgetSource, /psyadmin-D\.ogg/);
-assert.match(widgetSource, /Для прослушивания доступен голос A\./);
+assert.match(widgetSource, /Ответ помощника будет озвучен\./);
 assert.doesNotMatch(widgetSource, /естественный голос/i);
 assert.match(widgetSource, /data-voice-volume="0\.55" data-voice-eq-gain="-5"/);
 assert.match(widgetSource, /data-voice-stop/);
@@ -97,7 +102,11 @@ assert.match(widgetSource, /recognition\.continuous = true/);
 assert.match(widgetSource, /Можете делать паузы/);
 assert.match(widgetSource, /voiceIsActive/);
 assert.match(widgetCss, /psy-widget-listening/);
-assert.doesNotMatch(widgetSource, /SpeechSynthesisUtterance|speechSynthesis\.speak/);
+assert.match(widgetSource, /new SpeechSynthesisUtterance/);
+assert.match(widgetSource, /speechSynthesis\.speak/);
+assert.match(widgetSource, /new URL\("\.\/booking\/api\/ask", import\.meta\.url\)\.href/);
+assert.match(widgetSource, /fetch\(assistantApiUrl/);
+assert.match(widgetSource, /sanitizeSpokenText/);
 assert.doesNotMatch(widgetSource, /data-question="У меня мысли о самоубийстве"/);
 const preparedAnswers = quickQuestions.map(({ question }) => answerQuestion(question));
 assert.equal(preparedAnswers.filter(({ kind }) => kind === "fallback" || kind === "empty").length, 0);

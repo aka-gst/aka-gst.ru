@@ -1,11 +1,12 @@
-import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-01";
+import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-02";
 
-const voicePreviewUrl = new URL("./audio/voices/psyadmin-A.wav?v=psy-widget-20260908-01", import.meta.url).href;
+const voicePreviewUrl = new URL("./audio/voices/psyadmin-A.wav?v=psy-widget-20260908-02", import.meta.url).href;
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
+const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-01&theme=orion-blue-20260907", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-02&theme=orion-blue-20260907", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -16,7 +17,7 @@ mount.innerHTML = `
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
-        <div><b>AI-администратор</b><span>Можно спросить голосом или написать. Для прослушивания доступен голос A.</span></div>
+        <div><b>AI-администратор</b><span>Можно спросить голосом или написать. Ответ помощника будет озвучен.</span></div>
         <div class="psy-widget-head-actions">
           <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить голос" title="Остановить голос: пробел">■ Стоп</button>
           <button class="psy-widget-fullscreen" type="button" aria-label="Развернуть чат на весь экран">↗</button>
@@ -39,11 +40,18 @@ mount.innerHTML = `
       </div>
       <div class="psy-widget-messages" aria-live="polite"></div>
       <section class="psy-widget-handoff-area" aria-label="Заявка в центр Орион-С">
-        <button class="psy-widget-handoff-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-handoff">Оставить заявку администратору</button>
+        <button class="psy-widget-handoff-toggle" type="button" aria-expanded="false" aria-controls="psy-widget-handoff">Запись, аренда и оплата</button>
         <form class="psy-widget-handoff" id="psy-widget-handoff" hidden>
-          <p><b>Запись в центр «Орион‑С»</b><span>Скоро здесь появятся актуальные расписания специалистов и свободные окна для записи. Пока укажите, к кому хотите записаться, желаемые дату и время — администратор всё уточнит и свяжется с вами.</span></p>
-          <label>Желаемый специалист
-            <input name="specialist" list="psy-widget-specialists" maxlength="120" placeholder="Имя психолога или «помогите выбрать»" required>
+          <p><b>Запись, семинары и аренда</b><span>Пока точного расписания нет. Укажите, что вам нужно, желаемые дату и время — администратор всё уточнит и свяжется с вами. После согласования услугу можно оплатить на официальной странице.</span></p>
+          <label>Что вас интересует?
+            <select name="requestKind" required>
+              <option value="specialist">Консультация психолога</option>
+              <option value="seminar">Семинар или программа</option>
+              <option value="rental">Аренда зала или кабинета</option>
+            </select>
+          </label>
+          <label><span data-handoff-subject-label>К кому или на что хотите записаться?</span>
+            <input name="subject" list="psy-widget-specialists" maxlength="160" placeholder="Имя психолога или «помогите выбрать»" required>
             <datalist id="psy-widget-specialists">
               <option value="Помогите выбрать специалиста"></option>
               <option value="Смирнова Юлия Сергеевна"></option>
@@ -56,9 +64,14 @@ mount.innerHTML = `
               <option value="Сатикова Светлана Валентиновна"></option>
             </datalist>
           </label>
-          <label>Желаемое время
+          <div class="psy-widget-handoff-grid">
+          <label>Желаемые дата и время
             <input name="requestedTime" maxlength="120" placeholder="Например: будни после 18:00" required>
           </label>
+          <label>Ваше имя
+            <input name="clientName" maxlength="80" autocomplete="name" placeholder="Как к вам обращаться" required>
+          </label>
+          </div>
           <label>Комментарий
             <textarea name="comment" maxlength="500" rows="2" placeholder="Что важно учесть"></textarea>
           </label>
@@ -73,8 +86,8 @@ mount.innerHTML = `
           <p class="psy-widget-handoff-status" aria-live="polite"></p>
         </form>
         <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
-          <span>Оплатить ↗</span>
-          <small>Официальный сайт</small>
+          <span>Перейти к оплате ↗</span>
+          <small>После выбора и согласования услуги</small>
         </a>
       </section>
       <form class="psy-widget-form">
@@ -120,6 +133,9 @@ const evaluationContent = root.querySelector("#psy-widget-evaluation-content");
 const handoffToggle = root.querySelector(".psy-widget-handoff-toggle");
 const handoffForm = root.querySelector(".psy-widget-handoff");
 const handoffStatus = root.querySelector(".psy-widget-handoff-status");
+const handoffKind = handoffForm.querySelector("[name='requestKind']");
+const handoffSubject = handoffForm.querySelector("[name='subject']");
+const handoffSubjectLabel = handoffForm.querySelector("[data-handoff-subject-label]");
 let previewAudio = null;
 let previewAudioContext = null;
 let recognition = null;
@@ -135,7 +151,7 @@ let state = createWidgetState();
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
-  speechAvailable: false,
+  speechAvailable: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
 };
 
 function appendMessage(role, answer) {
@@ -289,13 +305,67 @@ function softenPreviewTone(button) {
   }
 }
 
+function speakReply(text) {
+  const presentation = widgetPresentation(window.innerWidth, voiceCapabilities);
+  const spokenText = sanitizeSpokenText(text);
+  if (!presentation.voice.shouldSpeakReply || !spokenText) return;
+  stopVoice({ announce: false });
+  const utterance = new SpeechSynthesisUtterance(spokenText);
+  utterance.lang = "ru-RU";
+  utterance.rate = 0.96;
+  const russianVoice = window.speechSynthesis.getVoices().find((voice) => voice.lang?.toLowerCase().startsWith("ru"));
+  if (russianVoice) utterance.voice = russianVoice;
+  utterance.addEventListener("start", () => {
+    setVoicePlaying(true);
+    setVoiceStatus("Помощник отвечает. Выключить звук можно кнопкой 🔇 или «Стоп».");
+  }, { once: true });
+  utterance.addEventListener("end", () => {
+    setVoicePlaying(false);
+    setVoiceStatus("");
+  }, { once: true });
+  utterance.addEventListener("error", () => {
+    setVoicePlaying(false);
+    setVoiceStatus("Ответ показан текстом: браузеру не удалось включить озвучивание.");
+  }, { once: true });
+  window.speechSynthesis.speak(utterance);
+}
+
+function normalizeAssistantResult(result, fallback) {
+  if (!result?.text) return fallback;
+  return {
+    kind: result.kind || "route",
+    text: result.text,
+    spokenText: sanitizeSpokenText(result.text),
+    sources: (result.sources || []).map((source) => ({
+      ...source,
+      url: new URL(source.url || "/", "https://orion-center.ru/").href,
+    })),
+  };
+}
+
 async function ask(question, askedByVoice = false) {
   const value = question.trim();
   if (!value) return;
   appendMessage("user", { text: value });
-  const result = routeWidgetQuestion(value);
+  const fallback = routeWidgetQuestion(value);
+  let result = fallback;
+  try {
+    const response = await fetch(assistantApiUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ question: value }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Помощник временно недоступен.");
+    result = normalizeAssistantResult(data, fallback);
+  } catch {
+    setVoiceStatus("Сервер временно недоступен — показан проверенный ответ из резервной базы.");
+  }
   appendMessage("assistant", result);
-  if (askedByVoice) setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities, true).voice.fallbackMessage);
+  speakReply(result.spokenText || result.text);
+  if (askedByVoice && !voiceCapabilities.speechAvailable) {
+    setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities, true).voice.fallbackMessage);
+  }
   questionInput.value = "";
   questionInput.focus({ preventScroll: true });
 }
@@ -374,15 +444,38 @@ handoffToggle.addEventListener("click", () => {
   const expanded = handoffToggle.getAttribute("aria-expanded") !== "true";
   handoffToggle.setAttribute("aria-expanded", String(expanded));
   handoffForm.hidden = !expanded;
-  handoffToggle.textContent = expanded ? "Скрыть форму заявки" : "Оставить заявку администратору";
-  if (expanded) handoffForm.querySelector("[name='specialist']")?.focus({ preventScroll: true });
+  handoffToggle.textContent = expanded ? "Скрыть форму" : "Запись, аренда и оплата";
+  if (expanded) handoffKind.focus({ preventScroll: true });
 });
+const handoffModes = {
+  specialist: {
+    label: "К кому или на что хотите записаться?",
+    placeholder: "Имя психолога или «помогите выбрать»",
+  },
+  seminar: {
+    label: "Какой семинар или программа вас интересует?",
+    placeholder: "Название или тема мероприятия",
+  },
+  rental: {
+    label: "Какой зал или кабинет вам нужен?",
+    placeholder: "Например: кабинет для консультации",
+  },
+};
+function renderHandoffMode() {
+  const mode = handoffModes[handoffKind.value] || handoffModes.specialist;
+  handoffSubjectLabel.textContent = mode.label;
+  handoffSubject.placeholder = mode.placeholder;
+}
+handoffKind.addEventListener("change", renderHandoffMode);
+renderHandoffMode();
 handoffForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const fields = new FormData(handoffForm);
   const payload = createHandoffPayload({
-    specialist: String(fields.get("specialist") || ""),
+    requestKind: String(fields.get("requestKind") || ""),
+    subject: String(fields.get("subject") || ""),
     requestedTime: String(fields.get("requestedTime") || ""),
+    clientName: String(fields.get("clientName") || ""),
     comment: String(fields.get("comment") || ""),
     contact: String(fields.get("contact") || ""),
     consent: fields.get("consent") === "yes",
@@ -402,6 +495,7 @@ handoffForm.addEventListener("submit", async (event) => {
     handoffStatus.dataset.state = "success";
     handoffStatus.textContent = `Заявка отправлена. Номер: ${result.publicCode}. ${result.message || "Администратор свяжется с вами."}`;
     handoffForm.reset();
+    renderHandoffMode();
   } catch (error) {
     handoffStatus.dataset.state = "error";
     handoffStatus.textContent = error?.message || "Сервис записи временно недоступен. Попробуйте ещё раз позже.";

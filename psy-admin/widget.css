@@ -79,6 +79,7 @@
 .psy-widget-handoff-area { padding: 0 16px 12px; }
 .psy-widget-handoff-toggle { width: 100%; min-height: var(--psy-widget-touch-target); border: 1px solid var(--psy-widget-primary-border); border-radius: 10px; background: #fff; color: var(--psy-widget-primary); font-weight: 800; cursor: pointer; }
 .psy-widget-handoff { display: grid; gap: 10px; margin-top: 10px; padding: 12px; border-radius: 12px; background: #f7f4fb; }
+.psy-widget-handoff-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .psy-widget-handoff p { display: grid; gap: 2px; margin: 0; font-size: .82rem; }
 .psy-widget-handoff p span { color: #6a6378; }
 .psy-widget-handoff label { display: grid; gap: 4px; font-size: .82rem; font-weight: 700; }
@@ -108,5 +109,6 @@
   .psy-widget-payment { min-height: 58px; font-size: .78rem; }
   .psy-widget-payment span { font-size: .8rem; }
   .psy-widget-payment small { font-size: .68rem; }
+  .psy-widget-handoff-grid { grid-template-columns: 1fr; }
   .psy-widget-form { grid-template-columns: minmax(0, 1fr) var(--psy-widget-touch-target) auto; }
 }
