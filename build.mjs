@@ -1620,7 +1620,7 @@ ${сборникиПоказ
   .map((c) => {
     const active = c.stories.some((st) => st.slug === current);
     return `        <details class="reader-side-group${active ? ' is-current' : ''}"${active ? ' open' : ''}>
-          <summary class="reader-side-book" id="reader-side-${esc(c.id)}" aria-expanded="${active}" aria-controls="reader-side-list-${esc(c.id)}"><span>${esc(c.title)}</span><span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span></summary>
+          <summary class="reader-side-book" id="reader-side-${esc(c.id)}" aria-expanded="${active}" aria-controls="reader-side-list-${esc(c.id)}"><span>${esc(c.title)}</span><span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span>${active ? '<span class="reader-side-current">текущий сборник</span>' : ''}</summary>
         <ul id="reader-side-list-${esc(c.id)}">
 ${c.stories
   .map(
