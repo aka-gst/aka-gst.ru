@@ -48,13 +48,27 @@
   }
 
   // details/summary дают клавиатурное управление без собственного велосипеда;
-  // aria-expanded синхронизируем с реальным состоянием каждой секции.
-  for (const группа of document.querySelectorAll('.reader-side-group')) {
+  // aria-expanded синхронизируем с реальным состоянием каждой секции. При
+  // раскрытии одной закрываем остальные, но закрыть последнюю не мешаем.
+  const группы = [...document.querySelectorAll('.reader-side-group')];
+  const обновитьСостояния = () => {
+    for (const группа of группы) {
+      const заголовок = группа.querySelector('.reader-side-book');
+      заголовок?.setAttribute('aria-expanded', String(группа.open));
+    }
+  };
+  for (const группа of группы) {
     const заголовок = группа.querySelector('.reader-side-book');
-    const обновитьСостояние = () => заголовок?.setAttribute('aria-expanded', String(группа.open));
-    группа.addEventListener('toggle', обновитьСостояние);
-    обновитьСостояние();
+    группа.addEventListener('toggle', () => {
+      if (группа.open) {
+        for (const другая of группы) {
+          if (другая !== группа) другая.open = false;
+        }
+      }
+      обновитьСостояния();
+    });
   }
+  обновитьСостояния();
 
   const рассказ = document.querySelector('.story');
   if (!рассказ) return;

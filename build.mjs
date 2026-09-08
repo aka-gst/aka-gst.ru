@@ -1620,7 +1620,7 @@ ${сборникиПоказ
   .map((c) => {
     const active = c.stories.some((st) => st.slug === current);
     return `        <details class="reader-side-group${active ? ' is-current' : ''}"${active ? ' open' : ''}>
-          <summary class="reader-side-book" id="reader-side-${esc(c.id)}" aria-expanded="${active}" aria-controls="reader-side-list-${esc(c.id)}"><span>${esc(c.title)}</span><span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span></summary>
+          <summary class="reader-side-book" id="reader-side-${esc(c.id)}" aria-expanded="${active}" aria-controls="reader-side-list-${esc(c.id)}"><span>${esc(c.title)}</span> <span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span></summary>
         <ul id="reader-side-list-${esc(c.id)}">
 ${c.stories
   .map(
@@ -1888,16 +1888,16 @@ for (const [i, st] of storyList.entries()) {
   <body class="reader">
     <div class="reader-progress" aria-hidden="true"><i></i></div>
 ${readerTopbar}
-    <header class="reader-top">
-      <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
-    </header>
     <main id="main" class="reader-main reader-main--wide">
 ${readerSide(st.slug)}
       <div class="reader-col">
+      <div class="reader-story-toolbar">
+        <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
+      </div>
       <article class="story" data-story="${esc(st.slug)}">
-        <p class="story-book">${esc(st.book.title)} · ${esc(st.book.year)}</p>
-        <h1>${esc(st.title)}</h1>
-        <p class="story-meta">${minutes(st.words)} мин · ${esc(book.автор)}</p>
+        <header class="story-heading">
+          <h1>${esc(st.title)}</h1>
+        </header>
         ${
           чемИллюстрирован(st, st.book)
             ? (() => {

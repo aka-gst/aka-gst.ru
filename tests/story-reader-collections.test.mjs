@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import vm from 'node:vm';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const page = read('rasskazy/pulya-v-stakane/index.html');
@@ -38,4 +39,62 @@ test('collection headings are full-size controls and the page owns vertical scro
   const sidebar = css.match(/\.reader-side\s*\{([^}]+)\}/)?.[1] || '';
   assert.doesNotMatch(sidebar, /overflow(?:-y)?:\s*(?:auto|scroll)/);
   assert.doesNotMatch(sidebar, /max-height:\s*calc\(100vh/);
+});
+
+test('opening another collection closes the previous one while zero open remains allowed', () => {
+  const group = (open = false) => {
+    const listeners = new Map();
+    const attrs = new Map();
+    const summary = { setAttribute: (name, value) => attrs.set(name, value) };
+    return {
+      open,
+      attrs,
+      addEventListener: (name, listener) => listeners.set(name, listener),
+      querySelector: (selector) => selector === '.reader-side-book' ? summary : null,
+      toggle(value) {
+        this.open = value;
+        listeners.get('toggle')?.();
+      },
+    };
+  };
+  const groups = [group(true), group(false), group(false)];
+  const context = {
+    document: {
+      documentElement: { dataset: {} },
+      querySelector: () => null,
+      querySelectorAll: (selector) => selector === '.reader-side-group' ? groups : [],
+    },
+    localStorage: { getItem: () => null, setItem: () => {} },
+  };
+
+  vm.runInNewContext(script, context);
+  groups[1].toggle(true);
+  assert.deepEqual(groups.map(({ open }) => open), [false, true, false]);
+  assert.deepEqual(groups.map(({ attrs }) => attrs.get('aria-expanded')), ['false', 'true', 'false']);
+
+  groups[1].toggle(false);
+  assert.deepEqual(groups.map(({ open }) => open), [false, false, false]);
+  assert.deepEqual(groups.map(({ attrs }) => attrs.get('aria-expanded')), ['false', 'false', 'false']);
+});
+
+test('story detail uses a compact toolbar and its content heading contains only the title', () => {
+  assert.match(page, /<div class="reader-story-toolbar">[\s\S]*?<a class="site-home"[\s\S]*?<div class="reader-bar"/);
+  assert.doesNotMatch(page, /<header class="reader-top">/);
+
+  const storyHeader = page.match(/<header class="story-heading">([\s\S]*?)<\/header>/)?.[1] || '';
+  assert.match(storyHeader, /^\s*<h1>Пуля в стакане<\/h1>\s*$/);
+  assert.doesNotMatch(page, /class="story-book"/);
+  assert.doesNotMatch(page, /class="story-meta"/);
+  assert.match(page, /<title>Пуля в стакане — Сергей Гостов<\/title>/,
+    'автор остаётся в SEO title');
+
+  const detailControls = css.match(/\.reader-story-toolbar \.reader-bar button\s*\{([^}]+)\}/)?.[1] || '';
+  assert.match(detailControls, /min-width:\s*44px/);
+  assert.match(detailControls, /height:\s*44px/);
+});
+
+test('collection title and year do not join in the accessible summary text', () => {
+  const summary = page.match(/<summary class="reader-side-book"[^>]*>([\s\S]*?)<\/summary>/)?.[1] || '';
+  const textContent = summary.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  assert.match(textContent, /счастье 2020/);
 });
