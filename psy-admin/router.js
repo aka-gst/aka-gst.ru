@@ -1,5 +1,5 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260908-03";
-import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260908-03";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260908-04";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260908-04";
 
 const normalize = (value) => value
   .toLocaleLowerCase("ru-RU")
@@ -107,7 +107,21 @@ export function answerQuestion(rawQuestion) {
     };
   }
 
-  if (/(ближайш|следующ).*(семинар|мероприят|программ)|(семинар|мероприят|программ).*(ближайш|следующ)/i.test(query)) {
+  const asksForNextEvent = /(ближайш|следующ).*(семинар|мероприят|программ)|(семинар|мероприят|программ).*(ближайш|следующ)/i.test(query);
+  const asksForClubPrice = /(сколько стоит|цена|почем).*(психологическ.*клуб|клуб)|(психологическ.*клуб|клуб).*(сколько стоит|цена|почем)/i.test(query);
+
+  if (asksForNextEvent && asksForClubPrice) {
+    return {
+      kind: "offer",
+      title: "Ближайшее мероприятие и стоимость клуба",
+      text: `Ближайшее опубликованное мероприятие — «${nextPublishedEvent.title}»: старт ${nextPublishedEvent.startsAt}, ${nextPublishedEvent.duration}. Разовое посещение психологического клуба «Вечер с пользой» стоит 1 000 руб.; регистрация обязательна.`,
+      url: "https://orion-center.ru/schedule#actual",
+      linkText: "Открыть актуальное расписание",
+      action: { label: "Открыть страницу клуба", url: "https://orion-center.ru/psycluborion" }
+    };
+  }
+
+  if (asksForNextEvent) {
     return {
       kind: "offer",
       title: "Ближайшее опубликованное мероприятие",

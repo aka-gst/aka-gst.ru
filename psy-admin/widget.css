@@ -85,6 +85,10 @@
 .psy-widget-handoff-status[data-state="success"] { color: #126c50; }
 .psy-widget-handoff-status[data-state="error"] { color: #a43131; }
 .psy-widget-handoff-area > .psy-widget-payment { min-height: 44px; margin-top: 8px; text-align: center; }
+@media (max-width: 1320px), (max-height: 800px) {
+  .psy-widget-trigger { width: 52px; min-width: 52px; padding: 12px; }
+  .psy-widget-trigger span:last-child { display: none; }
+}
 @media (max-width: 620px) {
   .psy-widget-trigger { right: 16px; bottom: 16px; min-width: var(--psy-widget-touch-target); padding: 12px; }
   .psy-widget-trigger span:last-child { display: none; }
