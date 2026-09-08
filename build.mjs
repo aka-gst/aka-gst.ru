@@ -803,8 +803,31 @@ const polosaFraz = фразыСергея.length
           <script type="application/json" data-term-frazy>${JSON.stringify(фразыСергея).replace(/</g, '\\u003c')}</script>`
   : '';
 
+const workPathImage = 'put/put-documentary-pilot.webp';
+const workPathImageSize = imageSize(`assets/${workPathImage}`);
+const workPathChapters = put.chapters
+  .map((chapter) => `<li data-work-path-chapter="${esc(chapter.id)}"><span class="sr-only">${esc(chapter.title)}</span></li>`)
+  .join('');
+const workPath = `
+        <article class="work-path" aria-label="Путь: семь глав">
+          <div class="work-path-copy">
+            <p class="kicker">Путь</p>
+            <p class="work-path-thesis">${esc(put.subtitle)}</p>
+            <a class="work-path-cta" href="/put/comic/">Комикс: как я дошёл до жизни такой <span aria-hidden="true">→</span></a>
+          </div>
+          <figure class="work-path-visual">
+            <img src="/assets/${workPathImage}?v=${assetVersion(`assets/${workPathImage}`)}" alt="${esc(put.hero.imageAlt)}" width="${workPathImageSize.w}" height="${workPathImageSize.h}" decoding="async">
+            <figcaption class="sr-only">Семь глав пути Сергея: от желания через ошибку и проверку к следующей вещи.</figcaption>
+            <div class="work-path-route">
+              <div class="work-path-stages" aria-hidden="true"><span>желание</span><span>ошибка</span><span>проверка</span><span>следующая вещь</span></div>
+              <ol class="work-path-chapters" aria-label="Семь глав пути">${workPathChapters}</ol>
+            </div>
+          </figure>
+        </article>`;
+
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
+${workPath}
         <div class="work-duet">
           <div class="work-col work-col--gateway">
           <article class="work-system work-gateway">
@@ -828,14 +851,6 @@ const workLead = `
           <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
           </div>
           <div class="work-col work-col--dharma">
-          <article class="work-put work-system work-comics">
-            <p class="kicker">Путь</p>
-            <a class="work-put-main" href="/put/comic/">Комикс: как я дошёл до жизни такой</a>
-            <p class="work-put-sub">Семь глав картинками: с чего начал, что сломал и чем чиню.</p>
-            <p class="work-put-links">
-              <a class="work-put-alt" href="#masterskaya">заглянуть в мастерскую →</a>
-            </p>
-          </article>
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
@@ -1234,6 +1249,7 @@ const html = `<!doctype html>
     <meta name="twitter:image" content="${esc(site.url)}${esc(site.ogImage)}">
     <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
+    <link rel="stylesheet" href="/assets/work-path.css?v=${assetVersion('assets/work-path.css')}">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
@@ -1301,7 +1317,7 @@ ${socialLinks('footer')}
 // читает как подпись; абзацы страниц и рассказы не задеты. Точки МЕЖДУ
 // предложениями внутри строки остаются, снимается последняя. Вопросительный
 // и восклицательный знаки не трогаются: правило про точку.
-const БЕЗ_ТОЧКИ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'work-put-sub',
+const БЕЗ_ТОЧКИ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'work-path-thesis',
   'gw-case', 'gw-note', 'mast-stamp', 'kicker', 'job-role', 'shot-caption'];
 // Описания на первом экране лежат в <p> БЕЗ класса — их ловим по контейнеру.
 // Первая версия прохода их не видела вовсе, а проверка тоже смотрела только

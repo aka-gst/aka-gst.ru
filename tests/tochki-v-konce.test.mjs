@@ -12,7 +12,7 @@ import test from 'node:test';
 //
 // Классы прицельные — только то, что человек читает как подпись. Абзацы
 // страниц, главы «Пути» и рассказы сюда не входят: там точка на месте.
-const КЛАССЫ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'work-put-sub',
+const КЛАССЫ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'work-path-thesis',
   'gw-case', 'gw-note', 'mast-stamp', 'kicker', 'job-role', 'shot-caption'];
 
 const КОНТЕЙНЕРЫ = ['work-gateway-copy', 'work-dharma-copy'];
@@ -49,7 +49,7 @@ test('в конце коротких строк карточек нет точк
   assert.deepEqual(сТочкой, [], `строки с точкой в конце: ${сТочкой.join(' | ')}`);
 
   // Отрицательный контроль: та же мера обязана краснеть на подсаженной точке.
-  const подсажено = строки(html.replace(/(<p class="work-put-sub">[^<]*)</, '$1.<'));
+  const подсажено = строки(html.replace(/(<p class="work-path-thesis">[^<]*)</, '$1.<'));
   assert.ok(подсажено.some((с) => с.endsWith('.')), 'мера не видит точку даже когда её поставили — она слепая');
 });
 
@@ -62,13 +62,13 @@ test('вопросительный и восклицательный знаки 
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const источник = readFileSync(new URL('../build.mjs', import.meta.url), 'utf8')
     + readFileSync(new URL('../data/projects.json', import.meta.url), 'utf8');
-  const сЗнаком = [...источник.matchAll(/class="(?:tagline|gcard-text|card-text|work-put-sub)"[^>]*>([^<]*[?!])</g)]
+  const сЗнаком = [...источник.matchAll(/class="(?:tagline|gcard-text|card-text|work-path-thesis)"[^>]*>([^<]*[?!])</g)]
     .map((m) => m[1].trim());
   for (const строка of сЗнаком) {
     assert.ok(html.includes(строка), `строка «${строка.slice(0, 40)}…» потеряла знак по дороге на страницу`);
   }
   // Положительный контроль наоборот: сама проверка обязана уметь найти
   // такую строку, если её подсадить в источник.
-  const подсажено = [...'<p class="tagline">А ты уверен?</p>'.matchAll(/class="(?:tagline|gcard-text|card-text|work-put-sub)"[^>]*>([^<]*[?!])</g)];
+  const подсажено = [...'<p class="tagline">А ты уверен?</p>'.matchAll(/class="(?:tagline|gcard-text|card-text|work-path-thesis)"[^>]*>([^<]*[?!])</g)];
   assert.equal(подсажено.length, 1, 'мера не видит строку с вопросом даже когда её подсадили');
 });
