@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
+import { tmpdir } from "node:os";
 
 const repoRoot = new URL("../", import.meta.url).pathname;
 const voiceA = await readFile(new URL("./audio/voices/psyadmin-A.wav", import.meta.url));
@@ -67,9 +68,14 @@ const server = createServer(async (request, response) => {
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const port = server.address().port;
-const debuggingPort = port + 1;
+const portProbe = createServer();
+await new Promise((resolve) => portProbe.listen(0, "127.0.0.1", resolve));
+const debuggingPort = portProbe.address().port;
+await new Promise((resolve) => portProbe.close(resolve));
+const profile = await mkdtemp(join(tmpdir(), "psy-assistant-host-test-"));
 const chrome = spawn("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", [
   "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+  `--user-data-dir=${profile}`,
   `--remote-debugging-port=${debuggingPort}`, `http://127.0.0.1:${port}/__assistant-host-test.html`,
 ], { stdio: "ignore" });
 
@@ -132,26 +138,25 @@ try {
     };
   })()`);
   assert.equal(initial.marker, "live");
-  assert.deepEqual(initial.voiceLabels, ["A"]);
-  assert.equal(initial.stopText, "■ Стоп");
+  assert.deepEqual(initial.voiceLabels, []);
+  assert.equal(initial.stopText, "Остановить голос");
   assert.equal(initial.stopVisible, true);
   assert.doesNotMatch(initial.text, /естественный голос|голос B|голос Б|голос C|голос В/i);
-  assert.deepEqual(initial.labels, ["Желаемый специалист", "Желаемое время", "Комментарий", "Телефон или e-mail"]);
+  for (const label of ["Что вас интересует?", "К какому психологу хотите записаться?", "Желаемые дата и время", "Ваше имя", "Комментарий", "Телефон или e-mail"]) {
+    assert.ok(initial.labels.includes(label), `в форме должна быть подпись «${label}»`);
+  }
   assert.match(initial.text, /Я согласен передать указанный контакт администратору центра только для обработки этой заявки\./);
   assert.equal(initial.timeOptions, 0, "Желаемое время не должно изображать расписание слотами");
-  assert.match(initial.text, /Скоро здесь появятся актуальные расписания специалистов и свободные окна для записи\./);
+  assert.match(initial.text, /Для личных консультаций пока нет общего календаря свободных окон/);
 
   const stopResult = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
     const mic = root.querySelector('.psy-widget-mic');
     const before = mic.getBoundingClientRect();
-    root.querySelector('[data-voice-preview]').click();
-    await Promise.resolve();
     root.querySelector('[data-voice-stop]').click();
     const after = mic.getBoundingClientRect();
     return { audioStops: window.__audioStops, speechStops: window.__speechStops, sameGeometry: before.width === after.width && before.height === after.height && before.x === after.x };
   })()`);
-  assert.ok(stopResult.audioStops >= 1);
   assert.ok(stopResult.speechStops >= 1);
   assert.equal(stopResult.sameGeometry, true);
 
@@ -170,25 +175,29 @@ try {
   const handoff = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
     root.querySelector('.psy-widget-handoff-toggle').click();
-    root.querySelector('[name="specialist"]').value = "Помогите выбрать специалиста";
+    root.querySelector('[name="requestKind"]').value = "specialist";
+    root.querySelector('[name="subject"]').value = "Не знаю — администратор поможет подобрать";
     root.querySelector('[name="requestedTime"]').value = "будни после 18:00";
+    root.querySelector('[name="clientName"]').value = "Анна";
     root.querySelector('[name="comment"]').value = "Первая консультация";
     root.querySelector('[name="contact"]').value = "+7 900 000-00-00";
     root.querySelector('[name="consent"]').checked = true;
     root.querySelector('.psy-widget-handoff').requestSubmit();
-    for (let attempt = 0; attempt < 40 && !root.querySelector('.psy-widget-handoff-status').textContent.includes('ORION-RECEIPT'); attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
-    return { receipt: root.querySelector('.psy-widget-handoff-status').textContent, inbox: window.__psyAdminTestInbox, networkRequests: window.__handoffNetworkRequests };
+    for (let attempt = 0; attempt < 40 && !root.querySelector('.psy-widget-message.success'); attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
+    return { receipt: root.querySelector('.psy-widget-message.success')?.textContent || '', formHidden: root.querySelector('.psy-widget-handoff').hidden, inbox: window.__psyAdminTestInbox, networkRequests: window.__handoffNetworkRequests };
   })()`);
   assert.match(handoff.receipt, /Заявка отправлена/);
   assert.match(handoff.receipt, /ORION-RECEIPT/);
+  assert.equal(handoff.formHidden, true);
   assert.equal(handoff.inbox, undefined);
   assert.equal(handoff.networkRequests.length, 1);
   assert.equal(handoff.networkRequests[0].method, "POST");
   assert.match(handoff.networkRequests[0].url, /\/psy-admin\/booking\/api\/requests$/);
   assert.deepEqual(JSON.parse(handoff.networkRequests[0].body), {
     kind: "specialist",
-    subject: "Помогите выбрать специалиста",
+    subject: "Не знаю — администратор поможет подобрать",
     requestedDateTime: "будни после 18:00",
+    clientName: "Анна",
     details: "Первая консультация",
     contact: "+7 900 000-00-00",
     consent: true,
@@ -197,13 +206,15 @@ try {
   const rejectedHandoff = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
     window.__handoffResponseStatus = 503;
-    root.querySelector('[name="specialist"]').value = "Смирнова Юлия Сергеевна";
+    root.querySelector('.psy-widget-handoff-toggle').click();
+    root.querySelector('[name="subject"]').value = "Смирнова Юлия Сергеевна";
     root.querySelector('[name="requestedTime"]').value = "завтра утром";
+    root.querySelector('[name="clientName"]').value = "Анна";
     root.querySelector('[name="contact"]').value = "client@example.test";
     root.querySelector('[name="consent"]').checked = true;
     root.querySelector('.psy-widget-handoff').requestSubmit();
     for (let attempt = 0; attempt < 40 && !root.querySelector('.psy-widget-handoff-status').textContent.includes('недоступен'); attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
-    return { receipt: root.querySelector('.psy-widget-handoff-status').textContent, specialist: root.querySelector('[name="specialist"]').value, networkCount: window.__handoffNetworkRequests.length };
+    return { receipt: root.querySelector('.psy-widget-handoff-status').textContent, specialist: root.querySelector('[name="subject"]').value, networkCount: window.__handoffNetworkRequests.length };
   })()`);
   assert.match(rejectedHandoff.receipt, /временно недоступен/i);
   assert.equal(rejectedHandoff.specialist, "Смирнова Юлия Сергеевна");
@@ -239,4 +250,5 @@ try {
   socket.close();
   chrome.kill("SIGTERM");
   server.close();
+  await rm(profile, { recursive: true, force: true });
 }

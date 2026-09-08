@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
 import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
+import * as widgetContract from "./widget-contract.js";
 
 const widgetVersion = "psy-widget-20260908-04";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
@@ -110,7 +111,7 @@ assert.match(widgetSource, /speechSynthesis\.speak/);
 assert.match(widgetSource, /new URL\("\.\/booking\/api\/ask", import\.meta\.url\)\.href/);
 assert.match(widgetSource, /fetch\(assistantApiUrl/);
 assert.match(widgetSource, /sanitizeSpokenText/);
-assert.match(widgetSource, /const scheduleAnswer = \/orion-center\\\.ru\\\/schedule\//);
+assert.match(widgetSource, /const keepVerifiedAnswer = shouldKeepVerifiedAnswer\(fallback\)/);
 assert.match(widgetSource, /handoffForm\.hidden = true/);
 assert.match(widgetSource, /appendMessage\("assistant", \{ kind: "success", text: successText \}\)/);
 assert.doesNotMatch(widgetSource, /data-question="У меня мысли о самоубийстве"/);
@@ -203,6 +204,8 @@ assert.match(routedClub.text, /1\s*000\s*(руб|₽)/i); // Полный отв
 assert.match(routedClub.action?.label || "", /записаться/i); // И кнопка ссылки остаётся видимой.
 assert.ok(routedClub.spokenText.length > 0);
 assert.doesNotMatch(routedClub.spokenText, /https?:\/\/|www\.|[\\/]|\.(?:html?|php)\b|записаться/i);
+assert.equal(widgetContract.shouldKeepVerifiedAnswer?.(routedClub), true); // Сервер не должен перезаписать проверенную цену общим ответом.
+assert.equal(widgetContract.shouldKeepVerifiedAnswer?.({ kind: "fallback" }), false); // Неизвестный вопрос по-прежнему можно уточнить на сервере.
 
 let widgetState = reduceWidgetState(createWidgetState(), "trigger");
 widgetState = reduceWidgetState(widgetState, "fullscreen");

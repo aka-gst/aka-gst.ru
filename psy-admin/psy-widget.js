@@ -1,4 +1,4 @@
-import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-04";
+import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-04";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
@@ -306,9 +306,9 @@ async function ask(question, askedByVoice = false) {
   appendMessage("user", { text: value });
   const fallback = routeWidgetQuestion(value);
   let result = fallback;
-  const scheduleAnswer = /orion-center\.ru\/schedule/.test(fallback.url || fallback.action?.url || "");
+  const keepVerifiedAnswer = shouldKeepVerifiedAnswer(fallback);
   try {
-    if (scheduleAnswer) throw new Error("use-published-schedule");
+    if (keepVerifiedAnswer) throw new Error("use-verified-answer");
     const response = await fetch(assistantApiUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -318,7 +318,7 @@ async function ask(question, askedByVoice = false) {
     if (!response.ok) throw new Error(data.error || "Помощник временно недоступен.");
     result = normalizeAssistantResult(data, fallback);
   } catch (error) {
-    if (error?.message !== "use-published-schedule") {
+    if (error?.message !== "use-verified-answer") {
       setVoiceStatus("Сервер временно недоступен — показан проверенный ответ из резервной базы.");
     }
   }

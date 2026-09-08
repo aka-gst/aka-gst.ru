@@ -49,17 +49,19 @@ const fixture = `<!doctype html><meta charset="utf-8">
 <script>
   const timer = setInterval(() => {
     const trigger = document.querySelector('.psy-widget-trigger');
-    const primary = document.querySelector('.psy-widget-booking:not(.psy-widget-booking-secondary)');
-    const secondary = document.querySelector('.psy-widget-booking-secondary');
+    const primary = document.querySelector('.psy-widget-handoff button[type="submit"]');
+    const secondary = document.querySelector('.psy-widget-handoff-toggle');
+    const payment = document.querySelector('.psy-widget-payment');
     const submit = document.querySelector('.psy-widget-form button[type="submit"]');
-    if (!trigger || !primary || !secondary || !submit || !document.styleSheets.length) return;
+    if (!trigger || !primary || !secondary || !payment || !submit || !document.styleSheets.length) return;
     clearInterval(timer);
     document.querySelector('.psy-widget-panel').hidden = false;
+    document.querySelector('.psy-widget-handoff').hidden = false;
     const read = (node) => {
       const style = getComputedStyle(node);
       return { background: style.backgroundColor, color: style.color, height: node.getBoundingClientRect().height };
     };
-    const result = { trigger: read(trigger), primary: read(primary), secondary: read(secondary), submit: read(submit) };
+    const result = { trigger: read(trigger), primary: read(primary), secondary: read(secondary), payment: read(payment), submit: read(submit) };
     document.body.dataset.result = JSON.stringify(result);
   }, 20);
 </script>`;
@@ -98,6 +100,9 @@ try {
   assert.equal(result.secondary.background, "rgb(255, 255, 255)", "вторичная кнопка должна быть белой");
   assert.equal(result.secondary.color, "rgb(31, 0, 166)", "вторичная кнопка должна иметь синий текст");
   assert.ok(result.secondary.height >= 44, "вторичная кнопка должна оставаться не ниже 44px");
+  assert.equal(result.payment.background, "rgb(238, 243, 255)", "оплата должна быть выделена светло-синим");
+  assert.equal(result.payment.color, "rgb(31, 0, 166)", "оплата должна иметь синий текст");
+  assert.ok(result.payment.height >= 44, "оплата должна оставаться не ниже 44px");
   console.log("PsyAdmin: сине-белая тема кнопок видима в браузере");
 } finally {
   server.close();

@@ -109,3 +109,7 @@ export function routeWidgetQuestion(question) {
     spokenText: sanitizeSpokenText(answer.spokenText || answer.text, linkLabels),
   };
 }
+
+export function shouldKeepVerifiedAnswer(answer) {
+  return Boolean(answer?.kind && answer.kind !== "fallback");
+}

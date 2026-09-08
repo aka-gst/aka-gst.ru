@@ -67,7 +67,7 @@ try {
       });
       const metrics = result.result.value;
       assert.equal(metrics.newsPosts, 0, "локальная копия не должна выдумывать новости");
-      assert.match(metrics.widgetScript, /orion-blue-20260907/, "страница должна обойти старый кэш виджета");
+      assert.match(metrics.widgetScript, /orion-blue-20260908/, "страница должна обойти старый кэш виджета");
       assert.ok(metrics.newsHeight <= 1, `пустой блок новостей не должен занимать ${metrics.newsHeight}px`);
       assert.ok(metrics.scheduleGap >= 16, `линия расписания должна идти ниже текста, сейчас зазор ${metrics.scheduleGap}px`);
       assert.equal(metrics.documentWidth, metrics.viewportWidth, `страница не должна распирать viewport ${width}px`);
