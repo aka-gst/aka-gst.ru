@@ -11,8 +11,8 @@
     <link rel="icon" href="/assets/favicon-32.png?v=9643b0c3" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=7ac7cb25" type="image/png" sizes="64x64">
     <style>:root{--an-vyhod: cubic-bezier(0.22, 0.61, 0.36, 1);--an-vyhod-rezkiy: cubic-bezier(0.16, 1, 0.3, 1);--an-spokoyno: cubic-bezier(0.4, 0, 0.2, 1);--an-uhod: cubic-bezier(0.4, 0, 1, 1);--an-pruzhina: cubic-bezier(0.34, 1.56, 0.64, 1);--an-pruzhina-myagche: cubic-bezier(0.3, 1.3, 0.6, 1);--an-mikro: 150ms;--an-raskrytie: 280ms;--an-stranica: 500ms}</style>
-    <link rel="stylesheet" href="/assets/site.css?v=6cdbc3fc">
-    <link rel="stylesheet" href="/assets/read.css?v=caed8559">
+    <link rel="stylesheet" href="/assets/site.css?v=5df35593">
+    <link rel="stylesheet" href="/assets/read.css?v=a84d86a4">
     <script defer src="/assets/afterimage-scroll.js?v=5fda5bf4"></script>
     <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
   </head>
@@ -59,9 +59,9 @@
     <main id="main" class="reader-main reader-main--wide">
 
       <nav class="reader-side" aria-label="Все рассказы">
-        <section class="reader-side-group" aria-labelledby="reader-side-a-potom">
-          <p class="reader-side-book" id="reader-side-a-potom"><span>А потом наступит счастье</span><span class="reader-side-meta">2020 · 7 текстов</span></p>
-        <ul>
+        <details class="reader-side-group">
+          <summary class="reader-side-book" id="reader-side-a-potom" aria-expanded="false" aria-controls="reader-side-list-a-potom"><span>А потом наступит счастье</span><span class="reader-side-meta">2020 · 7 текстов</span></summary>
+        <ul id="reader-side-list-a-potom">
           <li><a href="/rasskazy/pulya-v-stakane/">Пуля в стакане</a></li>
           <li><a href="/rasskazy/purpurnye-oblaka/">Пурпурные облака</a></li>
           <li><a href="/rasskazy/potom-vykinem/">Потом выкинем</a></li>
@@ -70,10 +70,10 @@
           <li><a href="/rasskazy/stendap-dlya-nikogo/">Стэндап для никого</a></li>
           <li><a href="/rasskazy/s/">С</a></li>
         </ul>
-        </section>
-        <section class="reader-side-group is-current" aria-labelledby="reader-side-tri-iznutri">
-          <p class="reader-side-book" id="reader-side-tri-iznutri"><span>Три изнутри</span><span class="reader-side-meta">2019 · 9 текстов</span></p>
-        <ul>
+        </details>
+        <details class="reader-side-group is-current" open>
+          <summary class="reader-side-book" id="reader-side-tri-iznutri" aria-expanded="true" aria-controls="reader-side-list-tri-iznutri"><span>Три изнутри</span><span class="reader-side-meta">2019 · 9 текстов</span></summary>
+        <ul id="reader-side-list-tri-iznutri">
           <li><a href="/rasskazy/vstuplenie/">Вступление</a></li>
           <li><a href="/rasskazy/ves-v-otca/">Весь в отца</a></li>
           <li><a href="/rasskazy/ne-poteryaysya/">Не потеряйся</a></li>
@@ -84,10 +84,10 @@
           <li><a href="/rasskazy/nachinka/">Начинка</a></li>
           <li><a href="/rasskazy/zaraza/">Зараза</a></li>
         </ul>
-        </section>
-        <section class="reader-side-group" aria-labelledby="reader-side-solyanochka">
-          <p class="reader-side-book" id="reader-side-solyanochka"><span>Соляночка</span><span class="reader-side-meta">2018 · 7 текстов</span></p>
-        <ul>
+        </details>
+        <details class="reader-side-group">
+          <summary class="reader-side-book" id="reader-side-solyanochka" aria-expanded="false" aria-controls="reader-side-list-solyanochka"><span>Соляночка</span><span class="reader-side-meta">2018 · 7 текстов</span></summary>
+        <ul id="reader-side-list-solyanochka">
           <li><a href="/rasskazy/myasnaya-konserva/">Мясная консерва</a></li>
           <li><a href="/rasskazy/letuny/">Летуны</a></li>
           <li><a href="/rasskazy/bag-v-sudbe/">Баг в судьбе</a></li>
@@ -96,7 +96,7 @@
           <li><a href="/rasskazy/teplovaya-lovushka/">Тепловая ловушка</a></li>
           <li><a href="/rasskazy/prosto-ya-zabyla-kakovo-eto/">Просто я забыла, каково это</a></li>
         </ul>
-        </section>
+        </details>
       </nav>
       <div class="reader-col">
       <article class="story" data-story="chetvertaya-stena">
@@ -255,6 +255,6 @@
     <footer class="sitefoot">
       <span><a href="/" style="text-decoration:none">← aka-gst.ru</a></span>
     </footer>
-    <script src="/assets/read.js?v=d63b409d"></script>
+    <script src="/assets/read.js?v=af59d1e2"></script>
   </body>
 </html>

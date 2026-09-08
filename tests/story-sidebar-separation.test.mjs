@@ -7,7 +7,7 @@ const build = readFileSync(new URL('../build.mjs', import.meta.url), 'utf8');
 
 const checks = [
   ['каждый сборник остаётся отдельной секцией', () => {
-    assert.match(build, /<section class="reader-side-group/);
+    assert.match(build, /<details class="reader-side-group/);
     assert.match(build, /reader-side-book/);
   }],
   ['между сборниками есть заметный вертикальный разрыв', () => {

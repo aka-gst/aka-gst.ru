@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Макетчик — простой инструмент, чтобы собрать схему страницы и передать её дизайнеру.">
+  <meta name="release" content="maketchik-20260908-01">
+  <title>Макетчик — aka-gst</title>
+  <link rel="stylesheet" href="/maketchik/styles.css?v=20260908-01">
+  <script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
+</head>
+<body>
+  <header class="site-head">
+    <a href="/" class="brand" aria-label="На главную aka-gst">aka-gst</a>
+    <span class="save-state" id="save-state" role="status">Схема новая</span>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">Рабочий стол для идеи</p>
+      <h1 id="page-title">Макетчик</h1>
+      <p>Собери страницу из простых блоков. Их можно двигать, растягивать и подписывать — без дизайнерской программы.</p>
+    </section>
+
+    <div id="error" class="error" role="alert" hidden></div>
+
+    <section class="empty" id="empty-state">
+      <button class="primary" id="first-block">Добавить первый блок</button>
+      <button class="text-button" id="load-example">Посмотреть пример</button>
+      <button class="text-button" id="undo-empty" hidden>Вернуть удалённый блок</button>
+      <p>Начни с крупного экрана, а детали добавишь после.</p>
+    </section>
+
+    <section class="workspace" id="workspace" hidden aria-label="Редактор схемы">
+      <div class="toolbar" aria-label="Добавить блок">
+        <button data-add="screen">+ Экран</button>
+        <button data-add="block">+ Блок</button>
+        <button data-add="action">+ Действие</button>
+        <button data-add="note">+ Заметка</button>
+        <span class="toolbar-gap"></span>
+        <button id="undo" disabled>Отменить</button>
+        <button id="fit">Показать всю схему</button>
+      </div>
+
+      <div class="desk">
+        <div class="canvas-shell" id="canvas-shell">
+          <svg id="canvas" viewBox="0 0 1280 760" role="application" aria-label="Схема страницы. Блоки можно двигать стрелками или указателем.">
+            <defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="currentColor" stroke-opacity=".11"/></pattern></defs>
+            <rect width="1280" height="760" class="grid"/>
+            <g id="blocks"></g>
+          </svg>
+        </div>
+
+        <aside class="inspector" id="inspector" aria-label="Настройки выбранного блока">
+          <p class="eyebrow">Выбранный блок</p>
+          <label>Подпись <span id="label-count">0/120</span>
+            <textarea id="label" maxlength="120" rows="4"></textarea>
+          </label>
+          <label>Тип
+            <select id="type"><option value="screen">Экран</option><option value="block">Блок</option><option value="action">Действие</option><option value="note">Заметка</option></select>
+          </label>
+          <button class="danger" id="delete">Удалить блок</button>
+          <p class="hint">Стрелки двигают блок. Alt + стрелки меняют размер.</p>
+        </aside>
+      </div>
+
+      <section class="handoff" aria-labelledby="handoff-title">
+        <h2 id="handoff-title">Готово показать?</h2>
+        <button class="primary" id="handoff">Передать дизайнеру</button>
+        <div class="handoff-actions" id="handoff-actions" hidden>
+          <button id="download-png">Скачать картинку для просмотра</button>
+          <button id="download-json">Скачать схему для дальнейших правок</button>
+          <p>Скачай файл и отправь Кате — автоматически ничего не отправляется.</p>
+        </div>
+      </section>
+    </section>
+
+    <section class="file-actions" aria-label="Работа с файлом">
+      <button id="new-scheme">Новая схема</button>
+      <button id="open-scheme">Открыть сохранённую схему</button>
+      <input id="file-input" type="file" accept="application/json,.json" hidden>
+    </section>
+  </main>
+
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <h2 id="dialog-title">Заменить текущую схему?</h2>
+      <p id="dialog-copy">Сначала можно скачать то, что уже сделано.</p>
+      <div class="dialog-actions">
+        <button value="download">Скачать текущую схему</button>
+        <button value="cancel">Отмена</button>
+        <button class="primary" value="continue">Продолжить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="preview-dialog" class="preview-dialog">
+    <form method="dialog">
+      <h2>Так картинка будет выглядеть</h2>
+      <img id="preview-image" alt="Предпросмотр схемы перед скачиванием">
+      <div class="dialog-actions"><button value="cancel">Назад</button><button class="primary" id="save-preview" value="save">Скачать PNG</button></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/maketchik/app.js?v=20260908-01"></script>
+</body>
+</html>

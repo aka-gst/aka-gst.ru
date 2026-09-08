@@ -29,7 +29,7 @@ DEST="${DEST:-bonita:/opt/zakriva/caddy/site/}"
 SITE="${SITE:-https://aka-gst.ru}"
 
 if [ "${1:-}" = "--vse" ]; then
-  set -- index.html 404.html 503.html assets rasskazy praktikum psy-admin photodata \
+  set -- index.html 404.html 503.html assets rasskazy praktikum psy-admin photodata maketchik \
          qa-quest technomagic test leela zoo puzzle-quest robots.txt sitemap.xml sitemap-pages.xml og.png favicon.svg \
          game-menu.css player-name.js
 fi

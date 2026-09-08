@@ -697,13 +697,13 @@ const practicumSwitch = `
             </div>
             <div class="quequest-copy quequest-actions">
               <div class="quequest-left">
-                <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="128" height="128" loading="lazy" decoding="async"><p class="kicker">Игра · Python</p></div>
+                <div class="quequest-heading"><p class="kicker">Игра · Python</p></div>
                 <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
                 <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы <b aria-hidden="true">↓</b></button>
               </div>
               <div class="quequest-cta">
-                <h3 id="quequest-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QueQuest</a></h3>
-                <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Открыть игру <b aria-hidden="true">↗</b></a>
+                <h3 id="quequest-title"><a class="quequest-brand" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest"><img src="/assets/quequest-mark.svg?v=${assetVersion('assets/quequest-mark.svg')}" alt="" width="128" height="128" loading="lazy" decoding="async"><span>QueQuest</span></a></h3>
+                <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Автоматизировать рутину <b aria-hidden="true">↗</b></a>
               </div>
             </div>
           </article>
@@ -1611,16 +1611,17 @@ ${socialLinks('reader')}
         </nav>
       </header>`;
 
-// Боковой список на больших экранах: сборники и рассказы внутри. Нужен,
-// чтобы переключаться между текстами не возвращаясь в оглавление. На узких
-// экранах не выводится — там он занял бы весь первый экран.
+// Оглавление на больших экранах стоит сбоку, а на узких входит в общий поток.
+// Сборники сворачиваются, поэтому мобильный первый экран не занят всеми
+// двадцатью тремя ссылками сразу.
 const readerSide = (current) => `
       <nav class="reader-side" aria-label="Все рассказы">
 ${сборникиПоказ
-  .map(
-    (c) => `        <section class="reader-side-group${c.stories.some((st) => st.slug === current) ? ' is-current' : ''}" aria-labelledby="reader-side-${esc(c.id)}">
-          <p class="reader-side-book" id="reader-side-${esc(c.id)}"><span>${esc(c.title)}</span><span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span></p>
-        <ul>
+  .map((c) => {
+    const active = c.stories.some((st) => st.slug === current);
+    return `        <details class="reader-side-group${active ? ' is-current' : ''}"${active ? ' open' : ''}>
+          <summary class="reader-side-book" id="reader-side-${esc(c.id)}" aria-expanded="${active}" aria-controls="reader-side-list-${esc(c.id)}"><span>${esc(c.title)}</span><span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span></summary>
+        <ul id="reader-side-list-${esc(c.id)}">
 ${c.stories
   .map(
     (st) => `          <li><a href="/rasskazy/${esc(st.slug)}/"${
@@ -1629,8 +1630,8 @@ ${c.stories
   )
   .join('\n')}
         </ul>
-        </section>`
-  )
+        </details>`;
+  })
   .join('\n')}
       </nav>`;
 
