@@ -7,6 +7,7 @@ const buildSource = await readFile(new URL("tools/build-orion-demo.mjs", root), 
 const home = await readFile(new URL("index.html", root), "utf8");
 const education = await readFile(new URL("pweducation/index.html", root), "utf8");
 const widgetCss = await readFile(new URL("widget.css", root), "utf8");
+const widgetSource = await readFile(new URL("psy-widget.js", root), "utf8");
 
 test("the generated site carries one deliberate Orion polish layer", () => {
   assert.match(buildSource, /data-orion-polish/);
@@ -42,4 +43,14 @@ test("the mobile hero sizes the inline Tilda child instead of splitting Russian 
 
 test("schedule body links cannot fall back to the old orange accent", () => {
   assert.match(buildSource, /\.t522__title a\s*\{[^}]*color:\s*#1f00a6!important/s);
+});
+
+test("the same polish layer reaches the live Tilda host through the installed widget", () => {
+  assert.match(widgetCss, /data-orion-host-polish/);
+  assert.match(widgetCss, /\.t-rec_pt_150/);
+  assert.match(widgetCss, /\.t-btn:hover/);
+  assert.match(widgetCss, /\.t522__title a/);
+  assert.match(widgetSource, /applyHostPagePolish/);
+  assert.match(widgetSource, /orion-polish-homebar/);
+  assert.match(widgetSource, /Листайте отзывы/);
 });

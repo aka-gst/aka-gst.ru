@@ -132,11 +132,11 @@ test('unsafe server refusal falls back to local text and keeps relative sources 
   assert.equal(normalized.sources[0].url, relative, 'relative URL must survive until render time');
   assert.equal(normalized.sources[1].url, official, 'official absolute URL must stay byte-identical');
   assert.equal(
-    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-10'),
+    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-11'),
     'https://aka-gst.ru/psy-admin/booking/?kind=seminar',
   );
   assert.notEqual(
-    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-10'),
+    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-11'),
     new URL(relative, 'https://orion-center.ru/').href,
   );
 });

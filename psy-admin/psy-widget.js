@@ -1,14 +1,42 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-10";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-10";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-10";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-11";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-11";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-11";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-10&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-11&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
+
+function applyHostPagePolish() {
+  if (!/(^|\.)orion-center\.ru$/i.test(window.location.hostname)) return;
+  document.documentElement.dataset.orionHostPolish = "20260909";
+
+  document.querySelectorAll(".t-title,.t-name,.t-descr,[field]").forEach((element) => {
+    const text = element.textContent.replace(/\s+/g, " ").trim();
+    if (/^Отзывы клиентов\s*❤️?$/iu.test(text)) element.textContent = "Отзывы";
+    if (/^Листайте отзывы$/iu.test(text)) element.hidden = true;
+  });
+
+  document.querySelectorAll("img").forEach((image, index) => {
+    image.decoding = "async";
+    if (index > 1 && !image.hasAttribute("fetchpriority")) image.loading = "lazy";
+  });
+
+  if (/^\/pweducation\/?$/i.test(window.location.pathname) && !document.querySelector(".orion-polish-homebar")) {
+    const nav = document.createElement("nav");
+    nav.className = "orion-polish-homebar";
+    nav.setAttribute("aria-label", "Навигация центра Орион-С");
+    nav.innerHTML = '<a class="orion-polish-homebar__brand" href="/">Орион-С</a><a href="/">Главная</a><a href="/schedule">Расписание</a><a href="/consultation">Психологи</a><a href="/contacts">Контакты</a>';
+    document.body.prepend(nav);
+  }
+}
+
+applyHostPagePolish();
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyHostPagePolish, { once: true });
+window.setTimeout(applyHostPagePolish, 800);
 
 const mount = document.createElement("div");
 mount.innerHTML = `

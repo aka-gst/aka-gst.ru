@@ -1,5 +1,79 @@
 .psy-widget,
 .psy-widget * { box-sizing: border-box; }
+/* data-orion-host-polish=20260909: this layer is loaded by the installed
+   widget on the live Tilda pages as well as by the local review copy. */
+html[data-orion-host-polish] body { max-width: 100%; overflow-x: hidden; }
+html[data-orion-host-polish] .t-rec_pt_75,
+html[data-orion-host-polish] .t-rec_pt_90,
+html[data-orion-host-polish] .t-rec_pt_105,
+html[data-orion-host-polish] .t-rec_pt_120,
+html[data-orion-host-polish] .t-rec_pt_135,
+html[data-orion-host-polish] .t-rec_pt_150,
+html[data-orion-host-polish] .t-rec_pt_165,
+html[data-orion-host-polish] .t-rec_pt_180 { padding-top: 64px !important; }
+html[data-orion-host-polish] .t-rec_pb_75,
+html[data-orion-host-polish] .t-rec_pb_90,
+html[data-orion-host-polish] .t-rec_pb_105,
+html[data-orion-host-polish] .t-rec_pb_120,
+html[data-orion-host-polish] .t-rec_pb_135,
+html[data-orion-host-polish] .t-rec_pb_150,
+html[data-orion-host-polish] .t-rec_pb_165,
+html[data-orion-host-polish] .t-rec_pb_180 { padding-bottom: 64px !important; }
+html[data-orion-host-polish] #rec584106074 { padding-top: 34px !important; padding-bottom: 34px !important; }
+html[data-orion-host-polish] #rec759291094 { padding-bottom: 18px !important; }
+html[data-orion-host-polish] #rec759291094 .t050__title > div { font-size: 58px !important; }
+html[data-orion-host-polish] #rec605382232,
+html[data-orion-host-polish] #rec605382040,
+html[data-orion-host-polish] #rec283508943,
+html[data-orion-host-polish] #rec283510213,
+html[data-orion-host-polish] #rec605379906 { height: 72px !important; min-height: 72px !important; overflow: hidden; }
+html[data-orion-host-polish] #rec603818649,
+html[data-orion-host-polish] #rec605379914,
+html[data-orion-host-polish] #rec605379977,
+html[data-orion-host-polish] #rec634096591 { display: none !important; }
+html[data-orion-host-polish] .t-btn,
+html[data-orion-host-polish] .t-btnflex,
+html[data-orion-host-polish] .tn-elem[data-elem-type="button"] .tn-atom { transition: transform .22s ease, box-shadow .22s ease, filter .22s ease !important; will-change: transform; }
+html[data-orion-host-polish] .t-btn:hover,
+html[data-orion-host-polish] .t-btnflex:hover,
+html[data-orion-host-polish] .tn-elem[data-elem-type="button"] .tn-atom:hover { transform: translateY(-3px); box-shadow: 0 13px 28px rgba(31,0,166,.20) !important; filter: saturate(1.08); }
+html[data-orion-host-polish] .t-btn:active,
+html[data-orion-host-polish] .t-btnflex:active,
+html[data-orion-host-polish] .tn-elem[data-elem-type="button"] .tn-atom:active { transform: translateY(0) scale(.985); }
+html[data-orion-host-polish] .t-card__btn-wrapper { display: flex !important; justify-content: center !important; align-items: flex-end; }
+html[data-orion-host-polish] .t-card__btn { min-width: 172px; justify-content: center; }
+html[data-orion-host-polish] #rec285338838 .t758__link-item_active,
+html[data-orion-host-polish] .t522__title a,
+html[data-orion-host-polish] [style*="color: rgb(255, 126, 102)"],
+html[data-orion-host-polish] [style*="color:#ff7e66"],
+html[data-orion-host-polish] a[style*="#ff7e66"] { color: #1f00a6 !important; }
+html[data-orion-host-polish] #rec283637377,
+html[data-orion-host-polish] #rec504823956,
+html[data-orion-host-polish] #rec307228255 { display: inline-block !important; vertical-align: middle; box-sizing: border-box; }
+html[data-orion-host-polish] #rec283637377 { width: 46%; padding-left: max(24px, calc((100vw - 1200px)/2)); }
+html[data-orion-host-polish] #rec504823956 { width: 18%; }
+html[data-orion-host-polish] #rec307228255 { width: 34%; }
+html[data-orion-host-polish] #rec283637377 .t-sociallinks__item a,
+html[data-orion-host-polish] #rec283637377 .t-sociallinks__svg { width: 42px !important; height: 42px !important; }
+.orion-polish-homebar { position: relative; z-index: 1000; display: flex; align-items: center; justify-content: center; gap: clamp(14px,3vw,42px); min-height: 92px; padding: 18px 24px; background: #fff; color: #1f00a6; font: 700 18px/1.2 Georgia,serif; box-shadow: 0 1px 0 #ece8f5; }
+.orion-polish-homebar a { color: #1f00a6; text-decoration: none; }
+.orion-polish-homebar a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.orion-polish-homebar__brand { margin-right: auto; font-size: 23px; }
+@media (min-width:960px) {
+  html[data-orion-host-polish] #rec1773853311 .t522 > .t-container:not(.t-section__container) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 28px; padding-top: 28px; }
+  html[data-orion-host-polish] #rec1773853311 .t522__row { width: auto !important; margin: 0 !important; display: block; }
+  html[data-orion-host-polish] #rec1773853311 .t522__leftcol { display: none; }
+  html[data-orion-host-polish] #rec1773853311 .t522__rightcol { float: none; width: 100% !important; margin: 0 !important; }
+  html[data-orion-host-polish] #rec1773853311 .t522__right-tablewrapper { display: flex; flex-direction: column; align-items: center; text-align: center; }
+}
+@media (max-width:959px) {
+  html[data-orion-host-polish] .t-rec_pt_75,html[data-orion-host-polish] .t-rec_pt_90,html[data-orion-host-polish] .t-rec_pt_105,html[data-orion-host-polish] .t-rec_pt_120,html[data-orion-host-polish] .t-rec_pt_135,html[data-orion-host-polish] .t-rec_pt_150,html[data-orion-host-polish] .t-rec_pt_165,html[data-orion-host-polish] .t-rec_pt_180 { padding-top: 42px !important; }
+  html[data-orion-host-polish] .t-rec_pb_75,html[data-orion-host-polish] .t-rec_pb_90,html[data-orion-host-polish] .t-rec_pb_105,html[data-orion-host-polish] .t-rec_pb_120,html[data-orion-host-polish] .t-rec_pb_135,html[data-orion-host-polish] .t-rec_pb_150,html[data-orion-host-polish] .t-rec_pb_165,html[data-orion-host-polish] .t-rec_pb_180 { padding-bottom: 42px !important; }
+  .orion-polish-homebar { justify-content: flex-start; flex-wrap: wrap; gap: 12px 20px; min-height: 72px; padding: 14px 18px; font-size: 15px; }
+  .orion-polish-homebar__brand { width: 100%; margin: 0; }
+}
+@media (max-width:479px) { html[data-orion-host-polish] #rec908825596 .t1120__title > div { font-size: 32px !important; line-height: 1.1 !important; word-break: normal !important; overflow-wrap: normal !important; hyphens: auto; } }
+@media (prefers-reduced-motion:reduce) { html[data-orion-host-polish] .t-btn,html[data-orion-host-polish] .t-btnflex,html[data-orion-host-polish] .tn-elem[data-elem-type="button"] .tn-atom { transition: none !important; } html[data-orion-host-polish] .t-btn:hover,html[data-orion-host-polish] .t-btnflex:hover,html[data-orion-host-polish] .tn-elem[data-elem-type="button"] .tn-atom:hover { transform: none; } }
 .psy-widget {
   --psy-widget-primary: #1f00a6;
   --psy-widget-primary-hover: #17007d;
