@@ -288,6 +288,10 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec2836
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 28px !important;
 }
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec283637376 .t-container::before,
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec283637376 .t-container::after {
+  display: none !important;
+}
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec283637376 .t567__col {
   float: none !important;
   width: auto !important;

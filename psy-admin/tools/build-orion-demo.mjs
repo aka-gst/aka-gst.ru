@@ -125,6 +125,7 @@ function sanitise(html, widgetPath) {
     #rec288715564 .t-feed__buttons-wrapper{margin-top:28px!important}
     #rec283637376{padding-top:18px!important;padding-bottom:10px!important}
     #rec283637376 .t-container{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:28px!important}
+    #rec283637376 .t-container::before,#rec283637376 .t-container::after{display:none!important}
     #rec283637376 .t567__col{float:none!important;width:auto!important;margin:0!important}
     #rec283637376 .t567__col-wrapper{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;height:100%!important;padding-top:0!important}
     #rec283637376 .t567__img{margin-bottom:10px!important}
@@ -224,7 +225,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-20&theme=orion-blue-20260908"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-21&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }
