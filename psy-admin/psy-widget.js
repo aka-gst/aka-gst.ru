@@ -1,23 +1,23 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-12";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-12";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-12";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-13";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-13";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-13";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-12&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-13&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 function applyHostPagePolish() {
   if (!/(^|\.)orion-center\.ru$/i.test(window.location.hostname)) return;
   document.documentElement.dataset.orionHostPolish = "20260909";
 
-  document.querySelectorAll(".t-title,.t-name,.t-descr,[field]").forEach((element) => {
+  document.querySelectorAll(".t-title,.t-name,.t-descr,[field],.orion-review-hint").forEach((element) => {
     const text = element.textContent.replace(/\s+/g, " ").trim();
     if (/^Отзывы клиентов\s*❤️?$/iu.test(text)) element.textContent = "Отзывы";
-    if (/^Листайте отзывы$/iu.test(text)) element.hidden = true;
+    if (/^Листайте отзывы$/iu.test(text)) element.remove();
   });
 
   document.querySelectorAll("img").forEach((image, index) => {
@@ -37,6 +37,7 @@ function applyHostPagePolish() {
 applyHostPagePolish();
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyHostPagePolish, { once: true });
 window.setTimeout(applyHostPagePolish, 800);
+window.setTimeout(applyHostPagePolish, 1800);
 
 const mount = document.createElement("div");
 mount.innerHTML = `

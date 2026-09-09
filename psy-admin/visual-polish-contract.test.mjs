@@ -11,7 +11,10 @@ const widgetSource = await readFile(new URL("psy-widget.js", root), "utf8");
 
 test("the generated site carries one deliberate Orion polish layer", () => {
   assert.match(buildSource, /data-orion-polish/);
-  assert.match(buildSource, /\.t-rec_pt_150/);
+  assert.doesNotMatch(buildSource, /\.t-rec_pt_150/);
+  assert.doesNotMatch(buildSource, /grid-template-columns:repeat\(3/);
+  assert.match(buildSource, /#rec3723957301\{display:none!important\}/);
+  assert.match(buildSource, /#rec1773910081 \.t-btnflex\{[^}]*font-size:18px/s);
   assert.match(buildSource, /\.t-btn:hover/);
   assert.match(buildSource, /\.t-card__btn-wrapper/);
 });
@@ -47,11 +50,23 @@ test("schedule body links cannot fall back to the old orange accent", () => {
 
 test("the same polish layer reaches the live Tilda host through the installed widget", () => {
   assert.match(widgetCss, /data-orion-host-polish/);
-  assert.match(widgetCss, /\.t-rec_pt_150/);
   assert.match(widgetCss, /\.t-btn:hover/);
   assert.match(widgetCss, /\.t522__title a/);
   assert.match(widgetSource, /applyHostPagePolish/);
   assert.match(widgetSource, /orion-polish-homebar/);
   assert.match(widgetSource, /Листайте отзывы/);
   assert.match(widgetCss, /\.orion-polish-homebar \{ box-sizing: border-box/);
+  assert.match(widgetSource, /\.orion-review-hint/);
+  assert.match(widgetSource, /element\.remove\(\)/);
+});
+
+test("live homepage repair is narrow and preserves the original page rhythm", () => {
+  assert.doesNotMatch(widgetCss, /html\[data-orion-host-polish\] \.t-rec_pt_/);
+  assert.doesNotMatch(widgetCss, /#rec1773853311 \.t522 > \.t-container[^\n]+display:\s*grid/);
+  assert.match(widgetCss, /#rec3723957301\s*\{\s*display:\s*none\s*!important/);
+  assert.match(widgetCss, /#rec605382040\s*\{[^}]*display:\s*block\s*!important[^}]*height:\s*96px/s);
+  assert.match(widgetCss, /#rec908825596 \.t-cover[^}]*min-height:\s*calc\(100svh - 60px\)/s);
+  assert.match(widgetCss, /#rec282570514 \[data-elem-id="1613643387114"\][^}]*text-align:\s*center/s);
+  assert.match(widgetCss, /#rec1773910081 \.t-btnflex[^}]*min-height:\s*60px[^}]*font-size:\s*18px/s);
+  assert.match(widgetCss, /\.orion-review-hint\s*\{\s*display:\s*none\s*!important/);
 });
