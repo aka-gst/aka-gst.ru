@@ -147,10 +147,10 @@ function sanitise(html, widgetPath) {
       #rec282570514 [data-elem-id="1497357188044"]{left:20px!important;top:100px!important;width:calc(100% - 40px)!important;height:48px!important;transform:none!important}
       #rec282570514 [data-elem-id="1497357188037"] .tn-atom,#rec282570514 [data-elem-id="1497357188044"] .tn-atom{text-align:center!important}
       #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690964155999"],#rec282570514 [data-elem-id="1690962540232"]{width:calc(50% - 28px)!important;height:155px!important;transform:none!important}
-      #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1690964155999"]{left:20px!important}
-      #rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690962540232"]{left:calc(50% + 8px)!important}
-      #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1613644294582"]{top:178px!important}
-      #rec282570514 [data-elem-id="1690964155999"],#rec282570514 [data-elem-id="1690962540232"]{top:535px!important}
+      #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1613644294582"]{left:20px!important}
+      #rec282570514 [data-elem-id="1690964155999"],#rec282570514 [data-elem-id="1690962540232"]{left:calc(50% + 8px)!important}
+      #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1690964155999"]{top:178px!important}
+      #rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690962540232"]{top:535px!important}
       #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1474906621455"],#rec282570514 [data-elem-id="1690964264025"],#rec282570514 [data-elem-id="1690967422558"]{width:calc(50% - 28px)!important;height:100px!important;transform:none!important}
       #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1690964264025"]{left:20px!important}
       #rec282570514 [data-elem-id="1474906621455"],#rec282570514 [data-elem-id="1690967422558"]{left:calc(50% + 8px)!important}
