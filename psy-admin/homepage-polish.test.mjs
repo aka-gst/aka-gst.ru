@@ -88,6 +88,8 @@ try {
         assert.ok(Math.max(...metrics.scheduleRows.map((row) => row.top)) - Math.min(...metrics.scheduleRows.map((row) => row.top)) <= 8,
           `три вида расписания должны стоять в одном ряду: ${JSON.stringify(metrics.scheduleRows)}`);
         assert.ok(metrics.directionsHeight <= 650, `направления не должны оставлять экран пустоты, сейчас ${metrics.directionsHeight}px`);
+      } else {
+        assert.ok(metrics.directionsHeight <= height, `мобильные направления должны целиком помещаться в экран, сейчас ${metrics.directionsHeight}px при ${height}px`);
       }
       console.log(`${width}px: новости ${metrics.newsHeight}px, зазор до линии ${metrics.scheduleGap}px`);
     } finally {

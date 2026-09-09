@@ -179,26 +179,26 @@ function sanitise(html, widgetPath) {
       #rec282570514 [data-elem-id="1613643678385"] .tn-atom,#rec282570514 [data-elem-id="1613643795239"] .tn-atom,#rec282570514 [data-elem-id="1613643798757"] .tn-atom,#rec282570514 [data-elem-id="1690962575043"] .tn-atom{font-size:18px!important}
     }
     @media (max-width:767px){
-      #rec282570514 .t396__artboard,#rec282570514 .t396__carrier,#rec282570514 .t396__filter{height:915px!important;min-height:915px!important}
-      #rec282570514 [data-elem-id="1497357188037"]{left:20px!important;top:36px!important;width:calc(100% - 40px)!important;height:48px!important;transform:none!important}
-      #rec282570514 [data-elem-id="1497357188044"]{left:20px!important;top:100px!important;width:calc(100% - 40px)!important;height:48px!important;transform:none!important}
+      #rec282570514 .t396__artboard,#rec282570514 .t396__carrier,#rec282570514 .t396__filter{height:830px!important;min-height:830px!important}
+      #rec282570514 [data-elem-id="1497357188037"]{left:20px!important;top:24px!important;width:calc(100% - 40px)!important;height:48px!important;transform:none!important}
+      #rec282570514 [data-elem-id="1497357188044"]{left:20px!important;top:88px!important;width:calc(100% - 40px)!important;height:48px!important;transform:none!important}
       #rec282570514 [data-elem-id="1497357188037"] .tn-atom,#rec282570514 [data-elem-id="1497357188044"] .tn-atom{text-align:center!important}
       #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690964155999"],#rec282570514 [data-elem-id="1690962540232"]{width:calc(50% - 28px)!important;height:155px!important;transform:none!important}
       #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1613644294582"]{left:20px!important}
       #rec282570514 [data-elem-id="1690964155999"],#rec282570514 [data-elem-id="1690962540232"]{left:calc(50% + 8px)!important}
-      #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1690964155999"]{top:178px!important}
-      #rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690962540232"]{top:535px!important}
+      #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1690964155999"]{top:150px!important}
+      #rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690962540232"]{top:480px!important}
       #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1474906621455"],#rec282570514 [data-elem-id="1690964264025"],#rec282570514 [data-elem-id="1690967422558"]{width:calc(50% - 28px)!important;height:100px!important;transform:none!important}
       #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1690964264025"]{left:20px!important}
       #rec282570514 [data-elem-id="1474906621455"],#rec282570514 [data-elem-id="1690967422558"]{left:calc(50% + 8px)!important}
-      #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1474906621455"]{top:348px!important}
-      #rec282570514 [data-elem-id="1690964264025"],#rec282570514 [data-elem-id="1690967422558"]{top:705px!important}
+      #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1474906621455"]{top:315px!important}
+      #rec282570514 [data-elem-id="1690964264025"],#rec282570514 [data-elem-id="1690967422558"]{top:645px!important}
       #rec282570514 [data-elem-id="1613643387114"] .tn-atom,#rec282570514 [data-elem-id="1474906621455"] .tn-atom,#rec282570514 [data-elem-id="1690964264025"] .tn-atom,#rec282570514 [data-elem-id="1690967422558"] .tn-atom{font-size:19px!important;line-height:1.12!important;text-align:center!important}
       #rec282570514 [data-elem-id="1613643678385"],#rec282570514 [data-elem-id="1613643795239"],#rec282570514 [data-elem-id="1613643798757"],#rec282570514 [data-elem-id="1690962575043"]{width:calc(50% - 28px)!important;height:55px!important;transform:none!important}
       #rec282570514 [data-elem-id="1613643678385"],#rec282570514 [data-elem-id="1613643798757"]{left:20px!important}
       #rec282570514 [data-elem-id="1613643795239"],#rec282570514 [data-elem-id="1690962575043"]{left:calc(50% + 8px)!important}
-      #rec282570514 [data-elem-id="1613643678385"],#rec282570514 [data-elem-id="1613643795239"]{top:455px!important}
-      #rec282570514 [data-elem-id="1613643798757"],#rec282570514 [data-elem-id="1690962575043"]{top:812px!important}
+      #rec282570514 [data-elem-id="1613643678385"],#rec282570514 [data-elem-id="1613643795239"]{top:405px!important}
+      #rec282570514 [data-elem-id="1613643798757"],#rec282570514 [data-elem-id="1690962575043"]{top:750px!important}
       #rec282570514 [data-elem-id="1693418956003"],#rec282570514 [data-elem-id="1693480480743"],#rec282570514 [data-elem-id="1693480617986"]{display:none!important}
     }
     @media (max-width:479px){
@@ -213,7 +213,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-16&theme=orion-blue-20260908"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-17&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }
