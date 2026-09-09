@@ -53,4 +53,5 @@ test("the same polish layer reaches the live Tilda host through the installed wi
   assert.match(widgetSource, /applyHostPagePolish/);
   assert.match(widgetSource, /orion-polish-homebar/);
   assert.match(widgetSource, /Листайте отзывы/);
+  assert.match(widgetCss, /\.orion-polish-homebar \{ box-sizing: border-box/);
 });

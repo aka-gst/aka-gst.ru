@@ -55,7 +55,7 @@ html[data-orion-host-polish] #rec504823956 { width: 18%; }
 html[data-orion-host-polish] #rec307228255 { width: 34%; }
 html[data-orion-host-polish] #rec283637377 .t-sociallinks__item a,
 html[data-orion-host-polish] #rec283637377 .t-sociallinks__svg { width: 42px !important; height: 42px !important; }
-.orion-polish-homebar { position: relative; z-index: 1000; display: flex; align-items: center; justify-content: center; gap: clamp(14px,3vw,42px); min-height: 92px; padding: 18px 24px; background: #fff; color: #1f00a6; font: 700 18px/1.2 Georgia,serif; box-shadow: 0 1px 0 #ece8f5; }
+.orion-polish-homebar { box-sizing: border-box; position: relative; z-index: 1000; display: flex; align-items: center; justify-content: center; gap: clamp(14px,3vw,42px); min-height: 92px; padding: 18px 24px; background: #fff; color: #1f00a6; font: 700 18px/1.2 Georgia,serif; box-shadow: 0 1px 0 #ece8f5; }
 .orion-polish-homebar a { color: #1f00a6; text-decoration: none; }
 .orion-polish-homebar a:hover { text-decoration: underline; text-underline-offset: 5px; }
 .orion-polish-homebar__brand { margin-right: auto; font-size: 23px; }
