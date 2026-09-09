@@ -142,6 +142,19 @@ async function evaluate(expression) {
   return result.result.value;
 }
 
+async function hoverStyle(selector) {
+  const box = await evaluate(`(() => {
+    const rect = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  })()`);
+  await cdp("Input.dispatchMouseEvent", { type: "mouseMoved", x: box.x, y: box.y });
+  await new Promise((resolve) => setTimeout(resolve, 180));
+  return evaluate(`(() => {
+    const style = getComputedStyle(document.querySelector(${JSON.stringify(selector)}));
+    return { background: style.backgroundColor, color: style.color, transform: style.transform };
+  })()`);
+}
+
 try {
   await cdp("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -189,6 +202,14 @@ try {
   assert.match(initial.text, /Я согласен передать указанный контакт администратору центра только для обработки этой заявки\./);
   assert.equal(initial.timeOptions, 0, "Желаемое время не должно изображать расписание слотами");
   assert.match(initial.text, /Для личных консультаций пока нет общего календаря свободных окон/);
+
+  const fullScreenHover = await hoverStyle(".psy-widget-fullscreen");
+  const closeHover = await hoverStyle(".psy-widget-close");
+  for (const [name, style] of [["разворот", fullScreenHover], ["закрытие", closeHover]]) {
+    assert.match(style.background, /^rgb\(31, [01], 166\)$/, `кнопка «${name}» должна менять фон при наведении`);
+    assert.match(style.color, /^rgb\(255, 25[45], 255\)$/, `кнопка «${name}» должна менять цвет знака при наведении`);
+    assert.notEqual(style.transform, "none", `кнопка «${name}» должна визуально реагировать на наведение`);
+  }
 
   const stopResult = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
@@ -350,15 +371,39 @@ try {
   assert.equal(rejectedHandoff.specialist, "Смирнова Юлия Сергеевна");
   assert.equal(rejectedHandoff.networkCount, 2);
 
-  const stickyStop = await evaluate(`(() => {
+  const stickyControls = await evaluate(`(() => {
     const panel = document.querySelector('.psy-widget-panel');
+    const messages = document.querySelector('.psy-widget-messages');
     const stop = document.querySelector('[data-voice-stop]');
+    for (let index = 0; index < 12; index += 1) {
+      const message = document.createElement('p');
+      message.className = 'psy-widget-message assistant';
+      message.textContent = 'Проверочная длинная строка ответа ' + index;
+      messages.append(message);
+    }
+    const visible = () => {
+      const panelBox = panel.getBoundingClientRect();
+      const headBox = document.querySelector('.psy-widget-head').getBoundingClientRect();
+      const formBox = document.querySelector('.psy-widget-form').getBoundingClientRect();
+      const stopBox = stop.getBoundingClientRect();
+      return {
+        head: headBox.top >= panelBox.top - 1 && headBox.bottom <= panelBox.bottom + 1,
+        form: formBox.top >= panelBox.top - 1 && formBox.bottom <= panelBox.bottom + 1,
+        stop: stopBox.top >= panelBox.top - 1 && stopBox.bottom <= panelBox.bottom + 1,
+      };
+    };
+    panel.scrollTop = 0;
+    const atTop = visible();
     panel.scrollTop = panel.scrollHeight;
-    const panelBox = panel.getBoundingClientRect();
-    const stopBox = stop.getBoundingClientRect();
-    return stopBox.top >= panelBox.top && stopBox.bottom <= panelBox.bottom;
+    const atBottom = visible();
+    return { atTop, atBottom, overflow: panel.scrollHeight - panel.clientHeight };
   })()`);
-  assert.equal(stickyStop, true, "Стоп должен оставаться видимым после прокрутки панели");
+  assert.ok(stickyControls.overflow > 100, "тестовая панель должна действительно прокручиваться");
+  for (const [position, state] of [["сверху", stickyControls.atTop], ["снизу", stickyControls.atBottom]]) {
+    assert.equal(state.head, true, `шапка должна быть целиком видна при прокрутке ${position}`);
+    assert.equal(state.form, true, `поле, микрофон и кнопка должны быть целиком видны при прокрутке ${position}`);
+    assert.equal(state.stop, true, `стоп должен оставаться видимым при прокрутке ${position}`);
+  }
 
   if (process.env.PSY_WIDGET_SCREENSHOT) {
     const shot = await cdp("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
@@ -368,9 +413,23 @@ try {
   await cdp("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   const mobile = await evaluate(`(() => {
     const root = document.querySelector('[data-psy-widget]');
+    const panel = root.querySelector('.psy-widget-panel');
     const stop = root.querySelector('[data-voice-stop]').getBoundingClientRect();
     const mic = root.querySelector('.psy-widget-mic').getBoundingClientRect();
     const launcher = root.querySelector('.psy-widget-trigger');
+    const visible = () => {
+      const panelBox = panel.getBoundingClientRect();
+      const head = root.querySelector('.psy-widget-head').getBoundingClientRect();
+      const form = root.querySelector('.psy-widget-form').getBoundingClientRect();
+      return {
+        head: head.top >= panelBox.top - 1 && head.bottom <= panelBox.bottom + 1,
+        form: form.top >= panelBox.top - 1 && form.bottom <= panelBox.bottom + 1,
+      };
+    };
+    panel.scrollTop = 0;
+    const atTop = visible();
+    panel.scrollTop = panel.scrollHeight;
+    const atBottom = visible();
     return {
       overflow: document.documentElement.scrollWidth - innerWidth,
       stopWidth: stop.width,
@@ -380,6 +439,8 @@ try {
       launcherWidth: launcher.getBoundingClientRect().width,
       launcherHeight: launcher.getBoundingClientRect().height,
       launcherTextVisible: getComputedStyle(launcher.querySelector('span:last-child')).display !== 'none',
+      atTop,
+      atBottom,
     };
   })()`);
   assert.ok(mobile.overflow <= 1);
@@ -388,6 +449,8 @@ try {
   assert.ok(mobile.launcherWidth >= 44 && mobile.launcherWidth <= 160);
   assert.ok(mobile.launcherHeight >= 44);
   assert.equal(mobile.launcherTextVisible, true);
+  assert.deepEqual(mobile.atTop, { head: true, form: true });
+  assert.deepEqual(mobile.atBottom, { head: true, form: true });
   console.log("psy-admin assistant host contract: passed desktop and 390px mobile");
 } finally {
   socket.close();

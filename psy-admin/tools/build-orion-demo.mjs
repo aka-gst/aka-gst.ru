@@ -99,7 +99,6 @@ function sanitise(html, widgetPath) {
     #rec1773853311 .t522>.t-container:not(.t-section__container){padding-top:26px}
     /* Правим только известные блоки главной. Общие классы отступов Tilda не
        трогаем: предыдущая глобальная правка сжала несвязанные секции. */
-    #rec3723957301{display:none!important}
     #rec908825596{padding-top:60px!important;padding-bottom:0!important;overflow:visible!important}
     #rec908825596 .t-cover,#rec908825596 .t-cover__carrier,#rec908825596 .t-cover__filter,
     #rec908825596 .t-container,#rec908825596 .t1120__col_center,#rec908825596 .t1120__wrapper{height:calc(100svh - 60px)!important;min-height:calc(100svh - 60px)!important}
@@ -142,6 +141,7 @@ function sanitise(html, widgetPath) {
     #rec283637377 .t-sociallinks__item a,#rec283637377 .t-sociallinks__svg{width:42px!important;height:42px!important}
     #rec283637377 .t-sociallinks__svg path{fill:#1f00a6!important}
     @media (min-width:961px){
+      #rec908825596 .t1120__col-left{transform:translateY(-128px)!important}
       #rec1773853311{padding-top:32px!important;padding-bottom:32px!important}
       #rec1773853311 .t-section__title{margin-bottom:16px!important}
       #rec1773853311 .t-section__descr{margin-bottom:0!important}
@@ -151,11 +151,11 @@ function sanitise(html, widgetPath) {
       #rec1773853311 .t522__leftcol,#rec1773853311 .t522__line{display:none!important}
       #rec1773853311 .t522__rightcol{float:none!important;width:auto!important;height:auto!important;margin:0!important}
       #rec1773853311 .t522__right-tablewrapper{display:flex!important;flex-direction:column!important;align-items:center!important;width:100%!important;height:auto!important}
-      #rec1773853311 .t522__personimgwrapper{display:block!important;width:140px!important;height:140px!important}
-      #rec1773853311 .t522__img{width:140px!important;height:140px!important}
+      #rec1773853311 .t522__personimgwrapper{display:block!important;width:140px!important;height:140px!important;overflow:hidden!important;border-radius:50%!important}
+      #rec1773853311 .t522__img{width:140px!important;height:140px!important;border-radius:50%!important;background-position:center!important;background-size:cover!important}
       #rec1773853311 .t522__textwrapper{box-sizing:border-box!important;display:block!important;width:100%!important;height:auto!important;padding-top:16px!important;text-align:center!important}
       #rec1773853311 .t522__persname,#rec1773853311 .t522__title{text-align:center!important}
-      #rec1773853311 .t522__persname{font-size:28px!important;line-height:1.15!important}
+      #rec1773853311 .t522__persname{display:flex!important;align-items:center!important;justify-content:center!important;min-height:97px!important;font-size:28px!important;line-height:1.15!important}
       #rec1773853311 .t522__title{font-size:18px!important;line-height:1.45!important}
       #rec1773853311 .t-section__bottomwrapper{margin-top:24px!important}
     }
@@ -213,7 +213,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-17&theme=orion-blue-20260908"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-18&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }

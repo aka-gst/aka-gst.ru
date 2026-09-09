@@ -5,7 +5,7 @@ import { quickQuestions } from "./content.js";
 import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 import * as widgetContract from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260909-17";
+const widgetVersion = "psy-widget-20260909-18";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -15,6 +15,7 @@ const caddyfile = await readFile(new URL("../Caddyfile", import.meta.url), "utf8
 const officialHero = "https://static.tildacdn.com/tild6564-6339-4335-b465-333932373236/WhatsApp_Image_2024-.jpeg";
 assert.equal((homePage.match(new RegExp(officialHero.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) || []).length, 3);
 assert.match(homePage, /linear-gradient\(to bottom, rgba\(0,0,0,0\.60\), rgba\(51,51,51,0\.30\)\)/);
+assert.doesNotMatch(widgetCss, /#rec3723957301/, "виджет не должен скрывать исходный блок оплаты Ирины");
 assert.doesNotMatch(homePage, /orion-hero-trajectory\.png/);
 assert.match(widgetSource, new RegExp(`widget-contract\\.js\\?v=${widgetVersion}`));
 assert.match(contractSource, new RegExp(`router\\.js\\?v=${widgetVersion}`));

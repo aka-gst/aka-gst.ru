@@ -1,13 +1,13 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-17";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-17";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-17";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-18";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-18";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-18";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-17&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-18&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 function applyHostPagePolish() {
@@ -108,13 +108,13 @@ mount.innerHTML = `
           <p class="psy-widget-handoff-status" aria-live="polite"></p>
         </form>
       </section>
+      <p class="psy-widget-voice-status" aria-live="polite"></p>
       <form class="psy-widget-form">
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
         <input id="psy-widget-question" maxlength="500" autocomplete="off" placeholder="Например: где посмотреть расписание?" required>
         <button class="psy-widget-mic" type="button" aria-label="Задать вопрос голосом" aria-pressed="false">🎙</button>
         <button type="submit">Спросить</button>
       </form>
-      <p class="psy-widget-voice-status" aria-live="polite"></p>
     </aside>
   </section>`;
 document.body.append(mount);
