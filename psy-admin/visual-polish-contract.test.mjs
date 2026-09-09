@@ -65,7 +65,7 @@ test("live homepage repair is narrow and preserves the original page rhythm", ()
   assert.match(widgetCss, /#rec1773853311 \.t522 > \.t-container[^}]+display:\s*grid/s);
   assert.match(widgetCss, /#rec908825596 \.t1120__title[\s\S]*opacity:\s*1\s*!important/);
   assert.doesNotMatch(widgetCss, /#rec3723957301\s*\{\s*display:\s*none\s*!important/);
-  assert.match(widgetCss, /#rec605382040\s*\{[^}]*display:\s*block\s*!important[^}]*height:\s*96px/s);
+  assert.match(widgetCss, /#rec623335436,[\s\S]*#rec401787399,[\s\S]*#rec605382040,[\s\S]*#rec282808065\s*\{[^}]*display:\s*none\s*!important/s);
   assert.match(widgetCss, /#rec908825596 \.t-cover[^}]*min-height:\s*calc\(100svh - 60px\)/s);
   assert.match(widgetCss, /#rec282570514 \.t396__artboard[^{]*\{[^}]*height:\s*620px/s);
   assert.match(widgetCss, /#rec282570514 \[data-elem-id="1613643387114"\][^}]*text-align:\s*center/s);
@@ -77,6 +77,9 @@ test("live homepage repair is narrow and preserves the original page rhythm", ()
   assert.match(widgetCss, /#rec283510213\s*\{[^}]*display:\s*none\s*!important/s);
   assert.match(widgetCss, /#rec288715564\s*\{[^}]*padding-top:\s*40px[^}]*padding-bottom:\s*24px/s);
   assert.match(widgetCss, /#rec288715564 \.t-feed__buttons-wrapper\s*\{[^}]*margin-top:\s*28px/s);
+  assert.match(widgetCss, /#rec283637376 \.t-container\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*repeat\(3/s);
+  assert.match(widgetCss, /#rec283637377 \.t345-content\s*\{[^}]*display:\s*flex[^}]*justify-content:\s*space-between/s);
+  assert.match(widgetCss, /@media \(max-width:767px\)[\s\S]*#rec1773853311 \.t522__personimgwrapper,[\s\S]*width:\s*140px[^}]*height:\s*140px[^}]*border-radius:\s*50%/s);
   assert.match(widgetCss, /#rec908825596 \.orion-hero-left-action[^}]*position:\s*absolute/s);
   assert.match(widgetSource, /scheduleButton\.parentElement !== leftAction/);
   assert.match(widgetCss, /\.orion-review-hint\s*\{\s*display:\s*none\s*!important/);

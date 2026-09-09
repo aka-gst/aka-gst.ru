@@ -77,6 +77,8 @@ try {
             };
           });
           const directions = document.querySelector('#rec282570514 .t396__artboard').getBoundingClientRect();
+          const blankSpacers = ['rec623335436', 'rec401787399', 'rec605382040', 'rec282808065']
+            .map((id) => Math.round(document.querySelector('#' + id).getBoundingClientRect().height));
           return {
             viewportWidth: innerWidth,
             documentWidth: document.documentElement.scrollWidth,
@@ -95,6 +97,7 @@ try {
             scheduleRows,
             scheduleCards,
             directionsHeight: Math.round(directions.height),
+            blankSpacers,
           };
         })()`,
       });
@@ -105,6 +108,7 @@ try {
       assert.ok(metrics.newsHeight <= 1, `пустой блок новостей не должен занимать ${metrics.newsHeight}px`);
       assert.ok(metrics.scheduleGap >= 16, `линия расписания должна идти ниже текста, сейчас зазор ${metrics.scheduleGap}px`);
       assert.equal(metrics.documentWidth, metrics.viewportWidth, `страница не должна распирать viewport ${width}px`);
+      assert.deepEqual(metrics.blankSpacers, [0, 0, 0, 0], `пустые Tilda-секции должны быть схлопнуты: ${metrics.blankSpacers}`);
       assert.equal(metrics.heroTitleVisibility, "visible", "заголовок героя не должен ждать анимацию Tilda");
       assert.equal(metrics.heroTitleOpacity, 1, "заголовок героя должен быть виден с первого кадра");
       if (!mobile) {
@@ -136,6 +140,8 @@ try {
         assert.ok(negativeControl.result.value > 20, `отрицательный контроль должен поймать сломанное выравнивание, получил ${negativeControl.result.value}px`);
         assert.ok(metrics.directionsHeight <= 650, `направления не должны оставлять экран пустоты, сейчас ${metrics.directionsHeight}px`);
       } else {
+        assert.ok(metrics.scheduleCards.every(({ circle }) => Math.abs(circle.width - 140) <= 1 && Math.abs(circle.height - 140) <= 1 && circle.radius !== '0px'),
+          `на телефоне изображения расписания тоже должны оставаться кругами: ${JSON.stringify(metrics.scheduleCards)}`);
         assert.ok(metrics.directionsHeight <= height, `мобильные направления должны целиком помещаться в экран, сейчас ${metrics.directionsHeight}px при ${height}px`);
       }
       console.log(`${width}px: новости ${metrics.newsHeight}px, зазор до линии ${metrics.scheduleGap}px`);

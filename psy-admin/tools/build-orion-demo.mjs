@@ -103,8 +103,7 @@ function sanitise(html, widgetPath) {
     #rec908825596 .t-cover,#rec908825596 .t-cover__carrier,#rec908825596 .t-cover__filter,
     #rec908825596 .t-container,#rec908825596 .t1120__col_center,#rec908825596 .t1120__wrapper{height:calc(100svh - 60px)!important;min-height:calc(100svh - 60px)!important}
     #rec908825596 .t1120__title,#rec908825596 .t1120__descr,#rec908825596 .t1120__buttons,#rec908825596 .t-btn{opacity:1!important;visibility:visible!important;transform:none!important}
-    #rec605382040{display:block!important;height:96px!important;min-height:96px!important;overflow:hidden!important}
-    #rec605382040 .t-cover,#rec605382040 .t-cover__carrier,#rec605382040 .t-cover__filter,#rec605382040 .t-cover__wrapper{height:96px!important;min-height:96px!important}
+    #rec623335436,#rec401787399,#rec605382040,#rec282808065{display:none!important}
     #rec282570514 [data-elem-id="1613643387114"] .tn-atom,
     #rec282570514 [data-elem-id="1474906621455"] .tn-atom,
     #rec282570514 [data-elem-id="1690964264025"] .tn-atom,
@@ -124,12 +123,15 @@ function sanitise(html, widgetPath) {
     #rec288715564 .t-section__container{height:auto!important}
     #rec288715564 .t-section__title{margin-bottom:40px!important}
     #rec288715564 .t-feed__buttons-wrapper{margin-top:28px!important}
-    #rec283637376{padding-top:20px!important;padding-bottom:12px!important}
-    #rec283637376 .t567__col-wrapper{padding-top:12px!important}
-    #rec283637376 .t567__img{margin-bottom:18px!important}
-    #rec283637377 .t345-content{height:auto!important;min-height:92px!important;padding:18px 0!important}
+    #rec283637376{padding-top:18px!important;padding-bottom:10px!important}
+    #rec283637376 .t-container{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:28px!important}
+    #rec283637376 .t567__col{float:none!important;width:auto!important;margin:0!important}
+    #rec283637376 .t567__col-wrapper{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;height:100%!important;padding-top:0!important}
+    #rec283637376 .t567__img{margin-bottom:10px!important}
+    #rec283637377 .t345-content{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:32px!important;height:auto!important;min-height:0!important;padding:12px 0!important}
     #rec504823956{padding:4px 0!important}
     #rec307228255 .t396__artboard,#rec307228255 .t396__carrier,#rec307228255 .t396__filter{height:64px!important;min-height:64px!important}
+    @media(max-width:767px){#rec1773853311 .t522__right-tablewrapper{display:flex!important;flex-direction:column!important;align-items:center!important;height:auto!important}#rec1773853311 .t522__personimgwrapper,#rec1773853311 .t522__img{width:140px!important;height:140px!important;border-radius:50%!important}#rec1773853311 .t522__personimgwrapper{overflow:hidden!important}#rec1773853311 .t522__img{background-position:center!important;background-size:cover!important}#rec1773853311 .t522__textwrapper{width:100%!important;padding-top:16px!important;text-align:center!important}#rec1773853311 .t522__persname,#rec1773853311 .t522__title{text-align:center!important}#rec283637376{padding:22px 20px 14px!important}#rec283637376 .t-container{grid-template-columns:1fr!important;gap:22px!important;width:100%!important;max-width:520px!important;margin:0 auto!important}#rec283637376 .t567__col,#rec283637376 .t567__col-wrapper{min-height:0!important}#rec283637377 .t345-content{display:grid!important;justify-items:center!important;gap:18px!important;padding:14px 0!important;text-align:center!important}#rec283637377 .t345-text__wrapper,#rec283637377 .t345-socials{float:none!important;width:auto!important;margin:0!important}}
     .orion-review-hint{display:none!important}
 
     /* Одна и та же реакция на все кнопки сайта. */
@@ -222,7 +224,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-19&theme=orion-blue-20260908"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-20&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }

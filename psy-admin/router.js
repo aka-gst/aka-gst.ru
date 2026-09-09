@@ -1,5 +1,5 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260909-19";
-import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260909-19";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260909-20";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260909-20";
 
 export function resolveWidgetPublicUrl(value, widgetScriptUrl) {
   const publicRoot = new URL("../", widgetScriptUrl);
