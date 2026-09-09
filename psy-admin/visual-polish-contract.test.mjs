@@ -69,4 +69,6 @@ test("live homepage repair is narrow and preserves the original page rhythm", ()
   assert.match(widgetCss, /#rec282570514 \[data-elem-id="1613643387114"\][^}]*text-align:\s*center/s);
   assert.match(widgetCss, /#rec1773910081 \.t-btnflex[^}]*min-height:\s*60px[^}]*font-size:\s*18px/s);
   assert.match(widgetCss, /\.orion-review-hint\s*\{\s*display:\s*none\s*!important/);
+  assert.match(widgetCss, /@media \(max-width:767px\)[^{]*\{[\s\S]*#rec282570514 \.t396__artboard[^{]*\{[^}]*height:\s*915px/s);
+  assert.match(widgetCss, /\[data-elem-id="1497357188037"\][^}]*width:\s*calc\(100% - 40px\)/s);
 });
