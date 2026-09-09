@@ -1,17 +1,19 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-18";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-18";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-18";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-19";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-19";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-19";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-18&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-19&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 function applyHostPagePolish() {
-  if (!/(^|\.)orion-center\.ru$/i.test(window.location.hostname)) return;
+  const isLiveOrion = /(^|\.)orion-center\.ru$/i.test(window.location.hostname);
+  const isLocalDemo = /^(127\.0\.0\.1|localhost)$/i.test(window.location.hostname) && /^\/psy-admin\//i.test(window.location.pathname);
+  if (!isLiveOrion && !isLocalDemo) return;
   document.documentElement.dataset.orionHostPolish = "20260909";
 
   document.querySelectorAll(".t-title,.t-name,.t-descr,[field],.orion-review-hint").forEach((element) => {
@@ -24,6 +26,37 @@ function applyHostPagePolish() {
     image.decoding = "async";
     if (index > 1 && !image.hasAttribute("fetchpriority")) image.loading = "lazy";
   });
+
+  const hero = document.querySelector('#allrecords[data-tilda-page-id="17421901"] #rec908825596');
+  const heroLeft = hero?.querySelector(".t1120__col-left");
+  const heroTitle = heroLeft?.querySelector(".t1120__title");
+  const heroButtons = hero?.querySelector(".t1120__buttons");
+  const registerButton = heroButtons?.querySelector(".t-btnflex_type_button");
+  const scheduleButton = hero?.querySelector(".t-btnflex_type_button2");
+  if (heroLeft && heroTitle && heroButtons && registerButton && scheduleButton) {
+    let leftAction = heroLeft.querySelector(".orion-hero-left-action");
+    if (!leftAction) {
+      leftAction = document.createElement("div");
+      leftAction.className = "orion-hero-left-action";
+      heroTitle.insertAdjacentElement("afterend", leftAction);
+    }
+    if (scheduleButton.parentElement !== leftAction) leftAction.append(scheduleButton);
+
+    const alignHeroActions = () => {
+      leftAction.style.removeProperty("--orion-hero-action-top");
+      if (!window.matchMedia("(min-width: 961px)").matches) return;
+      window.requestAnimationFrame(() => {
+        const leftBox = heroLeft.getBoundingClientRect();
+        const registerBox = registerButton.getBoundingClientRect();
+        leftAction.style.setProperty("--orion-hero-action-top", `${Math.round(registerBox.top - leftBox.top)}px`);
+      });
+    };
+    alignHeroActions();
+    if (!window.__orionHeroActionsBound) {
+      window.__orionHeroActionsBound = true;
+      window.addEventListener("resize", alignHeroActions, { passive: true });
+    }
+  }
 
   if (/^\/pweducation\/?$/i.test(window.location.pathname) && !document.querySelector(".orion-polish-homebar")) {
     const nav = document.createElement("nav");
@@ -54,6 +87,7 @@ mount.innerHTML = `
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
         </div>
       </header>
+      <div class="psy-widget-scroll">
       <div class="psy-widget-evaluation">
         <label for="psy-widget-evaluation-select">Частые вопросы</label>
         <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select">
@@ -109,6 +143,7 @@ mount.innerHTML = `
         </form>
       </section>
       <p class="psy-widget-voice-status" aria-live="polite"></p>
+      </div>
       <form class="psy-widget-form">
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
         <input id="psy-widget-question" maxlength="500" autocomplete="off" placeholder="Например: где посмотреть расписание?" required>

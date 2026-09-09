@@ -4,7 +4,7 @@ import test from "node:test";
 
 import * as router from "./router.js";
 
-const widgetScript = "https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-18";
+const widgetScript = "https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-19";
 const embeddingPage = "https://orion-center.ru/?incident=iphone-booking-20260909";
 const widgetSource = readFileSync(new URL("./psy-widget.js", import.meta.url), "utf8");
 const widgetCss = readFileSync(new URL("./widget.css", import.meta.url), "utf8");

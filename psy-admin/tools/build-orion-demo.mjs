@@ -117,12 +117,19 @@ function sanitise(html, widgetPath) {
     #rec759291094{padding-top:32px!important;padding-bottom:24px!important}
     #rec584106074{padding-top:24px!important;padding-bottom:32px!important}
     #rec623395186{padding-top:24px!important}
-    #rec282788666{padding-top:40px!important;padding-bottom:40px!important}
-    #rec401577081{padding-bottom:40px!important}
+    #rec282788666{padding-top:28px!important;padding-bottom:28px!important}
+    #rec401577081{padding-bottom:24px!important}
+    #rec283510213{display:none!important}
     #rec288715564{padding-top:40px!important;padding-bottom:24px!important}
     #rec288715564 .t-section__container{height:auto!important}
     #rec288715564 .t-section__title{margin-bottom:40px!important}
-    #rec288715564 .t-feed__buttons-wrapper{margin-top:40px!important}
+    #rec288715564 .t-feed__buttons-wrapper{margin-top:28px!important}
+    #rec283637376{padding-top:20px!important;padding-bottom:12px!important}
+    #rec283637376 .t567__col-wrapper{padding-top:12px!important}
+    #rec283637376 .t567__img{margin-bottom:18px!important}
+    #rec283637377 .t345-content{height:auto!important;min-height:92px!important;padding:18px 0!important}
+    #rec504823956{padding:4px 0!important}
+    #rec307228255 .t396__artboard,#rec307228255 .t396__carrier,#rec307228255 .t396__filter{height:64px!important;min-height:64px!important}
     .orion-review-hint{display:none!important}
 
     /* Одна и та же реакция на все кнопки сайта. */
@@ -141,7 +148,9 @@ function sanitise(html, widgetPath) {
     #rec283637377 .t-sociallinks__item a,#rec283637377 .t-sociallinks__svg{width:42px!important;height:42px!important}
     #rec283637377 .t-sociallinks__svg path{fill:#1f00a6!important}
     @media (min-width:961px){
-      #rec908825596 .t1120__col-left{transform:translateY(-128px)!important}
+      #rec908825596 .t1120__col-left{position:relative!important;transform:translateY(-96px)!important}
+      #rec908825596 .orion-hero-left-action{position:absolute!important;top:var(--orion-hero-action-top,calc(100% + 32px))!important;right:0!important;left:0!important;display:flex!important;justify-content:flex-start!important}
+      #rec908825596 .orion-hero-left-action .t-btn{width:min(100%,360px)!important}
       #rec1773853311{padding-top:32px!important;padding-bottom:32px!important}
       #rec1773853311 .t-section__title{margin-bottom:16px!important}
       #rec1773853311 .t-section__descr{margin-bottom:0!important}
@@ -213,7 +222,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-18&theme=orion-blue-20260908"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-19&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }

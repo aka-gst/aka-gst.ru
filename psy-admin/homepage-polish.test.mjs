@@ -56,6 +56,10 @@ try {
           const heroTitleStyle = getComputedStyle(heroTitle);
           const hero = document.querySelector('#rec908825596').getBoundingClientRect();
           const heroTitleRect = heroTitle.getBoundingClientRect();
+          const heroScheduleButton = document.querySelector('#rec908825596 .orion-hero-left-action .t-btnflex_type_button2');
+          const heroRegisterButton = document.querySelector('#rec908825596 .t1120__buttons .t-btnflex_type_button');
+          const heroScheduleButtonRect = heroScheduleButton?.getBoundingClientRect();
+          const heroRegisterButtonRect = heroRegisterButton?.getBoundingClientRect();
           const schedule = document.querySelector('#rec1773853311').getBoundingClientRect();
           const scheduleRows = [...document.querySelectorAll('#rec1773853311 .t522__row')]
             .map((row) => row.getBoundingClientRect())
@@ -84,6 +88,9 @@ try {
             heroTitleVisibility: heroTitleStyle.visibility,
             heroTitleOffset: Math.round(heroTitleRect.top - hero.top),
             heroColumnTransform: getComputedStyle(heroTitle.closest('.t1120__col-left')).transform,
+            heroScheduleParent: heroScheduleButton?.parentElement?.className || '',
+            heroButtonTopDelta: heroScheduleButtonRect && heroRegisterButtonRect ? Math.round(Math.abs(heroScheduleButtonRect.top - heroRegisterButtonRect.top)) : null,
+            partnerSpacerDisplay: getComputedStyle(document.querySelector('#rec283510213')).display,
             scheduleHeight: Math.round(schedule.height),
             scheduleRows,
             scheduleCards,
@@ -101,8 +108,11 @@ try {
       assert.equal(metrics.heroTitleVisibility, "visible", "заголовок героя не должен ждать анимацию Tilda");
       assert.equal(metrics.heroTitleOpacity, 1, "заголовок героя должен быть виден с первого кадра");
       if (!mobile) {
-        assert.match(metrics.heroColumnTransform, /matrix\([^)]*, -128\)$/, `левый текст должен иметь заданный подъём: ${metrics.heroColumnTransform}`);
+        assert.match(metrics.heroColumnTransform, /matrix\([^)]*, -96\)$/, `левый текст должен иметь заданный подъём: ${metrics.heroColumnTransform}`);
         assert.ok(metrics.heroTitleOffset <= 120, `левый текст первого экрана должен быть поднят, сейчас отступ ${metrics.heroTitleOffset}px`);
+        assert.match(metrics.heroScheduleParent, /orion-hero-left-action/, "кнопка расписания должна находиться под левым заголовком");
+        assert.ok(metrics.heroButtonTopDelta <= 2, `кнопки первого экрана должны стоять на одной высоте, разбежка ${metrics.heroButtonTopDelta}px`);
+        assert.equal(metrics.partnerSpacerDisplay, "none", "пустой 20vh-блок перед партнёрами должен быть скрыт");
         assert.ok(metrics.scheduleHeight <= 760, `расписание должно помещаться в экран, сейчас ${metrics.scheduleHeight}px`);
         assert.ok(Math.max(...metrics.scheduleRows.map((row) => row.top)) - Math.min(...metrics.scheduleRows.map((row) => row.top)) <= 8,
           `три вида расписания должны стоять в одном ряду: ${JSON.stringify(metrics.scheduleRows)}`);
@@ -116,7 +126,7 @@ try {
           returnByValue: true,
           expression: `(() => {
             const style = document.createElement('style');
-            style.textContent = '#rec1773853311 .t522__row:first-child .t522__persname{min-height:32px!important;align-items:flex-start!important}';
+            style.textContent = '#rec1773853311 .t522__row:first-child .t522__title{transform:translateY(30px)!important}';
             document.head.append(style);
             const tops = [...document.querySelectorAll('#rec1773853311 .t522__title')].map((node) => node.getBoundingClientRect().top);
             style.remove();

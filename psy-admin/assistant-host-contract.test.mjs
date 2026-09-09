@@ -373,6 +373,7 @@ try {
 
   const stickyControls = await evaluate(`(() => {
     const panel = document.querySelector('.psy-widget-panel');
+    const scroll = document.querySelector('.psy-widget-scroll');
     const messages = document.querySelector('.psy-widget-messages');
     const stop = document.querySelector('[data-voice-stop]');
     for (let index = 0; index < 12; index += 1) {
@@ -392,13 +393,21 @@ try {
         stop: stopBox.top >= panelBox.top - 1 && stopBox.bottom <= panelBox.bottom + 1,
       };
     };
-    panel.scrollTop = 0;
+    scroll.scrollTop = 0;
     const atTop = visible();
-    panel.scrollTop = panel.scrollHeight;
+    scroll.scrollTop = scroll.scrollHeight;
     const atBottom = visible();
-    return { atTop, atBottom, overflow: panel.scrollHeight - panel.clientHeight };
+    return {
+      atTop,
+      atBottom,
+      overflow: scroll.scrollHeight - scroll.clientHeight,
+      panelOverflow: getComputedStyle(panel).overflow,
+      scrollOverflow: getComputedStyle(scroll).overflowY,
+    };
   })()`);
   assert.ok(stickyControls.overflow > 100, "тестовая панель должна действительно прокручиваться");
+  assert.equal(stickyControls.panelOverflow, "hidden", "внешняя панель не должна прокручивать и обрезать шапку");
+  assert.equal(stickyControls.scrollOverflow, "auto", "прокручиваться должна только середина помощника");
   for (const [position, state] of [["сверху", stickyControls.atTop], ["снизу", stickyControls.atBottom]]) {
     assert.equal(state.head, true, `шапка должна быть целиком видна при прокрутке ${position}`);
     assert.equal(state.form, true, `поле, микрофон и кнопка должны быть целиком видны при прокрутке ${position}`);
@@ -414,6 +423,7 @@ try {
   const mobile = await evaluate(`(() => {
     const root = document.querySelector('[data-psy-widget]');
     const panel = root.querySelector('.psy-widget-panel');
+    const scroll = root.querySelector('.psy-widget-scroll');
     const stop = root.querySelector('[data-voice-stop]').getBoundingClientRect();
     const mic = root.querySelector('.psy-widget-mic').getBoundingClientRect();
     const launcher = root.querySelector('.psy-widget-trigger');
@@ -426,9 +436,9 @@ try {
         form: form.top >= panelBox.top - 1 && form.bottom <= panelBox.bottom + 1,
       };
     };
-    panel.scrollTop = 0;
+    scroll.scrollTop = 0;
     const atTop = visible();
-    panel.scrollTop = panel.scrollHeight;
+    scroll.scrollTop = scroll.scrollHeight;
     const atBottom = visible();
     return {
       overflow: document.documentElement.scrollWidth - innerWidth,
