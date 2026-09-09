@@ -109,12 +109,20 @@ function sanitise(html, widgetPath) {
     #rec282570514 [data-elem-id="1474906621455"] .tn-atom,
     #rec282570514 [data-elem-id="1690964264025"] .tn-atom,
     #rec282570514 [data-elem-id="1690967422558"] .tn-atom{text-align:center!important}
-    #rec1773910081{padding-top:36px!important;padding-bottom:72px!important}
+    #rec1773910081{padding-top:24px!important;padding-bottom:32px!important}
     #rec1773910081 .t-btnflex{min-width:min(440px,calc(100vw - 32px))!important;min-height:60px!important;padding:14px 24px!important;font-size:18px!important;line-height:1.25!important}
-    #rec729134751{padding-top:72px!important;padding-bottom:40px!important}
+    #rec729134751{padding-top:32px!important;padding-bottom:48px!important}
+    #rec729134751 .t-section__container{height:auto!important}
+    #rec729134751 .t-section__title{margin-bottom:40px!important}
     #rec759291094{padding-top:32px!important;padding-bottom:24px!important}
     #rec584106074{padding-top:24px!important;padding-bottom:32px!important}
     #rec623395186{padding-top:24px!important}
+    #rec282788666{padding-top:40px!important;padding-bottom:40px!important}
+    #rec401577081{padding-bottom:40px!important}
+    #rec288715564{padding-top:40px!important;padding-bottom:24px!important}
+    #rec288715564 .t-section__container{height:auto!important}
+    #rec288715564 .t-section__title{margin-bottom:40px!important}
+    #rec288715564 .t-feed__buttons-wrapper{margin-top:40px!important}
     .orion-review-hint{display:none!important}
 
     /* Одна и та же реакция на все кнопки сайта. */
@@ -176,7 +184,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-14&theme=orion-blue-20260908"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-15&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }

@@ -68,6 +68,12 @@ test("live homepage repair is narrow and preserves the original page rhythm", ()
   assert.match(widgetCss, /#rec908825596 \.t-cover[^}]*min-height:\s*calc\(100svh - 60px\)/s);
   assert.match(widgetCss, /#rec282570514 \[data-elem-id="1613643387114"\][^}]*text-align:\s*center/s);
   assert.match(widgetCss, /#rec1773910081 \.t-btnflex[^}]*min-height:\s*60px[^}]*font-size:\s*18px/s);
+  assert.match(widgetCss, /#rec1773910081\s*\{[^}]*padding-top:\s*24px[^}]*padding-bottom:\s*32px/s);
+  assert.match(widgetCss, /#rec729134751\s*\{[^}]*padding-top:\s*32px[^}]*padding-bottom:\s*48px/s);
+  assert.match(widgetCss, /#rec729134751 \.t-section__title\s*\{[^}]*margin-bottom:\s*40px/s);
+  assert.match(widgetCss, /#rec401577081\s*\{[^}]*padding-bottom:\s*40px/s);
+  assert.match(widgetCss, /#rec288715564\s*\{[^}]*padding-top:\s*40px[^}]*padding-bottom:\s*24px/s);
+  assert.match(widgetCss, /#rec288715564 \.t-feed__buttons-wrapper\s*\{[^}]*margin-top:\s*40px/s);
   assert.match(widgetCss, /\.orion-review-hint\s*\{\s*display:\s*none\s*!important/);
   assert.match(widgetCss, /@media \(max-width:767px\)[^{]*\{[\s\S]*#rec282570514 \.t396__artboard[^{]*\{[^}]*height:\s*915px/s);
   assert.match(widgetCss, /\[data-elem-id="1497357188037"\][^}]*width:\s*calc\(100% - 40px\)/s);

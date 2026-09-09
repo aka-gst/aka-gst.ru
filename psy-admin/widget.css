@@ -90,8 +90,8 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec2825
 }
 
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773910081 {
-  padding-top: 36px !important;
-  padding-bottom: 72px !important;
+  padding-top: 24px !important;
+  padding-bottom: 32px !important;
 }
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773910081 .t-btnflex {
   min-width: min(440px, calc(100vw - 32px)) !important;
@@ -102,8 +102,14 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773
 }
 
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec729134751 {
-  padding-top: 72px !important;
-  padding-bottom: 40px !important;
+  padding-top: 32px !important;
+  padding-bottom: 48px !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec729134751 .t-section__container {
+  height: auto !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec729134751 .t-section__title {
+  margin-bottom: 40px !important;
 }
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec759291094 {
   padding-top: 32px !important;
@@ -118,6 +124,26 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec6233
 }
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec623395186 .orion-review-hint {
   display: none !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282788666 {
+  padding-top: 40px !important;
+  padding-bottom: 40px !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec401577081 {
+  padding-bottom: 40px !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec288715564 {
+  padding-top: 40px !important;
+  padding-bottom: 24px !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec288715564 .t-section__container {
+  height: auto !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec288715564 .t-section__title {
+  margin-bottom: 40px !important;
+}
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec288715564 .t-feed__buttons-wrapper {
+  margin-top: 40px !important;
 }
 @media (max-width:767px) {
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 .t396__artboard,
