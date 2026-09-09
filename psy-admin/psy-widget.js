@@ -1,13 +1,13 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-11";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-11";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-11";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-12";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-12";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-12";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-11&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-12&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 function applyHostPagePolish() {
@@ -106,10 +106,6 @@ mount.innerHTML = `
           <button type="submit">Отправить заявку</button>
           <p class="psy-widget-handoff-status" aria-live="polite"></p>
         </form>
-        <a class="psy-widget-payment" href="https://orion-center.ru/payment" target="_blank" rel="noopener noreferrer">
-          <span>Перейти к оплате ↗</span>
-          <small>После выбора и согласования услуги</small>
-        </a>
       </section>
       <form class="psy-widget-form">
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
@@ -171,7 +167,50 @@ const voiceCapabilities = {
 };
 const widgetPublicUrl = (value) => resolveWidgetPublicUrl(value, import.meta.url);
 
-function appendMessage(role, answer) {
+function handoffKindFor(answer) {
+  const context = [answer.title, answer.text, answer.url, answer.action?.url]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (/аренд|зал|кабинет|services/.test(context)) return "rental";
+  if (/семинар|программ|курс|обуч|расписан|клуб|мероприят|schedule|psyclub|pweducation/.test(context)) return "seminar";
+  return "specialist";
+}
+
+function openHandoffFor(answer) {
+  handoffKind.value = handoffKindFor(answer);
+  renderHandoffMode();
+  handoffSubject.value = answer.title || "";
+  handoffForm.hidden = false;
+  handoffToggle.setAttribute("aria-expanded", "true");
+  handoffToggle.textContent = "Скрыть форму";
+  handoffForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  handoffSubject.focus({ preventScroll: true });
+}
+
+function appendSupportActions(article, answer) {
+  if (answer.kind === "crisis" || answer.kind === "success") return;
+  const area = document.createElement("div");
+  area.className = "psy-widget-followup-actions";
+  const actions = document.createElement("div");
+  actions.className = "psy-widget-followup-buttons";
+  const booking = document.createElement("button");
+  booking.type = "button";
+  booking.dataset.supportAction = "booking";
+  booking.textContent = "Помочь записаться";
+  booking.addEventListener("click", () => openHandoffFor(answer));
+  const payment = document.createElement("a");
+  payment.dataset.supportAction = "payment";
+  payment.href = "https://orion-center.ru/payment";
+  payment.target = "_blank";
+  payment.rel = "noopener noreferrer";
+  payment.textContent = "Помочь оплатить";
+  actions.append(booking, payment);
+  area.append(actions);
+  article.append(area);
+}
+
+function appendMessage(role, answer, { supportActions = false } = {}) {
   const article = document.createElement("article");
   article.className = `psy-widget-message ${role} ${answer.kind || ""}`;
   if (answer.leadIn) {
@@ -218,6 +257,7 @@ function appendMessage(role, answer) {
     followUp.append(question);
     article.append(followUp);
   }
+  if (role === "assistant" && supportActions) appendSupportActions(article, answer);
   messages.append(article);
   article.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -350,7 +390,7 @@ async function ask(question, askedByVoice = false) {
     }
   }
   conversationContext = nextConversationContext(result);
-  appendMessage("assistant", result);
+  appendMessage("assistant", result, { supportActions: true });
   void speakReply(result, value);
   if (askedByVoice && !voiceCapabilities.speechAvailable) {
     setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities, true).voice.fallbackMessage);

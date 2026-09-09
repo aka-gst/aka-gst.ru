@@ -252,7 +252,7 @@ try {
       actionFollowUpGap: followUpBox.top - actionBox.bottom,
     };
   })()`);
-  assert.match(eventContinuity.eventText, /Хотите узнать формат этой программы или оставить заявку\?/);
+  assert.match(eventContinuity.eventText, /Что показать дальше: программу, расписание или помочь записаться\?/);
   assert.ok(eventContinuity.sourceActionGap >= 12, `Ссылка и кнопка слиплись: ${eventContinuity.sourceActionGap}px`);
   assert.ok(eventContinuity.actionFollowUpGap >= 14, `Кнопка и вопрос слиплись: ${eventContinuity.actionFollowUpGap}px`);
   assert.match(eventContinuity.formatText, /«Теория и практика работы с измененными и экстремальными состояниями сознания» проходит онлайн\./);

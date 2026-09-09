@@ -125,10 +125,14 @@ html[data-orion-host-polish] #rec283637377 .t-sociallinks__svg { width: 42px !im
 .psy-widget-links .psy-widget-action:hover,
 .psy-widget-links .psy-widget-action:focus-visible { background: var(--psy-widget-primary-hover); color: #fff; outline: 3px solid var(--psy-widget-primary-focus); outline-offset: 3px; }
 .psy-widget-links + [data-supportive-followup] { margin-top: 16px; }
-.psy-widget-payment { display: grid; align-content: center; gap: 2px; min-height: 54px; padding: 7px 9px; border: 1px solid var(--psy-widget-primary-border); border-radius: 12px; background: var(--psy-widget-primary-soft); color: var(--psy-widget-primary); text-decoration: none; box-shadow: 0 3px 10px #1f00a612; }
-.psy-widget-payment span { font-size: .74rem; font-weight: 850; line-height: 1.15; }
-.psy-widget-payment small { color: #665b7d; font-size: .64rem; line-height: 1.15; }
-.psy-widget-payment:hover, .psy-widget-payment:focus-visible { border-color: var(--psy-widget-primary); background: #e3ebff; outline: 3px solid var(--psy-widget-primary-focus); outline-offset: 3px; }
+.psy-widget-followup-actions { display: grid; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #d9d1e9; }
+.psy-widget-followup-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.psy-widget-followup-buttons > button,
+.psy-widget-followup-buttons > a { display: inline-flex; align-items: center; justify-content: center; min-height: var(--psy-widget-touch-target); padding: 9px 10px; border: 1px solid var(--psy-widget-primary); border-radius: 9px; background: #fff; color: var(--psy-widget-primary); font-weight: 800; text-align: center; text-decoration: none; cursor: pointer; }
+.psy-widget-followup-buttons > button:hover,
+.psy-widget-followup-buttons > button:focus-visible,
+.psy-widget-followup-buttons > a:hover,
+.psy-widget-followup-buttons > a:focus-visible { background: var(--psy-widget-primary-soft); outline: 2px solid var(--psy-widget-primary-focus); outline-offset: 2px; }
 .psy-widget-booking-area { padding: 8px 18px 12px; }
 .psy-widget-booking-area p { display: grid; gap: 1px; margin: 0 0 7px; color: #4b397c; font-size: .78rem; line-height: 1.25; }
 .psy-widget-booking-area p span { color: #6a6378; font-size: .7rem; }
@@ -162,7 +166,6 @@ html[data-orion-host-polish] #rec283637377 .t-sociallinks__svg { width: 42px !im
 .psy-widget-handoff-status { color: #5d526e; font-size: .76rem !important; font-weight: 600; }
 .psy-widget-handoff-status[data-state="success"] { color: #126c50; }
 .psy-widget-handoff-status[data-state="error"] { color: #a43131; }
-.psy-widget-handoff-area > .psy-widget-payment { min-height: 44px; margin-top: 8px; text-align: center; }
 @media (max-width: 620px) {
   .psy-widget-trigger { right: 16px; bottom: 96px; }
   .psy-widget-panel { right: 0; bottom: 0; width: 100vw; max-height: min(76vh, 680px); border-radius: 22px 22px 0 0; }
@@ -176,9 +179,6 @@ html[data-orion-host-polish] #rec283637377 .t-sociallinks__svg { width: 42px !im
   .psy-widget-booking-area { padding: 8px 16px 12px; }
   .psy-widget-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .psy-widget-booking,
-  .psy-widget-payment { min-height: 58px; font-size: .78rem; }
-  .psy-widget-payment span { font-size: .8rem; }
-  .psy-widget-payment small { font-size: .68rem; }
   .psy-widget-handoff-grid { grid-template-columns: 1fr; }
   .psy-widget-form { grid-template-columns: minmax(0, 1fr) var(--psy-widget-touch-target) auto; }
 }

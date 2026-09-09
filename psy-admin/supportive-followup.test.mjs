@@ -10,12 +10,12 @@ import { safetyIntents } from './intents.js';
 const widgetSource = readFileSync(new URL('./psy-widget.js', import.meta.url), 'utf8');
 
 const followUps = {
-  answer: 'Что уточнить дальше: содержание программы, формат участия или контакты?',
-  curated: 'Что показать дальше: программу, расписание или контакты?',
-  offer: 'Что уточнить дальше: формат, программу или способ записи?',
-  unconfirmed: 'Что открыть дальше: официальные контакты или другие программы центра?',
-  fallback: 'Что вас интересует: консультации, мероприятия, обучение или аренда?',
-  boundary: 'Что показать дальше: профили специалистов или официальные контакты центра?',
+  answer: 'Что показать дальше: программу, расписание или помочь записаться?',
+  curated: 'Что показать дальше: программу, расписание или помочь записаться?',
+  offer: 'Что показать дальше: программу, расписание или помочь записаться?',
+  unconfirmed: 'Что показать дальше: программу, расписание или помочь записаться?',
+  fallback: 'Что показать дальше: программу, расписание или помочь записаться?',
+  boundary: 'Что показать дальше: программу, расписание или помочь записаться?',
   crisis: 'Если опасность непосредственная, вы можете сейчас позвонить 112 или попросить человека рядом сделать это?',
 };
 
@@ -33,11 +33,7 @@ test('router adds a neutral, actionable follow-up for each supported answer kind
   for (const [question, kind] of cases) {
     const answer = answerQuestion(question);
     assert.equal(answer.kind, kind, question);
-    if (question === 'Какие мероприятия ближайшие?') {
-      assert.match(answer.followUp, /этой программы/i, question);
-    } else {
-      assert.equal(answer.followUp, followUps[kind], question);
-    }
+    assert.equal(answer.followUp, followUps[kind], question);
     if (kind !== 'crisis') assert.ok(answer.leadIn, question);
     assert.match(answer.followUp, /\?$/, `${question}: ответ должен приглашать к продолжению конкретным вопросом`);
   }
@@ -63,7 +59,7 @@ test('specialist choice is support, safe boundary, next step and then a question
   assert.doesNotMatch(`${answer.leadIn} ${answer.text}`, /Я не могу ответить по одному сообщению/i);
   assert.match(answer.text, /не обещает лечение/);
   assert.equal(answer.url, 'https://orion-center.ru/consultation');
-  assert.match(answer.followUp, /специалист|профил/i);
+  assert.match(answer.followUp, /помочь записаться/i);
   assert.match(answer.followUp, /\?$/);
 });
 

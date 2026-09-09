@@ -1,5 +1,5 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260909-11";
-import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260909-11";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260909-12";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260909-12";
 
 export function resolveWidgetPublicUrl(value, widgetScriptUrl) {
   const publicRoot = new URL("../", widgetScriptUrl);
@@ -18,13 +18,14 @@ const diagnosisPattern = /(диагноз|диагностируй|назнач�
 const sensitivePattern = /(номер карты|данные карты|картой|карту|оплатить в чате|cvv|cvc|парол|паспорт|снилс)/i;
 const currentFactPattern = /(сколько стоит|цена|стоимость|когда|дата|места|свободн|сегодня|завтра|сейчас проходит)/i;
 
+const standardFollowUp = "Что показать дальше: программу, расписание или помочь записаться?";
 const supportiveFollowUps = Object.freeze({
-  answer: "Что уточнить дальше: содержание программы, формат участия или контакты?",
-  curated: "Что показать дальше: программу, расписание или контакты?",
-  offer: "Что уточнить дальше: формат, программу или способ записи?",
-  unconfirmed: "Что открыть дальше: официальные контакты или другие программы центра?",
-  fallback: "Что вас интересует: консультации, мероприятия, обучение или аренда?",
-  boundary: "Что показать дальше: профили специалистов или официальные контакты центра?",
+  answer: standardFollowUp,
+  curated: standardFollowUp,
+  offer: standardFollowUp,
+  unconfirmed: standardFollowUp,
+  fallback: standardFollowUp,
+  boundary: standardFollowUp,
   crisis: "Если опасность непосредственная, вы можете сейчас позвонить 112 или попросить человека рядом сделать это?",
 });
 
@@ -284,7 +285,7 @@ function routeQuestion(rawQuestion, context = {}) {
 
 export function answerQuestion(rawQuestion, context = {}) {
   const answer = routeQuestion(rawQuestion, context);
-  const followUp = answer.followUp || supportiveFollowUps[answer.kind];
+  const followUp = answer.kind === "crisis" ? supportiveFollowUps.crisis : standardFollowUp;
   const query = normalize(rawQuestion);
   const shortContinuation = query.split(" ").filter(Boolean).length <= 3
     && /^(?:контакт|формат|программ|способ запис|запис|распис|стоимост|цен|подробн|специалист)/i.test(query);

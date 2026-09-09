@@ -8,7 +8,7 @@ test("short follow-up keeps the nearest published event as its subject", () => {
   const nearest = router.answerQuestion("Какие мероприятия ближайшие?");
 
   assert.deepEqual(nearest.context, { topic: "next-published-event" });
-  assert.equal(nearest.followUp, "Хотите узнать формат этой программы или оставить заявку?");
+  assert.equal(nearest.followUp, "Что показать дальше: программу, расписание или помочь записаться?");
 
   const format = router.answerQuestion("формат", nearest.context);
   assert.equal(format.title, "Формат ближайшей программы");

@@ -51,9 +51,8 @@ const fixture = `<!doctype html><meta charset="utf-8">
     const trigger = document.querySelector('.psy-widget-trigger');
     const primary = document.querySelector('.psy-widget-handoff button[type="submit"]');
     const secondary = document.querySelector('.psy-widget-handoff-toggle');
-    const payment = document.querySelector('.psy-widget-payment');
     const submit = document.querySelector('.psy-widget-form button[type="submit"]');
-    if (!trigger || !primary || !secondary || !payment || !submit || !document.styleSheets.length) return;
+    if (!trigger || !primary || !secondary || !submit || !document.styleSheets.length) return;
     clearInterval(timer);
     document.querySelector('.psy-widget-panel').hidden = false;
     document.querySelector('.psy-widget-handoff').hidden = false;
@@ -61,8 +60,25 @@ const fixture = `<!doctype html><meta charset="utf-8">
       const style = getComputedStyle(node);
       return { background: style.backgroundColor, color: style.color, height: node.getBoundingClientRect().height };
     };
-    const result = { trigger: read(trigger), primary: read(primary), secondary: read(secondary), payment: read(payment), submit: read(submit) };
-    document.body.dataset.result = JSON.stringify(result);
+    trigger.click();
+    const input = document.querySelector('#psy-widget-question');
+    input.value = 'аренда кабинета';
+    document.querySelector('.psy-widget-form').requestSubmit();
+    const answerTimer = setInterval(() => {
+      const followUp = document.querySelector('.psy-widget-followup-actions');
+      if (!followUp) return;
+      clearInterval(answerTimer);
+      followUp.querySelector('[data-support-action="booking"]').click();
+      const result = {
+        trigger: read(trigger), primary: read(primary), secondary: read(secondary), submit: read(submit),
+        paymentCount: document.querySelectorAll('.psy-widget-payment').length,
+        followUpText: followUp.closest('.psy-widget-message').textContent,
+        paymentHref: followUp.querySelector('[data-support-action="payment"]').href,
+        handoffVisible: !document.querySelector('.psy-widget-handoff').hidden,
+        handoffKind: document.querySelector('[name="requestKind"]').value,
+      };
+      document.body.dataset.result = JSON.stringify(result);
+    }, 20);
   }, 20);
 </script>`;
 
@@ -100,9 +116,13 @@ try {
   assert.equal(result.secondary.background, "rgb(255, 255, 255)", "вторичная кнопка должна быть белой");
   assert.equal(result.secondary.color, "rgb(31, 0, 166)", "вторичная кнопка должна иметь синий текст");
   assert.ok(result.secondary.height >= 44, "вторичная кнопка должна оставаться не ниже 44px");
-  assert.equal(result.payment.background, "rgb(238, 243, 255)", "оплата должна быть выделена светло-синим");
-  assert.equal(result.payment.color, "rgb(31, 0, 166)", "оплата должна иметь синий текст");
-  assert.ok(result.payment.height >= 44, "оплата должна оставаться не ниже 44px");
+  assert.equal(result.paymentCount, 0, "помощник-поисковик не должен сам показывать кнопку оплаты");
+  assert.match(result.followUpText, /Что показать дальше: программу, расписание или помочь записаться\?/);
+  assert.match(result.followUpText, /Помочь записаться/);
+  assert.match(result.followUpText, /Помочь оплатить/);
+  assert.match(result.paymentHref, /orion-center\.ru\/payment/);
+  assert.equal(result.handoffVisible, true, "запись должна открываться только после выбора человека");
+  assert.equal(result.handoffKind, "rental", "форма должна учитывать тему текущего ответа");
   console.log("PsyAdmin: сине-белая тема кнопок видима в браузере");
 } finally {
   server.close();
