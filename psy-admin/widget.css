@@ -41,6 +41,101 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec9088
   height: calc(100svh - 60px) !important;
   min-height: calc(100svh - 60px) !important;
 }
+/* The live Tilda animation can stay at its hidden initial frame in a
+   backgrounded or throttled tab. Hero content is essential, so it must not
+   depend on that animation finishing. */
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__title,
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__descr,
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__buttons,
+html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+@media (min-width:961px) {
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t-section__title {
+    margin-bottom: 16px !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t-section__descr {
+    margin-bottom: 0 !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522 > .t-container:not(.t-section__container) {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 32px !important;
+    width: min(1200px, calc(100% - 48px)) !important;
+    padding-top: 24px !important;
+    margin: 0 auto !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522 > .t-container:not(.t-section__container)::before,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522 > .t-container:not(.t-section__container)::after {
+    display: none !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__row {
+    display: block !important;
+    float: none !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__leftcol,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__line {
+    display: none !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__rightcol {
+    float: none !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__right-tablewrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__personimgwrapper {
+    display: block !important;
+    width: 140px !important;
+    height: 140px !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__img {
+    width: 140px !important;
+    height: 140px !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__textwrapper {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    padding-top: 16px !important;
+    text-align: center !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__persname,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__title {
+    text-align: center !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__persname {
+    font-size: 28px !important;
+    line-height: 1.15 !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__title {
+    font-size: 18px !important;
+    line-height: 1.45 !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t-section__bottomwrapper {
+    margin-top: 24px !important;
+  }
+}
 
 /* Restore a deliberate breath between Phoenix and the next section, without
    bringing back the old 35vh decorative cover. */
@@ -58,13 +153,14 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec6053
   min-height: 96px !important;
 }
 
-/* Undo the upward shift that squeezed the direction cards into Phoenix. */
+/* Compact the useful direction content instead of clipping the outside of
+   the fixed-height Zero Block. */
 @media (min-width:1200px) {
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 .t396__artboard,
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 .t396__carrier,
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 .t396__filter {
-    height: 837px !important;
-    min-height: 837px !important;
+    height: 620px !important;
+    min-height: 620px !important;
   }
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643493683"],
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690964155999"],
@@ -80,6 +176,28 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec6053
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690962575043"] {
     transform: none !important;
   }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1497357188037"] { top: 30px !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1497357188044"] { top: 104px !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643493683"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690964155999"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613644294582"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690962540232"] { top: 190px !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643387114"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1474906621455"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690964264025"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690967422558"] { top: 435px !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643678385"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643795239"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643798757"],
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690962575043"] { top: 535px !important; width: 200px !important; height: 60px !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643798757"] { left: calc(50% - 600px + 70px) !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643795239"] { left: calc(50% - 600px + 359px) !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643678385"] { left: calc(50% - 600px + 647px) !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690962575043"] { left: calc(50% - 600px + 937px) !important; }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643678385"] .tn-atom,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643795239"] .tn-atom,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643798757"] .tn-atom,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1690962575043"] .tn-atom { font-size: 18px !important; }
 }
 
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec282570514 [data-elem-id="1613643387114"] .tn-atom,

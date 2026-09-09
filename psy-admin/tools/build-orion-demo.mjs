@@ -103,6 +103,7 @@ function sanitise(html, widgetPath) {
     #rec908825596{padding-top:60px!important;padding-bottom:0!important;overflow:visible!important}
     #rec908825596 .t-cover,#rec908825596 .t-cover__carrier,#rec908825596 .t-cover__filter,
     #rec908825596 .t-container,#rec908825596 .t1120__col_center,#rec908825596 .t1120__wrapper{height:calc(100svh - 60px)!important;min-height:calc(100svh - 60px)!important}
+    #rec908825596 .t1120__title,#rec908825596 .t1120__descr,#rec908825596 .t1120__buttons,#rec908825596 .t-btn{opacity:1!important;visibility:visible!important;transform:none!important}
     #rec605382040{display:block!important;height:96px!important;min-height:96px!important;overflow:hidden!important}
     #rec605382040 .t-cover,#rec605382040 .t-cover__carrier,#rec605382040 .t-cover__filter,#rec605382040 .t-cover__wrapper{height:96px!important;min-height:96px!important}
     #rec282570514 [data-elem-id="1613643387114"] .tn-atom,
@@ -140,14 +141,42 @@ function sanitise(html, widgetPath) {
     /* Увеличиваем только соцсети; структуру футера оставляет Tilda. */
     #rec283637377 .t-sociallinks__item a,#rec283637377 .t-sociallinks__svg{width:42px!important;height:42px!important}
     #rec283637377 .t-sociallinks__svg path{fill:#1f00a6!important}
+    @media (min-width:961px){
+      #rec1773853311{padding-top:32px!important;padding-bottom:32px!important}
+      #rec1773853311 .t-section__title{margin-bottom:16px!important}
+      #rec1773853311 .t-section__descr{margin-bottom:0!important}
+      #rec1773853311 .t522>.t-container:not(.t-section__container){box-sizing:border-box!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:32px!important;width:min(1200px,calc(100% - 48px))!important;padding-top:24px!important;margin:0 auto!important}
+      #rec1773853311 .t522>.t-container:not(.t-section__container)::before,#rec1773853311 .t522>.t-container:not(.t-section__container)::after{display:none!important}
+      #rec1773853311 .t522__row{display:block!important;float:none!important;width:auto!important;height:auto!important;margin:0!important;opacity:1!important;transform:none!important}
+      #rec1773853311 .t522__leftcol,#rec1773853311 .t522__line{display:none!important}
+      #rec1773853311 .t522__rightcol{float:none!important;width:auto!important;height:auto!important;margin:0!important}
+      #rec1773853311 .t522__right-tablewrapper{display:flex!important;flex-direction:column!important;align-items:center!important;width:100%!important;height:auto!important}
+      #rec1773853311 .t522__personimgwrapper{display:block!important;width:140px!important;height:140px!important}
+      #rec1773853311 .t522__img{width:140px!important;height:140px!important}
+      #rec1773853311 .t522__textwrapper{box-sizing:border-box!important;display:block!important;width:100%!important;height:auto!important;padding-top:16px!important;text-align:center!important}
+      #rec1773853311 .t522__persname,#rec1773853311 .t522__title{text-align:center!important}
+      #rec1773853311 .t522__persname{font-size:28px!important;line-height:1.15!important}
+      #rec1773853311 .t522__title{font-size:18px!important;line-height:1.45!important}
+      #rec1773853311 .t-section__bottomwrapper{margin-top:24px!important}
+    }
     @media (min-width:1200px){
-      #rec282570514 .t396__artboard,#rec282570514 .t396__carrier,#rec282570514 .t396__filter{height:837px!important;min-height:837px!important}
+      #rec282570514 .t396__artboard,#rec282570514 .t396__carrier,#rec282570514 .t396__filter{height:620px!important;min-height:620px!important}
       #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1690964155999"],
       #rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690962540232"],
       #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1474906621455"],
       #rec282570514 [data-elem-id="1690964264025"],#rec282570514 [data-elem-id="1690967422558"],
       #rec282570514 [data-elem-id="1613643798757"],#rec282570514 [data-elem-id="1613643795239"],
       #rec282570514 [data-elem-id="1613643678385"],#rec282570514 [data-elem-id="1690962575043"]{transform:none!important}
+      #rec282570514 [data-elem-id="1497357188037"]{top:30px!important}
+      #rec282570514 [data-elem-id="1497357188044"]{top:104px!important}
+      #rec282570514 [data-elem-id="1613643493683"],#rec282570514 [data-elem-id="1690964155999"],#rec282570514 [data-elem-id="1613644294582"],#rec282570514 [data-elem-id="1690962540232"]{top:190px!important}
+      #rec282570514 [data-elem-id="1613643387114"],#rec282570514 [data-elem-id="1474906621455"],#rec282570514 [data-elem-id="1690964264025"],#rec282570514 [data-elem-id="1690967422558"]{top:435px!important}
+      #rec282570514 [data-elem-id="1613643678385"],#rec282570514 [data-elem-id="1613643795239"],#rec282570514 [data-elem-id="1613643798757"],#rec282570514 [data-elem-id="1690962575043"]{top:535px!important;width:200px!important;height:60px!important}
+      #rec282570514 [data-elem-id="1613643798757"]{left:calc(50% - 600px + 70px)!important}
+      #rec282570514 [data-elem-id="1613643795239"]{left:calc(50% - 600px + 359px)!important}
+      #rec282570514 [data-elem-id="1613643678385"]{left:calc(50% - 600px + 647px)!important}
+      #rec282570514 [data-elem-id="1690962575043"]{left:calc(50% - 600px + 937px)!important}
+      #rec282570514 [data-elem-id="1613643678385"] .tn-atom,#rec282570514 [data-elem-id="1613643795239"] .tn-atom,#rec282570514 [data-elem-id="1613643798757"] .tn-atom,#rec282570514 [data-elem-id="1690962575043"] .tn-atom{font-size:18px!important}
     }
     @media (max-width:767px){
       #rec282570514 .t396__artboard,#rec282570514 .t396__carrier,#rec282570514 .t396__filter{height:915px!important;min-height:915px!important}
@@ -184,7 +213,7 @@ function sanitise(html, widgetPath) {
   // вместе со снятием слова «аналитика» из предупреждения — иначе страница
   // обещала бы человеку то, чего на ней уже нет.
   const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
-  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-15&theme=orion-blue-20260908"></script>`;
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-16&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }

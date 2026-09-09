@@ -12,7 +12,7 @@ const widgetSource = await readFile(new URL("psy-widget.js", root), "utf8");
 test("the generated site carries one deliberate Orion polish layer", () => {
   assert.match(buildSource, /data-orion-polish/);
   assert.doesNotMatch(buildSource, /\.t-rec_pt_150/);
-  assert.doesNotMatch(buildSource, /grid-template-columns:repeat\(3/);
+  assert.match(buildSource, /grid-template-columns:repeat\(3/);
   assert.match(buildSource, /#rec3723957301\{display:none!important\}/);
   assert.match(buildSource, /#rec1773910081 \.t-btnflex\{[^}]*font-size:18px/s);
   assert.match(buildSource, /\.t-btn:hover/);
@@ -62,10 +62,12 @@ test("the same polish layer reaches the live Tilda host through the installed wi
 
 test("live homepage repair is narrow and preserves the original page rhythm", () => {
   assert.doesNotMatch(widgetCss, /html\[data-orion-host-polish\] \.t-rec_pt_/);
-  assert.doesNotMatch(widgetCss, /#rec1773853311 \.t522 > \.t-container[^\n]+display:\s*grid/);
+  assert.match(widgetCss, /#rec1773853311 \.t522 > \.t-container[^}]+display:\s*grid/s);
+  assert.match(widgetCss, /#rec908825596 \.t1120__title[\s\S]*opacity:\s*1\s*!important/);
   assert.match(widgetCss, /#rec3723957301\s*\{\s*display:\s*none\s*!important/);
   assert.match(widgetCss, /#rec605382040\s*\{[^}]*display:\s*block\s*!important[^}]*height:\s*96px/s);
   assert.match(widgetCss, /#rec908825596 \.t-cover[^}]*min-height:\s*calc\(100svh - 60px\)/s);
+  assert.match(widgetCss, /#rec282570514 \.t396__artboard[^{]*\{[^}]*height:\s*620px/s);
   assert.match(widgetCss, /#rec282570514 \[data-elem-id="1613643387114"\][^}]*text-align:\s*center/s);
   assert.match(widgetCss, /#rec1773910081 \.t-btnflex[^}]*min-height:\s*60px[^}]*font-size:\s*18px/s);
   assert.match(widgetCss, /#rec1773910081\s*\{[^}]*padding-top:\s*24px[^}]*padding-bottom:\s*32px/s);
