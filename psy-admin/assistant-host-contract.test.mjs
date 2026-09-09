@@ -46,9 +46,11 @@ class TestAudioContext {
 window.Audio = TestAudio;
 window.AudioContext = TestAudioContext;
 class TestRecognition {
-  addEventListener() {}
-  start() {}
-  abort() {}
+  constructor() { this.listeners = new Map(); this.starts = 0; window.__testRecognition = this; }
+  addEventListener(name, listener) { this.listeners.set(name, listener); }
+  start() { this.starts += 1; }
+  abort() { this.listeners.get("end")?.({}); }
+  emit(name, event = {}) { this.listeners.get(name)?.(event); }
 }
 window.SpeechRecognition = TestRecognition;
 class TestUtterance {
@@ -134,6 +136,7 @@ async function evaluate(expression) {
 }
 
 try {
+  await cdp("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   for (let attempt = 0; attempt < 80; attempt += 1) {
     if (await evaluate("Boolean(document.querySelector('[data-psy-widget]'))")) break;
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -215,7 +218,82 @@ try {
   })()`);
   assert.equal(spokenAnswer.spoken, "Ответ спокойно продолжим?");
   assert.doesNotMatch(spokenAnswer.spoken, /backspace|backslash|бэкспейс|обратный\s+слэш|escape|orion-center|\.com|\.ru|https?|[\\/\u0000-\u001f\u007f]/iu, "В объект озвучивания не должны попадать технические слова, controls или slash/backslash");
-  assert.equal(spokenAnswer.voice, "Milena");
+  assert.equal(spokenAnswer.voice, "", "Браузер должен сам выбрать голос; Milena нельзя назначать принудительно");
+
+  const eventContinuity = await evaluate(`(async () => {
+    const root = document.querySelector('[data-psy-widget]');
+    const input = root.querySelector('#psy-widget-question');
+    const submit = async (question) => {
+      const before = root.querySelectorAll('.psy-widget-message.assistant').length;
+      input.value = question;
+      input.form.requestSubmit();
+      for (let attempt = 0; attempt < 40 && root.querySelectorAll('.psy-widget-message.assistant').length === before; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      return [...root.querySelectorAll('.psy-widget-message.assistant')].at(-1);
+    };
+    const eventAnswer = await submit('Какое ближайшее мероприятие?');
+    const links = [...eventAnswer.querySelectorAll('.psy-widget-links > a')];
+    const sourceBox = links[0].getBoundingClientRect();
+    const actionBox = links[1].getBoundingClientRect();
+    const followUpBox = eventAnswer.querySelector('[data-supportive-followup]').getBoundingClientRect();
+    const formatAnswer = await submit('формат');
+    return {
+      eventText: eventAnswer.textContent,
+      formatText: formatAnswer.textContent,
+      sourceActionGap: actionBox.top - sourceBox.bottom,
+      actionFollowUpGap: followUpBox.top - actionBox.bottom,
+    };
+  })()`);
+  assert.match(eventContinuity.eventText, /Хотите узнать формат этой программы или оставить заявку\?/);
+  assert.ok(eventContinuity.sourceActionGap >= 12, `Ссылка и кнопка слиплись: ${eventContinuity.sourceActionGap}px`);
+  assert.ok(eventContinuity.actionFollowUpGap >= 14, `Кнопка и вопрос слиплись: ${eventContinuity.actionFollowUpGap}px`);
+  assert.match(eventContinuity.formatText, /«Теория и практика работы с измененными и экстремальными состояниями сознания» проходит онлайн\./);
+  assert.doesNotMatch(eventContinuity.formatText, /формат зависит|если вы назовете программу/i);
+  if (process.env.PSY_WIDGET_EVENT_DESKTOP_SCREENSHOT) {
+    const shot = await cdp("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
+    await writeFile(process.env.PSY_WIDGET_EVENT_DESKTOP_SCREENSHOT, Buffer.from(shot.data, "base64"));
+  }
+  if (process.env.PSY_WIDGET_EVENT_MOBILE_SCREENSHOT) {
+    await cdp("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const shot = await cdp("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
+    await writeFile(process.env.PSY_WIDGET_EVENT_MOBILE_SCREENSHOT, Buffer.from(shot.data, "base64"));
+    await cdp("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  const secondTapVoiceInput = await evaluate(`(async () => {
+    const root = document.querySelector('[data-psy-widget]');
+    const mic = root.querySelector('.psy-widget-mic');
+    const userCountBefore = root.querySelectorAll('.psy-widget-message.user').length;
+    const speechResult = (text) => {
+      const result = [{ transcript: text }];
+      result.isFinal = true;
+      return { resultIndex: 0, results: [result] };
+    };
+    mic.click();
+    window.__testRecognition.emit('result', speechResult('Какие ближайшие'));
+    window.__testRecognition.emit('end');
+    await new Promise((resolve) => setTimeout(resolve, 160));
+    window.__testRecognition.emit('result', speechResult('мероприятия'));
+    const beforeSecondTap = root.querySelectorAll('.psy-widget-message.user').length;
+    mic.click();
+    for (let attempt = 0; attempt < 40 && root.querySelectorAll('.psy-widget-message.user').length === beforeSecondTap; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    const users = [...root.querySelectorAll('.psy-widget-message.user')];
+    return {
+      noEarlySubmit: beforeSecondTap === userCountBefore,
+      submittedCount: users.length - userCountBefore,
+      submittedText: users.at(-1)?.textContent || '',
+      recognitionStarts: window.__testRecognition.starts,
+    };
+  })()`);
+  assert.equal(secondTapVoiceInput.noEarlySubmit, true, "Пауза распознавания не должна отправлять вопрос");
+  assert.equal(secondTapVoiceInput.submittedCount, 1, "Второе нажатие должно отправить вопрос ровно один раз");
+  assert.equal(secondTapVoiceInput.submittedText, "Какие ближайшие мероприятия");
+  assert.ok(secondTapVoiceInput.recognitionStarts >= 2, "Распознавание должно продолжаться после внутренней паузы браузера");
 
   const handoff = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');

@@ -1,5 +1,5 @@
-import { quickQuestions } from "./content.js?v=psy-widget-20260909-07";
-import { answerQuestion } from "./router.js?v=psy-widget-20260909-07";
+import { quickQuestions } from "./content.js?v=psy-widget-20260909-08";
+import { answerQuestion } from "./router.js?v=psy-widget-20260909-08";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",
@@ -45,6 +45,32 @@ export function widgetPresentation(viewportWidth, voiceCapabilities, askedByVoic
 
 export function createWidgetState() {
   return { open: false, panelVisible: false, fullScreen: false, returnFocusToTrigger: false };
+}
+
+export function createVoiceInputSession() {
+  return { finalText: "", interimText: "", text: "", submitted: false };
+}
+
+export function appendVoiceInputResult(session, { finalFragments = [], interimFragment = "" } = {}) {
+  const finalText = [session?.finalText, ...finalFragments]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const interimText = String(interimFragment || "").replace(/\s+/g, " ").trim();
+  return {
+    finalText,
+    interimText,
+    text: `${finalText} ${interimText}`.replace(/\s+/g, " ").trim(),
+    submitted: false,
+  };
+}
+
+export function finishVoiceInputSession(session) {
+  return {
+    question: String(session?.text || "").replace(/\s+/g, " ").trim(),
+    session: createVoiceInputSession(),
+  };
 }
 
 export function reduceWidgetState(state, action) {
@@ -107,39 +133,10 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
   return (sentences[0] || text).trim().slice(0, 160);
 }
 
-export function selectPreferredRussianVoice(voices = []) {
-  const russian = [...voices].filter((voice) => String(voice?.lang || "").toLowerCase().startsWith("ru"));
-  const preferred = russian.find((voice) => /milena/i.test(`${voice?.name || ""} ${voice?.voiceURI || ""}`));
-  if (preferred) return preferred;
-  const detectableFemale = russian.find((voice) => /female|женск/iu.test(`${voice?.name || ""} ${voice?.voiceURI || ""} ${voice?.gender || ""}`));
-  if (detectableFemale) return detectableFemale;
-  return russian.sort((left, right) => {
-    const leftKey = `${left?.name || ""}\u0000${left?.voiceURI || ""}`.toLowerCase();
-    const rightKey = `${right?.name || ""}\u0000${right?.voiceURI || ""}`.toLowerCase();
-    return leftKey < rightKey ? -1 : (leftKey > rightKey ? 1 : 0);
-  })[0];
-}
-
-export function waitForPreferredRussianVoice(synthesis, timeoutMs = 300) {
-  const available = selectPreferredRussianVoice(synthesis?.getVoices?.() || []);
-  if (available || !synthesis?.addEventListener) return Promise.resolve(available);
-  return new Promise((resolve) => {
-    let settled = false;
-    let timer;
-    const finish = (voice) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      synthesis.removeEventListener?.("voiceschanged", onVoicesChanged);
-      resolve(voice);
-    };
-    const onVoicesChanged = () => {
-      const voice = selectPreferredRussianVoice(synthesis.getVoices?.() || []);
-      if (voice) finish(voice);
-    };
-    synthesis.addEventListener("voiceschanged", onVoicesChanged);
-    timer = setTimeout(() => finish(selectPreferredRussianVoice(synthesis.getVoices?.() || [])), timeoutMs);
-  });
+export function configureSpeechUtterance(utterance) {
+  utterance.lang = "ru-RU";
+  utterance.rate = 0.96;
+  return utterance;
 }
 
 export function normalizeAssistantResult(result, fallback) {
@@ -160,8 +157,8 @@ export function normalizeAssistantResult(result, fallback) {
   };
 }
 
-export function routeWidgetQuestion(question) {
-  const answer = answerQuestion(question);
+export function routeWidgetQuestion(question, context = {}) {
+  const answer = answerQuestion(question, context);
   const sources = answer.url ? [{ url: answer.url, label: answer.linkText || "Открыть официальный источник" }] : [];
   const linkLabels = [...sources.map(({ label }) => label), answer.action?.label].filter(Boolean);
   return {
@@ -169,6 +166,10 @@ export function routeWidgetQuestion(question) {
     sources,
     spokenText: sanitizeSpokenText(answer.spokenText || answer.text, linkLabels),
   };
+}
+
+export function nextConversationContext(answer) {
+  return answer?.context || {};
 }
 
 export function shouldKeepVerifiedAnswer(answer) {

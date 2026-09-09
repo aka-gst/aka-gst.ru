@@ -1,12 +1,12 @@
-import { createHandoffPayload, createWidgetState, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, waitForPreferredRussianVoice, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-07";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-07";
+import { appendVoiceInputResult, configureSpeechUtterance, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-08";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-08";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-07&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-08&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -127,14 +127,12 @@ const handoffSubject = handoffForm.querySelector("[name='subject']");
 const handoffSubjectLabel = handoffForm.querySelector("[data-handoff-subject-label]");
 let recognition = null;
 let listening = false;
-let finalizedTranscript = "";
-let interimTranscript = "";
-let silenceTimer = null;
+let voiceInputSession = createVoiceInputSession();
 let recognitionRestartTimer = null;
-const VOICE_QUIET_GAP_MS = 1400;
 // Помощник не закрывает человеку страницу сам: на любой ширине он появляется
 // только после явного нажатия на плавающую кнопку. На панели остаётся крестик.
 let state = createWidgetState();
+let conversationContext = {};
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
@@ -216,11 +214,6 @@ function setVoiceStatus(message) {
   voiceStatus.textContent = message;
 }
 
-function clearSilenceTimer() {
-  if (silenceTimer) window.clearTimeout(silenceTimer);
-  silenceTimer = null;
-}
-
 function clearRecognitionRestartTimer() {
   if (recognitionRestartTimer) window.clearTimeout(recognitionRestartTimer);
   recognitionRestartTimer = null;
@@ -248,11 +241,9 @@ function setVoicePlaying(active) {
   renderVoiceControl();
 }
 
-function stopListening() {
-  clearSilenceTimer();
+function stopListening({ resetDraft = true } = {}) {
   clearRecognitionRestartTimer();
-  finalizedTranscript = "";
-  interimTranscript = "";
+  if (resetDraft) voiceInputSession = createVoiceInputSession();
   setListeningState(false);
   if (recognition) {
     try {
@@ -283,15 +274,7 @@ async function speakReply(text) {
   const spokenText = sanitizeSpokenText(text);
   if (!presentation.voice.shouldSpeakReply || !spokenText) return;
   stopVoice({ announce: false });
-  const utterance = new SpeechSynthesisUtterance(spokenText);
-  utterance.lang = "ru-RU";
-  utterance.rate = 0.96;
-  const russianVoice = await waitForPreferredRussianVoice(window.speechSynthesis);
-  if (!russianVoice) {
-    setVoiceStatus("Русский голос недоступен: ответ показан текстом.");
-    return;
-  }
-  utterance.voice = russianVoice;
+  const utterance = configureSpeechUtterance(new SpeechSynthesisUtterance(spokenText));
   utterance.addEventListener("start", () => {
     setVoicePlaying(true);
     setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
@@ -311,7 +294,7 @@ async function ask(question, askedByVoice = false) {
   const value = question.trim();
   if (!value) return;
   appendMessage("user", { text: value });
-  const fallback = routeWidgetQuestion(value);
+  const fallback = routeWidgetQuestion(value, conversationContext);
   let result = fallback;
   const keepVerifiedAnswer = shouldKeepVerifiedAnswer(fallback);
   try {
@@ -329,6 +312,7 @@ async function ask(question, askedByVoice = false) {
       setVoiceStatus("Сервер временно недоступен — показан проверенный ответ из резервной базы.");
     }
   }
+  conversationContext = nextConversationContext(result);
   appendMessage("assistant", result);
   void speakReply(result.spokenText || result.text);
   if (askedByVoice && !voiceCapabilities.speechAvailable) {
@@ -462,18 +446,6 @@ if (!voiceCapabilities.recognitionAvailable) {
   recognition.continuous = true;
   recognition.interimResults = true;
 
-  const fullTranscript = () => `${finalizedTranscript} ${interimTranscript}`.replace(/\s+/g, " ").trim();
-  const submitAfterPause = () => {
-    clearSilenceTimer();
-    const question = fullTranscript();
-    if (!question) return;
-    silenceTimer = window.setTimeout(() => {
-      const completedQuestion = fullTranscript();
-      stopListening();
-      if (completedQuestion) void ask(completedQuestion, true);
-    }, VOICE_QUIET_GAP_MS);
-  };
-
   const restartRecognition = () => {
     if (!listening || !recognition) return;
     try {
@@ -488,17 +460,21 @@ if (!voiceCapabilities.recognitionAvailable) {
 
   recognition.addEventListener("result", (event) => {
     if (!listening) return;
-    interimTranscript = "";
+    const finalFragments = [];
+    const interimFragments = [];
     for (let index = event.resultIndex; index < event.results.length; index += 1) {
       const result = event.results[index];
       const fragment = result[0]?.transcript?.trim();
       if (!fragment) continue;
-      if (result.isFinal) finalizedTranscript += `${fragment} `;
-      else interimTranscript += `${fragment} `;
+      if (result.isFinal) finalFragments.push(fragment);
+      else interimFragments.push(fragment);
     }
-    if (!fullTranscript()) return;
-    setVoiceStatus("Слушаю… Можете делать паузы: отправлю вопрос, когда вы закончите фразу.");
-    submitAfterPause();
+    voiceInputSession = appendVoiceInputResult(voiceInputSession, {
+      finalFragments,
+      interimFragment: interimFragments.join(" "),
+    });
+    if (!voiceInputSession.text) return;
+    setVoiceStatus("Слушаю… Нажмите микрофон ещё раз, когда закончите вопрос.");
   });
   recognition.addEventListener("error", (event) => {
     const wasListening = listening;
@@ -516,13 +492,26 @@ if (!voiceCapabilities.recognitionAvailable) {
     recognitionRestartTimer = window.setTimeout(restartRecognition, 120);
   });
   mic.addEventListener("click", () => {
-    if (voiceIsPlaying() || listening) {
+    if (voiceIsPlaying()) {
       stopVoice();
       return;
     }
+    if (listening) {
+      const finished = finishVoiceInputSession(voiceInputSession);
+      voiceInputSession = finished.session;
+      stopListening({ resetDraft: false });
+      if (finished.question) {
+        setVoiceStatus("Вопрос записан. Отправляю помощнику.");
+        void ask(finished.question, true);
+      } else {
+        setVoiceStatus("Запись пуста. Нажмите микрофон и задайте вопрос.");
+      }
+      return;
+    }
     stopVoice({ announce: false });
+    voiceInputSession = createVoiceInputSession();
     setListeningState(true);
-    setVoiceStatus("Слушаю… Можете говорить спокойно: длинные паузы допустимы.");
+    setVoiceStatus("Слушаю… Нажмите микрофон ещё раз, когда закончите вопрос.");
     restartRecognition();
   });
 }

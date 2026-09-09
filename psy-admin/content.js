@@ -6,6 +6,7 @@ export const nextPublishedEvent = {
   title: "Теория и практика работы с измененными и экстремальными состояниями сознания",
   startsAt: "14 сентября 2026",
   duration: "11 занятий",
+  format: "онлайн",
   url: "https://orion-center.ru/alteredstates-online",
   checkedAt: "2026-09-03"
 };
