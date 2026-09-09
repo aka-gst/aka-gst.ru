@@ -437,10 +437,10 @@ aka-gst.ru, www.aka-gst.ru {
   }
 
   # Orion loads the public assistant as an ES module from aka-gst.ru. Keep the
-  # cross-origin grant narrow: only the widget dependency graph and its one
-  # approved voice sample, never the booking admin/API routes.
+  # Cross-origin grant stays narrow: only the widget dependency graph and
+  # approved voice A bank, never the booking admin/API routes.
   @orion_widget_assets {
-    path /psy-admin/psy-widget.js /psy-admin/widget-contract.js /psy-admin/content.js /psy-admin/router.js /psy-admin/intents.js /psy-admin/widget.css /psy-admin/audio/voices/psyadmin-A.wav
+    path /psy-admin/psy-widget.js /psy-admin/widget-contract.js /psy-admin/content.js /psy-admin/router.js /psy-admin/intents.js /psy-admin/voice-bank.js /psy-admin/widget.css /psy-admin/audio/voice-a/*
     header Origin https://orion-center.ru
   }
   header @orion_widget_assets {

@@ -12,6 +12,7 @@ assert.ok(voiceA.length > 10_000, "Голос A должен быть насто
 const fixture = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head><body>
 <script>
 window.__audioStops = 0;
+window.__playedAudio = [];
 window.__speechStops = 0;
 window.__spokenTexts = [];
 window.__spokenVoices = [];
@@ -31,9 +32,15 @@ window.fetch = async (url, init = {}) => {
 class TestXHR { open() { window.__handoffNetworkRequests += 1; } send() {} }
 window.XMLHttpRequest = TestXHR;
 class TestAudio {
-  constructor(src) { this.src = src; this.currentTime = 0; this.volume = 1; this.paused = true; }
-  addEventListener() {}
-  play() { this.paused = false; return Promise.resolve(); }
+  constructor(src = "") { this.src = src; this.currentTime = 0; this.volume = 1; this.paused = true; this.listeners = new Map(); }
+  addEventListener(name, listener) { this.listeners.set(name, listener); }
+  play() {
+    this.paused = false;
+    window.__playedAudio.push(this.src);
+    this.listeners.get("play")?.();
+    setTimeout(() => { this.paused = true; this.listeners.get("ended")?.(); }, 0);
+    return Promise.resolve();
+  }
   pause() { this.paused = true; window.__audioStops += 1; }
 }
 class TestAudioContext {
@@ -191,7 +198,8 @@ try {
     const after = mic.getBoundingClientRect();
     return { audioStops: window.__audioStops, speechStops: window.__speechStops, sameGeometry: before.width === after.width && before.height === after.height && before.x === after.x };
   })()`);
-  assert.ok(stopResult.speechStops >= 1);
+  assert.ok(stopResult.audioStops >= 1);
+  assert.equal(stopResult.speechStops, 0, "Системный TTS нельзя даже запускать или останавливать");
   assert.equal(stopResult.sameGeometry, true);
 
   const listeningGeometry = await evaluate(`(() => {
@@ -211,14 +219,13 @@ try {
     const input = root.querySelector('#psy-widget-question');
     input.value = 'Неподготовленный вопрос';
     input.form.requestSubmit();
-    for (let attempt = 0; attempt < 40 && !window.__spokenTexts.length; attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
-    const spoken = window.__spokenTexts.at(-1) || '';
+    for (let attempt = 0; attempt < 40 && !window.__playedAudio.length; attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
+    const played = window.__playedAudio.at(-1) || '';
     window.__handoffNetworkRequests = [];
-    return { spoken, voice: window.__spokenVoices.at(-1) || '' };
+    return { played, systemSpeechCount: window.__spokenTexts.length };
   })()`);
-  assert.equal(spokenAnswer.spoken, "Ответ спокойно продолжим?");
-  assert.doesNotMatch(spokenAnswer.spoken, /backspace|backslash|бэкспейс|обратный\s+слэш|escape|orion-center|\.com|\.ru|https?|[\\/\u0000-\u001f\u007f]/iu, "В объект озвучивания не должны попадать технические слова, controls или slash/backslash");
-  assert.equal(spokenAnswer.voice, "", "Браузер должен сам выбрать голос; Milena нельзя назначать принудительно");
+  assert.match(spokenAnswer.played, /\/psy-admin\/audio\/voice-a\/generic-general\.wav\?v=orion-voice-a-20260909-01$/);
+  assert.equal(spokenAnswer.systemSpeechCount, 0, "Milena, Google и любой другой SpeechSynthesis не должны использоваться");
 
   const eventContinuity = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');

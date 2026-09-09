@@ -5,7 +5,7 @@ import { quickQuestions } from "./content.js";
 import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 import * as widgetContract from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260909-08";
+const widgetVersion = "psy-widget-20260909-10";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -86,7 +86,8 @@ const widgetCors = caddyfile.slice(widgetCorsStart, caddyfile.indexOf("root * /s
 assert.match(widgetCors, /header Origin https:\/\/orion-center\.ru/);
 assert.match(widgetCors, /Access-Control-Allow-Origin "https:\/\/orion-center\.ru"/);
 assert.match(widgetCors, /\/psy-admin\/psy-widget\.js/);
-assert.match(widgetCors, /\/psy-admin\/audio\/voices\/psyadmin-A\.wav/);
+assert.match(widgetCors, /\/psy-admin\/voice-bank\.js/);
+assert.match(widgetCors, /\/psy-admin\/audio\/voice-a\/\*/);
 assert.doesNotMatch(widgetCors, /\/psy-admin\/(?:admin|booking)/);
 assert.doesNotMatch(widgetCors.replaceAll("https://orion-center.ru", "https://attacker.invalid"), /https:\/\/orion-center\.ru/);
 assert.doesNotMatch(widgetSource, /psyadmin-B\.wav/);
@@ -110,12 +111,13 @@ assert.match(widgetSource, /finishVoiceInputSession/);
 assert.doesNotMatch(widgetSource, /VOICE_QUIET_GAP_MS|submitRecognizedQuestion/);
 assert.match(widgetSource, /voiceIsActive/);
 assert.match(widgetCss, /psy-widget-listening/);
-assert.match(widgetSource, /new SpeechSynthesisUtterance/);
-assert.match(widgetSource, /speechSynthesis\.speak/);
+assert.doesNotMatch(widgetSource, /SpeechSynthesisUtterance|speechSynthesis/);
+assert.match(widgetSource, /resolveVoiceClip/);
+assert.match(widgetSource, /new Audio\(\)/);
 assert.doesNotMatch(widgetSource, /\.voice\s*=|Milena|waitForPreferredRussianVoice/);
 assert.match(widgetSource, /new URL\("\.\/booking\/api\/ask", import\.meta\.url\)\.href/);
 assert.match(widgetSource, /fetch\(assistantApiUrl/);
-assert.match(widgetSource, /sanitizeSpokenText/);
+assert.match(contractSource, /sanitizeSpokenText/);
 assert.match(widgetSource, /const keepVerifiedAnswer = shouldKeepVerifiedAnswer\(fallback\)/);
 assert.match(widgetSource, /handoffForm\.hidden = true/);
 assert.match(widgetSource, /appendMessage\("assistant", \{ kind: "success", text: successText \}\)/);
@@ -215,7 +217,7 @@ assert.equal(
 const routedNearestEvent = routeWidgetQuestion("Какие мероприятия ближайшие?");
 assert.equal(
   routedNearestEvent.spokenText,
-  "Ближайшее опубликованное мероприятие — «Теория и практика работы с измененными и экстремальными состояниями сознания».",
+  "Ближайшее опубликованное мероприятие — Теория и практика работы с измененными и экстремальными состояниями сознания.",
 );
 assert.doesNotMatch(routedNearestEvent.spokenText, /https?:\/\/|www\.|[\\/]|[→↗]|\.(?:html?|php)\b/i);
 

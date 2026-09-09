@@ -1,5 +1,5 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260909-08";
-import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260909-08";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260909-10";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260909-10";
 
 export function resolveWidgetPublicUrl(value, widgetScriptUrl) {
   const publicRoot = new URL("../", widgetScriptUrl);
@@ -29,9 +29,9 @@ const supportiveFollowUps = Object.freeze({
 });
 
 const supportiveLeadIns = Object.freeze({
-  answer: "Хороший вопрос — вот что удалось подтвердить по материалам центра.",
-  curated: "Хороший вопрос — вот подтверждённая информация центра.",
-  offer: "Интерес к актуальным возможностям понятен — вот что сейчас подтверждено.",
+  answer: "Вот что удалось подтвердить по материалам центра.",
+  curated: "Вот подтверждённая информация центра.",
+  offer: "Вот что сейчас подтверждено по этой возможности.",
   unconfirmed: "Здесь особенно важно сверить актуальные данные.",
   fallback: "Давайте уточним тему — так получится найти нужный раздел.",
   boundary: "Здесь особенно важно дать безопасный и точный ориентир.",
@@ -285,6 +285,9 @@ function routeQuestion(rawQuestion, context = {}) {
 export function answerQuestion(rawQuestion, context = {}) {
   const answer = routeQuestion(rawQuestion, context);
   const followUp = answer.followUp || supportiveFollowUps[answer.kind];
-  const leadIn = supportiveLeadIns[answer.kind];
+  const query = normalize(rawQuestion);
+  const shortContinuation = query.split(" ").filter(Boolean).length <= 3
+    && /^(?:контакт|формат|программ|способ запис|запис|распис|стоимост|цен|подробн|специалист)/i.test(query);
+  const leadIn = shortContinuation ? undefined : supportiveLeadIns[answer.kind];
   return followUp ? { ...answer, ...(leadIn ? { leadIn } : {}), followUp } : answer;
 }

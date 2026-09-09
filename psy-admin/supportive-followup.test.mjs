@@ -43,6 +43,19 @@ test('router adds a neutral, actionable follow-up for each supported answer kind
   }
 });
 
+test('short continuation is answered directly without grading it as a good question', () => {
+  for (const question of ['контакты', 'формат', 'способ записи']) {
+    const answer = answerQuestion(question, { topic: 'next-published-event' });
+    assert.equal(answer.leadIn, undefined, question);
+    assert.doesNotMatch(`${answer.text} ${answer.followUp || ''}`, /Хороший вопрос/i, question);
+  }
+
+  for (const question of ['Расскажите про Пилот-волну', 'Какие мероприятия ближайшие?', 'К кому с тревогой?']) {
+    const answer = answerQuestion(question);
+    assert.doesNotMatch(`${answer.leadIn || ''} ${answer.text} ${answer.followUp || ''}`, /Хороший вопрос/i, question);
+  }
+});
+
 test('specialist choice is support, safe boundary, next step and then a question', () => {
   const answer = answerQuestion('К кому с тревогой?');
   assert.ok(answer.leadIn, 'supportive opening is missing');
@@ -119,11 +132,11 @@ test('unsafe server refusal falls back to local text and keeps relative sources 
   assert.equal(normalized.sources[0].url, relative, 'relative URL must survive until render time');
   assert.equal(normalized.sources[1].url, official, 'official absolute URL must stay byte-identical');
   assert.equal(
-    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-08'),
+    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-10'),
     'https://aka-gst.ru/psy-admin/booking/?kind=seminar',
   );
   assert.notEqual(
-    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-08'),
+    resolveWidgetPublicUrl(normalized.sources[0].url, 'https://aka-gst.ru/psy-admin/psy-widget.js?v=psy-widget-20260909-10'),
     new URL(relative, 'https://orion-center.ru/').href,
   );
 });
@@ -200,7 +213,7 @@ test('crisis keeps 112 in the primary answer and current event TTS stays unchang
   const event = routeWidgetQuestion('Какие мероприятия ближайшие?');
   assert.equal(
     event.spokenText,
-    'Ближайшее опубликованное мероприятие — «Теория и практика работы с измененными и экстремальными состояниями сознания».',
+    'Ближайшее опубликованное мероприятие — Теория и практика работы с измененными и экстремальными состояниями сознания.',
   );
   assert.doesNotMatch(event.spokenText, /Что уточнить дальше/);
 });

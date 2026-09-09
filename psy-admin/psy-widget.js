@@ -1,12 +1,13 @@
-import { appendVoiceInputResult, configureSpeechUtterance, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-08";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-08";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-10";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-10";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260909-10";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-08&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-10&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -134,9 +135,11 @@ let recognitionRestartTimer = null;
 let state = createWidgetState();
 let conversationContext = {};
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const replyAudio = new Audio();
+replyAudio.preload = "auto";
 const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
-  speechAvailable: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
+  speechAvailable: typeof replyAudio.play === "function",
 };
 const widgetPublicUrl = (value) => resolveWidgetPublicUrl(value, import.meta.url);
 
@@ -256,39 +259,45 @@ function stopListening({ resetDraft = true } = {}) {
 
 function stopVoice({ announce = true } = {}) {
   stopListening();
-  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  replyAudio.pause();
+  replyAudio.currentTime = 0;
   setVoicePlaying(false);
   if (announce) setVoiceStatus("Голос остановлен.");
 }
 
 function voiceIsPlaying() {
-  return root.dataset.voicePlaying === "true" || Boolean(window.speechSynthesis?.speaking);
+  return root.dataset.voicePlaying === "true" || !replyAudio.paused;
 }
 
 function voiceIsActive() {
   return listening || voiceIsPlaying();
 }
 
-async function speakReply(text) {
+async function speakReply(answer, question) {
   const presentation = widgetPresentation(window.innerWidth, voiceCapabilities);
-  const spokenText = sanitizeSpokenText(text);
-  if (!presentation.voice.shouldSpeakReply || !spokenText) return;
+  const clip = resolveVoiceClip({ question, answer });
+  if (!presentation.voice.shouldSpeakReply || !clip?.src) return;
   stopVoice({ announce: false });
-  const utterance = configureSpeechUtterance(new SpeechSynthesisUtterance(spokenText));
-  utterance.addEventListener("start", () => {
-    setVoicePlaying(true);
-    setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
-  }, { once: true });
-  utterance.addEventListener("end", () => {
+  replyAudio.src = new URL(clip.src, import.meta.url).href;
+  replyAudio.currentTime = 0;
+  setVoicePlaying(true);
+  setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
+  try {
+    await replyAudio.play();
+  } catch {
     setVoicePlaying(false);
-    setVoiceStatus("");
-  }, { once: true });
-  utterance.addEventListener("error", () => {
-    setVoicePlaying(false);
-    setVoiceStatus("Ответ показан текстом: браузеру не удалось включить озвучивание.");
-  }, { once: true });
-  window.speechSynthesis.speak(utterance);
+    setVoiceStatus("Ответ показан текстом. Нажмите микрофон или задайте следующий вопрос, чтобы продолжить.");
+  }
 }
+
+replyAudio.addEventListener("ended", () => {
+  setVoicePlaying(false);
+  setVoiceStatus("");
+});
+replyAudio.addEventListener("error", () => {
+  setVoicePlaying(false);
+  setVoiceStatus("Ответ показан текстом: аудиофраза временно недоступна.");
+});
 
 async function ask(question, askedByVoice = false) {
   const value = question.trim();
@@ -314,7 +323,7 @@ async function ask(question, askedByVoice = false) {
   }
   conversationContext = nextConversationContext(result);
   appendMessage("assistant", result);
-  void speakReply(result.spokenText || result.text);
+  void speakReply(result, value);
   if (askedByVoice && !voiceCapabilities.speechAvailable) {
     setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities, true).voice.fallbackMessage);
   }

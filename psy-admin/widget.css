@@ -90,7 +90,7 @@
 .psy-widget-handoff-status[data-state="error"] { color: #a43131; }
 .psy-widget-handoff-area > .psy-widget-payment { min-height: 44px; margin-top: 8px; text-align: center; }
 @media (max-width: 620px) {
-  .psy-widget-trigger { right: 16px; bottom: 16px; }
+  .psy-widget-trigger { right: 16px; bottom: 96px; }
   .psy-widget-panel { right: 0; bottom: 0; width: 100vw; max-height: min(76vh, 680px); border-radius: 22px 22px 0 0; }
   .psy-widget-head { align-items: flex-start; flex-wrap: wrap; }
   .psy-widget-head-actions { width: 100%; justify-content: flex-end; }

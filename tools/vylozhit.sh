@@ -88,6 +88,7 @@ while [ "$n" -le 3 ]; do
   # shellcheck disable=SC2086
   if rsync -avzR --timeout=120 -e "ssh -o ConnectTimeout=25" \
       --exclude='proizvodnye.json' --exclude='README.md' \
+      --exclude='psy-admin/audio/voice-a/report.json' \
       --exclude='*test*.mjs' --exclude='*.test.js' --exclude='tests/' --exclude='tools/' \
       --exclude='docs/' --exclude='trash/' --exclude='.git*' --exclude='*.md' \
       --exclude='node_modules/' --exclude='.claude/' \

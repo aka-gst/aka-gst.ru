@@ -2,15 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import * as widgetContract from "./widget-contract.js";
+import { resolveVoiceClip } from "./voice-bank.js";
 
-test("spoken reply leaves browser voice selection automatic", () => {
-  assert.equal(typeof widgetContract.configureSpeechUtterance, "function");
+test("speech never receives Unicode slashes, quotes, or encoded markup", () => {
+  const spoken = widgetContract.sanitizeSpokenText('Ближайшее — «Программа» ＼ ﹨ ∖ &#92; &bsol; &#x5c; &quot;текст&quot;.');
+  assert.equal(spoken, 'Ближайшее — Программа текст.');
+});
 
-  const utterance = { lang: "", rate: 1, voice: null };
-  const configured = widgetContract.configureSpeechUtterance(utterance);
-
-  assert.equal(configured, utterance);
-  assert.equal(configured.lang, "ru-RU");
-  assert.equal(configured.rate, 0.96);
-  assert.equal(configured.voice, null);
+test("spoken reply resolves to prerecorded voice A instead of browser TTS", () => {
+  assert.equal("configureSpeechUtterance" in widgetContract, false);
+  const clip = resolveVoiceClip({
+    question: "Какие мероприятия ближайшие?",
+    answer: widgetContract.routeWidgetQuestion("Какие мероприятия ближайшие?"),
+  });
+  assert.equal(clip.id, "prepared-01");
+  assert.match(clip.src, /\/audio\/voice-a\/prepared-01\.wav/);
 });

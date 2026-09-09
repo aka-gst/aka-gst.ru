@@ -1,5 +1,5 @@
-import { quickQuestions } from "./content.js?v=psy-widget-20260909-08";
-import { answerQuestion } from "./router.js?v=psy-widget-20260909-08";
+import { quickQuestions } from "./content.js?v=psy-widget-20260909-10";
+import { answerQuestion } from "./router.js?v=psy-widget-20260909-10";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",
@@ -109,7 +109,14 @@ export function createHandoffPayload(fields) {
 // Ответ для озвучивания должен остаться кратким и не читать адреса ссылок.
 // Вопрос уходит в серверный помощник, но сервер не сохраняет его в базе или журнале.
 export function sanitizeSpokenText(rawText, linkLabels = []) {
-  let text = String(rawText || "");
+  let text = String(rawText || "").normalize("NFKC");
+  // Decode before stripping markup: otherwise &#92; becomes pronounceable "92".
+  for (let depth = 0; depth < 3; depth += 1) {
+    text = text.replace(/&amp;/gi, "&").replace(/&#(x[0-9a-f]+|[0-9]+);/gi, (_, code) => {
+      const point = code[0].toLowerCase() === "x" ? parseInt(code.slice(1), 16) : Number(code);
+      return point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : " ";
+    }).replace(/&[a-z]+;/gi, " ");
+  }
   for (const label of linkLabels) {
     if (!label) continue;
     text = text.replaceAll(label, "");
@@ -126,17 +133,14 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
     .replace(/[`*_#~|<>{}\[\]]+/g, " ")
     .replace(/[\\/]+/g, " ")
     .replace(/[→↗]+/g, " ")
+    // Only prose reaches TTS, never quote/slash variants or formatting symbols.
+    .replace(/[^\p{L}\p{M}\p{N}\s.,!?…:;—–-]/gu, " ")
+    .replace(/\s+([.,!?…:;])/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
 
   const sentences = text.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) || [];
   return (sentences[0] || text).trim().slice(0, 160);
-}
-
-export function configureSpeechUtterance(utterance) {
-  utterance.lang = "ru-RU";
-  utterance.rate = 0.96;
-  return utterance;
 }
 
 export function normalizeAssistantResult(result, fallback) {
