@@ -1,5 +1,10 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260908-06";
-import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260908-06";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260909-07";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260909-07";
+
+export function resolveWidgetPublicUrl(value, widgetScriptUrl) {
+  const publicRoot = new URL("../", widgetScriptUrl);
+  return new URL(value, publicRoot).href;
+}
 
 const normalize = (value) => value
   .toLocaleLowerCase("ru-RU")

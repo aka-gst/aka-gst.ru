@@ -14,12 +14,14 @@ const fixture = `<!doctype html><html><head><meta charset="utf-8"><meta name="vi
 window.__audioStops = 0;
 window.__speechStops = 0;
 window.__spokenTexts = [];
+window.__spokenVoices = [];
 window.__handoffNetworkRequests = [];
 window.__handoffResponseStatus = 201;
 window.fetch = async (url, init = {}) => {
   window.__handoffNetworkRequests.push({ url: String(url), method: init.method, body: init.body });
   if (String(url).endsWith("/booking/api/ask")) {
-    return new Response(JSON.stringify({ text: "Ответ на backspace.com/path и orion-center.ru/schedule \\\\ служебный хвост.", kind: "route" }), { status: 200, headers: { "content-type": "application/json" } });
+    const technicalJunk = "Ответ спокойно backspace backslash бэкспейс обратный слэш \\\\b " + String.fromCharCode(0, 8, 11, 31, 127) + " продолжим?";
+    return new Response(JSON.stringify({ text: technicalJunk, kind: "route" }), { status: 200, headers: { "content-type": "application/json" } });
   }
   const status = window.__handoffResponseStatus;
   return new Response(JSON.stringify(status === 201
@@ -57,8 +59,8 @@ window.SpeechSynthesisUtterance = TestUtterance;
 Object.defineProperty(window, "speechSynthesis", { configurable: true, value: {
   speaking: true,
   cancel() { window.__speechStops += 1; this.speaking = false; },
-  getVoices() { return []; },
-  speak(utterance) { window.__spokenTexts.push(utterance.text); },
+  getVoices() { return [{ name: "Yuri", lang: "ru-RU", voiceURI: "test-yuri" }, { name: "Milena", lang: "ru-RU", voiceURI: "test-milena" }]; },
+  speak(utterance) { window.__spokenTexts.push(utterance.text); window.__spokenVoices.push(utterance.voice?.name || ""); },
 } });
 </script>
 <script type="module" src="/psy-admin/psy-widget.js"></script></body></html>`;
@@ -209,10 +211,11 @@ try {
     for (let attempt = 0; attempt < 40 && !window.__spokenTexts.length; attempt += 1) await new Promise((resolve) => setTimeout(resolve, 25));
     const spoken = window.__spokenTexts.at(-1) || '';
     window.__handoffNetworkRequests = [];
-    return spoken;
+    return { spoken, voice: window.__spokenVoices.at(-1) || '' };
   })()`);
-  assert.match(spokenAnswer, /Ответ на/i);
-  assert.doesNotMatch(spokenAnswer, /backspace|orion-center|\.com|\.ru|https?|[\\/]/i, "В объект озвучивания не должны попадать домены и slash/backslash");
+  assert.equal(spokenAnswer.spoken, "Ответ спокойно продолжим?");
+  assert.doesNotMatch(spokenAnswer.spoken, /backspace|backslash|бэкспейс|обратный\s+слэш|escape|orion-center|\.com|\.ru|https?|[\\/\u0000-\u001f\u007f]/iu, "В объект озвучивания не должны попадать технические слова, controls или slash/backslash");
+  assert.equal(spokenAnswer.voice, "Milena");
 
   const handoff = await evaluate(`(async () => {
     const root = document.querySelector('[data-psy-widget]');
@@ -305,5 +308,5 @@ try {
   socket.close();
   chrome.kill("SIGTERM");
   server.close();
-  await rm(profile, { recursive: true, force: true });
+  await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 }

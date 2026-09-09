@@ -5,7 +5,7 @@ import { quickQuestions } from "./content.js";
 import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
 import * as widgetContract from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260908-05";
+const widgetVersion = "psy-widget-20260909-07";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
@@ -78,7 +78,7 @@ assert.doesNotMatch(widgetCss, /\.psy-widget-trigger span:last-child \{ display:
 assert.doesNotMatch(widgetCss, /data-fullscreen="true"[^}]*inset:\s*0/);
 assert.match(widgetCss, /\.psy-widget-handoff-area > \.psy-widget-payment \{[^}]*min-height: 44px;/);
 assert.match(widgetCss, /\.psy-widget-voice-status \{[^}]*min-height: 1\.35em;[^}]*white-space: nowrap;/);
-assert.match(widgetCss, /\.psy-widget-message\.assistant \{[^}]*justify-self: end;[^}]*width: fit-content;/);
+assert.match(widgetCss, /\.psy-widget-message\.assistant \{[^}]*justify-self: start;[^}]*width: fit-content;/);
 assert.doesNotMatch(widgetSource, /\/psy-admin\/payment/);
 assert.doesNotMatch(widgetSource, /psyadmin-A\.wav|data-voice-preview|Голос:/);
 const widgetCorsStart = caddyfile.indexOf("@orion_widget_assets");
@@ -92,7 +92,7 @@ assert.doesNotMatch(widgetCors.replaceAll("https://orion-center.ru", "https://at
 assert.doesNotMatch(widgetSource, /psyadmin-B\.wav/);
 assert.doesNotMatch(widgetSource, /psyadmin-C\.wav/);
 assert.doesNotMatch(widgetSource, /psyadmin-D\.ogg/);
-assert.match(widgetSource, /Ответ помощника будет озвучен\./);
+assert.match(widgetSource, /Ответ помощника будет озвучен<\/span>/);
 assert.doesNotMatch(widgetSource, /естественный голос/i);
 assert.match(widgetSource, /data-voice-stop/);
 assert.match(widgetSource, />Остановить голос<\/button>/);

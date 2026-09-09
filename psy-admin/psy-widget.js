@@ -1,11 +1,12 @@
-import { createHandoffPayload, createWidgetState, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260908-06";
+import { createHandoffPayload, createWidgetState, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, waitForPreferredRussianVoice, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-07";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-07";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260908-06&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-07&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 const mount = document.createElement("div");
@@ -16,7 +17,7 @@ mount.innerHTML = `
     </button>
     <aside class="psy-widget-panel" id="psy-widget-panel" aria-label="AI-администратор" hidden>
       <header class="psy-widget-head">
-        <div><b>AI-администратор</b><span>Можно спросить голосом или написать. Ответ помощника будет озвучен.</span></div>
+        <div><b>AI-администратор</b><span>Можно спросить голосом или написать. Ответ помощника будет озвучен</span></div>
         <div class="psy-widget-head-actions">
           <button class="psy-widget-voice-preview-stop" type="button" data-voice-stop aria-label="Остановить голос" title="Остановить голос: пробел">Остановить голос</button>
           <button class="psy-widget-fullscreen" type="button" aria-label="Увеличить окно помощника">↗</button>
@@ -139,6 +140,7 @@ const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
   speechAvailable: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
 };
+const widgetPublicUrl = (value) => resolveWidgetPublicUrl(value, import.meta.url);
 
 function appendMessage(role, answer) {
   const article = document.createElement("article");
@@ -162,7 +164,7 @@ function appendMessage(role, answer) {
     links.className = "psy-widget-links";
     for (const source of answer.sources || []) {
       const link = document.createElement("a");
-      link.href = source.url;
+      link.href = widgetPublicUrl(source.url);
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       link.textContent = `${source.label} →`;
@@ -171,7 +173,7 @@ function appendMessage(role, answer) {
     if (answer.action) {
       const action = document.createElement("a");
       action.className = "psy-widget-action";
-      action.href = answer.action.url;
+      action.href = widgetPublicUrl(answer.action.url);
       action.target = "_blank";
       action.rel = "noopener noreferrer";
       action.textContent = answer.action.label;
@@ -276,7 +278,7 @@ function voiceIsActive() {
   return listening || voiceIsPlaying();
 }
 
-function speakReply(text) {
+async function speakReply(text) {
   const presentation = widgetPresentation(window.innerWidth, voiceCapabilities);
   const spokenText = sanitizeSpokenText(text);
   if (!presentation.voice.shouldSpeakReply || !spokenText) return;
@@ -284,8 +286,12 @@ function speakReply(text) {
   const utterance = new SpeechSynthesisUtterance(spokenText);
   utterance.lang = "ru-RU";
   utterance.rate = 0.96;
-  const russianVoice = window.speechSynthesis.getVoices().find((voice) => voice.lang?.toLowerCase().startsWith("ru"));
-  if (russianVoice) utterance.voice = russianVoice;
+  const russianVoice = await waitForPreferredRussianVoice(window.speechSynthesis);
+  if (!russianVoice) {
+    setVoiceStatus("Русский голос недоступен: ответ показан текстом.");
+    return;
+  }
+  utterance.voice = russianVoice;
   utterance.addEventListener("start", () => {
     setVoicePlaying(true);
     setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
@@ -324,7 +330,7 @@ async function ask(question, askedByVoice = false) {
     }
   }
   appendMessage("assistant", result);
-  speakReply(result.spokenText || result.text);
+  void speakReply(result.spokenText || result.text);
   if (askedByVoice && !voiceCapabilities.speechAvailable) {
     setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities, true).voice.fallbackMessage);
   }

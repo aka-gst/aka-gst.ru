@@ -1,5 +1,5 @@
-import { quickQuestions } from "./content.js?v=psy-widget-20260908-06";
-import { answerQuestion } from "./router.js?v=psy-widget-20260908-06";
+import { quickQuestions } from "./content.js?v=psy-widget-20260909-07";
+import { answerQuestion } from "./router.js?v=psy-widget-20260909-07";
 
 const preparedAnswerLabels = {
   boundary: "граница безопасности",
@@ -89,10 +89,15 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
     text = text.replaceAll(label, "");
   }
   text = text
-    .replace(/\[([^\]]+)\]\((?:https?:\/\/|www\.)[^)]+\)/gi, "$1")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/\b(?:https?:\/\/|www\.)\S+/gi, "")
     .replace(/\b(?:[a-z0-9а-яё-]+\.)+(?:[a-z]{2,24}|рф)(?:\/[^\s]*)?/giu, "")
     .replace(/\b[\w.-]+\.(?:html?|php)\b/gi, "")
+    .replace(/\\(?:n|r|t|b|f|v|0|x[0-9a-f]{2}|u[0-9a-f]{4})/gi, " ")
+    .replace(/\b(?:backspace|backslash|escape|markdown)\b/gi, " ")
+    .replace(/(?:б[еэ]кспейс|б[еэ]ксл[еэ]ш|обратн(?:ый|ая)\s+(?:сл[еэ]ш|косая\s+черта))/giu, " ")
+    .replace(/[`*_#~|<>{}\[\]]+/g, " ")
     .replace(/[\\/]+/g, " ")
     .replace(/[→↗]+/g, " ")
     .replace(/\s+/g, " ")
@@ -102,15 +107,53 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
   return (sentences[0] || text).trim().slice(0, 160);
 }
 
+export function selectPreferredRussianVoice(voices = []) {
+  const russian = [...voices].filter((voice) => String(voice?.lang || "").toLowerCase().startsWith("ru"));
+  const preferred = russian.find((voice) => /milena/i.test(`${voice?.name || ""} ${voice?.voiceURI || ""}`));
+  if (preferred) return preferred;
+  const detectableFemale = russian.find((voice) => /female|женск/iu.test(`${voice?.name || ""} ${voice?.voiceURI || ""} ${voice?.gender || ""}`));
+  if (detectableFemale) return detectableFemale;
+  return russian.sort((left, right) => {
+    const leftKey = `${left?.name || ""}\u0000${left?.voiceURI || ""}`.toLowerCase();
+    const rightKey = `${right?.name || ""}\u0000${right?.voiceURI || ""}`.toLowerCase();
+    return leftKey < rightKey ? -1 : (leftKey > rightKey ? 1 : 0);
+  })[0];
+}
+
+export function waitForPreferredRussianVoice(synthesis, timeoutMs = 300) {
+  const available = selectPreferredRussianVoice(synthesis?.getVoices?.() || []);
+  if (available || !synthesis?.addEventListener) return Promise.resolve(available);
+  return new Promise((resolve) => {
+    let settled = false;
+    let timer;
+    const finish = (voice) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      synthesis.removeEventListener?.("voiceschanged", onVoicesChanged);
+      resolve(voice);
+    };
+    const onVoicesChanged = () => {
+      const voice = selectPreferredRussianVoice(synthesis.getVoices?.() || []);
+      if (voice) finish(voice);
+    };
+    synthesis.addEventListener("voiceschanged", onVoicesChanged);
+    timer = setTimeout(() => finish(selectPreferredRussianVoice(synthesis.getVoices?.() || [])), timeoutMs);
+  });
+}
+
 export function normalizeAssistantResult(result, fallback) {
   if (!result?.text) return fallback;
+  const serverText = String(result.text);
+  const hasUnsafeRefusal = /(?:^|[.!?]\s*)(?:я\s+не\s+(?:могу|буду|имею|ставлю|провожу|стану)(?:\s|$|[,.!?;:—-])|по\s+одному\s+сообщению(?:\s|$|[,.!?;:—-]))/iu.test(serverText);
+  const text = hasUnsafeRefusal ? fallback.text : serverText;
   return {
     kind: result.kind || "route",
-    text: result.text,
-    spokenText: sanitizeSpokenText(result.text),
+    text,
+    spokenText: sanitizeSpokenText(text),
     sources: (result.sources || []).map((source) => ({
       ...source,
-      url: new URL(source.url || "/", "https://orion-center.ru/").href,
+      url: String(source.url || "/"),
     })),
     leadIn: fallback.leadIn,
     followUp: fallback.followUp,
