@@ -77,6 +77,18 @@ try {
             };
           });
           const directions = document.querySelector('#rec282570514 .t396__artboard').getBoundingClientRect();
+          const directionTitleIds = ['1613643387114', '1474906621455', '1690964264025', '1690967422558'];
+          const directionButtonIds = ['1613643678385', '1613643795239', '1613643798757', '1690962575043'];
+          const directionTitles = directionTitleIds.map((id) => document.querySelector('#rec282570514 [data-elem-id="' + id + '"]').getBoundingClientRect());
+          const directionButtons = directionButtonIds.map((id) => document.querySelector('#rec282570514 [data-elem-id="' + id + '"]').getBoundingClientRect());
+          const directionGaps = directionTitles.map((title, index) => Math.round(directionButtons[index].top - title.bottom));
+          const trigger = document.querySelector('.psy-widget-trigger').getBoundingClientRect();
+          const contactMarkers = [...document.querySelectorAll('#rec283637376 .t567__col-wrapper')].map((node) => ({
+            imageDisplay: getComputedStyle(node.querySelector('.t567__img')).display,
+            symbol: getComputedStyle(node, '::before').content,
+          }));
+          const mobileHeader = document.querySelector('#rec307228255');
+          const mobileHeaderStyle = mobileHeader ? getComputedStyle(mobileHeader) : null;
           const blankSpacers = ['rec623335436', 'rec401787399', 'rec605382040', 'rec282808065']
             .map((id) => Math.round(document.querySelector('#' + id).getBoundingClientRect().height));
           return {
@@ -89,6 +101,7 @@ try {
             heroTitleOpacity: Number(heroTitleStyle.opacity),
             heroTitleVisibility: heroTitleStyle.visibility,
             heroTitleOffset: Math.round(heroTitleRect.top - hero.top),
+            heroPaddingTop: getComputedStyle(document.querySelector('#rec908825596')).paddingTop,
             heroColumnTransform: getComputedStyle(heroTitle.closest('.t1120__col-left')).transform,
             heroScheduleParent: heroScheduleButton?.parentElement?.className || '',
             heroButtonTopDelta: heroScheduleButtonRect && heroRegisterButtonRect ? Math.round(Math.abs(heroScheduleButtonRect.top - heroRegisterButtonRect.top)) : null,
@@ -97,6 +110,10 @@ try {
             scheduleRows,
             scheduleCards,
             directionsHeight: Math.round(directions.height),
+            directionGaps,
+            trigger: { width: Math.round(trigger.width), height: Math.round(trigger.height), bottom: Math.round(innerHeight - trigger.bottom) },
+            contactMarkers,
+            mobileHeaderBackground: mobileHeaderStyle?.backgroundColor || '',
             blankSpacers,
           };
         })()`,
@@ -143,6 +160,29 @@ try {
         assert.ok(metrics.scheduleCards.every(({ circle }) => Math.abs(circle.width - 140) <= 1 && Math.abs(circle.height - 140) <= 1 && circle.radius !== '0px'),
           `на телефоне изображения расписания тоже должны оставаться кругами: ${JSON.stringify(metrics.scheduleCards)}`);
         assert.ok(metrics.directionsHeight <= height, `мобильные направления должны целиком помещаться в экран, сейчас ${metrics.directionsHeight}px при ${height}px`);
+        assert.ok(metrics.trigger.width <= 56 && metrics.trigger.height >= 44,
+          `компактный помощник должен занимать не больше 56px и оставаться нажимаемым: ${JSON.stringify(metrics.trigger)}`);
+        assert.ok(metrics.trigger.bottom <= 24,
+          `помощник должен стоять у безопасного нижнего края, а не поверх контента: ${JSON.stringify(metrics.trigger)}`);
+        assert.ok(metrics.directionGaps.every((gap) => gap >= 10),
+          `между заголовками направлений и кнопками нужен зазор 10px: ${metrics.directionGaps}`);
+        assert.ok(metrics.contactMarkers.every(({ imageDisplay, symbol }) => imageDisplay === 'none' && !['none', 'normal', '""'].includes(symbol)),
+          `пустые Ellipse_41.png должны быть заменены смысловыми маркерами: ${JSON.stringify(metrics.contactMarkers)}`);
+        assert.equal(metrics.heroPaddingTop, '0px',
+          `между мобильной шапкой и hero не должно быть белого padding: ${metrics.heroPaddingTop}`);
+        const helperNegativeControl = await send("Runtime.evaluate", {
+          returnByValue: true,
+          expression: `(() => {
+            const style = document.createElement('style');
+            style.textContent = '.psy-widget-trigger{width:141px!important;min-width:141px!important}';
+            document.head.append(style);
+            const width = document.querySelector('.psy-widget-trigger').getBoundingClientRect().width;
+            style.remove();
+            return Math.round(width);
+          })()`,
+        });
+        assert.ok(helperNegativeControl.result.value > 56,
+          `отрицательный контроль обязан поймать возврат широкой кнопки: ${helperNegativeControl.result.value}px`);
       }
       console.log(`${width}px: новости ${metrics.newsHeight}px, зазор до линии ${metrics.scheduleGap}px`);
     } finally {
