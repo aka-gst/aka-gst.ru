@@ -1,4 +1,4 @@
-import { preparedQuestionCases, routeWidgetQuestion } from "./widget-contract.js?v=psy-widget-20260913-22";
+import { preparedQuestionCases, routeWidgetQuestion } from "./widget-contract.js?v=psy-widget-20260913-23";
 
 export const VOICE_BANK_VERSION = "orion-voice-a-20260909-01";
 

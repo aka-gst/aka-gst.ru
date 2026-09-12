@@ -36,9 +36,11 @@ test("every generated inner page retains a route back to the home page", async (
   }
 });
 
-test("the mobile helper stays compact at the safe lower edge", () => {
-  assert.match(widgetCss, /\.psy-widget-trigger\s*\{[^}]*bottom:\s*max\(16px,[^}]*width:\s*52px\s*!important[^}]*height:\s*52px\s*!important/s);
+test("the mobile helper stays compact and docks clear of protected content", () => {
+  assert.match(widgetCss, /\.psy-widget-trigger\s*\{[^}]*bottom:\s*max\(var\(--psy-widget-mobile-bottom, 16px\),[^}]*width:\s*52px\s*!important[^}]*height:\s*52px\s*!important/s);
   assert.match(widgetCss, /\.psy-widget-trigger > span:last-child\s*\{[^}]*display:\s*none\s*!important/s);
+  assert.match(widgetSource, /function positionMobileTrigger\(\)/);
+  assert.match(widgetSource, /#rec504823956 iframe/);
 });
 
 test("the mobile hero sizes the inline Tilda child instead of splitting Russian words", () => {

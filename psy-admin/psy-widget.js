@@ -1,13 +1,13 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-22";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-22";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-22";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-23";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-23";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-23";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260913-22&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260913-23&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 function applyHostPagePolish() {
@@ -15,6 +15,14 @@ function applyHostPagePolish() {
   const isLocalDemo = /^(127\.0\.0\.1|localhost)$/i.test(window.location.hostname) && /^\/psy-admin\//i.test(window.location.pathname);
   if (!isLiveOrion && !isLocalDemo) return;
   document.documentElement.dataset.orionHostPolish = "20260909";
+
+  const headerMenuRecords = [...document.querySelectorAll("#t-header > .r")]
+    .filter((record) => record.querySelector(".tmenu-mobile"));
+  headerMenuRecords.forEach((record) => record.classList.remove("orion-mobile-menu-duplicate"));
+  if (window.matchMedia("(max-width: 980px)").matches) {
+    const visibleMenus = headerMenuRecords.filter((record) => record.getBoundingClientRect().height > 0);
+    visibleMenus.slice(0, -1).forEach((record) => record.classList.add("orion-mobile-menu-duplicate"));
+  }
 
   document.querySelectorAll(".t-title,.t-name,.t-descr,[field],.orion-review-hint").forEach((element) => {
     const text = element.textContent.replace(/\s+/g, " ").trim();
@@ -64,6 +72,11 @@ function applyHostPagePolish() {
     nav.setAttribute("aria-label", "Навигация центра Орион-С");
     nav.innerHTML = '<a class="orion-polish-homebar__brand" href="/">Орион-С</a><a href="/">Главная</a><a href="/schedule">Расписание</a><a href="/consultation">Психологи</a><a href="/contacts">Контакты</a>';
     document.body.prepend(nav);
+  }
+
+  if (!window.__orionHostPolishResizeBound) {
+    window.__orionHostPolishResizeBound = true;
+    window.addEventListener("resize", applyHostPagePolish, { passive: true });
   }
 }
 
@@ -188,6 +201,81 @@ const handoffSubject = handoffForm.querySelector("[name='subject']");
 const handoffSubjectLabel = handoffForm.querySelector("[data-handoff-subject-label]");
 let recognition = null;
 let listening = false;
+
+let triggerPositionFrame = 0;
+function scheduleTriggerPosition() {
+  if (triggerPositionFrame) return;
+  triggerPositionFrame = window.requestAnimationFrame(() => {
+    triggerPositionFrame = 0;
+    positionMobileTrigger();
+  });
+}
+
+function positionMobileTrigger() {
+  trigger.style.removeProperty("--psy-widget-mobile-bottom");
+  trigger.style.removeProperty("--psy-widget-mobile-left");
+  trigger.style.removeProperty("--psy-widget-mobile-right");
+  if (!window.matchMedia("(max-width: 620px)").matches || state.open) return;
+
+  const triggerSize = Math.max(44, Math.round(trigger.getBoundingClientRect().width || 52));
+  const safeBottom = 16;
+  const sideInset = 12;
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const protectedRects = [];
+
+  const protectedSelectors = [
+    "#rec908825596 .t-btnflex",
+    "#rec282570514 [data-elem-type='text']",
+    "#rec282570514 [data-elem-type='button']",
+    "#rec283637376 .t567__descr",
+    "#rec283637377 a",
+    "#rec504823956 iframe",
+  ];
+  document.querySelectorAll(protectedSelectors.join(","))
+    .forEach((node) => {
+      if (node.closest(".psy-widget") || ["SCRIPT", "STYLE"].includes(node.tagName)) return;
+      const box = node.getBoundingClientRect();
+      if (box.bottom < 0 || box.top > viewportHeight || box.width === 0 || box.height === 0) return;
+      if (node.matches("a,button,input,select,textarea,iframe") || node.closest("[data-elem-type='button']")) {
+        protectedRects.push(box);
+        return;
+      }
+      if (!node.textContent.replace(/\s+/g, " ").trim()) return;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      protectedRects.push(...range.getClientRects());
+    });
+
+  const overlapScore = (candidate) => protectedRects.reduce((sum, rect) => {
+    const padded = { left: rect.left - 6, top: rect.top - 6, right: rect.right + 6, bottom: rect.bottom + 6 };
+    return sum + Math.max(0, Math.min(candidate.right, padded.right) - Math.max(candidate.left, padded.left))
+      * Math.max(0, Math.min(candidate.bottom, padded.bottom) - Math.max(candidate.top, padded.top));
+  }, 0);
+
+  const bottoms = [];
+  for (let bottom = safeBottom; bottom <= Math.max(safeBottom, viewportHeight - triggerSize - 76); bottom += 68) bottoms.push(bottom);
+  const candidates = ["right", "left"].flatMap((side) => bottoms.map((bottom) => {
+    const left = side === "right" ? viewportWidth - sideInset - triggerSize : sideInset;
+    return { side, bottom, left, right: left + triggerSize, top: viewportHeight - bottom - triggerSize, bottomEdge: viewportHeight - bottom };
+  }));
+  let best = candidates[0];
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (const candidate of candidates) {
+    const score = overlapScore({ left: candidate.left, right: candidate.right, top: candidate.top, bottom: candidate.bottomEdge });
+    if (score < bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+    if (score === 0) break;
+  }
+
+  trigger.style.setProperty("--psy-widget-mobile-bottom", `${best.bottom}px`);
+  trigger.style.setProperty("--psy-widget-mobile-left", best.side === "left" ? `${sideInset}px` : "auto");
+  trigger.style.setProperty("--psy-widget-mobile-right", best.side === "right" ? `${sideInset}px` : "auto");
+  trigger.dataset.dockSide = best.side;
+  trigger.dataset.overlapScore = String(Math.round(bestScore));
+}
 let voiceInputSession = createVoiceInputSession();
 let recognitionRestartTimer = null;
 // Помощник не закрывает человеку страницу сам: на любой ширине он появляется
@@ -310,6 +398,7 @@ function render() {
   fullScreenButton.setAttribute("aria-pressed", String(state.fullScreen));
   if (state.open && document.activeElement === trigger) questionInput.focus({ preventScroll: true });
   if (state.returnFocusToTrigger) trigger.focus();
+  scheduleTriggerPosition();
 }
 
 function transition(action) {
@@ -468,6 +557,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && state.open) transition("escape");
 });
 window.addEventListener("resize", render);
+window.addEventListener("scroll", scheduleTriggerPosition, { passive: true });
 questionForm.addEventListener("submit", (event) => {
   event.preventDefault();
   void ask(questionInput.value, false);

@@ -343,6 +343,9 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec3072
   height: 64px !important;
   min-height: 64px !important;
 }
+html[data-orion-host-polish] #t-header > .orion-mobile-menu-duplicate {
+  display: none !important;
+}
 @media (max-width:767px) {
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 {
     padding-top: 0 !important;
@@ -581,8 +584,9 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec3072
 .psy-widget-handoff-status[data-state="error"] { color: #a43131; }
 @media (max-width: 620px) {
   .psy-widget-trigger {
-    right: 12px;
-    bottom: max(16px, env(safe-area-inset-bottom));
+    right: var(--psy-widget-mobile-right, 12px);
+    left: var(--psy-widget-mobile-left, auto);
+    bottom: max(var(--psy-widget-mobile-bottom, 16px), env(safe-area-inset-bottom));
     width: 52px !important;
     min-width: 52px !important;
     height: 52px !important;

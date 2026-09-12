@@ -89,6 +89,8 @@ try {
           }));
           const mobileHeader = document.querySelector('#rec307228255');
           const mobileHeaderStyle = mobileHeader ? getComputedStyle(mobileHeader) : null;
+          const visibleMobileMenuBars = [...document.querySelectorAll('#t-header .tmenu-mobile')]
+            .filter((node) => node.getBoundingClientRect().height > 0).length;
           const blankSpacers = ['rec623335436', 'rec401787399', 'rec605382040', 'rec282808065']
             .map((id) => Math.round(document.querySelector('#' + id).getBoundingClientRect().height));
           return {
@@ -114,6 +116,7 @@ try {
             trigger: { width: Math.round(trigger.width), height: Math.round(trigger.height), bottom: Math.round(innerHeight - trigger.bottom) },
             contactMarkers,
             mobileHeaderBackground: mobileHeaderStyle?.backgroundColor || '',
+            visibleMobileMenuBars,
             blankSpacers,
           };
         })()`,
@@ -170,6 +173,24 @@ try {
           `пустые Ellipse_41.png должны быть заменены смысловыми маркерами: ${JSON.stringify(metrics.contactMarkers)}`);
         assert.equal(metrics.heroPaddingTop, '0px',
           `между мобильной шапкой и hero не должно быть белого padding: ${metrics.heroPaddingTop}`);
+        assert.equal(metrics.visibleMobileMenuBars, 1,
+          `на телефоне должна оставаться одна полоса меню, сейчас ${metrics.visibleMobileMenuBars}`);
+        await send("Runtime.evaluate", {
+          expression: `scrollTo(0, document.querySelector('#rec282570514').getBoundingClientRect().top + scrollY - 110)`,
+        });
+        await sleep(350);
+        const helperOverlap = await send("Runtime.evaluate", {
+          returnByValue: true,
+          expression: `(() => {
+            const trigger = document.querySelector('.psy-widget-trigger').getBoundingClientRect();
+            const targets = ['1613643387114', '1474906621455', '1690964264025', '1690967422558', '1613643678385', '1613643795239', '1613643798757', '1690962575043']
+              .map((id) => document.querySelector('#rec282570514 [data-elem-id="' + id + '"]')?.getBoundingClientRect())
+              .filter(Boolean);
+            return Math.round(targets.reduce((sum, rect) => sum + Math.max(0, Math.min(trigger.right, rect.right) - Math.max(trigger.left, rect.left)) * Math.max(0, Math.min(trigger.bottom, rect.bottom) - Math.max(trigger.top, rect.top)), 0));
+          })()`,
+        });
+        assert.equal(helperOverlap.result.value, 0,
+          `компактный помощник не должен перекрывать заголовки и CTA направлений: ${helperOverlap.result.value}px²`);
         const helperNegativeControl = await send("Runtime.evaluate", {
           returnByValue: true,
           expression: `(() => {
