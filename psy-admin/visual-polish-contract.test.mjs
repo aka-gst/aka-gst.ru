@@ -39,6 +39,7 @@ test("every generated inner page retains a route back to the home page", async (
 test("the mobile helper stays compact and docks clear of protected content", () => {
   assert.match(widgetCss, /\.psy-widget-trigger\s*\{[^}]*bottom:\s*max\(var\(--psy-widget-mobile-bottom, 16px\),[^}]*width:\s*52px\s*!important[^}]*height:\s*52px\s*!important/s);
   assert.match(widgetCss, /\.psy-widget-trigger > span:last-child\s*\{[^}]*display:\s*none\s*!important/s);
+  assert.doesNotMatch(widgetCss, /\.psy-widget-fullscreen\s*\{\s*display:\s*none/);
   assert.match(widgetSource, /function positionMobileTrigger\(\)/);
   assert.match(widgetSource, /#rec504823956 iframe/);
 });
@@ -61,6 +62,8 @@ test("the same polish layer reaches the live Tilda host through the installed wi
   assert.match(widgetCss, /\.orion-polish-homebar \{ box-sizing: border-box/);
   assert.match(widgetSource, /\.orion-review-hint/);
   assert.match(widgetSource, /element\.remove\(\)/);
+  assert.match(widgetSource, /classList\.add\("orion-mobile-menu-record"\)/);
+  assert.match(widgetCss, /#t-header > \.orion-mobile-menu-record\s*\{[^}]*padding-top:\s*0\s*!important[^}]*padding-bottom:\s*0\s*!important/s);
 });
 
 test("live homepage repair is narrow and preserves the original page rhythm", () => {

@@ -347,6 +347,10 @@ html[data-orion-host-polish] #t-header > .orion-mobile-menu-duplicate {
   display: none !important;
 }
 @media (max-width:767px) {
+  html[data-orion-host-polish] #t-header > .orion-mobile-menu-record {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 {
     padding-top: 0 !important;
   }
@@ -598,7 +602,6 @@ html[data-orion-host-polish] #t-header > .orion-mobile-menu-duplicate {
   .psy-widget-panel { right: 0; bottom: 0; width: 100vw; height: min(76dvh, 680px); border-radius: 22px 22px 0 0; }
   .psy-widget-head { align-items: flex-start; flex-wrap: wrap; }
   .psy-widget-head-actions { width: 100%; justify-content: flex-end; }
-  .psy-widget-fullscreen { display: none; }
   .psy-widget-evaluation { padding: 9px 16px; }
   .psy-widget-voice-preview-stop { min-width: 118px; padding: 0 9px; }
   .psy-widget-messages { padding: 12px 16px 10px; }

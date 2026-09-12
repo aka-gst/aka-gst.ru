@@ -1,13 +1,13 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-23";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-23";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-23";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-24";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-24";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-24";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260913-23&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260913-24&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 function applyHostPagePolish() {
@@ -18,7 +18,10 @@ function applyHostPagePolish() {
 
   const headerMenuRecords = [...document.querySelectorAll("#t-header > .r")]
     .filter((record) => record.querySelector(".tmenu-mobile"));
-  headerMenuRecords.forEach((record) => record.classList.remove("orion-mobile-menu-duplicate"));
+  headerMenuRecords.forEach((record) => {
+    record.classList.add("orion-mobile-menu-record");
+    record.classList.remove("orion-mobile-menu-duplicate");
+  });
   if (window.matchMedia("(max-width: 980px)").matches) {
     const visibleMenus = headerMenuRecords.filter((record) => record.getBoundingClientRect().height > 0);
     visibleMenus.slice(0, -1).forEach((record) => record.classList.add("orion-mobile-menu-duplicate"));

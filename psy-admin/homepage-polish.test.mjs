@@ -44,8 +44,23 @@ try {
         deviceScaleFactor: 1,
         mobile,
       });
+      if (mobile) {
+        await send("Network.setUserAgentOverride", {
+          userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",
+          platform: "iPhone",
+        });
+      }
       await send("Page.navigate", { url: `${baseUrl}/psy-admin/` });
       await sleep(5_500);
+      if (mobile) {
+        await send("Runtime.evaluate", {
+          expression: `(() => {
+            const record = [...document.querySelectorAll('#t-header > .r')]
+              .find((node) => node.querySelector('.tmenu-mobile')?.getBoundingClientRect().height > 0);
+            record?.classList.add('t-rec_pt_15', 't-rec_pb_15');
+          })()`,
+        });
+      }
       const result = await send("Runtime.evaluate", {
         returnByValue: true,
         expression: `(() => {
@@ -91,6 +106,9 @@ try {
           const mobileHeaderStyle = mobileHeader ? getComputedStyle(mobileHeader) : null;
           const visibleMobileMenuBars = [...document.querySelectorAll('#t-header .tmenu-mobile')]
             .filter((node) => node.getBoundingClientRect().height > 0).length;
+          const visibleMobileMenuBar = [...document.querySelectorAll('#t-header .tmenu-mobile')]
+            .find((node) => node.getBoundingClientRect().height > 0)?.getBoundingClientRect();
+          const renderedHeader = document.querySelector('#t-header')?.getBoundingClientRect();
           const blankSpacers = ['rec623335436', 'rec401787399', 'rec605382040', 'rec282808065']
             .map((id) => Math.round(document.querySelector('#' + id).getBoundingClientRect().height));
           return {
@@ -117,6 +135,9 @@ try {
             contactMarkers,
             mobileHeaderBackground: mobileHeaderStyle?.backgroundColor || '',
             visibleMobileMenuBars,
+            renderedHeader: renderedHeader ? { top: Math.round(renderedHeader.top), height: Math.round(renderedHeader.height) } : null,
+            visibleMobileMenuBar: visibleMobileMenuBar ? { top: Math.round(visibleMobileMenuBar.top), height: Math.round(visibleMobileMenuBar.height) } : null,
+            heroTop: Math.round(hero.top),
             blankSpacers,
           };
         })()`,
@@ -175,6 +196,12 @@ try {
           `между мобильной шапкой и hero не должно быть белого padding: ${metrics.heroPaddingTop}`);
         assert.equal(metrics.visibleMobileMenuBars, 1,
           `на телефоне должна оставаться одна полоса меню, сейчас ${metrics.visibleMobileMenuBars}`);
+        assert.deepEqual(metrics.renderedHeader, { top: 0, height: 64 },
+          `вся мобильная шапка должна занимать ровно 64px: ${JSON.stringify(metrics.renderedHeader)}`);
+        assert.deepEqual(metrics.visibleMobileMenuBar, { top: 0, height: 64 },
+          `видимая полоса меню должна начинаться без 15px отступа: ${JSON.stringify(metrics.visibleMobileMenuBar)}`);
+        assert.equal(metrics.heroTop, 64,
+          `hero должен начинаться сразу после 64px шапки: ${metrics.heroTop}px`);
         await send("Runtime.evaluate", {
           expression: `scrollTo(0, document.querySelector('#rec282570514').getBoundingClientRect().top + scrollY - 110)`,
         });
@@ -204,6 +231,18 @@ try {
         });
         assert.ok(helperNegativeControl.result.value > 56,
           `отрицательный контроль обязан поймать возврат широкой кнопки: ${helperNegativeControl.result.value}px`);
+        await send("Runtime.evaluate", { expression: `document.querySelector('.psy-widget-trigger').click()` });
+        await sleep(200);
+        const fullscreenControl = await send("Runtime.evaluate", {
+          returnByValue: true,
+          expression: `(() => {
+            const node = document.querySelector('.psy-widget-fullscreen');
+            const rect = node.getBoundingClientRect();
+            return { display: getComputedStyle(node).display, width: Math.round(rect.width), height: Math.round(rect.height) };
+          })()`,
+        });
+        assert.deepEqual(fullscreenControl.result.value, { display: 'grid', width: 44, height: 44 },
+          `разворот помощника должен оставаться видимым контролом 44x44: ${JSON.stringify(fullscreenControl.result.value)}`);
       }
       console.log(`${width}px: новости ${metrics.newsHeight}px, зазор до линии ${metrics.scheduleGap}px`);
     } finally {
