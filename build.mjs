@@ -1167,6 +1167,33 @@ const storyBodyInline = (slug) =>
     .map((p) => /^\*\*\*$|^\*\s*\*\s*\*$/.test(p) ? '<hr class="story-break">' : `<p>${esc(p)}</p>`)
     .join('\n');
 
+// Рассказ без своей обложки берёт обложку сборника — решение владельца
+// 31 августа: «там где нет обложек — ставить обложку сборника». На самой
+// странице рассказа места хватает, поэтому показывается обложка целиком.
+// Поле coverBy остаётся внутренней записью и на сайте не выводится.
+const чемИллюстрирован = (story, collection) => {
+  if (story.cover) {
+    return { файл: story.cover, свой: true, alt: `Обложка рассказа «${story.title}»` };
+  }
+  if (!collection?.cover) return null;
+  return {
+    файл: collection.cover, свой: false, сборник: collection.title, кусок: story.slug,
+    alt: `Фрагмент обложки сборника «${collection.title}»`,
+  };
+};
+
+const storyCoverInline = (story) => {
+  const image = чемИллюстрирован(story, story.book);
+  if (!image) return '';
+  const relative = `assets/covers/${image.файл}`;
+  const { w, h } = imageSize(relative);
+  return `<figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/${relative}?v=${assetVersion(relative)}" alt="${esc(image.свой ? `Обложка рассказа «${story.title}»` : `Обложка сборника «${image.сборник}»`)}"
+       width="${w}" height="${h}" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure>`;
+};
+
 const storyCollectionPanel = (collection) => {
   const intro = collection.stories.find((story) => /^(вступление|предисловие)$/i.test(story.title));
   const contents = collection.stories.filter((story) => story !== intro);
@@ -1214,7 +1241,7 @@ ${сборникиПоказ.map((collection) => `
 ${сборникиПоказ.map(storyCollectionPanel).join('\n')}
         </div>
         <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 tabindex="-1" data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑</button></article>
-        <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
+        <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyCoverInline(story)}${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
       </section>`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
@@ -1685,30 +1712,6 @@ const копияОбложки = (вид, file, исток = file) => {
 // Миниатюра в оглавлении: 44 пикселя на экране, 132 в файле — под тройную
 // плотность. Раньше сюда шёл оригинал в 900 пикселей, и оглавление весило
 // 2.3 МБ при разметке в 19 КБ.
-// Рассказ без своей обложки берёт обложку сборника — решение владельца
-// 31 августа: «там где нет обложек — ставить обложку сборника». В список
-// идёт КУСОК её, а не целая: у «А потом наступит счастье» своей обложки нет
-// ни у одного из семи рассказов, и семь одинаковых квадратиков подряд
-// перестают быть списком — различать в нём труднее, чем когда картинок нет
-// вовсе (правило 17). На самой странице рассказа кусок незачем: там места
-// хватает, и показывается обложка сборника целиком.
-//
-// Кто рисовал обложку, на сайте больше не пишется: «убери отсюда чьи
-// обложки, я заплатил за все которые не из инета» — владелец, 31 августа
-// 2026. Поле coverBy в data/stories.json остаётся, это его собственная
-// запись; просто ничто её не выводит. Обложки рисовал
-// человек, и права на чужую работу — не то место, где экономят.
-const чемИллюстрирован = (st, c) => {
-  if (st.cover) {
-    return { файл: st.cover, свой: true, alt: `Обложка рассказа «${st.title}»` };
-  }
-  if (!c?.cover) return null;
-  return {
-    файл: c.cover, свой: false, сборник: c.title, кусок: st.slug,
-    alt: `Фрагмент обложки сборника «${c.title}»`,
-  };
-};
-
 const миниатюра = (и) => {
   const o = и.свой
     ? копияОбложки('mini', и.файл)
