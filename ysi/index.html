@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="description" content="Private interactive concept for one connected YSI system">
+  <title>YSI — one connected system</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="premium.css?v=20260909-public-copy1">
+</head>
+<body>
+  <div class="demo-ribbon"><span>PRIVATE INTERACTIVE CONCEPT</span><span>SYNTHETIC DATA</span><span>NO YSI ACCOUNT CONNECTION</span></div>
+  <header class="app-header">
+    <div class="brand" aria-label="YSI Connected"><b>YSI</b><span>Connected</span></div>
+    <nav aria-label="Product presentation">
+      <button class="nav-button is-active" data-screen="overview"><i>01</i><span>Vision</span></button>
+      <button class="nav-button" data-screen="operations"><i>02</i><span>Operations</span></button>
+      <button class="nav-button" data-screen="assistant"><i>03</i><span>Site guide</span></button>
+      <button class="nav-button" data-screen="practice"><i>04</i><span>Practice</span></button>
+      <button class="nav-button" data-screen="offer"><i>05</i><span>Offer</span></button>
+    </nav>
+    <span class="local-mark">Private · local demo</span>
+  </header>
+  <main>
+    <section id="overview" class="screen is-active" aria-labelledby="overview-title">
+      <div class="overview-copy">
+        <span class="eyebrow">ONE SYSTEM · THREE PRODUCTS</span>
+        <h1 id="overview-title">Nothing gets lost.<br><em>Learning keeps moving.</em></h1>
+        <p class="lede">Internal work, visitor questions and personal practice share one calm delivery layer — while every role keeps the right boundary.</p>
+        <div class="overview-actions">
+          <button class="primary" data-go="operations">Try the product flow <span>→</span></button>
+          <button class="secondary" data-go="assistant">Ask the site guide</button>
+        </div>
+        <div class="truth-row">
+          <p><i class="dot mint"></i><b>Working here</b><span>Site guide, journal state and UI flows</span></p>
+          <p><i class="dot lilac"></i><b>In acceptance</b><span>Three-role @ysi_flow_bot contract</span></p>
+          <p><i class="dot coral"></i><b>Not connected</b><span>YSI, Kajabi, payment or production sync</span></p>
+        </div>
+      </div>
+      <div class="system-stage" aria-label="Three connected YSI products">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <article class="system-card card-ops"><span class="card-icon">✓</span><small>YSI OPERATIONS</small><h2>One task.<br>One owner.</h2><p>Assign → deliver → complete → review.</p><b class="status-chip">3-role pilot</b></article>
+        <article class="system-card card-guide"><span class="guide-orb"></span><small>SITE COMPANION</small><h2>Ask naturally.</h2><p>One approved answer and a useful next step.</p><b class="status-chip">Source linked</b></article>
+        <article class="system-card card-practice"><span class="card-icon">◌</span><small>PRACTICE COMPANION</small><h2>Three real forms.</h2><p>Meditation · yoga · Buddhist diary.</p><b class="status-chip">Private by default</b></article>
+        <div class="event-pulse"><i></i><span>one current state</span></div>
+      </div>
+    </section>
+
+    <section id="operations" class="screen" aria-labelledby="operations-title">
+      <header class="screen-intro compact">
+        <div><span class="eyebrow">PRODUCT 01 · YSI OPERATIONS</span><h1 id="operations-title">From assignment to proof — without chasing people.</h1></div>
+        <div class="mode-switch" role="tablist" aria-label="Operations scenario"><button class="is-active" data-ops-mode="team">Team task</button><button data-ops-mode="student">Student update</button></div>
+      </header>
+      <div class="operations-layout">
+        <section class="control-panel glass" aria-label="Create operation">
+          <div id="team-controls" class="control-view is-active">
+            <div class="actor-row"><span class="avatar sofia">S</span><div><small>SOFIA · PROGRAM LEAD</small><b>Assign a task</b></div><span class="live-pill" title="Bot identity candidate; not selected or installed in Telegram"><img src="assets/ysi-flow-avatar.png" alt="YSI Flow bot candidate">Bot candidate</span></div>
+            <label>Task <input id="task-title" value="Prepare the next course page"></label>
+            <div class="field-pair"><label>Owner <select id="task-owner"><option>Sergey</option><option>Maya</option></select></label><label>Due <select id="task-due"><option>Today · 18:00</option><option>Tomorrow · 10:00</option></select></label></div>
+            <label>Context <input id="task-note" value="Use the approved course description"></label>
+            <button id="assign-task" class="primary wide">Assign to Sergey <span>→</span></button>
+            <p class="micro-boundary">The candidate Telegram flow uses @ysi_flow_bot only after both people opt in and activate a one-use link. Nothing is sent from this page.</p>
+          </div>
+          <div id="student-controls" class="control-view">
+            <div class="actor-row"><span class="avatar maya">M</span><div><small>MAYA · COURSE PARTICIPANT</small><b>Choose updates</b></div><span class="live-pill" title="Bot identity candidate; not selected or installed in Telegram"><img src="assets/ysi-flow-avatar.png" alt="YSI Flow bot candidate">Bot candidate</span></div>
+            <label class="choice"><input id="course-optin" type="checkbox" checked><span><b>Course &amp; video updates</b><small>Only topics Maya chooses</small></span></label>
+            <label>Programme <select id="programme"><option>The Union of Day and Night</option><option>Lady Niguma Foundation I</option></select></label>
+            <label>New item <input id="update-title" value="Class recording is ready"></label>
+            <button id="publish-update" class="primary wide">Preview student delivery <span>→</span></button>
+            <p class="micro-boundary">A course participant is never a worker. Access is previewed, not connected to Kajabi or payment.</p>
+          </div>
+        </section>
+        <section class="delivery-stage" aria-label="Delivery flow">
+          <div class="stage-head"><span id="flow-title">Assignment delivery</span><p id="flow-status"><i></i>Ready for Sofia</p></div>
+          <div class="delivery-line"><i></i><i></i><i></i></div>
+          <div class="delivery-grid">
+            <article class="surface sofia-surface is-current" data-step="created"><small>SOFIA · WEB</small><span class="surface-state">Create</span><h3 id="sofia-title">Prepare the next course page</h3><p id="sofia-detail">Owner · Sergey<br>Due · Today, 18:00</p><b id="sofia-status">Draft</b></article>
+            <article class="surface phone-surface" data-step="received"><small id="phone-kicker">SERGEY · TELEGRAM</small><span class="surface-state">Receive</span><h3 id="phone-title">Waiting for an assignment</h3><p id="phone-detail">The task will appear here with its owner and due time.</p><button id="complete-task" disabled>Submit work + proof</button></article>
+            <article class="surface review-surface" data-step="review"><small>SOFIA · REVIEW QUEUE</small><span class="surface-state">Review</span><div class="proof-thumb" id="proof-thumb"><i>+</i><span>text · screenshot · URL</span></div><h3 id="review-title">Nothing to review yet</h3><p id="review-detail">Completed work returns with evidence.</p><b id="review-status">Waiting</b></article>
+          </div>
+          <div class="event-log"><span>LOCAL EVENT TRACE</span><p id="event-trace">No event created yet.</p><button id="retry-event" disabled title="Negative control">Retry same event</button></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="assistant" class="screen" aria-labelledby="assistant-title">
+      <header class="screen-intro compact">
+        <div><span class="eyebrow">PRODUCT 02 · SITE COMPANION</span><h1 id="assistant-title">The real YSI site — with one useful answer built in.</h1></div>
+        <p>A private working copy of the public experience. The guide reads a dated local source snapshot and never invents current events.</p>
+      </header>
+      <article class="ysi-site-copy" aria-label="Private working copy of the public Yoga Studies Institute page">
+        <header class="public-site-header">
+          <a class="public-logo" href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noreferrer" aria-label="Open the current Yoga Studies Institute site"><span>YSI</span><b>Yoga Studies Institute</b></a>
+          <nav aria-label="YSI public site preview"><a href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noreferrer">About</a><a href="https://www.yogastudiesinstitute.org/contact-faq" target="_blank" rel="noreferrer">Contact + FAQ</a><a href="https://www.yogastudiesinstitute.org/#section-1711984190106" target="_blank" rel="noreferrer">Events</a><a class="donate-link" href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noreferrer">Donate</a></nav>
+        </header>
+        <div class="public-site-body">
+          <section class="public-hero">
+            <span>YOGA STUDIES INSTITUTE</span>
+            <h2>Live the full path of yoga.</h2>
+            <p>A lineage of authentic movement, meditation &amp; philosophy made accessible for your modern practice.</p>
+            <a href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noreferrer">Explore courses <b>↗</b></a>
+          </section>
+          <section class="public-events" aria-labelledby="events-title">
+            <div class="events-heading"><div><span>UPCOMING EVENTS</span><h2 id="events-title">Continue your practice.</h2></div><p id="events-source-state" class="events-source-state"><i></i>Loading dated source…</p></div>
+            <div id="public-event-list" class="public-event-list" aria-live="polite"></div>
+          </section>
+        </div>
+        <button id="open-guide" class="guide-launcher" type="button" aria-expanded="true" aria-controls="assistant-drawer"><span class="guide-orb"></span><span><b>Ask YSI</b><small>Courses · events · joining</small></span><i>→</i></button>
+        <section id="assistant-drawer" class="assistant-drawer is-open" aria-label="Ask YSI site assistant">
+          <div class="assistant-head"><div><span class="guide-orb"></span><div><b>Ask YSI</b><small>Answers from dated public sources</small></div></div><button id="close-guide" type="button" aria-label="Close site guide">×</button></div>
+          <div id="chat-log" class="chat-log" aria-live="polite">
+            <article class="bubble guide"><small>YSI GUIDE</small><p>Ask me where to begin, what is coming up, or how to join.</p></article>
+          </div>
+          <div class="prompt-row"><button data-prompt="I am new. Where should I begin?">Where do I begin?</button><button data-prompt="What events are coming up?">Current events</button><button data-prompt="Is there a Russian course?">Russian options</button></div>
+          <form id="guide-form" class="ask-row"><label class="sr-only" for="guide-input">Ask YSI</label><button id="listen-question" type="button" aria-label="Ask by voice" title="Ask by voice">⌁</button><input id="guide-input" autocomplete="off" placeholder="Ask in your own words…"><button class="primary" type="submit">Ask</button></form>
+          <div class="voice-row"><button id="speak-answer" type="button" disabled>Listen</button><button id="stop-answer" type="button" disabled>Stop</button><span id="voice-state">Local browser voice, if available</span></div>
+        </section>
+      </article>
+    </section>
+
+    <section id="practice" class="screen" aria-labelledby="practice-title">
+      <header class="screen-intro compact">
+        <div><span class="eyebrow">PRODUCT 03 · PRACTICE COMPANION</span><h1 id="practice-title">The form changes because the practice changes.</h1></div>
+        <p>One account and notification layer; three genuinely different meanings.</p>
+      </header>
+      <div class="practice-layout">
+        <form id="practice-form" class="practice-form glass">
+          <div class="practice-tabs" role="tablist" aria-label="Practice type"><button type="button" class="is-active" data-practice="meditation">Meditation</button><button type="button" data-practice="yoga">Yoga</button><button type="button" data-practice="buddhist">Buddhist diary</button></div>
+          <div class="practice-title-row"><span id="practice-icon">◌</span><div><small id="practice-kicker">PLAN A MEDITATION</small><h2 id="practice-form-title">Make room for silence.</h2></div></div>
+          <div id="practice-fields" class="practice-fields"></div>
+          <button id="save-practice" class="primary wide" type="submit">Schedule meditation <span>→</span></button>
+          <p id="practice-boundary" class="micro-boundary">Saved in this browser. Telegram is an opt-in preview, never the diary vault.</p>
+        </form>
+        <section class="practice-stage" aria-label="Practice on chosen devices">
+          <div class="sync-rail"><span>WEB</span><i></i><span>PHONE</span><i></i><span>TELEGRAM</span></div>
+          <article class="practice-surface web-diary"><div class="surface-brand"><b>YSI</b><span>My practice</span></div><small id="web-label">MEDITATION · PLANNED</small><h3 id="web-practice-title">Ten quiet minutes</h3><p id="web-practice-detail">Today · 19:30<br>Return gently to the breath.</p><b class="preview-chip">LOCAL PREVIEW</b></article>
+          <article class="practice-surface mini-phone"><small id="mobile-label">TODAY’S MEDITATION</small><h3 id="mobile-practice-title">Ten quiet minutes</h3><p id="mobile-practice-detail">10 minutes<br>19:30</p><i>Saved</i></article>
+          <article class="practice-surface telegram-preview"><small id="telegram-label">TELEGRAM · OPT-IN PREVIEW</small><h3 id="telegram-practice-title">Meditation reminder</h3><p id="telegram-practice-detail">Ten quiet minutes begins at 19:30.</p><b class="preview-chip">NOT SENT</b></article>
+          <div id="sync-packet" class="sync-packet"><i></i><span>saving one current state</span></div>
+          <div id="practice-toast" class="practice-toast" role="status" aria-live="polite"><span>✓</span><div><b>Practice saved</b><small>Visible on chosen surfaces</small></div></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="offer" class="screen" aria-labelledby="offer-title">
+      <header class="offer-head"><span class="eyebrow">ONE CONNECTED BUILD · THREE SELLABLE PRODUCTS</span><h1 id="offer-title">Start with the workflow.<br><em>Keep the whole system possible.</em></h1><p>This private demo turns the proposal into something YSI can touch. Production scope follows one short workflow review.</p></header>
+      <div class="offer-grid">
+        <article><span>01</span><div><small>FIRST OPERATIONAL PROOF</small><h2>YSI Operations</h2><p>One staff assignment and one student update, complete from creation to confirmation.</p></div><ul class="offer-proof"><li>Mutual staff consent</li><li>Deadline, result and proof</li><li>Course updates stay separate</li></ul><b>Assign · remind · prove · review</b></article>
+        <article><span>02</span><div><small>LOCAL-FIRST GUIDE</small><h2>Site Companion</h2><p>Natural-language questions, approved sources, text and voice where appropriate.</p></div><ul class="offer-proof"><li>Ask in different words</li><li>One approved YSI route</li><li>Safe human handoff</li></ul><b>Ask · answer · continue</b></article>
+        <article><span>03</span><div><small>PRIVATE PRACTICE</small><h2>Practice Companion</h2><p>Different forms for meditation, yoga and Buddhist reflection, one delivery layer.</p></div><ul class="offer-proof"><li>Meditation plan and text</li><li>Yoga time and reminder</li><li>Private vow reflection</li></ul><b>Plan · reflect · return</b></article>
+      </div>
+      <div class="scale-switch" aria-label="Current and planned scope"><button class="is-active" data-scale="pilot">CURRENT PILOT · 3 ROLES</button><button data-scale="planned">PLANNED SCALE · 20 + 20</button><p id="scale-copy">Sofia · Sergey · one course participant. Real @ysi_flow_bot delivery is accepted separately.</p></div>
+      <div class="price-decision"><div><small>FULL CONNECTED YSI SYSTEM</small><strong>from $35,000</strong><span>Fixed first-build quote after workflow review</span></div><button id="copy-brief" class="primary">Copy the meeting brief <span>→</span></button><p id="copy-status" aria-live="polite"></p></div>
+    </section>
+  </main>
+  <script src="app.js?v=20260909-public-copy1"></script>
+</body>
+</html>

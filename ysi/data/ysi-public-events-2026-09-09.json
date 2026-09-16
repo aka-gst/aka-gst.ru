@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "ysi-public-events-2026-09-09-mac-preflight",
+  "observed_at": "2026-09-09T00:47:30+03:00",
+  "fresh_for_hours": 72,
+  "source": {
+    "name": "Yoga Studies Institute public homepage",
+    "url": "https://www.yogastudiesinstitute.org/",
+    "events_url": "https://www.yogastudiesinstitute.org/#section-1711984190106"
+  },
+  "capture": {
+    "method": "visible public page DOM in the in-app browser",
+    "machine": "mac",
+    "independent_pc_verification": "pending"
+  },
+  "events": [
+    {
+      "title": "Ripples of Light",
+      "date": "24-Hour Meditation Marathon",
+      "url": "https://www.yogastudiesinstitute.org/#section-1749480947597"
+    },
+    {
+      "title": "The Union of Day and Night",
+      "date": "Sep. 2, 16, 30 · Oct. 14, 28 · Nov. 11",
+      "url": "https://www.yogastudiesinstitute.org/#section-1786638100827"
+    },
+    {
+      "title": "Lady Niguma Foundation I",
+      "date": "September 14 – October 12 · Russian",
+      "url": "https://www.yogastudiesinstitute.org/resource_redirect/landing_pages/2149930093"
+    },
+    {
+      "title": "Lady Niguma Teacher Training 2",
+      "date": "New dates coming soon · Chinese",
+      "url": "https://www.yogastudiesinstitute.org/resource_redirect/landing_pages/2150129775"
+    },
+    {
+      "title": "Lady Niguma Foundation I",
+      "date": "October 16–19 · Chinese, Vietnamese",
+      "url": "https://www.yogastudiesinstitute.org/resource_redirect/landing_pages/2149930093"
+    },
+    {
+      "title": "Hatha Yoga Shatkarma Retreat",
+      "date": "October 18–24 · Russian",
+      "url": "https://pranamove.yoga/hypretreat"
+    },
+    {
+      "title": "Himalayan Heart Yoga Retreat",
+      "date": "October 25–31 · Russian",
+      "url": "https://pranamove.yoga/himalayan-heart-yoga"
+    }
+  ]
+}

@@ -59,6 +59,7 @@ rasskazy
 technomagic
 qa-quest
 psy-admin
+ysi
 photodata
 maketchik
 way
