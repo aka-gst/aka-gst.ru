@@ -56,7 +56,7 @@
           <div id="team-controls" class="control-view is-active">
             <div class="actor-row"><span class="avatar sofia">S</span><div><small>SOFIA · PROGRAM LEAD</small><b>Assign a task</b></div><span class="live-pill" title="Bot identity candidate; not selected or installed in Telegram"><img src="assets/ysi-flow-avatar.png" alt="YSI Flow bot candidate">Bot candidate</span></div>
             <label>Task <input id="task-title" value="Prepare the next course page"></label>
-            <div class="field-pair"><label>Owner <select id="task-owner"><option>Sergey</option><option>Maya</option></select></label><label>Due <select id="task-due"><option>Today · 18:00</option><option>Tomorrow · 10:00</option></select></label></div>
+            <div class="field-pair"><label>Owner <select id="task-owner"><option>Sergey</option><option>Alex</option></select></label><label>Due <select id="task-due"><option>Today · 18:00</option><option>Tomorrow · 10:00</option></select></label></div>
             <label>Context <input id="task-note" value="Use the approved course description"></label>
             <button id="assign-task" class="primary wide">Assign to Sergey <span>→</span></button>
             <p class="micro-boundary">The candidate Telegram flow uses @ysi_flow_bot only after both people opt in and activate a one-use link. Nothing is sent from this page.</p>
@@ -89,9 +89,9 @@
         <p>A private working copy of the public experience. The guide reads a dated local source snapshot and never invents current events.</p>
       </header>
       <article class="ysi-site-copy" aria-label="Private working copy of the public Yoga Studies Institute page">
+        <div class="real-site-badge">✓ This is your real, current site — a private local copy, not a redesign proposal</div>
         <header class="public-site-header">
           <a class="public-logo" href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noreferrer" aria-label="Open the current Yoga Studies Institute site"><span>YSI</span><b>Yoga Studies Institute</b></a>
-          <nav aria-label="YSI public site preview"><a href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noreferrer">About</a><a href="https://www.yogastudiesinstitute.org/contact-faq" target="_blank" rel="noreferrer">Contact + FAQ</a><a href="https://www.yogastudiesinstitute.org/#section-1711984190106" target="_blank" rel="noreferrer">Events</a><a class="donate-link" href="https://www.yogastudiesinstitute.org/" target="_blank" rel="noreferrer">Donate</a></nav>
         </header>
         <div class="public-site-body">
           <section class="public-hero">
@@ -105,15 +105,16 @@
             <div id="public-event-list" class="public-event-list" aria-live="polite"></div>
           </section>
         </div>
-        <button id="open-guide" class="guide-launcher" type="button" aria-expanded="true" aria-controls="assistant-drawer"><span class="guide-orb"></span><span><b>Ask YSI</b><small>Courses · events · joining</small></span><i>→</i></button>
+        <button id="open-guide" class="guide-launcher pulse" type="button" aria-expanded="true" aria-controls="assistant-drawer"><span class="guide-orb"></span><span><b>👆 Click to ask YSI</b><small>Courses · events · joining</small></span><i>→</i></button>
         <section id="assistant-drawer" class="assistant-drawer is-open" aria-label="Ask YSI site assistant">
           <div class="assistant-head"><div><span class="guide-orb"></span><div><b>Ask YSI</b><small>Answers from dated public sources</small></div></div><button id="close-guide" type="button" aria-label="Close site guide">×</button></div>
           <div id="chat-log" class="chat-log" aria-live="polite">
-            <article class="bubble guide"><small>YSI GUIDE</small><p>Ask me where to begin, what is coming up, or how to join.</p></article>
+            <article class="bubble guide"><small>YSI GUIDE</small><p>Ask me where to begin, what is coming up, or how to join. Type below, or click the mic to speak.</p></article>
           </div>
           <div class="prompt-row"><button data-prompt="I am new. Where should I begin?">Where do I begin?</button><button data-prompt="What events are coming up?">Current events</button><button data-prompt="Is there a Russian course?">Russian options</button></div>
-          <form id="guide-form" class="ask-row"><label class="sr-only" for="guide-input">Ask YSI</label><button id="listen-question" type="button" aria-label="Ask by voice" title="Ask by voice">⌁</button><input id="guide-input" autocomplete="off" placeholder="Ask in your own words…"><button class="primary" type="submit">Ask</button></form>
-          <div class="voice-row"><button id="speak-answer" type="button" disabled>Listen</button><button id="stop-answer" type="button" disabled>Stop</button><span id="voice-state">Local browser voice, if available</span></div>
+          <form id="guide-form" class="ask-row"><label class="sr-only" for="guide-input">Ask YSI</label><button id="listen-question" type="button" aria-label="Ask by voice — click and speak" title="Click and speak your question">🎤</button><input id="guide-input" autocomplete="off" placeholder="Ask in your own words…"><button class="primary" type="submit">Ask</button></form>
+          <div class="voice-row"><button id="speak-answer" type="button" disabled>🔊 Listen</button><button id="stop-answer" type="button" disabled>Stop</button><span id="voice-state">Local browser voice, if available</span></div>
+          <p class="guide-proof">This same guide already answers ~60 real questions for a paying client, in Russian and English, with voice both ways — <a href="/orion-case-en/" target="_blank" rel="noopener">try the English version live</a>.</p>
         </section>
       </article>
     </section>
@@ -150,6 +151,14 @@
         <article><span>03</span><div><small>PRIVATE PRACTICE</small><h2>Practice Companion</h2><p>Different forms for meditation, yoga and Buddhist reflection, one delivery layer.</p></div><ul class="offer-proof"><li>Meditation plan and text</li><li>Yoga time and reminder</li><li>Private vow reflection</li></ul><b>Plan · reflect · return</b></article>
       </div>
       <div class="scale-switch" aria-label="Current and planned scope"><button class="is-active" data-scale="pilot">CURRENT PILOT · 3 ROLES</button><button data-scale="planned">PLANNED SCALE · 20 + 20</button><p id="scale-copy">Sofia · Sergey · one course participant. Real @ysi_flow_bot delivery is accepted separately.</p></div>
+      <p class="proof-line">Priced against typical US/international market rates for this scope of work — happy to discuss individual terms.</p>
+      <div class="price-breakdown">
+        <article><span>1</span><div><h3>Course Guide</h3><p>One existing course or event page. English answers to "where do I start?", "how do I join?", "who can help?" — 20–30 high-value questions, safe handoffs, teacher-approved sources only. No diary, payment rebuild, migration, or student-data export.</p></div><b>$4,500–6,500<small>2 weeks</small></b></article>
+        <article><span>2</span><div><h3>Practice Companion Pilot</h3><p>Everything in Course Guide, plus a mobile-first meditation, yoga and journal concept, an approved voice-guide direction, and the technical decision for safe account and cross-device sync.</p></div><b>$15,000–18,000<small>4–6 weeks</small></b></article>
+        <article><span>3</span><div><h3>YSI Learning Layer</h3><p>A production guide across selected YSI journeys, a secure multi-device practice companion, teacher/admin workflows, aggregate analytics, and a controlled Telegram reminder bridge. Exact scope follows the pilot.</p></div><b>from $35,000<small>8–14 weeks</small></b></article>
+        <article><span>4</span><div><h3>Meditation Voice Studio</h3><p>Separate, standalone option: four original English meditation voice directions, a text-and-duration composer, downloadable guided-practice audio. No voice cloning, no teacher/student impersonation, human listening review before delivery.</p></div><b>$4,500–6,500<small>2–3 weeks</small></b></article>
+      </div>
+      <p class="proof-line">Already built and paid for, so you can judge the work itself: an <a href="/orion-case-en/" target="_blank" rel="noopener">English case study</a> of the same booking + AI-guide engine, delivered for a psychology center — live, not a mockup.</p>
       <div class="price-decision"><div><small>FULL CONNECTED YSI SYSTEM</small><strong>from $35,000</strong><span>Fixed first-build quote after workflow review</span></div><button id="copy-brief" class="primary">Copy the meeting brief <span>→</span></button><p id="copy-status" aria-live="polite"></p></div>
     </section>
   </main>

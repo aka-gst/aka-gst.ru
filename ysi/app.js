@@ -34,12 +34,12 @@ function renderOperations(){
   const task=state.task;
   if(!task){
     $('#sofia-title').textContent='Prepare the next course page';$('#sofia-detail').innerHTML='Owner · Sergey<br>Due · Today, 18:00';$('#sofia-status').textContent='Draft';
-    $('#phone-kicker').textContent='SERGEY · TELEGRAM';$('#phone-title').textContent='Waiting for an assignment';$('#phone-detail').textContent='The task will appear here with its owner and due time.';$('#complete-task').disabled=true;$('#complete-task').textContent='Submit work + proof';
+    $('#phone-kicker').textContent='✈ SERGEY · TELEGRAM';$('#phone-title').textContent='Waiting for an assignment';$('#phone-detail').textContent='The task will appear here with its owner and due time.';$('#complete-task').disabled=true;$('#complete-task').textContent='Submit work + proof';
     $('#review-title').textContent='Nothing to review yet';$('#review-detail').textContent='Completed work returns with evidence.';$('#review-status').textContent='Waiting';$('#proof-thumb').classList.remove('has-proof');
     $('#event-trace').textContent='No event created yet.';$('#retry-event').disabled=true;setFlow('created','Ready for Sofia');return;
   }
   $('#sofia-title').textContent=task.title;$('#sofia-detail').innerHTML=`Owner · ${task.owner}<br>Due · ${task.due}`;$('#sofia-status').textContent=task.status==='review'?'Needs review':'Delivered';
-  $('#phone-kicker').textContent=`${task.owner.toUpperCase()} · TELEGRAM`;$('#phone-title').textContent=task.title;$('#phone-detail').textContent=`Due ${task.due}. ${task.note}`;$('#complete-task').disabled=task.status==='review';$('#complete-task').textContent=task.status==='review'?'Submitted ✓':'Submit work + proof';
+  $('#phone-kicker').textContent=`✈ ${task.owner.toUpperCase()} · TELEGRAM`;$('#phone-title').textContent=task.title;$('#phone-detail').textContent=`Due ${task.due}. ${task.note}`;$('#complete-task').disabled=task.status==='review';$('#complete-task').textContent=task.status==='review'?'Submitted ✓':'Submit work + proof';
   $('#review-title').textContent=task.status==='review'?task.title:'Nothing to review yet';$('#review-detail').textContent=task.status==='review'?'Text, screenshot and URL attached · completed just now':'Completed work returns with evidence.';$('#review-status').textContent=task.status==='review'?'Needs review':'Waiting';$('#proof-thumb').classList.toggle('has-proof',task.status==='review');
   $('#event-trace').textContent=task.status==='review'?'task.submitted → proof.attached → review.requested':`task.assigned → ${task.owner.toLowerCase()}.delivered`;$('#retry-event').disabled=false;
   setFlow(task.status==='review'?'review':'received',task.status==='review'?'Back with Sofia for review':'Delivered to Sergey');
@@ -50,6 +50,9 @@ async function animateTask(){
   $('.delivery-stage').classList.add('is-delivering');await wait(720);$('.delivery-stage').classList.remove('is-delivering');
 }
 $('#assign-task').addEventListener('click',animateTask);
+const updateAssignLabel=()=>{$('#assign-task').innerHTML=`Assign to ${$('#task-owner').value} <span>→</span>`};
+$('#task-owner').addEventListener('change',updateAssignLabel);
+updateAssignLabel();
 $('#complete-task').addEventListener('click',async()=>{
   if(!state.task)return;state.task.status='review';eventOnce({id:`${state.task.id}:submitted`,type:'task.submitted'});saveState();
   $('.proof-thumb').classList.add('proof-arriving');renderOperations();await wait(700);$('.proof-thumb').classList.remove('proof-arriving');
@@ -62,7 +65,7 @@ $('#retry-event').addEventListener('click',()=>{
 function renderStudentUpdate(){
   $('#flow-title').textContent='Student programme delivery';const update=state.update;
   $('#sofia-title').textContent=update?.programme||'The Union of Day and Night';$('#sofia-detail').innerHTML='Audience · opted-in students<br>Access · enrolled members';$('#sofia-status').textContent=update?'Preview sent':'Draft';
-  $('#phone-kicker').textContent='MAYA · TELEGRAM';$('#phone-title').textContent=update?.title||'Waiting for chosen updates';$('#phone-detail').textContent=update?`${update.programme} · Open the class from your member library.`:'Maya receives only programmes she selected.';$('#complete-task').disabled=true;$('#complete-task').textContent=update?'Open member access':'No update yet';
+  $('#phone-kicker').textContent='✈ MAYA · TELEGRAM';$('#phone-title').textContent=update?.title||'Waiting for chosen updates';$('#phone-detail').textContent=update?`${update.programme} · Open the class from your member library.`:'Maya receives only programmes she selected.';$('#complete-task').disabled=true;$('#complete-task').textContent=update?'Open member access':'No update yet';
   $('#review-title').textContent=update?'Delivery receipt':'No delivery yet';$('#review-detail').textContent=update?'Maya · received · allowed course route shown':'An opted-out delivery never turns green.';$('#review-status').textContent=update?'Delivered':'Waiting';$('#proof-thumb').classList.toggle('has-proof',Boolean(update));
   $('#event-trace').textContent=update?'programme.updated → preference.checked → maya.delivered':'No event created yet.';$('#retry-event').disabled=!update;setFlow(update?'review':'created',update?'Delivered to opted-in participant':'Ready for a programme update');
 }
