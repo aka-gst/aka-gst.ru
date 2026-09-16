@@ -185,10 +185,6 @@ $('#practice-form').addEventListener('submit',async e=>{
   packet.classList.remove('is-moving');$$('.practice-surface').forEach(x=>x.classList.remove('just-arrived'));$('#practice-toast').classList.add('is-visible');setTimeout(()=>$('#practice-toast').classList.remove('is-visible'),2200);
 });
 
-$$('[data-scale]').forEach(button=>button.addEventListener('click',()=>{
-  $$('[data-scale]').forEach(x=>x.classList.toggle('is-active',x===button));
-  $('#scale-copy').textContent=button.dataset.scale==='pilot'?'Sofia · Sergey · one course participant. Real @ysi_flow_bot delivery is accepted separately.':'Planned: 20 total team seats plus 20 course participants. Kajabi remains a separate API and permissions decision.';
-}));
 $('#copy-brief').addEventListener('click',async()=>{
   const text='YSI connected system — meeting brief\n\n1. YSI Operations: internal assignment → delivery → proof → review, plus opted-in student programme updates.\n2. Site Companion: natural-language public-site help with approved sources and safe handoff.\n3. Practice Companion: distinct meditation, yoga and Buddhist diary forms with one notification layer.\n\nPrivate demo: no YSI/Kajabi account connection, payment or production sync. Live @ysi_flow_bot acceptance is tracked separately.\n\nFull connected system: from $35,000. Fixed first-build quote follows one workflow review.';
   try{await navigator.clipboard.writeText(text);$('#copy-status').textContent='Copied · nothing was sent.'}catch{$('#copy-status').textContent='Copy is blocked in this browser.'}
