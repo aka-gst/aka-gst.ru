@@ -436,6 +436,16 @@ aka-gst.ru, www.aka-gst.ru {
     }
   }
 
+  # English case study of the same engine, for pitching YSI — own container,
+  # own SQLite volume, same reverse-proxy pattern as psy-admin/booking above.
+  redir /orion-case-en /orion-case-en/ 308
+  handle_path /orion-case-en/* {
+    reverse_proxy orion-case-en:4180 {
+      header_up Host {host}
+      header_up X-Forwarded-Proto {scheme}
+    }
+  }
+
   # Orion loads the public assistant as an ES module from aka-gst.ru. Keep the
   # cross-origin grant narrow: only the widget dependency graph and its one
   # approved voice sample, never the booking admin/API routes.
