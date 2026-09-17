@@ -120,7 +120,7 @@ main{height:calc(100dvh - 111px);position:relative;overflow:hidden}.screen{posit
 
 /* multi-task, archive, subscriber profiles, multi-practice list — 17.09 */
 .control-panel{overflow-y:auto}
-.task-list{display:grid;gap:6px;max-height:130px;overflow-y:auto}
+.task-list{display:flex;flex-direction:column;gap:6px}
 .task-row{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.6);text-align:left;cursor:pointer;width:100%}
 .task-row.is-active{border-color:var(--blue);box-shadow:0 0 0 3px rgba(22,115,201,.1)}
 .task-row b{font-size:11px}
@@ -129,7 +129,7 @@ main{height:calc(100dvh - 111px);position:relative;overflow:hidden}.screen{posit
 .archive-row{display:flex}
 .archive-row button{font-size:9px;font-weight:850;color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
 .archive-row button.is-active{color:var(--blue);border-color:var(--blue)}
-.archive-list{display:grid;gap:5px;margin-top:6px;max-height:90px;overflow-y:auto}
+.archive-list{display:flex;flex-direction:column;gap:5px;margin-top:6px}
 .archive-row-item{display:flex;justify-content:space-between;font-size:9px;padding:6px 9px;border-radius:10px;background:rgba(0,0,0,.03)}
 .archive-row-item b{font-weight:700}
 .archive-row-item span{color:var(--muted)}
