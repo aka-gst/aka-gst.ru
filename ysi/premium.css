@@ -144,3 +144,13 @@ main{height:calc(100dvh - 111px);position:relative;overflow:hidden}.screen{posit
 .profile-chip b{display:block;font-size:10px}
 .profile-chip span{font-size:9px;color:var(--blue);font-weight:850}
 .profile-names{margin-top:6px;background:var(--navy);color:#fff;font-size:9px;padding:6px 9px;border-radius:10px}
+
+/* two-button review (rework/confirm), status-success emphasis, task due date — 17.09 late */
+.review-actions[hidden],.rework-box[hidden]{display:none!important}
+.review-actions{display:flex;gap:8px;margin-top:10px;width:100%}
+.rework-button{flex:1;height:38px;border-radius:999px;border:1px solid #c34d37;background:#fff2ea;color:#b94b31;font-weight:850;font-size:10px;cursor:pointer}
+.review-actions .accept-button{flex:1;margin-top:0}
+.rework-box{display:flex;gap:6px;margin-top:10px;width:100%}
+.rework-box input{flex:1;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:10px;min-width:0}
+.rework-box button{height:38px;padding:0 12px;border-radius:10px;border:0;background:var(--navy);color:#fff;font-size:10px;font-weight:850;cursor:pointer}
+.status-success{background:#d5e8d6!important;color:#1d6b3c!important;font-size:11px!important;font-weight:900!important;padding:8px 12px!important}

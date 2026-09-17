@@ -6,7 +6,7 @@
   <meta name="description" content="Private interactive concept for one connected YSI system">
   <title>YSI — one connected system</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="premium.css?v=20260917-multitask2">
+  <link rel="stylesheet" href="premium.css?v=20260917-multitask4">
 </head>
 <body>
   <div class="demo-ribbon"><span>PRIVATE INTERACTIVE CONCEPT</span><span>SYNTHETIC DATA</span><span>NO YSI ACCOUNT CONNECTION</span></div>
@@ -80,7 +80,7 @@
           <div class="delivery-grid">
             <article class="surface sofia-surface is-current" data-step="created"><small>SOFIA · WEB</small><span class="surface-state">Create</span><h3 id="sofia-title">Prepare the next course page</h3><p id="sofia-detail">Owner · Sergey<br>Due · Today, 18:00</p><b id="sofia-status">Draft</b></article>
             <article class="surface phone-surface" data-step="received"><small id="phone-kicker">SERGEY · TELEGRAM</small><span class="surface-state">Receive</span><h3 id="phone-title">Waiting for an assignment</h3><p id="phone-detail">The task will appear here with its owner and due time.</p><button id="complete-task" disabled>Submit work + proof</button></article>
-            <article class="surface review-surface" data-step="review"><small>SOFIA · REVIEW QUEUE</small><span class="surface-state">Review</span><div class="proof-thumb" id="proof-thumb"><i>+</i><span>text · screenshot · URL</span></div><h3 id="review-title">Nothing to review yet</h3><p id="review-detail">Completed work returns with evidence.</p><b id="review-status">Waiting</b><button id="accept-task" class="accept-button" type="button" hidden>Accept &amp; archive ✓</button></article>
+            <article class="surface review-surface" data-step="review"><small>SOFIA · REVIEW QUEUE</small><span class="surface-state">Review</span><div class="proof-thumb" id="proof-thumb"><i>+</i><span>text · screenshot · URL</span></div><h3 id="review-title">Nothing to review yet</h3><p id="review-detail">Completed work returns with evidence.</p><b id="review-status">Waiting</b><div id="review-actions" class="review-actions" hidden><button id="rework-task" class="rework-button" type="button">Needs rework</button><button id="confirm-task" class="accept-button" type="button">Confirm ✓</button></div><div id="rework-box" class="rework-box" hidden><input id="rework-note" placeholder="What needs fixing?" maxlength="140"><button id="send-rework" type="button">Send back</button></div></article>
           </div>
           <div class="event-log"><span>LOCAL EVENT TRACE</span><p id="event-trace">No event created yet.</p><button id="retry-event" disabled title="Negative control">Retry same event</button></div>
         </section>
@@ -177,6 +177,6 @@
       <div class="price-decision"><div><small>FULL CONNECTED YSI SYSTEM</small><strong>from $35,000</strong><span>Fixed first-build quote after workflow review</span></div><button id="copy-brief" class="primary">Copy the meeting brief <span>→</span></button><p id="copy-status" aria-live="polite"></p></div>
     </section>
   </main>
-  <script src="app.js?v=20260917-multitask2"></script>
+  <script src="app.js?v=20260917-multitask4"></script>
 </body>
 </html>

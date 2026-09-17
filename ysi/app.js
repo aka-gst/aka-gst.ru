@@ -39,32 +39,34 @@ function currentTask(){
   if(found&&found.status!=='archived')return found;
   const list=activeTasks();return list[list.length-1]||null;
 }
+const taskStatusLabel=t=>t.status==='review'?'Needs review':t.status==='rework'?'Sent back for rework':'In progress';
 function renderTaskList(){
   const list=$('#task-list');if(!list)return;
-  const tasks=activeTasks(),current=currentTask();
-  list.innerHTML=tasks.length?tasks.map(t=>`<button type="button" class="task-row${current&&t.id===current.id?' is-active':''}" data-task-id="${t.id}"><b>${t.title}</b><span>${t.owner} · ${t.status==='review'?'Needs review':'In progress'}</span></button>`).join(''):'<p class="task-list-empty">No active tasks yet — assign one below.</p>';
+  const tasks=[...activeTasks()].reverse(),current=currentTask();
+  list.innerHTML=tasks.length?tasks.map(t=>`<button type="button" class="task-row${current&&t.id===current.id?' is-active':''}" data-task-id="${t.id}"><b>${t.title}</b><span>${t.owner} · Due ${t.due} · ${taskStatusLabel(t)}</span></button>`).join(''):'<p class="task-list-empty">No active tasks yet — assign one below.</p>';
   $$('.task-row',list).forEach(x=>x.addEventListener('click',()=>{state.currentTaskId=x.dataset.taskId;saveState();renderOperations()}));
-  const archived=archivedTasks();$('#archive-count').textContent=`(${archived.length})`;
-  $('#archive-list').innerHTML=archived.length?archived.map(t=>`<div class="archive-row-item"><b>${t.title}</b><span>${t.owner}</span></div>`).join(''):'<p class="task-list-empty">Nothing archived yet.</p>';
+  const archived=[...archivedTasks()].reverse();$('#archive-count').textContent=`(${archived.length})`;
+  $('#archive-list').innerHTML=archived.length?archived.map(t=>`<div class="archive-row-item"><b>${t.title}</b><span>${t.owner} · Due ${t.due}</span></div>`).join(''):'<p class="task-list-empty">Nothing archived yet.</p>';
 }
 function renderOperations(){
   if(opsMode==='student')return renderStudentUpdate();
   $('#flow-title').textContent='Assignment delivery';
-  $('#accept-task').textContent='Accept & archive ✓';
+  $('#rework-box').hidden=true;
   renderTaskList();
   const task=currentTask();
   if(!task){
-    $('#sofia-title').textContent='Prepare the next course page';$('#sofia-detail').innerHTML='Owner · Sergey<br>Due · Today, 18:00';$('#sofia-status').textContent='Draft';
+    $('#sofia-title').textContent='Prepare the next course page';$('#sofia-detail').innerHTML='Owner · Sergey<br>Due · Today, 18:00';$('#sofia-status').textContent='Draft';$('#sofia-status').classList.remove('status-success');
     $('#phone-kicker').textContent='✈ SERGEY · TELEGRAM';$('#phone-title').textContent='Waiting for an assignment';$('#phone-detail').textContent='The task will appear here with its owner and due time.';$('#complete-task').disabled=true;$('#complete-task').textContent='Submit work + proof';
-    $('#review-title').textContent='Nothing to review yet';$('#review-detail').textContent='Completed work returns with evidence.';$('#review-status').textContent='Waiting';$('#proof-thumb').classList.remove('has-proof');$('#accept-task').hidden=true;
+    $('#review-title').textContent='Nothing to review yet';$('#review-detail').textContent='Completed work returns with evidence.';$('#review-status').textContent='Waiting';$('#proof-thumb').classList.remove('has-proof');$('#review-actions').hidden=true;
     $('#event-trace').textContent='No event created yet.';$('#retry-event').disabled=true;setFlow('created','Ready for Sofia');return;
   }
-  $('#sofia-title').textContent=task.title;$('#sofia-detail').innerHTML=`Owner · ${task.owner}<br>Due · ${task.due}`;$('#sofia-status').textContent=task.status==='review'?'Needs review':'Delivered';
-  $('#phone-kicker').textContent=`✈ ${task.owner.toUpperCase()} · TELEGRAM`;$('#phone-title').textContent=task.title;$('#phone-detail').textContent=`Due ${task.due}. ${task.note}`;$('#complete-task').disabled=task.status==='review';$('#complete-task').textContent=task.status==='review'?'Submitted ✓':'Submit work + proof';
-  $('#review-title').textContent=task.status==='review'?task.title:'Nothing to review yet';$('#review-detail').textContent=task.status==='review'?'Text, screenshot and URL attached · completed just now':'Completed work returns with evidence.';$('#review-status').textContent=task.status==='review'?'Needs review':'Waiting';$('#proof-thumb').classList.toggle('has-proof',task.status==='review');
-  $('#accept-task').hidden=task.status!=='review';
-  $('#event-trace').textContent=task.status==='review'?'task.submitted → proof.attached → review.requested':`task.assigned → ${task.owner.toLowerCase()}.delivered`;$('#retry-event').disabled=false;
-  setFlow(task.status==='review'?'review':'received',task.status==='review'?'Back with Sofia for review':'Delivered to Sergey');
+  const isRework=task.status==='rework';
+  $('#sofia-title').textContent=task.title;$('#sofia-detail').innerHTML=`Owner · ${task.owner}<br>Due · ${task.due}`;$('#sofia-status').textContent=task.status==='review'?'Needs review':isRework?'Sent back':'Delivered';$('#sofia-status').classList.remove('status-success');
+  $('#phone-kicker').textContent=`✈ ${task.owner.toUpperCase()} · TELEGRAM`;$('#phone-title').textContent=task.title;$('#phone-detail').textContent=isRework?`Sofia asked for a rework: “${task.reworkNote||'see notes'}”. Resubmit when ready.`:`Due ${task.due}. ${task.note}`;$('#complete-task').disabled=task.status==='review';$('#complete-task').textContent=task.status==='review'?'Submitted ✓':isRework?'Resubmit work + proof':'Submit work + proof';
+  $('#review-title').textContent=task.status==='review'?task.title:'Nothing to review yet';$('#review-detail').textContent=task.status==='review'?'Text, screenshot and URL attached · completed just now':isRework?'Waiting for a resubmit after rework.':'Completed work returns with evidence.';$('#review-status').textContent=task.status==='review'?'Needs review':isRework?'Rework requested':'Waiting';$('#proof-thumb').classList.toggle('has-proof',task.status==='review');
+  $('#review-actions').hidden=task.status!=='review';$('#rework-task').hidden=false;$('#confirm-task').hidden=false;$('#confirm-task').textContent='Confirm ✓';
+  $('#event-trace').textContent=task.status==='review'?'task.submitted → proof.attached → review.requested':isRework?'review.reworked → owner.notified':`task.assigned → ${task.owner.toLowerCase()}.delivered`;$('#retry-event').disabled=false;
+  setFlow(task.status==='review'?'review':'received',task.status==='review'?'Back with Sofia for review':isRework?'Sent back for rework':'Delivered to Sergey');
 }
 async function animateTask(){
   const task={id:`task-${Date.now()}`,title:$('#task-title').value.trim()||'Prepare the next course page',owner:$('#task-owner').value,due:$('#task-due').value,note:$('#task-note').value.trim(),status:'assigned'};
@@ -86,7 +88,7 @@ $('#retry-event').addEventListener('click',()=>{
   $('#event-trace').textContent=added?'Event accepted':'Duplicate event ignored · one task remains';
   $('#retry-event').classList.add('confirmed');setTimeout(()=>$('#retry-event').classList.remove('confirmed'),700);
 });
-$('#accept-task').addEventListener('click',()=>{
+$('#confirm-task').addEventListener('click',()=>{
   if(opsMode==='student'){
     if(!state.update||state.update.status==='paid')return;
     state.update.status='paid';eventOnce({id:`${state.update.id}:paid`,type:'payment.confirmed'});
@@ -96,6 +98,15 @@ $('#accept-task').addEventListener('click',()=>{
   const task=currentTask();if(!task||task.status!=='review')return;
   task.status='archived';eventOnce({id:`${task.id}:accepted`,type:'task.accepted'});
   state.currentTaskId=activeTasks()[activeTasks().length-1]?.id||null;saveState();renderOperations();
+});
+$('#rework-task').addEventListener('click',()=>{
+  const task=currentTask();if(!task||task.status!=='review')return;
+  $('#review-actions').hidden=true;$('#rework-box').hidden=false;$('#rework-note').value='';$('#rework-note').focus();
+});
+$('#send-rework').addEventListener('click',()=>{
+  const task=currentTask();if(!task)return;
+  task.status='rework';task.reworkNote=$('#rework-note').value.trim()||'Please redo this one.';
+  eventOnce({id:`${task.id}:reworked`,type:'review.reworked'});$('#rework-box').hidden=true;saveState();renderOperations();
 });
 $('#toggle-archive').addEventListener('click',()=>{
   const el=$('#archive-list');el.hidden=!el.hidden;$('#toggle-archive').classList.toggle('is-active',!el.hidden);
@@ -113,11 +124,11 @@ function renderProfiles(){
 }
 function renderStudentUpdate(){
   $('#flow-title').textContent='Course offer & access';const update=state.update;
-  $('#accept-task').textContent='Confirm payment received';
-  $('#sofia-title').textContent=update?update.programme:'Offer a course';$('#sofia-detail').innerHTML=update?`Buyer · ${update.buyer}<br>Price · ${update.price}`:'Choose a programme and a prospective buyer.';$('#sofia-status').textContent=update?(update.status==='paid'?'Access granted':'Awaiting payment'):'Draft';
+  $('#rework-box').hidden=true;
+  $('#sofia-title').textContent=update?update.programme:'Offer a course';$('#sofia-detail').innerHTML=update?`Buyer · ${update.buyer}<br>Price · ${update.price}`:'Choose a programme and a prospective buyer.';$('#sofia-status').textContent=update?(update.status==='paid'?'✓ Access granted':'Awaiting payment'):'Draft';$('#sofia-status').classList.toggle('status-success',update?.status==='paid');
   $('#phone-kicker').textContent=update?`✈ ${update.buyer.toUpperCase()} · TELEGRAM`:'✈ TELEGRAM';$('#phone-title').textContent=update?`${update.programme} — ${update.price}`:'Waiting for an offer';$('#phone-detail').textContent=update?(update.status==='paid'?'Access granted — open the class from your member library.':'Awaiting payment confirmation from Sofia.'):'A course offer will appear here for the prospective buyer.';$('#complete-task').disabled=true;$('#complete-task').textContent=update?(update.status==='paid'?'Access open':'Awaiting payment'):'No offer yet';
-  $('#review-title').textContent=update?(update.status==='paid'?'Payment confirmed':'Confirm payment received'):'No offer yet';$('#review-detail').textContent=update?'Sofia confirms payment manually here — never automatic, never assumed.':'An offer will appear here for confirmation.';$('#review-status').textContent=update?(update.status==='paid'?'Done':'Needs confirmation'):'Waiting';$('#proof-thumb').classList.toggle('has-proof',update?.status==='paid');
-  $('#accept-task').hidden=!(update&&update.status!=='paid');
+  $('#review-title').textContent=update?(update.status==='paid'?'Payment confirmed':'Confirm payment received'):'No offer yet';$('#review-detail').textContent=update?(update.status==='paid'?'Sofia confirmed the payment manually — never automatic, never assumed.':`(${update.buyer} says she paid — check the real payment, then confirm here.)`):'An offer will appear here for confirmation.';$('#review-status').textContent=update?(update.status==='paid'?'✓ Done':'Needs confirmation'):'Waiting';$('#review-status').classList.toggle('status-success',update?.status==='paid');$('#proof-thumb').classList.toggle('has-proof',update?.status==='paid');
+  $('#review-actions').hidden=!(update&&update.status!=='paid');$('#rework-task').hidden=true;$('#confirm-task').hidden=false;$('#confirm-task').textContent='Confirm payment received';
   $('#event-trace').textContent=update?(update.status==='paid'?'offer.sent → payment.confirmed → access.opened':'offer.sent → buyer.notified'):'No event created yet.';$('#retry-event').disabled=!update;
   setFlow(update?(update.status==='paid'?'review':'received'):'created',update?(update.status==='paid'?'Access granted':'Awaiting payment confirmation'):'Ready to send an offer');
   renderProfiles();
