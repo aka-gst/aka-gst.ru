@@ -49,7 +49,7 @@
     <section id="operations" class="screen" aria-labelledby="operations-title">
       <header class="screen-intro compact">
         <div><span class="eyebrow">PRODUCT 01 · YSI OPERATIONS</span><h1 id="operations-title">From assignment to proof — without chasing people.</h1></div>
-        <div class="mode-switch" role="tablist" aria-label="Operations scenario"><button class="is-active" data-ops-mode="team">Team task</button><button data-ops-mode="student">Student update</button></div>
+        <div class="mode-switch" role="tablist" aria-label="Operations scenario"><button class="is-active" data-ops-mode="team">Team task</button><button data-ops-mode="student">Course offer to a buyer</button></div>
       </header>
       <div class="operations-layout">
         <section class="control-panel glass" aria-label="Create operation">
@@ -60,14 +60,18 @@
             <label>Context <input id="task-note" value="Use the approved course description"></label>
             <button id="assign-task" class="primary wide">Assign to Sergey <span>→</span></button>
             <p class="micro-boundary">The candidate Telegram flow uses @ysi_flow_bot only after both people opt in and activate a one-use link. Nothing is sent from this page.</p>
+            <div id="task-list" class="task-list" aria-label="Active tasks"></div>
+            <div class="archive-row"><button id="toggle-archive" type="button">Archive <span id="archive-count">(0)</span></button></div>
+            <div id="archive-list" class="archive-list" hidden></div>
           </div>
           <div id="student-controls" class="control-view">
-            <div class="actor-row"><span class="avatar maya">M</span><div><small>MAYA · COURSE PARTICIPANT</small><b>Choose updates</b></div><span class="live-pill" title="Bot identity candidate; not selected or installed in Telegram"><img src="assets/ysi-flow-avatar.png" alt="YSI Flow bot candidate">Bot candidate</span></div>
-            <label class="choice"><input id="course-optin" type="checkbox" checked><span><b>Course &amp; video updates</b><small>Only topics Maya chooses</small></span></label>
+            <div class="actor-row"><span class="avatar sofia">S</span><div><small>SOFIA · PROGRAM LEAD</small><b>Offer a course</b></div><span class="live-pill" title="Bot identity candidate; not selected or installed in Telegram"><img src="assets/ysi-flow-avatar.png" alt="YSI Flow bot candidate">Bot candidate</span></div>
+            <label>Prospective buyer <input id="buyer-name" value="Maya"></label>
             <label>Programme <select id="programme"><option>The Union of Day and Night</option><option>Lady Niguma Foundation I</option></select></label>
-            <label>New item <input id="update-title" value="Class recording is ready"></label>
-            <button id="publish-update" class="primary wide">Preview student delivery <span>→</span></button>
-            <p class="micro-boundary">A course participant is never a worker. Access is previewed, not connected to Kajabi or payment.</p>
+            <label>Price <input id="programme-price" value="$220"></label>
+            <button id="publish-update" class="primary wide">Send course offer <span>→</span></button>
+            <p class="micro-boundary">A prospective buyer is not an existing student yet. Access opens only after Sofia confirms payment here — never automatically.</p>
+            <div id="profile-row" class="profile-row" aria-label="Programme subscriber profiles"></div>
           </div>
         </section>
         <section class="delivery-stage" aria-label="Delivery flow">
@@ -76,7 +80,7 @@
           <div class="delivery-grid">
             <article class="surface sofia-surface is-current" data-step="created"><small>SOFIA · WEB</small><span class="surface-state">Create</span><h3 id="sofia-title">Prepare the next course page</h3><p id="sofia-detail">Owner · Sergey<br>Due · Today, 18:00</p><b id="sofia-status">Draft</b></article>
             <article class="surface phone-surface" data-step="received"><small id="phone-kicker">SERGEY · TELEGRAM</small><span class="surface-state">Receive</span><h3 id="phone-title">Waiting for an assignment</h3><p id="phone-detail">The task will appear here with its owner and due time.</p><button id="complete-task" disabled>Submit work + proof</button></article>
-            <article class="surface review-surface" data-step="review"><small>SOFIA · REVIEW QUEUE</small><span class="surface-state">Review</span><div class="proof-thumb" id="proof-thumb"><i>+</i><span>text · screenshot · URL</span></div><h3 id="review-title">Nothing to review yet</h3><p id="review-detail">Completed work returns with evidence.</p><b id="review-status">Waiting</b></article>
+            <article class="surface review-surface" data-step="review"><small>SOFIA · REVIEW QUEUE</small><span class="surface-state">Review</span><div class="proof-thumb" id="proof-thumb"><i>+</i><span>text · screenshot · URL</span></div><h3 id="review-title">Nothing to review yet</h3><p id="review-detail">Completed work returns with evidence.</p><b id="review-status">Waiting</b><button id="accept-task" class="accept-button" type="button" hidden>Accept &amp; archive ✓</button></article>
           </div>
           <div class="event-log"><span>LOCAL EVENT TRACE</span><p id="event-trace">No event created yet.</p><button id="retry-event" disabled title="Negative control">Retry same event</button></div>
         </section>
@@ -134,7 +138,7 @@
         </form>
         <section class="practice-stage" aria-label="Practice on chosen devices">
           <div class="sync-rail"><span>WEB</span><i></i><span>PHONE</span><i></i><span>TELEGRAM</span></div>
-          <article class="practice-surface web-diary"><div class="surface-brand"><b>YSI</b><span>My practice</span></div><small id="web-label">MEDITATION · PLANNED</small><h3 id="web-practice-title">Ten quiet minutes</h3><p id="web-practice-detail">Today · 19:30<br>Return gently to the breath.</p><b class="preview-chip">LOCAL PREVIEW</b></article>
+          <article class="practice-surface web-diary"><div class="surface-brand"><b>YSI</b><span>My practice</span></div><div id="web-practice-list" class="web-practice-list"></div><b class="preview-chip">LOCAL PREVIEW</b></article>
           <article class="practice-surface mini-phone"><small id="mobile-label">TODAY’S MEDITATION</small><h3 id="mobile-practice-title">Ten quiet minutes</h3><p id="mobile-practice-detail">10 minutes<br>19:30</p><i>Saved</i></article>
           <article class="practice-surface telegram-preview"><small id="telegram-label">TELEGRAM · OPT-IN PREVIEW</small><h3 id="telegram-practice-title">Meditation reminder</h3><p id="telegram-practice-detail">Ten quiet minutes begins at 19:30.</p><b class="preview-chip">NOT SENT</b></article>
           <div id="sync-packet" class="sync-packet"><i></i><span>saving one current state</span></div>

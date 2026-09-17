@@ -11,8 +11,10 @@ $$('[data-screen]').forEach(x=>x.addEventListener('click',()=>showScreen(x.datas
 $$('[data-go]').forEach(x=>x.addEventListener('click',()=>showScreen(x.dataset.go)));
 addEventListener('hashchange',()=>showScreen(location.hash.slice(1),false));
 
-const storeKey='ysi-connected-demo-v2';
-const state=Object.assign({events:[],task:null,update:null,practice:null},JSON.parse(localStorage.getItem(storeKey)||'{}'));
+const storeKey='ysi-connected-demo-v3';
+const defaultProfiles=()=>({'The Union of Day and Night':{count:0,names:[]},'Lady Niguma Foundation I':{count:0,names:[]}});
+const state=Object.assign({events:[],tasks:[],currentTaskId:null,update:null,practices:{},profiles:defaultProfiles()},JSON.parse(localStorage.getItem(storeKey)||'{}'));
+if(!state.profiles||!Object.keys(state.profiles).length)state.profiles=defaultProfiles();
 const saveState=()=>localStorage.setItem(storeKey,JSON.stringify(state));
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,reduceMotion?0:ms));
 function eventOnce(event){if(state.events.some(x=>x.id===event.id))return false;state.events.push(event);saveState();return true}
@@ -28,25 +30,45 @@ function setFlow(step,text){
   $$('.delivery-stage .surface').forEach(x=>x.classList.toggle('is-current',x.dataset.step===step));
   $('#flow-status').innerHTML=`<i></i>${text}`;
 }
+
+// ---- Team task scenario: several tasks at once, with an archive ----
+const activeTasks=()=>state.tasks.filter(t=>t.status!=='archived');
+const archivedTasks=()=>state.tasks.filter(t=>t.status==='archived');
+function currentTask(){
+  const found=state.tasks.find(t=>t.id===state.currentTaskId);
+  if(found&&found.status!=='archived')return found;
+  const list=activeTasks();return list[list.length-1]||null;
+}
+function renderTaskList(){
+  const list=$('#task-list');if(!list)return;
+  const tasks=activeTasks(),current=currentTask();
+  list.innerHTML=tasks.length?tasks.map(t=>`<button type="button" class="task-row${current&&t.id===current.id?' is-active':''}" data-task-id="${t.id}"><b>${t.title}</b><span>${t.owner} · ${t.status==='review'?'Needs review':'In progress'}</span></button>`).join(''):'<p class="task-list-empty">No active tasks yet — assign one below.</p>';
+  $$('.task-row',list).forEach(x=>x.addEventListener('click',()=>{state.currentTaskId=x.dataset.taskId;saveState();renderOperations()}));
+  const archived=archivedTasks();$('#archive-count').textContent=`(${archived.length})`;
+  $('#archive-list').innerHTML=archived.length?archived.map(t=>`<div class="archive-row-item"><b>${t.title}</b><span>${t.owner}</span></div>`).join(''):'<p class="task-list-empty">Nothing archived yet.</p>';
+}
 function renderOperations(){
   if(opsMode==='student')return renderStudentUpdate();
   $('#flow-title').textContent='Assignment delivery';
-  const task=state.task;
+  $('#accept-task').textContent='Accept & archive ✓';
+  renderTaskList();
+  const task=currentTask();
   if(!task){
     $('#sofia-title').textContent='Prepare the next course page';$('#sofia-detail').innerHTML='Owner · Sergey<br>Due · Today, 18:00';$('#sofia-status').textContent='Draft';
     $('#phone-kicker').textContent='✈ SERGEY · TELEGRAM';$('#phone-title').textContent='Waiting for an assignment';$('#phone-detail').textContent='The task will appear here with its owner and due time.';$('#complete-task').disabled=true;$('#complete-task').textContent='Submit work + proof';
-    $('#review-title').textContent='Nothing to review yet';$('#review-detail').textContent='Completed work returns with evidence.';$('#review-status').textContent='Waiting';$('#proof-thumb').classList.remove('has-proof');
+    $('#review-title').textContent='Nothing to review yet';$('#review-detail').textContent='Completed work returns with evidence.';$('#review-status').textContent='Waiting';$('#proof-thumb').classList.remove('has-proof');$('#accept-task').hidden=true;
     $('#event-trace').textContent='No event created yet.';$('#retry-event').disabled=true;setFlow('created','Ready for Sofia');return;
   }
   $('#sofia-title').textContent=task.title;$('#sofia-detail').innerHTML=`Owner · ${task.owner}<br>Due · ${task.due}`;$('#sofia-status').textContent=task.status==='review'?'Needs review':'Delivered';
   $('#phone-kicker').textContent=`✈ ${task.owner.toUpperCase()} · TELEGRAM`;$('#phone-title').textContent=task.title;$('#phone-detail').textContent=`Due ${task.due}. ${task.note}`;$('#complete-task').disabled=task.status==='review';$('#complete-task').textContent=task.status==='review'?'Submitted ✓':'Submit work + proof';
   $('#review-title').textContent=task.status==='review'?task.title:'Nothing to review yet';$('#review-detail').textContent=task.status==='review'?'Text, screenshot and URL attached · completed just now':'Completed work returns with evidence.';$('#review-status').textContent=task.status==='review'?'Needs review':'Waiting';$('#proof-thumb').classList.toggle('has-proof',task.status==='review');
+  $('#accept-task').hidden=task.status!=='review';
   $('#event-trace').textContent=task.status==='review'?'task.submitted → proof.attached → review.requested':`task.assigned → ${task.owner.toLowerCase()}.delivered`;$('#retry-event').disabled=false;
   setFlow(task.status==='review'?'review':'received',task.status==='review'?'Back with Sofia for review':'Delivered to Sergey');
 }
 async function animateTask(){
   const task={id:`task-${Date.now()}`,title:$('#task-title').value.trim()||'Prepare the next course page',owner:$('#task-owner').value,due:$('#task-due').value,note:$('#task-note').value.trim(),status:'assigned'};
-  state.task=task;eventOnce({id:task.id,type:'task.assigned'});renderOperations();
+  state.tasks.push(task);state.currentTaskId=task.id;eventOnce({id:task.id,type:'task.assigned'});saveState();renderOperations();
   $('.delivery-stage').classList.add('is-delivering');await wait(720);$('.delivery-stage').classList.remove('is-delivering');
 }
 $('#assign-task').addEventListener('click',animateTask);
@@ -54,24 +76,56 @@ const updateAssignLabel=()=>{$('#assign-task').innerHTML=`Assign to ${$('#task-o
 $('#task-owner').addEventListener('change',updateAssignLabel);
 updateAssignLabel();
 $('#complete-task').addEventListener('click',async()=>{
-  if(!state.task)return;state.task.status='review';eventOnce({id:`${state.task.id}:submitted`,type:'task.submitted'});saveState();
+  if(opsMode==='student')return;
+  const task=currentTask();if(!task)return;task.status='review';eventOnce({id:`${task.id}:submitted`,type:'task.submitted'});saveState();
   $('.proof-thumb').classList.add('proof-arriving');renderOperations();await wait(700);$('.proof-thumb').classList.remove('proof-arriving');
 });
 $('#retry-event').addEventListener('click',()=>{
-  if(!state.task)return;const added=eventOnce({id:state.task.id,type:'task.assigned'});
+  if(opsMode==='student'){if(!state.update)return;const added=eventOnce({id:state.update.id,type:'offer.sent'});$('#event-trace').textContent=added?'Event accepted':'Duplicate event ignored · one offer remains';$('#retry-event').classList.add('confirmed');setTimeout(()=>$('#retry-event').classList.remove('confirmed'),700);return}
+  const task=currentTask();if(!task)return;const added=eventOnce({id:task.id,type:'task.assigned'});
   $('#event-trace').textContent=added?'Event accepted':'Duplicate event ignored · one task remains';
   $('#retry-event').classList.add('confirmed');setTimeout(()=>$('#retry-event').classList.remove('confirmed'),700);
 });
+$('#accept-task').addEventListener('click',()=>{
+  if(opsMode==='student'){
+    if(!state.update||state.update.status==='paid')return;
+    state.update.status='paid';eventOnce({id:`${state.update.id}:paid`,type:'payment.confirmed'});
+    const p=state.profiles[state.update.programme];if(p){p.count++;p.names.push(state.update.buyer)}
+    saveState();renderStudentUpdate();return;
+  }
+  const task=currentTask();if(!task||task.status!=='review')return;
+  task.status='archived';eventOnce({id:`${task.id}:accepted`,type:'task.accepted'});
+  state.currentTaskId=activeTasks()[activeTasks().length-1]?.id||null;saveState();renderOperations();
+});
+$('#toggle-archive').addEventListener('click',()=>{
+  const el=$('#archive-list');el.hidden=!el.hidden;$('#toggle-archive').classList.toggle('is-active',!el.hidden);
+});
+
+// ---- Student scenario: offer a course to a prospective buyer, Sofia confirms payment, access opens ----
+function renderProfiles(){
+  const row=$('#profile-row');if(!row)return;
+  row.innerHTML=Object.entries(state.profiles).map(([name,p])=>`<button type="button" class="profile-chip" data-programme="${name}"><b>${name}</b><span>+${p.count} subscriber${p.count===1?'':'s'}</span></button>`).join('');
+  $$('.profile-chip',row).forEach(x=>x.addEventListener('click',()=>{
+    const existing=x.querySelector('.profile-names');if(existing){existing.remove();return}
+    $$('.profile-names',row).forEach(n=>n.remove());
+    const p=state.profiles[x.dataset.programme],el=document.createElement('div');el.className='profile-names';el.textContent=p.names.length?p.names.join(', '):'No subscribers yet';x.append(el);
+  }));
+}
 function renderStudentUpdate(){
-  $('#flow-title').textContent='Student programme delivery';const update=state.update;
-  $('#sofia-title').textContent=update?.programme||'The Union of Day and Night';$('#sofia-detail').innerHTML='Audience · opted-in students<br>Access · enrolled members';$('#sofia-status').textContent=update?'Preview sent':'Draft';
-  $('#phone-kicker').textContent='✈ MAYA · TELEGRAM';$('#phone-title').textContent=update?.title||'Waiting for chosen updates';$('#phone-detail').textContent=update?`${update.programme} · Open the class from your member library.`:'Maya receives only programmes she selected.';$('#complete-task').disabled=true;$('#complete-task').textContent=update?'Open member access':'No update yet';
-  $('#review-title').textContent=update?'Delivery receipt':'No delivery yet';$('#review-detail').textContent=update?'Maya · received · allowed course route shown':'An opted-out delivery never turns green.';$('#review-status').textContent=update?'Delivered':'Waiting';$('#proof-thumb').classList.toggle('has-proof',Boolean(update));
-  $('#event-trace').textContent=update?'programme.updated → preference.checked → maya.delivered':'No event created yet.';$('#retry-event').disabled=!update;setFlow(update?'review':'created',update?'Delivered to opted-in participant':'Ready for a programme update');
+  $('#flow-title').textContent='Course offer & access';const update=state.update;
+  $('#accept-task').textContent='Confirm payment received';
+  $('#sofia-title').textContent=update?update.programme:'Offer a course';$('#sofia-detail').innerHTML=update?`Buyer · ${update.buyer}<br>Price · ${update.price}`:'Choose a programme and a prospective buyer.';$('#sofia-status').textContent=update?(update.status==='paid'?'Access granted':'Awaiting payment'):'Draft';
+  $('#phone-kicker').textContent=update?`✈ ${update.buyer.toUpperCase()} · TELEGRAM`:'✈ TELEGRAM';$('#phone-title').textContent=update?`${update.programme} — ${update.price}`:'Waiting for an offer';$('#phone-detail').textContent=update?(update.status==='paid'?'Access granted — open the class from your member library.':'Awaiting payment confirmation from Sofia.'):'A course offer will appear here for the prospective buyer.';$('#complete-task').disabled=true;$('#complete-task').textContent=update?(update.status==='paid'?'Access open':'Awaiting payment'):'No offer yet';
+  $('#review-title').textContent=update?(update.status==='paid'?'Payment confirmed':'Confirm payment received'):'No offer yet';$('#review-detail').textContent=update?'Sofia confirms payment manually here — never automatic, never assumed.':'An offer will appear here for confirmation.';$('#review-status').textContent=update?(update.status==='paid'?'Done':'Needs confirmation'):'Waiting';$('#proof-thumb').classList.toggle('has-proof',update?.status==='paid');
+  $('#accept-task').hidden=!(update&&update.status!=='paid');
+  $('#event-trace').textContent=update?(update.status==='paid'?'offer.sent → payment.confirmed → access.opened':'offer.sent → buyer.notified'):'No event created yet.';$('#retry-event').disabled=!update;
+  setFlow(update?(update.status==='paid'?'review':'received'):'created',update?(update.status==='paid'?'Access granted':'Awaiting payment confirmation'):'Ready to send an offer');
+  renderProfiles();
 }
 $('#publish-update').addEventListener('click',async()=>{
-  if(!$('#course-optin').checked){$('#event-trace').textContent='Delivery stopped · Maya did not opt in';setFlow('created','Not delivered — consent required');return}
-  const update={id:`update-${Date.now()}`,programme:$('#programme').value,title:$('#update-title').value.trim()||'Class recording is ready'};state.update=update;eventOnce({id:update.id,type:'programme.updated'});renderStudentUpdate();$('.delivery-stage').classList.add('is-delivering');await wait(720);$('.delivery-stage').classList.remove('is-delivering');
+  const update={id:`update-${Date.now()}`,programme:$('#programme').value,buyer:$('#buyer-name').value.trim()||'Maya',price:$('#programme-price').value.trim()||'$220',status:'pending'};
+  state.update=update;eventOnce({id:update.id,type:'offer.sent'});saveState();renderStudentUpdate();
+  $('.delivery-stage').classList.add('is-delivering');await wait(720);$('.delivery-stage').classList.remove('is-delivering');
 });
 
 const guideTopics=[
@@ -153,41 +207,52 @@ $('#listen-question').addEventListener('click',()=>{
 $('#speak-answer').addEventListener('click',()=>{if(!lastAnswer||!speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(lastAnswer);u.lang='en-US';u.rate=.88;u.pitch=.96;speechSynthesis.speak(u);$('#voice-state').textContent='Playing browser voice · press Stop any time'});
 $('#stop-answer').addEventListener('click',()=>{if(speechSynthesis)speechSynthesis.cancel();$('#voice-state').textContent='Stopped'});
 
+// ---- Practice: meditation / yoga / Buddhist diary can all be saved at once, all visible in the web profile ----
 const practiceSchemas={
-  meditation:{icon:'◌',kicker:'PLAN A MEDITATION',title:'Make room for silence.',button:'Schedule meditation',boundary:'Saved in this browser. The reminder contains time and title, never a private reflection.',fields:[['Title','text','Ten quiet minutes'],['Duration','select','10 minutes|20 minutes|40 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Guiding text','text','Return gently to the breath.']]},
-  yoga:{icon:'⌁',kicker:'PLAN YOGA',title:'Meet the body where it is.',button:'Schedule yoga',boundary:'The reminder carries the practice and time. Body notes remain private.',fields:[['Practice','select','Shavasana|Lady Niguma sequence|Morning grounding'],['Duration','select','40 minutes|20 minutes|60 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Reminder','select','1 hour before|15 minutes before|At start']]},
-  buddhist:{icon:'✦',kicker:'BUDDHIST DIARY',title:'Reflect on one chosen vow.',button:'Save private check-in',boundary:'Private by default. Telegram confirms the save but never copies Plus / Minus text.',fields:[['Vow','select','Speak with care|Give freely|Rejoice in others'],['Plus · what helped','text','I paused before replying.'],['Minus · what was difficult','text','I rushed one answer.'],['Next intention','text','Take one breath before I speak.']]}
+  meditation:{icon:'◌',kicker:'PLAN A MEDITATION',title:'Make room for silence.',button:'Schedule meditation',boundary:'Saved in this browser. The reminder contains time and title, never a private reflection.',fields:[['Title','text','Ten quiet minutes'],['Duration','select','10 minutes|20 minutes|40 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Guiding text','text','Return gently to the breath.']],label:'MEDITATION'},
+  yoga:{icon:'⌁',kicker:'PLAN YOGA',title:'Meet the body where it is.',button:'Schedule yoga',boundary:'The reminder carries the practice and time. Body notes remain private.',fields:[['Practice','select','Shavasana|Lady Niguma sequence|Morning grounding'],['Duration','select','40 minutes|20 minutes|60 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Reminder','select','1 hour before|15 minutes before|At start']],label:'YOGA'},
+  buddhist:{icon:'✦',kicker:'BUDDHIST DIARY',title:'Reflect on one chosen vow.',button:'Save private check-in',boundary:'Private by default. Telegram confirms the save but never copies Plus / Minus text.',fields:[['Vow','select','Speak with care|Give freely|Rejoice in others'],['Plus · what helped','text','I paused before replying.'],['Minus · what was difficult','text','I rushed one answer.'],['Next intention','text','Take one breath before I speak.']],label:'BUDDHIST DIARY'}
 };
-let practiceMode=state.practice?.mode||'meditation';
+let practiceMode='meditation';
 function renderPracticeForm(){
   const s=practiceSchemas[practiceMode];$('#practice-icon').textContent=s.icon;$('#practice-kicker').textContent=s.kicker;$('#practice-form-title').textContent=s.title;$('#save-practice').innerHTML=`${s.button} <span>→</span>`;$('#practice-boundary').textContent=s.boundary;
   $('#practice-fields').innerHTML=s.fields.map(([label,type,value],i)=>`<label><span>${label}</span>${type==='select'?`<select data-practice-field="${i}">${value.split('|').map(x=>`<option>${x}</option>`).join('')}</select>`:`<input data-practice-field="${i}" value="${value}">`}</label>`).join('');
-  if(state.practice?.mode===practiceMode){$$('[data-practice-field]').forEach((field,i)=>{field.value=state.practice.values[i]??field.value})}
+  if(state.practices[practiceMode]){$$('[data-practice-field]').forEach((field,i)=>{field.value=state.practices[practiceMode].values[i]??field.value})}
   $$('.practice-tabs button').forEach(x=>{const on=x.dataset.practice===practiceMode;x.classList.toggle('is-active',on);x.setAttribute('aria-selected',on?'true':'false')});
 }
 function practiceValues(){return{mode:practiceMode,values:$$('[data-practice-field]').map(x=>x.value.trim()),id:`practice-${Date.now()}`}}
-function renderPracticeSurfaces(entry=state.practice){
+function renderWebPracticeList(){
+  const list=$('#web-practice-list');if(!list)return;
+  const saved=['meditation','yoga','buddhist'].filter(m=>state.practices[m]);
+  list.innerHTML=saved.length?saved.map(m=>{
+    const e=state.practices[m],[a,b,c]=e.values,s=practiceSchemas[m];
+    const detail=m==='buddhist'?`Plus · ${b}`:`${b} · ${c}`;
+    return `<div class="web-practice-entry" data-mode="${m}"><small>${s.label}</small><b>${a}</b><span>${detail}</span></div>`;
+  }).join(''):'<p class="task-list-empty">Nothing saved yet — schedule a practice to see it here.</p>';
+}
+function renderPracticeSurfaces(entry){
+  renderWebPracticeList();
   if(!entry)return;const [a,b,c,d]=entry.values;
   if(entry.mode==='buddhist'){
-    $('#web-label').textContent='BUDDHIST DIARY · PRIVATE';$('#web-practice-title').textContent=a;$('#web-practice-detail').innerHTML=`Plus · ${b}<br>Minus · ${c}<br>Next · ${d}`;$('#mobile-label').textContent='PRIVATE CHECK-IN';$('#mobile-practice-title').textContent=a;$('#mobile-practice-detail').innerHTML='Reflection saved<br>Only you can open it';$('#telegram-label').textContent='TELEGRAM · PRIVATE CONFIRMATION';$('#telegram-practice-title').textContent='Check-in saved';$('#telegram-practice-detail').textContent='Your private reflection is available in your diary.';
+    $('#mobile-label').textContent='PRIVATE CHECK-IN';$('#mobile-practice-title').textContent=a;$('#mobile-practice-detail').innerHTML='Reflection saved<br>Only you can open it';$('#telegram-label').textContent='TELEGRAM · PRIVATE CONFIRMATION';$('#telegram-practice-title').textContent='Check-in saved';$('#telegram-practice-detail').textContent='Your private reflection is available in your diary.';
   }else if(entry.mode==='yoga'){
-    $('#web-label').textContent='YOGA · PLANNED';$('#web-practice-title').textContent=a;$('#web-practice-detail').innerHTML=`${b} · ${c}<br>Reminder · ${d}`;$('#mobile-label').textContent='TODAY’S YOGA';$('#mobile-practice-title').textContent=a;$('#mobile-practice-detail').innerHTML=`${b}<br>${c}<br>Reminder · ${d}`;$('#telegram-label').textContent='TELEGRAM · OPT-IN PREVIEW';$('#telegram-practice-title').textContent=`${a} reminder`;$('#telegram-practice-detail').textContent=`${b} · ${c} · ${d}.`;
+    $('#mobile-label').textContent='TODAY’S YOGA';$('#mobile-practice-title').textContent=a;$('#mobile-practice-detail').innerHTML=`${b}<br>${c}<br>Reminder · ${d}`;$('#telegram-label').textContent='TELEGRAM · OPT-IN PREVIEW';$('#telegram-practice-title').textContent=`${a} reminder`;$('#telegram-practice-detail').textContent=`${b} · ${c} · ${d}.`;
   }else{
-    $('#web-label').textContent='MEDITATION · PLANNED';$('#web-practice-title').textContent=a;$('#web-practice-detail').innerHTML=`${b} · ${c}<br>${d}`;$('#mobile-label').textContent='TODAY’S MEDITATION';$('#mobile-practice-title').textContent=a;$('#mobile-practice-detail').innerHTML=`${b}<br>${c}`;$('#telegram-label').textContent='TELEGRAM · OPT-IN PREVIEW';$('#telegram-practice-title').textContent='Meditation reminder';$('#telegram-practice-detail').textContent=`${a} · ${b} · ${c}.`;
+    $('#mobile-label').textContent='TODAY’S MEDITATION';$('#mobile-practice-title').textContent=a;$('#mobile-practice-detail').innerHTML=`${b}<br>${c}`;$('#telegram-label').textContent='TELEGRAM · OPT-IN PREVIEW';$('#telegram-practice-title').textContent='Meditation reminder';$('#telegram-practice-detail').textContent=`${a} · ${b} · ${c}.`;
   }
   $$('.practice-surface').forEach(x=>x.dataset.mode=entry.mode);
 }
 $$('[data-practice]').forEach(x=>x.addEventListener('click',()=>{practiceMode=x.dataset.practice;renderPracticeForm()}));
 $('#practice-form').addEventListener('submit',async e=>{
-  e.preventDefault();const entry=practiceValues();state.practice=entry;eventOnce({id:entry.id,type:`practice.${entry.mode}.saved`});saveState();
+  e.preventDefault();const entry=practiceValues();state.practices[practiceMode]=entry;eventOnce({id:entry.id,type:`practice.${entry.mode}.saved`});saveState();
   const packet=$('#sync-packet');packet.classList.add('is-moving');await wait(540);renderPracticeSurfaces(entry);
   $$('.practice-surface').forEach((card,i)=>setTimeout(()=>card.classList.add('just-arrived'),reduceMotion?0:i*90));await wait(540);
   packet.classList.remove('is-moving');$$('.practice-surface').forEach(x=>x.classList.remove('just-arrived'));$('#practice-toast').classList.add('is-visible');setTimeout(()=>$('#practice-toast').classList.remove('is-visible'),2200);
 });
 
 $('#copy-brief').addEventListener('click',async()=>{
-  const text='YSI connected system — meeting brief\n\n1. YSI Operations: internal assignment → delivery → proof → review, plus opted-in student programme updates.\n2. Site Companion: natural-language public-site help with approved sources and safe handoff.\n3. Practice Companion: distinct meditation, yoga and Buddhist diary forms with one notification layer.\n\nPrivate demo: no YSI/Kajabi account connection, payment or production sync. Live @ysi_flow_bot acceptance is tracked separately.\n\nFull connected system: from $35,000. Fixed first-build quote follows one workflow review.';
+  const text='YSI connected system — meeting brief\n\n1. YSI Operations: internal assignment → delivery → proof → review → archive, plus a course-offer → payment-confirmed → access flow for prospective buyers.\n2. Site Companion: natural-language public-site help with approved sources and safe handoff.\n3. Practice Companion: distinct meditation, yoga and Buddhist diary forms with one notification layer, all visible together in one profile.\n\nPrivate demo: no YSI/Kajabi account connection, payment or production sync. Live @ysi_flow_bot acceptance is tracked separately.\n\nFull connected system: from $35,000. Fixed first-build quote follows one workflow review.';
   try{await navigator.clipboard.writeText(text);$('#copy-status').textContent='Copied · nothing was sent.'}catch{$('#copy-status').textContent='Copy is blocked in this browser.'}
 });
 window.__YSI_GUIDE_TEST__={eventSourceFresh,loadEventSource,getEventSource:()=>eventSource,answerQuestion};
-renderPracticeForm();renderPracticeSurfaces();renderOperations();loadEventSource();showScreen(location.hash.slice(1)||'overview',false);
+renderPracticeForm();renderPracticeSurfaces(state.practices[practiceMode]);renderOperations();loadEventSource();showScreen(location.hash.slice(1)||'overview',false);
