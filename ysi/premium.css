@@ -168,3 +168,14 @@ main{height:calc(100dvh - 111px);position:relative;overflow:hidden}.screen{posit
 .offer-head h1{font-size:clamp(28px,3vw,42px)!important;margin:8px 0 0!important}
 .offer-head p{max-width:640px;font-size:13px;margin-top:6px}
 #offer{padding-top:14px!important}
+
+/* orion proof banner, offer hero shrink, dharma-ai mention, diary-bot proof — 17.09 late night */
+.orion-proof-banner{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--navy);color:#fff;border-radius:18px;padding:12px 18px;margin-bottom:10px;text-decoration:none}
+.orion-proof-banner b{font-size:13px}
+.orion-proof-banner span{font-size:11px;color:#9fc1d8}
+.offer-head h1{font-size:clamp(22px,2.3vw,32px)!important;margin:4px 0 0!important}
+.offer-head .eyebrow{margin-bottom:2px!important;font-size:9px!important}
+.offer-head p{font-size:11px!important;margin-top:2px!important}
+#offer{gap:8px!important}
+.offer-grid h2{font-size:20px!important}
+.offer-grid p{font-size:9px!important}
