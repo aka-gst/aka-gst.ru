@@ -201,27 +201,17 @@ async function answerQuestion(raw){
     const answer=topic?.answer||'I do not have an approved source for that question in this demo. I would ask one clarifying question or hand it to the YSI team — never invent an answer.';
     addBubble(answer,'guide',topic);lastAnswer=answer;
   }
-  $('#speak-answer').disabled=!('speechSynthesis'in window);$('#stop-answer').disabled=!('speechSynthesis'in window);
 }
 $('#guide-form').addEventListener('submit',e=>{e.preventDefault();answerQuestion($('#guide-input').value);$('#guide-input').value=''});
 $$('[data-prompt]').forEach(x=>x.addEventListener('click',()=>answerQuestion(x.dataset.prompt)));
 const openGuide=()=>{$('#assistant-drawer').classList.add('is-open');$('#open-guide').classList.add('is-hidden');$('#open-guide').setAttribute('aria-expanded','true');setTimeout(()=>$('#guide-input').focus(),reduceMotion?0:280)};
 const closeGuide=()=>{$('#assistant-drawer').classList.remove('is-open');$('#open-guide').classList.remove('is-hidden');$('#open-guide').setAttribute('aria-expanded','false')};
 $('#open-guide').addEventListener('click',openGuide);$('#close-guide').addEventListener('click',closeGuide);
-const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-$('#listen-question').addEventListener('click',()=>{
-  if(!Recognition){$('#voice-state').textContent='Voice input is unavailable in this browser';return}
-  const r=new Recognition();r.lang='en-US';r.interimResults=false;$('#voice-state').textContent='Listening…';
-  r.onresult=e=>{$('#guide-input').value=e.results[0][0].transcript;$('#voice-state').textContent='Voice captured locally'};
-  r.onerror=()=>$('#voice-state').textContent='Voice input was not captured';r.onend=()=>{if($('#voice-state').textContent==='Listening…')$('#voice-state').textContent='Listening stopped'};r.start();
-});
-$('#speak-answer').addEventListener('click',()=>{if(!lastAnswer||!speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(lastAnswer);u.lang='en-US';u.rate=.88;u.pitch=.96;speechSynthesis.speak(u);$('#voice-state').textContent='Playing browser voice · press Stop any time'});
-$('#stop-answer').addEventListener('click',()=>{if(speechSynthesis)speechSynthesis.cancel();$('#voice-state').textContent='Stopped'});
 
 // ---- Practice: meditation / yoga / Buddhist diary can all be saved at once, all visible in the web profile ----
 const practiceSchemas={
-  meditation:{icon:'◌',kicker:'PLAN A MEDITATION',title:'Make room for silence.',button:'Schedule meditation',boundary:'Saved in this browser. The reminder contains time and title, never a private reflection.',fields:[['Title','text','Ten quiet minutes'],['Duration','select','10 minutes|20 minutes|40 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Guiding text','text','Return gently to the breath.']],label:'MEDITATION'},
-  yoga:{icon:'⌁',kicker:'PLAN YOGA',title:'Meet the body where it is.',button:'Schedule yoga',boundary:'The reminder carries the practice and time. Body notes remain private.',fields:[['Practice','select','Shavasana|Lady Niguma sequence|Morning grounding'],['Duration','select','40 minutes|20 minutes|60 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Reminder','select','1 hour before|15 minutes before|At start']],label:'YOGA'},
+  meditation:{icon:'◌',kicker:'PLAN A MEDITATION',title:'Make room for silence.',button:'Schedule meditation',boundary:'Saved in this browser. The reminder contains time and title, never a private reflection.',fields:[['Title','text','Ten quiet minutes'],['Duration','select','5 minutes|10 minutes|15 minutes|20 minutes|30 minutes|40 minutes|60 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Guiding text','text','Return gently to the breath.']],label:'MEDITATION'},
+  yoga:{icon:'⌁',kicker:'PLAN YOGA',title:'Meet the body where it is.',button:'Schedule yoga',boundary:'The reminder carries the practice and time. Body notes remain private.',fields:[['Practice','select','Shavasana|Lady Niguma sequence|Morning grounding'],['Duration','select','20 minutes|30 minutes|40 minutes|60 minutes|75 minutes|90 minutes'],['When','select','Today · 19:30|Tomorrow · 07:30'],['Reminder','select','1 hour before|15 minutes before|At start']],label:'YOGA'},
   buddhist:{icon:'✦',kicker:'BUDDHIST DIARY',title:'Reflect on one chosen vow.',button:'Save private check-in',boundary:'Private by default. Telegram confirms the save but never copies Plus / Minus text.',fields:[['Vow','select','Speak with care|Give freely|Rejoice in others'],['Plus · what helped','text','I paused before replying.'],['Minus · what was difficult','text','I rushed one answer.'],['Next intention','text','Take one breath before I speak.']],label:'BUDDHIST DIARY'}
 };
 let practiceMode='meditation';
