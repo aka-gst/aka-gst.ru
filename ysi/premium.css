@@ -179,3 +179,10 @@ main{height:calc(100dvh - 111px);position:relative;overflow:hidden}.screen{posit
 #offer{gap:8px!important}
 .offer-grid h2{font-size:20px!important}
 .offer-grid p{font-size:9px!important}
+
+/* fix: buddhist-diary entry overflowing the fixed-height web-diary card; replace fake YSI mockup with real proof only — 18.09 night */
+.web-diary{overflow-y:auto}
+.web-practice-list{overflow:visible}
+.public-site-header,.public-site-body,.real-site-badge,.guide-launcher{display:none!important}
+.assistant-drawer{position:static;opacity:1;transform:none;margin-top:0}
+.ysi-site-copy{padding:0;background:none;box-shadow:none;border:0}
