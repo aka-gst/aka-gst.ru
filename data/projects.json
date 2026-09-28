@@ -479,11 +479,6 @@
           "type": "demo",
           "label": "Открыть демо",
           "url": "/psy-admin/"
-        },
-        {
-          "type": "repo",
-          "label": "Исходный код",
-          "url": "https://github.com/aka-gst/psy-ai-admin"
         }
       ],
       "shots": [
