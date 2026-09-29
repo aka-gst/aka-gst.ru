@@ -1,4 +1,4 @@
-// Читалка: грунт, размер текста, полоса прочитанного и возврат на место.
+// Читалка: грунт, размер текста, полоса прочитанного и хранение места.
 // Всё, что читатель выбрал, запоминается — иначе на телефоне, где читают в
 // три захода, каждый заход начинается с настройки заново.
 (() => {
@@ -47,6 +47,15 @@
     });
   }
 
+  // details/summary дают клавиатурное управление без собственного велосипеда;
+  // aria-expanded синхронизируем с реальным состоянием каждой секции.
+  for (const группа of document.querySelectorAll('.reader-side-group')) {
+    const заголовок = группа.querySelector('.reader-side-book');
+    const обновитьСостояние = () => заголовок?.setAttribute('aria-expanded', String(группа.open));
+    группа.addEventListener('toggle', обновитьСостояние);
+    обновитьСостояние();
+  }
+
   const рассказ = document.querySelector('.story');
   if (!рассказ) return;
 
@@ -65,7 +74,6 @@
   наверх.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 14 5-5 5 5"/></svg>';
   document.body.append(наверх);
 
-  const меньшеДвижения = matchMedia('(prefers-reduced-motion: reduce)');
   const высотаОкна = () => Math.max(1, window.visualViewport?.height || innerHeight);
   const обновитьНаверх = () => {
     const высота = высотаОкна();
@@ -73,7 +81,7 @@
     наверх.hidden = !(длинныйТекст && scrollY >= высота);
   };
   наверх.addEventListener('click', () => {
-    scrollTo({ top: 0, behavior: меньшеДвижения.matches ? 'auto' : 'smooth' });
+    scrollTo(0, 0); // мгновенно: плавности нет вообще отовсюду
     // При reduced motion браузер прыгает сразу; не ждём следующего scroll,
     // чтобы круг не висел на верхнем экране лишний кадр.
     requestAnimationFrame(обновитьНаверх);
@@ -110,7 +118,6 @@
 
   // Место храним в долях высоты, а не в пикселях: при другом размере шрифта
   // или на другом экране пиксели указывают не туда.
-  const места = настройки.места || {};
   let таймер;
   addEventListener(
     'scroll',
@@ -124,23 +131,6 @@
     },
     { passive: true }
   );
-
-  const было = места[слаг];
-  if (было > 0.04) {
-    const r = рассказ.getBoundingClientRect();
-    const цель = r.top + scrollY + r.height * было - innerHeight * 0.6;
-    // Предлагаем вернуться, а не прыгаем сами: непрошеный прыжок при
-    // открытии страницы сбивает сильнее, чем помогает.
-    const подсказка = document.createElement('button');
-    подсказка.type = 'button';
-    подсказка.className = 'reader-resume';
-    подсказка.textContent = `Вернуться на ${Math.round(было * 100)}%`;
-    подсказка.addEventListener('click', () => {
-      scrollTo({ top: цель });
-      подсказка.remove();
-    });
-    рассказ.querySelector('.story-meta')?.after(подсказка);
-  }
 })();
 
 // ── Оглавление: сборник раскрывается, рассказ разворачивается ─────────

@@ -2,14 +2,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { answerQuestion } from "./router.js";
 import { quickQuestions } from "./content.js";
-import { createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
+import { createHandoffPayload, createWidgetState, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText } from "./widget-contract.js";
+import * as widgetContract from "./widget-contract.js";
 
-const widgetVersion = "psy-widget-20260903-15";
+const widgetVersion = "psy-widget-20260909-08";
 const widgetSource = await readFile(new URL("./psy-widget.js", import.meta.url), "utf8");
 const contractSource = await readFile(new URL("./widget-contract.js", import.meta.url), "utf8");
 const buildSource = await readFile(new URL("./tools/build-orion-demo.mjs", import.meta.url), "utf8");
 const widgetCss = await readFile(new URL("./widget.css", import.meta.url), "utf8");
 const homePage = await readFile(new URL("./index.html", import.meta.url), "utf8");
+const caddyfile = await readFile(new URL("../Caddyfile", import.meta.url), "utf8");
 const officialHero = "https://static.tildacdn.com/tild6564-6339-4335-b465-333932373236/WhatsApp_Image_2024-.jpeg";
 assert.equal((homePage.match(new RegExp(officialHero.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) || []).length, 3);
 assert.match(homePage, /linear-gradient\(to bottom, rgba\(0,0,0,0\.60\), rgba\(51,51,51,0\.30\)\)/);
@@ -17,6 +19,8 @@ assert.doesNotMatch(homePage, /orion-hero-trajectory\.png/);
 assert.match(widgetSource, new RegExp(`widget-contract\\.js\\?v=${widgetVersion}`));
 assert.match(contractSource, new RegExp(`router\\.js\\?v=${widgetVersion}`));
 assert.match(buildSource, new RegExp(`\\?v=${widgetVersion}`));
+assert.match(widgetSource, /let state = createWidgetState\(\);/);
+assert.doesNotMatch(widgetSource, /window\.innerWidth\s*>\s*620\s*\?\s*\{\s*open:\s*true/);
 for (const page of ["index.html", "psycluborion/index.html", "services/index.html", "programs/index.html", "schedule/index.html", "consultation/index.html", "pweducation/index.html"]) {
   const html = await readFile(new URL(`./${page}`, import.meta.url), "utf8");
   assert.match(html, new RegExp(`psy-widget\\.js\\?v=${widgetVersion}`));
@@ -26,41 +30,95 @@ assert.equal(quickQuestions.length, 60);
 assert.equal(preparedQuestionCases().length, 60);
 assert.deepEqual(preparedQuestionCases().map(({ category, question }) => ({ category, question })), quickQuestions);
 assert.equal(preparedQuestionCases().filter(({ expected }) => !expected).length, 0);
+assert.match(widgetSource, /<label for="psy-widget-evaluation-select">Частые вопросы<\/label>/);
 assert.match(widgetSource, /<select class="psy-widget-evaluation-select"/);
-assert.match(widgetSource, /Выбери вопрос для проверки/);
+assert.match(widgetSource, /Выберите вопрос/);
 assert.doesNotMatch(widgetSource, /psy-widget-evaluation-open/);
+assert.doesNotMatch(widgetSource, /psy-widget-evaluation-toggle|psy-widget-evaluation-content|60 проверочных вопросов|Ожидается:/);
 assert.match(widgetSource, /preparedQuestionCases/);
 assert.doesNotMatch(widgetSource, /Только открытые источники|Демо по открытым страницам|Демо-передача/);
-assert.match(widgetSource, /Запись в центр «Орион‑С»/);
-assert.match(widgetSource, /Заявка уйдёт администратору на подтверждение/);
+assert.match(widgetSource, /Запись, семинары и аренда/);
+assert.match(widgetSource, /Расписание мероприятий уже опубликовано/);
+assert.match(widgetSource, /нет общего календаря свободных окон/);
+assert.doesNotMatch(widgetSource, /Пока точного расписания нет/);
+assert.match(widgetSource, /name="requestKind"/);
+assert.match(widgetSource, /К какому психологу хотите записаться\?/);
+assert.match(widgetSource, /Не знаю — администратор поможет подобрать/);
+assert.doesNotMatch(widgetSource, /Помогите выбрать специалиста|Запись, аренда и оплата/);
+for (const specialist of ["Смирнова Юлия Сергеевна", "Сербина Людмила Николаевна", "Белозеров Евгений Владимирович", "Бутусова Елена Сергеевна", "Андреева Татьяна Владимировна", "Гайнулина Оксана Владимировна", "Извекова Ирина Владимировна", "Сатикова Светлана Валентиновна"]) {
+  assert.match(widgetSource, new RegExp(specialist));
+}
+assert.match(widgetSource, /name="requestedTime"/);
+assert.match(widgetSource, /name="clientName"/);
+assert.match(widgetSource, /name="comment"/);
+assert.match(widgetSource, /name="contact"/);
+assert.match(widgetSource, /name="consent"/);
+assert.doesNotMatch(widgetSource, /__psyAdminTestInbox|PSY-TEST|Добавить в тестовый стенд/);
+assert.deepEqual(createHandoffPayload({ requestKind: "specialist", subject: "Юлия Смирнова", requestedTime: "будни вечером", clientName: "Анна", comment: "Первичная встреча", contact: "+7 900 000-00-00", consent: true }), {
+  kind: "specialist", subject: "Юлия Смирнова", requestedDateTime: "будни вечером", clientName: "Анна", details: "Первичная встреча", contact: "+7 900 000-00-00", consent: true,
+});
+assert.equal(createHandoffPayload({ requestKind: "rental" }).kind, "rental");
+assert.equal(createHandoffPayload({ requestKind: "seminar" }).kind, "seminar");
+assert.equal(createHandoffPayload({ requestKind: "unexpected" }).kind, "specialist");
+assert.match(widgetSource, /data-assistant-host="live"/);
+assert.match(widgetSource, /aria-label="Вам помочь\?"/);
+assert.match(widgetSource, /<span aria-hidden="true">✦<\/span><span>Вам помочь\?<\/span>/);
+assert.doesNotMatch(widgetSource, /Спросить помощника/);
+assert.match(widgetSource, />Оставить заявку<\/button>/);
 assert.match(widgetSource, /<a class="psy-widget-payment" href="https:\/\/orion-center\.ru\/payment" target="_blank" rel="noopener noreferrer">/);
-assert.match(widgetSource, /Оплатить услуги центра ↗/);
-assert.match(widgetSource, /Откроется официальная страница оплаты/);
-assert.ok(widgetSource.indexOf("psy-widget-payment-area") < widgetSource.indexOf("psy-widget-booking-area"));
-assert.match(widgetCss, /\.psy-widget-payment \{[^}]*min-height: 52px;/);
-assert.match(widgetCss, /@media \(max-width: 620px\)[\s\S]*\.psy-widget-payment-area \{ padding: 4px 16px 6px; \}/);
+assert.match(widgetSource, /Перейти к оплате ↗/);
+assert.match(widgetSource, /После выбора и согласования услуги/);
+assert.doesNotMatch(widgetSource, /href="\/psy-admin\/booking\/\?kind=/);
+assert.doesNotMatch(widgetSource, /<select[^>]+name="requestedTime"/);
+assert.match(widgetCss, /\.psy-widget-handoff \{ display: grid;/);
+assert.match(widgetCss, /\.psy-widget-handoff-area/);
+assert.match(widgetCss, /\.psy-widget-panel \{[^}]*width: min\(520px, calc\(100vw - 32px\)\);/);
+assert.match(widgetCss, /\.psy-widget\[data-fullscreen="true"\] \.psy-widget-panel \{[^}]*width: min\(760px, calc\(100vw - 48px\)\);/);
+assert.doesNotMatch(widgetCss, /\.psy-widget-trigger span:last-child \{ display: none; \}/);
+assert.doesNotMatch(widgetCss, /data-fullscreen="true"[^}]*inset:\s*0/);
+assert.match(widgetCss, /\.psy-widget-handoff-area > \.psy-widget-payment \{[^}]*min-height: 44px;/);
+assert.match(widgetCss, /\.psy-widget-voice-status \{[^}]*min-height: 1\.35em;[^}]*white-space: nowrap;/);
+assert.match(widgetCss, /\.psy-widget-message\.assistant \{[^}]*justify-self: start;[^}]*width: fit-content;/);
 assert.doesNotMatch(widgetSource, /\/psy-admin\/payment/);
-assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=specialist">Записаться к специалисту<\/a>/);
-assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=seminar">Записаться на семинар<\/a>/);
-assert.match(widgetSource, /href="\/psy-admin\/booking\/\?kind=rental">Оставить заявку на аренду<\/a>/);
-assert.match(widgetSource, /psyadmin-A\.wav/);
-assert.match(widgetSource, /psyadmin-B\.wav/);
-assert.match(widgetSource, /psyadmin-C\.wav/);
-assert.match(widgetSource, /data-voice-volume="0\.55" data-voice-eq-gain="-5"/);
+assert.doesNotMatch(widgetSource, /psyadmin-A\.wav|data-voice-preview|Голос:/);
+const widgetCorsStart = caddyfile.indexOf("@orion_widget_assets");
+const widgetCors = caddyfile.slice(widgetCorsStart, caddyfile.indexOf("root * /srv", widgetCorsStart));
+assert.match(widgetCors, /header Origin https:\/\/orion-center\.ru/);
+assert.match(widgetCors, /Access-Control-Allow-Origin "https:\/\/orion-center\.ru"/);
+assert.match(widgetCors, /\/psy-admin\/psy-widget\.js/);
+assert.match(widgetCors, /\/psy-admin\/audio\/voices\/psyadmin-A\.wav/);
+assert.doesNotMatch(widgetCors, /\/psy-admin\/(?:admin|booking)/);
+assert.doesNotMatch(widgetCors.replaceAll("https://orion-center.ru", "https://attacker.invalid"), /https:\/\/orion-center\.ru/);
+assert.doesNotMatch(widgetSource, /psyadmin-B\.wav/);
+assert.doesNotMatch(widgetSource, /psyadmin-C\.wav/);
+assert.doesNotMatch(widgetSource, /psyadmin-D\.ogg/);
+assert.match(widgetSource, /Ответ помощника будет озвучен<\/span>/);
+assert.doesNotMatch(widgetSource, /естественный голос/i);
 assert.match(widgetSource, /data-voice-stop/);
-assert.match(widgetSource, /Остановить голос/);
+assert.match(widgetSource, />Остановить голос<\/button>/);
 assert.match(widgetSource, /event\.code === "Space"/);
-assert.match(widgetSource, /stopVoiceButton\.addEventListener/);
 assert.match(widgetSource, /previewStopButton\.addEventListener/);
-assert.match(widgetSource, /filter\.frequency\.value = 520/);
-assert.match(widgetSource, /filter\.Q\.value = 0\.75/);
-assert.match(widgetSource, /filter\.gain\.value = gain/);
-assert.match(widgetSource, /VOICE_QUIET_GAP_MS = 1400/);
+assert.match(widgetSource, /function renderVoiceControl\(\)/);
+assert.match(widgetSource, /mic\.textContent = playing \? "🔇" : "🎙"/);
+assert.match(widgetSource, /if \(voiceIsPlaying\(\)\)/);
+assert.match(widgetSource, /if \(listening\)/);
+assert.doesNotMatch(widgetSource, /class="psy-widget-stop"/);
+assert.doesNotMatch(widgetSource, /softenPreviewTone|previewAudio/);
 assert.match(widgetSource, /recognition\.continuous = true/);
-assert.match(widgetSource, /Можете делать паузы/);
+assert.match(widgetSource, /Нажмите микрофон ещё раз, когда закончите вопрос/);
+assert.match(widgetSource, /finishVoiceInputSession/);
+assert.doesNotMatch(widgetSource, /VOICE_QUIET_GAP_MS|submitRecognizedQuestion/);
 assert.match(widgetSource, /voiceIsActive/);
 assert.match(widgetCss, /psy-widget-listening/);
-assert.doesNotMatch(widgetSource, /SpeechSynthesisUtterance|speechSynthesis\.speak/);
+assert.match(widgetSource, /new SpeechSynthesisUtterance/);
+assert.match(widgetSource, /speechSynthesis\.speak/);
+assert.doesNotMatch(widgetSource, /\.voice\s*=|Milena|waitForPreferredRussianVoice/);
+assert.match(widgetSource, /new URL\("\.\/booking\/api\/ask", import\.meta\.url\)\.href/);
+assert.match(widgetSource, /fetch\(assistantApiUrl/);
+assert.match(widgetSource, /sanitizeSpokenText/);
+assert.match(widgetSource, /const keepVerifiedAnswer = shouldKeepVerifiedAnswer\(fallback\)/);
+assert.match(widgetSource, /handoffForm\.hidden = true/);
+assert.match(widgetSource, /appendMessage\("assistant", \{ kind: "success", text: successText \}\)/);
 assert.doesNotMatch(widgetSource, /data-question="У меня мысли о самоубийстве"/);
 const preparedAnswers = quickQuestions.map(({ question }) => answerQuestion(question));
 assert.equal(preparedAnswers.filter(({ kind }) => kind === "fallback" || kind === "empty").length, 0);
@@ -86,6 +144,12 @@ assert.equal(nextEvent.title, "Ближайшее опубликованное �
 assert.match(nextEvent.text, /Теория и практика работы с измененными и экстремальными состояниями сознания/);
 assert.match(nextEvent.text, /14 сентября 2026/);
 assert.equal(nextEvent.action?.url, "/psy-admin/booking/?kind=seminar");
+const compoundScheduleAndClubPrice = answerQuestion("Когда будет ближайший семинар и сколько стоит психологический клуб?");
+assert.equal(compoundScheduleAndClubPrice.title, "Ближайшее мероприятие и стоимость клуба");
+assert.match(compoundScheduleAndClubPrice.text, /14 сентября 2026/);
+assert.match(compoundScheduleAndClubPrice.text, /1\s*000\s*(руб|₽)/i);
+assert.equal(compoundScheduleAndClubPrice.url, "https://orion-center.ru/schedule#actual");
+assert.equal(compoundScheduleAndClubPrice.action?.url, "https://orion-center.ru/psycluborion");
 assert.match(answerQuestion("какого цвета кабинет").title, /нет в подтверждённых данных/i);
 
 const psychosomatics = answerQuestion("Что входит в практикум по психосоматике?");
@@ -138,13 +202,30 @@ const unsafeSpeech = sanitizeSpokenText(
 assert.doesNotMatch(unsafeSpeech, /https?:\/\/|www\.|[\\/]|\.(?:html?|php)\b|Открыть файл|Записаться на встречу клуба/i);
 assert.match(unsafeSpeech, /Подробный ответ/i);
 assert.ok(unsafeSpeech.length <= 160);
+const bareDomainSpeech = sanitizeSpokenText(
+  "Ответ на backspace.com/path и orion-center.ru/schedule. [Открыть расписание](https://orion-center.ru/schedule) \\ служебный хвост.",
+);
+assert.doesNotMatch(bareDomainSpeech, /backspace|orion-center|\.com|\.ru|https?|[\\/]|\]\(/i);
 assert.equal(sanitizeSpokenText("Первая суть. Вторая подробность, которую говорить не нужно."), "Первая суть.");
+assert.equal(
+  sanitizeSpokenText("Ближайшее мероприятие → открыть ↗ \\ служебный хвост."),
+  "Ближайшее мероприятие открыть служебный хвост.",
+);
+
+const routedNearestEvent = routeWidgetQuestion("Какие мероприятия ближайшие?");
+assert.equal(
+  routedNearestEvent.spokenText,
+  "Ближайшее опубликованное мероприятие — «Теория и практика работы с измененными и экстремальными состояниями сознания».",
+);
+assert.doesNotMatch(routedNearestEvent.spokenText, /https?:\/\/|www\.|[\\/]|[→↗]|\.(?:html?|php)\b/i);
 
 const routedClub = routeWidgetQuestion("Сколько стоит психологический клуб?");
 assert.match(routedClub.text, /1\s*000\s*(руб|₽)/i); // Полный ответ остаётся видимым.
 assert.match(routedClub.action?.label || "", /записаться/i); // И кнопка ссылки остаётся видимой.
 assert.ok(routedClub.spokenText.length > 0);
 assert.doesNotMatch(routedClub.spokenText, /https?:\/\/|www\.|[\\/]|\.(?:html?|php)\b|записаться/i);
+assert.equal(widgetContract.shouldKeepVerifiedAnswer?.(routedClub), true); // Сервер не должен перезаписать проверенную цену общим ответом.
+assert.equal(widgetContract.shouldKeepVerifiedAnswer?.({ kind: "fallback" }), false); // Неизвестный вопрос по-прежнему можно уточнить на сервере.
 
 let widgetState = reduceWidgetState(createWidgetState(), "trigger");
 widgetState = reduceWidgetState(widgetState, "fullscreen");

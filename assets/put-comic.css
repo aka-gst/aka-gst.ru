@@ -13,3 +13,17 @@ body.put-comic { background-color: var(--put-bg); background-image: radial-gradi
 .put-comic .put-hero-nav a:first-child { background: #f5dc55; border-color: #f5dc55; color: #17120b; }
 .put-comic .put-dharma { border-color: #f5dc55; background: rgba(245,220,85,.1); color: #fff5bd; }
 @media (min-width: 760px) { .put-comic .put-chapter { padding: 42px; } }
+
+/* Ссылка на текстовую версию: с первого экрана она убрана по решению Сергея
+   («две двери в одно и то же место только путают»), и живёт здесь, в конце
+   истории. Отбита от подвала и от последней главы, чтобы на узком экране не
+   слипалась с концом текста и читалась как продолжение, а не как приписка. */
+.put-tekstom {
+  margin: 28px 0 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-soft, #232a33);
+  font-size: 15px;
+}
+.put-tekstom a { color: var(--accent, #7fb3ff); text-decoration: none; font-weight: 700; }
+.put-tekstom a b { font-weight: 700; }
+@media (max-width: 700px) { .put-tekstom { margin: 22px 0 14px; font-size: 15px; } }

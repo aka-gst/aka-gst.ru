@@ -5,7 +5,11 @@
 
   const links = new Map([...index.querySelectorAll('a[href^="#"]')].map((link) => [link.hash.slice(1), link]));
   const setCurrent = (id, updateHistory) => {
-    if (!id || !links.has(id)) return;
+    if (!id) return;
+    if (!links.has(id)) {
+      console.warn('[put] setCurrent: главы нет, значение отброшено:', id);
+      return;
+    }
     for (const [chapterId, link] of links) link.setAttribute('aria-current', String(chapterId === id));
     if (updateHistory && location.hash !== `#${id}`) history.pushState({ chapter: id }, '', `#${id}`);
   };

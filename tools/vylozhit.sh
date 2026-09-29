@@ -29,17 +29,59 @@ DEST="${DEST:-bonita:/opt/zakriva/caddy/site/}"
 SITE="${SITE:-https://aka-gst.ru}"
 
 if [ "${1:-}" = "--vse" ]; then
-  set -- index.html 404.html 503.html assets rasskazy praktikum psy-admin photodata \
+  set -- index.html 404.html 503.html assets rasskazy praktikum psy-admin photodata maketchik \
          qa-quest technomagic test leela zoo puzzle-quest robots.txt sitemap.xml sitemap-pages.xml og.png favicon.svg \
          game-menu.css player-name.js
 fi
 [ $# -gt 0 ] || { echo "  что выкладываем? имена файлов и папок от корня репозитория"; exit 2; }
 
 LIST=""
+needs_psy_admin_guard=0
 for x in "$@"; do
   [ -e "$x" ] || { echo "  нет такого: $x"; exit 2; }
   LIST="$LIST ./${x#./}"
+  case "${x#./}" in
+    psy-admin|psy-admin/*) needs_psy_admin_guard=1 ;;
+  esac
 done
+
+# Ворота набора тестов — те же, что в deploy.sh. Их тут не было, и 7 сентября
+# я через этот путь выложил сайт с красным набором: deploy.sh проверку гоняет,
+# а этот скрипт нет. Ровно то же, что было с калиткой на чужое незакоммиченное
+# — защита на одной двери из двух не половина защиты, а её отсутствие.
+if [ "${DEPLOY_BEZ_TESTOV:-}" = "1" ]; then
+  echo "== тесты пропущены по DEPLOY_BEZ_TESTOV=1 =="
+else
+  if node --test tests/*.mjs > /tmp/vylozhit-testy.$$ 2>&1; then
+    echo "== набор тестов зелёный =="
+    rm -f /tmp/vylozhit-testy.$$
+  else
+    echo "!! набор тестов красный — выкладка остановлена" >&2
+    grep -E 'not ok|AssertionError|fail [0-9]' /tmp/vylozhit-testy.$$ | head -8 >&2
+    rm -f /tmp/vylozhit-testy.$$
+    exit 1
+  fi
+fi
+
+# Та же калитка, что в deploy.sh: выкладка шлёт файлы С ДИСКА, а не из
+# коммита, значит уносит на бой чужую незакоммиченную работу. Здесь она
+# нужна не меньше — этот путь возит то, чего нет в PAYLOAD (zoo, leela,
+# puzzle-quest), и до 7 сентября 2026 стоял без всякой проверки: калитку
+# поставили на одну дверь из двух, а это то же самое, что ни на одну.
+# shellcheck disable=SC2086
+if ! sh tools/chuzhoe-v-dereve.sh $LIST; then
+  if [ "${DEPLOY_S_CHUZHIM:-}" = "1" ]; then
+    echo "== выкладываю вместе с незакоммиченным: DEPLOY_S_CHUZHIM=1 =="
+  else
+    echo "  выкладка остановлена. Разобрались — DEPLOY_S_CHUZHIM=1 sh tools/vylozhit.sh ..." >&2
+    exit 1
+  fi
+fi
+
+if [ "$needs_psy_admin_guard" -eq 1 ]; then
+  echo "== PsyAdmin: защита от старой выкладки =="
+  node psy-admin/tools/release-guard.mjs --live-base "$SITE"
+fi
 
 n=1
 while [ "$n" -le 3 ]; do

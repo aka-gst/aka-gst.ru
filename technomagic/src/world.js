@@ -13,7 +13,7 @@
  * врагов оружие осталось: бита и пистолет — это их роль, а не инвентарь.
  */
 
-import { TILE, TILE_SIZE, blocksMove, blocksSight, blocksShot, breakable, brokenBy } from './level.js';
+import { ENTITY, TILE, TILE_SIZE, blocksMove, blocksSight, blocksShot, breakable, brokenBy } from './level.js';
 import { thinkEnemy, buildFlowField } from './ai.js';
 import { BY_EVENT } from './trace.js';
 import {
@@ -23,6 +23,7 @@ import {
   SPILL, JOLT, FLARE, BURN_TIME, WET_TIME, CHAIN_HOP,
 } from './field.js';
 import { spellOf, STACK_LIMIT, CHARGE_STEP, colourOf, ELEMENT_ORDER } from './magic.js';
+import { createOperation, updateOperation } from './operation.js';
 
 export { TILE_SIZE };
 
@@ -78,6 +79,7 @@ const DOWN_TIME = 2;
  * вырубать станет незачем.
  */
 const SLEEP_TIME = 9;
+const IMPACT_LETHAL = 220;
 
 /*
  * ЗАМЕДЛЕНИЕ — ПО ПРИЗНАКУ, А НЕ ПО СПИСКУ
@@ -255,7 +257,8 @@ function moveBody(world, body, dx, dy) {
    * какой он не развивает никогда.
    */
   const брошено = (body.shove || 0) > 0;
-  if (вСтену && было >= (брошено ? FLING_SPEED : 300)) {
+  const скользит = body !== world.player && groundAt(world, body.x, body.y) === GROUND.ICE;
+  if (вСтену && было >= ((брошено || скользит) ? FLING_SPEED : 300)) {
     slam(world, body, было);
   }
 }
@@ -297,6 +300,16 @@ function creditConsequence(world, kind, x = null, y = null) {
   world.events.push({ type: 'consequence', kind, actions: world.systemic.actions, x, y });
 }
 
+function raiseOperationAlarm(world, cause, engage = false) {
+  if (engage) {
+    if (world.engaged) return false;
+    world.engaged = true;
+  }
+  if (world.operation) world.operation.alerts += 1;
+  world.events.push({ type: engage ? 'engaged' : 'alarm', cause });
+  return true;
+}
+
 function slam(world, body, speed) {
   if (!body.alive) return;
 
@@ -304,13 +317,102 @@ function slam(world, body, speed) {
   world.fx.shake = Math.max(world.fx.shake, 5);
   world.events.push({ type: 'slam', speed: Math.round(speed) });
 
+  resolveBodyImpact(world, body, speed, angle);
+}
+
+export function resolveBodyImpact(world, body, speed, angle = 0) {
+  if (!body.alive || speed < FLING_SPEED) return false;
+
   if (body === world.player) {
     killPlayer(world, angle);
-    return;
+    return true;
   }
 
-  killEnemy(world, body, angle, 'slam',
-    { by: 'player', weapon: 'wall', elements: [] });
+  const lethalAt = body.brittle > 0 ? 180 : IMPACT_LETHAL;
+  if (speed < lethalAt && world.enemies.includes(body)) {
+    knockDown(world, body, angle);
+    return true;
+  }
+
+  if (world.enemies.includes(body)) {
+    killEnemy(world, body, angle, 'slam',
+      { by: 'player', weapon: 'wall', elements: [] });
+    return true;
+  }
+
+  if (world.civilians.includes(body) || body === world.hostage) {
+    if (speed < lethalAt) {
+      body.downed = Number.POSITIVE_INFINITY;
+      body.state = 'down';
+      world.events.push({ type: 'neutral-knock', kind: body.kind });
+    } else {
+      killNeutral(world, body, angle, 'slam');
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function killNeutral(world, body, angle, cause) {
+  if (!body.alive) return;
+  body.alive = false;
+  body.downed = 0;
+  body.unconscious = false;
+  world.corpses.push({
+    x: body.x, y: body.y, angle: body.angle || angle, kind: body.kind,
+    twitch: 0, fall: 0.34, sheet: body.kind, lean: 0,
+    vx: body.vx || 0, vy: body.vy || 0, shove: 0, alive: false,
+  });
+  world.events.push({ type: 'neutral-death', kind: body.kind, cause });
+}
+
+function neutralBodies(world) {
+  return [...world.civilians, ...(world.hostage ? [world.hostage] : [])];
+}
+
+function livingBodies(world) {
+  return [...world.enemies, ...neutralBodies(world)].filter((body) => body.alive);
+}
+
+function hitNeutral(world, body, angle, cause, source = {}) {
+  const traits = source.traits || {};
+  const single = source.elements?.length === 1;
+  if (traits.gust && single) {
+    body.vx = (body.vx || 0) + Math.cos(angle) * 460;
+    body.vy = (body.vy || 0) + Math.sin(angle) * 460;
+    body.shove = Math.max(body.shove || 0, 0.45);
+    world.events.push({ type: 'gust', x: body.x, y: body.y });
+    return;
+  }
+  if (traits.freeze) {
+    body.brittle = 3;
+    body.downed = Number.POSITIVE_INFINITY;
+    body.state = 'down';
+    world.events.push({ type: 'frozen', x: body.x, y: body.y });
+    return;
+  }
+  if (traits.wet && single) {
+    body.wet = WET_TIME;
+    world.events.push({ type: 'soaked', kind: body.kind });
+    return;
+  }
+  if (traits.burn && single) {
+    body.burning = BURN_TIME;
+    world.events.push({ type: 'ignite', player: false });
+    return;
+  }
+  killNeutral(world, body, angle, cause);
+}
+
+function hitLivingBody(world, body, angle, cause, source = {}) {
+  if (world.enemies.includes(body)) {
+    if (!resisted(world, body, angle, { elements: source.elements })) {
+      killEnemy(world, body, angle, cause, source);
+    }
+  } else {
+    hitNeutral(world, body, angle, cause, source);
+  }
 }
 
 /*
@@ -394,11 +496,15 @@ export function emitNoise(world, x, y, radius, source) {
      * Отсюда и берётся выгода бить издалека: грохот слышали все, а куда
      * бежать, никто толком не знает, и обыск уходит мимо.
      */
-    const blur = (gap / radius) * radius * 0.5;
+    /* Треск самой ловушки ведёт в её центр точно: если страж остановится
+       у края, обучающий маршрут случайно исчезнет. Остальные разовые
+       звуки сохраняют обычную неопределённость направления. */
+    const blur = source === 'hay' ? 0 : (gap / radius) * radius * 0.5;
     const away = Math.random() * Math.PI * 2;
     enemy.heard = {
       x: x + Math.cos(away) * blur * Math.random(),
       y: y + Math.sin(away) * blur * Math.random(),
+      origin: { x, y, source },
     };
     enemy.state = 'alert';
     enemy.think = 0;
@@ -508,6 +614,10 @@ export function createWorld(level) {
     },
 
     enemies: [],
+    civilians: [],
+    hostage: null,
+    core: null,
+    props: [],
     bullets: [],
     particles: [],
     pops: [],
@@ -532,6 +642,7 @@ export function createWorld(level) {
     exitOpen: false,
     alarm: 0,
     systemic: level.systemic ? { actions: 0, last: '' } : null,
+    operation: createOperation(level.operation),
 
     flow: null,
     flowTimer: 0,
@@ -560,6 +671,38 @@ export function createWorld(level) {
   for (const entity of level.entities) {
     const x = entity.x * TILE_SIZE + TILE_SIZE / 2;
     const y = entity.y * TILE_SIZE + TILE_SIZE / 2;
+
+    if (entity.type === ENTITY.CIVIL || entity.type === ENTITY.HOSTAGE) {
+      const body = {
+        kind: entity.type === ENTITY.CIVIL ? 'civil' : 'hostage',
+        x, y, vx: 0, vy: 0,
+        angle: (entity.angle || 0) * (Math.PI / 4),
+        alive: true,
+        downed: 0,
+        burning: 0,
+        zap: 0,
+        wet: 0,
+        radius: BODY,
+        released: false,
+        rescued: false,
+      };
+      if (entity.type === ENTITY.CIVIL) world.civilians.push(body);
+      else world.hostage = body;
+      continue;
+    }
+
+    if (entity.type === ENTITY.CORE || entity.type === ENTITY.CANDLE) {
+      const prop = {
+        kind: entity.type === ENTITY.CORE ? 'core' : 'candle',
+        x, y,
+        radius: entity.type === ENTITY.CORE ? 11 : 7,
+        taken: false,
+        lit: false,
+      };
+      world.props.push(prop);
+      if (entity.type === ENTITY.CORE) world.core = prop;
+      continue;
+    }
 
     if (SHIELD_BY_TYPE[entity.type]) {
       world.enemies.push({
@@ -632,7 +775,8 @@ export function createWorld(level) {
 
   /* Пустая комната — задача на материал и путь, а не на несуществующую
      зачистку. Выход всё равно отделён реальными препятствиями карты. */
-  if (world.total === 0) openExit(world);
+  if (world.operation) world.exitOpen = true;
+  else if (world.total === 0) openExit(world);
 
   createField(world);
   world.flow = buildFlowField(world, world.player.x, world.player.y);
@@ -808,7 +952,8 @@ export function resisted(world, enemy, angle, source = {}) {
 }
 
 export function knockDown(world, enemy, angle, срок = DOWN_TIME) {
-  enemy.downed = срок;
+  enemy.unconscious = Boolean(world.operation);
+  enemy.downed = enemy.unconscious ? Number.POSITIVE_INFINITY : срок;
   enemy.state = 'down';
   enemy.vx += Math.cos(angle) * 260;
   enemy.vy += Math.sin(angle) * 260;
@@ -889,6 +1034,17 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
     return;
   }
 
+  /* В операции мороз — подготовка, а не ещё один цвет урона. Тело
+     падает целым и на короткое время становится хрупким; разбивает его
+     уже отдельное последствие — столкновение. Старые этажи сохраняют
+     прежнюю смертельность составов. */
+  if (world.operation && source.traits?.freeze && cause === 'daemon') {
+    enemy.brittle = 3;
+    knockDown(world, enemy, angle);
+    world.events.push({ type: 'frozen', x: enemy.x, y: enemy.y });
+    return;
+  }
+
   /*
    * Крепкий держит удар — но только тот, который нечем было усилить.
    * Событие уходит наружу: игрок обязан понять, что промаха не было, а
@@ -939,11 +1095,13 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
       x: enemy.x,
       y: enemy.y,
       by: source.by || 'player',
+      permanent: Boolean(enemy.unconscious),
     });
     return;
   }
 
   enemy.alive = false;
+  enemy.unconscious = false;
   world.kills += 1;
 
   /*
@@ -955,8 +1113,7 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
 
   /* Тревогу поднимает не смерть, а замеченная смерть. */
   if (!world.engaged && witnessed(world, enemy)) {
-    world.engaged = true;
-    world.events.push({ type: 'engaged' });
+    raiseOperationAlarm(world, 'witness', true);
   }
 
   bleed(world, enemy.x, enemy.y, angle, cause === 'bullet' ? 260 : 190);
@@ -1176,16 +1333,15 @@ function castCone(world, spell, angle) {
   const { form, substance } = spell;
   const elements = spell.elements;
 
-  for (const enemy of world.enemies) {
-    if (!enemy.alive) continue;
-    const dx = enemy.x - player.x;
-    const dy = enemy.y - player.y;
+  for (const body of livingBodies(world)) {
+    const dx = body.x - player.x;
+    const dy = body.y - player.y;
     if (Math.hypot(dx, dy) > form.reach + BODY) continue;
-    const toEnemy = Math.atan2(dy, dx);
-    if (Math.abs(angleDelta(angle, toEnemy)) > form.arc / 2) continue;
-    if (!hasSight(world, player.x, player.y, enemy.x, enemy.y)) continue;
-    if (resisted(world, enemy, toEnemy, { elements })) continue;
-    killEnemy(world, enemy, toEnemy, 'daemon', { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
+    const toBody = Math.atan2(dy, dx);
+    if (Math.abs(angleDelta(angle, toBody)) > form.arc / 2) continue;
+    if (!hasSight(world, player.x, player.y, body.x, body.y)) continue;
+    hitLivingBody(world, body, toBody, 'daemon',
+      { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
   }
 
   world.blasts.push({
@@ -1226,11 +1382,10 @@ function castBeam(world, spell, angle) {
       if (!shatter(world, tileIndex(world, x, y), substance)) break;
     }
 
-    for (const enemy of world.enemies) {
-      if (!enemy.alive) continue;
-      if (Math.hypot(enemy.x - x, enemy.y - y) > BODY + 2) continue;
-      if (resisted(world, enemy, angle, { elements })) continue;
-      killEnemy(world, enemy, angle, 'daemon', { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
+    for (const body of livingBodies(world)) {
+      if (Math.hypot(body.x - x, body.y - y) > BODY + 2) continue;
+      hitLivingBody(world, body, angle, 'daemon',
+        { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
     }
 
     distance += step;
@@ -1323,15 +1478,14 @@ function novaAt(world, spell, x, y, atFeet) {
   const { form, substance } = spell;
   const elements = spell.elements;
 
-  for (const enemy of world.enemies) {
-    if (!enemy.alive) continue;
-    const dx = enemy.x - x;
-    const dy = enemy.y - y;
+  for (const body of livingBodies(world)) {
+    const dx = body.x - x;
+    const dy = body.y - y;
     if (Math.hypot(dx, dy) > form.radius) continue;
-    if (!hasSight(world, x, y, enemy.x, enemy.y)) continue;
-    const toEnemy = Math.atan2(dy, dx);
-    if (resisted(world, enemy, toEnemy, { elements })) continue;
-    killEnemy(world, enemy, toEnemy, 'daemon', { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
+    if (!hasSight(world, x, y, body.x, body.y)) continue;
+    const toBody = Math.atan2(dy, dx);
+    hitLivingBody(world, body, toBody, 'daemon',
+      { by: 'player', weapon: 'daemon', elements, form: form.kind, traits: substance.traits });
   }
 
   /*
@@ -1414,12 +1568,39 @@ function novaAt(world, spell, x, y, atFeet) {
  * по всему конусу, луч — вдоль линии.
  */
 function land(world, tiles, substance, at, force = false) {
+  const touched = new Set(tiles);
+  if (substance.traits.burn) {
+    for (const prop of world.props) {
+      if (prop.kind !== 'candle' || prop.lit) continue;
+      if (!touched.has(tileIndex(world, prop.x, prop.y))) continue;
+      prop.lit = true;
+      if (world.operation) world.operation.candleLesson = true;
+      world.events.push({ type: 'candle-lit', x: prop.x, y: prop.y });
+      creditConsequence(world, 'candle', prop.x, prop.y);
+    }
+  }
+
   /* Сперва предметы: бочка обязана вскрыться до того, как на её клетку
      ляжет вещество, иначе вода разольётся под целой бочкой. */
   for (const idx of tiles) shatter(world, idx, substance);
 
   paint(world, tiles, substance, at, force);
   if (substance.traits.shock && at) discharge(world, at.x, at.y, substance);
+}
+
+function hitWorldProp(world, bullet) {
+  for (const prop of world.props) {
+    if (prop.kind !== 'candle' || prop.lit) continue;
+    if (Math.hypot(prop.x - bullet.x, prop.y - bullet.y) > prop.radius + 3) continue;
+    if (bullet.substance?.traits?.burn) {
+      prop.lit = true;
+      if (world.operation) world.operation.candleLesson = true;
+      world.events.push({ type: 'candle-lit', x: prop.x, y: prop.y });
+      creditConsequence(world, 'candle', prop.x, prop.y);
+    }
+    return true;
+  }
+  return false;
 }
 
 /*
@@ -1528,9 +1709,12 @@ function shatter(world, at, substance) {
      * никого не поймает, и бочка была бы просто мусором.
      */
     for (let ring = 0; ring < 4; ring += 1) {
-      const radius = TILE_SIZE * (0.55 + ring * 0.4);
+      const radius = TILE_SIZE * (0.65 + ring * 0.6);
       schedule(world, 0.09 + ring * 0.09, () => {
         paint(world, tilesInCircle(world, x, y, radius), SPILL, { x, y }, true);
+        for (const body of [world.player, ...livingBodies(world)]) {
+          if (groundAt(world, body.x, body.y) === GROUND.WATER) body.wet = WET_TIME;
+        }
         splash(world, x, y, radius);
         if (ring === 3) world.events.push({ type: 'spill', x, y });
       });
@@ -1548,7 +1732,7 @@ function shatter(world, at, substance) {
      * сухими и выживали. Порядок здесь не украшение — он и есть правило.
      */
     if (substance.traits.shock) {
-      schedule(world, 0.5, () => discharge(world, x, y, substance));
+      schedule(world, 0.4, () => discharge(world, x, y, substance));
     }
     return true;
   }
@@ -1681,6 +1865,7 @@ function shatter(world, at, substance) {
     spark(world, x, y, 0, 3.2, 22, '#ffe14d', 260);
     spark(world, x, y, 0, 3.2, 14, '#9fe8ff', 200);
     emitNoise(world, x, y, 360, 'panel');
+    raiseOperationAlarm(world, 'panel');
     world.fx.flash = Math.max(world.fx.flash, 0.3);
     return true;
   }
@@ -1751,9 +1936,10 @@ function applySignature(world, spell, at) {
  * пуская в неё молнию, это ровно то решение, за которое игра обязана
  * спросить: иначе «намочи и ударь» превратилось бы в бесплатную кнопку.
  */
-function discharge(world, x, y, substance) {
+export function discharge(world, x, y, substance) {
   const live = conductedTiles(world, x, y);
-  const bodies = [world.player, ...world.enemies].filter((body) => body.alive);
+  const bodies = [world.player, ...world.enemies, ...world.civilians,
+    ...(world.hostage ? [world.hostage] : [])].filter((body) => body.alive);
   const hit = new Set();
   const queue = [{ x, y }];
 
@@ -1775,6 +1961,7 @@ function discharge(world, x, y, substance) {
 
   /* Треск идёт сразу: он и есть предупреждение тем, кто стоит в воде. */
   world.events.push({ type: 'chain', size: hit.size });
+  if (world.operation && hit.size > 1) world.operation.waterLesson = true;
   world.fx.flash = Math.max(world.fx.flash, 0.2);
 
   /*
@@ -1832,9 +2019,13 @@ function discharge(world, x, y, substance) {
           killPlayer(world, angle);
           return;
         }
-        if (resisted(world, body, angle, { elements: substance.elements })) return;
-        killEnemy(world, body, angle, 'chain',
-          { by: 'player', weapon: 'daemon', elements: substance.elements });
+        if (world.enemies.includes(body)) {
+          if (resisted(world, body, angle, { elements: substance.elements })) return;
+          killEnemy(world, body, angle, 'chain',
+            { by: 'player', weapon: 'daemon', elements: substance.elements });
+        } else {
+          killNeutral(world, body, angle, 'chain');
+        }
       });
     });
   }
@@ -1877,6 +2068,13 @@ function scorch(world, body, dt) {
       && !resists(body, ['fire'])) {
     body.burning = BURN_TIME;
     world.events.push({ type: 'ignite', player: body === world.player });
+    const origin = body.heard?.origin;
+    if (world.enemies.includes(body) && origin
+        && Math.hypot(body.x - origin.x, body.y - origin.y) <= TILE_SIZE * 2
+        && !body.noiseTrapObserved) {
+      body.noiseTrapObserved = true;
+      world.events.push({ type: 'world-observation', id: 'noise-fire' });
+    }
   }
 
   if (body.burning > 0) {
@@ -1885,8 +2083,12 @@ function scorch(world, body, dt) {
       body.burning = 0;
       const angle = Math.random() * Math.PI * 2;
       if (body === world.player) killPlayer(world, angle);
-      else killEnemy(world, body, angle, 'fire',
-        { by: 'player', weapon: 'daemon', elements: ['fire'] });
+      else if (world.enemies.includes(body)) {
+        killEnemy(world, body, angle, 'fire',
+          { by: 'player', weapon: 'daemon', elements: ['fire'] });
+      } else {
+        killNeutral(world, body, angle, 'fire');
+      }
     }
   }
 }
@@ -1937,6 +2139,8 @@ export function update(world, dt, intent) {
 
   updateField(world, dt);
   updatePlayer(world, dt, intent);
+  updateOperation(world, dt);
+  tryExit(world);
 
   world.flowTimer -= dt;
   const playerCell = tileIndex(world, world.player.x, world.player.y);
@@ -1947,6 +2151,11 @@ export function update(world, dt, intent) {
   }
 
   for (const enemy of world.enemies) updateEnemy(world, enemy, dt);
+  for (const body of [...world.civilians, ...(world.hostage ? [world.hostage] : [])]) {
+    if (!body.alive) continue;
+    scorch(world, body, dt);
+    body.zap = Math.max(0, (body.zap || 0) - dt);
+  }
 
   updateBullets(world, dt);
   updateLoose(world, dt);
@@ -1977,6 +2186,16 @@ export function update(world, dt, intent) {
   maybeSlow(world);
 
   if (world.decals.length > 420) world.decals.splice(0, world.decals.length - 420);
+}
+
+export function tryExit(world) {
+  if (!world.exitOpen || world.state !== 'play'
+    || tileAt(world, world.player.x, world.player.y) !== TILE.EXIT) return false;
+  if (world.operation && !world.operation.coreTaken) return false;
+  world.state = 'clear';
+  if (world.operation) world.operation.escaped = true;
+  world.events.push({ type: 'exit' });
+  return true;
 }
 
 /*
@@ -2047,8 +2266,7 @@ function noticeBodies(world) {
       const gap = Math.hypot(enemy.x - тело.x, enemy.y - тело.y);
       if (gap > WITNESS_SIGHT) continue;
       if (!hasSight(world, enemy.x, enemy.y, тело.x, тело.y)) continue;
-      world.engaged = true;
-      world.events.push({ type: 'engaged', cause: 'body' });
+      raiseOperationAlarm(world, 'body', true);
       return;
     }
 
@@ -2057,8 +2275,7 @@ function noticeBodies(world) {
       const gap = Math.hypot(enemy.x - другой.x, enemy.y - другой.y);
       if (gap > WITNESS_SIGHT) continue;
       if (!hasSight(world, enemy.x, enemy.y, другой.x, другой.y)) continue;
-      world.engaged = true;
-      world.events.push({ type: 'engaged', cause: 'body' });
+      raiseOperationAlarm(world, 'body', true);
       return;
     }
   }
@@ -2170,11 +2387,6 @@ function updatePlayer(world, dt, intent) {
     }
   }
 
-  /* Выход открыт — стоя на нём, этаж считается сданным. */
-  if (world.exitOpen && world.state === 'play' && tileAt(world, player.x, player.y) === TILE.EXIT) {
-    world.state = 'clear';
-    world.events.push({ type: 'exit' });
-  }
 }
 
 
@@ -2186,6 +2398,7 @@ function updateEnemy(world, enemy, dt) {
   }
 
   enemy.cooldown = Math.max(0, enemy.cooldown - dt);
+  enemy.brittle = Math.max(0, (enemy.brittle || 0) - dt);
   enemy.swing = Math.max(0, (enemy.swing || 0) - dt);
   enemy.flash = Math.max(0, (enemy.flash || 0) - dt);
   enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
@@ -2224,11 +2437,11 @@ function updateEnemy(world, enemy, dt) {
     scorch(world, enemy, dt);
     if (!enemy.alive) return;
 
-    enemy.downed -= dt;
+    if (!enemy.unconscious) enemy.downed -= dt;
     enemy.vx *= 0.86;
     enemy.vy *= 0.86;
     moveBody(world, enemy, enemy.vx * dt, enemy.vy * dt);
-    if (enemy.downed <= 0) {
+    if (!enemy.unconscious && enemy.downed <= 0) {
       enemy.state = 'alert';
       enemy.heard = { x: world.player.x, y: world.player.y };
       /* Пробуждение — событие, а не тихая смена поля. Без него судьбу
@@ -2293,6 +2506,11 @@ function updateBullets(world, dt) {
        */
       if (bullet.substance) shatter(world, tileIndex(world, bullet.x, bullet.y), bullet.substance);
 
+      if (bullet.from === 'player' && hitWorldProp(world, bullet)) {
+        bullet.life = 0;
+        break;
+      }
+
       /*
        * Сигнатура следа: вещество ложится на каждом шагу полёта, а не
        * только там, где снаряд встал. Первые полторы клетки пропускаются —
@@ -2341,16 +2559,15 @@ function updateBullets(world, dt) {
       const angle = Math.atan2(sy, sx);
 
       if (bullet.from === 'player') {
-        for (const enemy of world.enemies) {
-          if (!enemy.alive) continue;
-          if (Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y) >= BODY + 1) continue;
-
-          if (!resisted(world, enemy, angle, { elements: bullet.elements })) {
-            killEnemy(world, enemy, angle, bullet.weapon === 'daemon' ? 'daemon' : 'bullet',
-              { by: 'player', weapon: bullet.weapon, elements: bullet.elements,
-                form: bullet.form,
-                traits: bullet.substance ? bullet.substance.traits : null });
-          }
+        const struck = livingBodies(world)
+          .filter((body) => Math.hypot(body.x - bullet.x, body.y - bullet.y) < BODY + 1)
+          .sort((a, b) => Math.hypot(a.x - bullet.x, a.y - bullet.y)
+            - Math.hypot(b.x - bullet.x, b.y - bullet.y));
+        for (const body of struck) {
+          hitLivingBody(world, body, angle, bullet.weapon === 'daemon' ? 'daemon' : 'bullet',
+            { by: 'player', weapon: bullet.weapon, elements: bullet.elements,
+              form: bullet.form,
+              traits: bullet.substance ? bullet.substance.traits : null });
 
           if (bullet.pierce > 0) { bullet.pierce -= 1; continue; }
           bullet.life = 0;

@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Макет первого экрана — воспроизведение настоящего прогона</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#07090c; --panel:#0d1116; --line:#1f272f; --line2:#2b3540;
+    --text:#e9ecef; --dim:#9aa4ae; --dim2:#7d868f;
+    --green:#8ce89a; --green-d:#3ddc84; --blue:#1f6feb;
+    --warn:#ffd479; --warn-bg:#2b230e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.6 -apple-system,system-ui,"Segoe UI",sans-serif;
+    -webkit-text-size-adjust:100%}
+  .banner{background:#161d16;border-bottom:1px solid #2b4a2b;color:#a7c5aa;
+    font-size:13px;padding:8px 16px;text-align:center}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px 20px 40px}
+  .top{display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:8px 0 16px}
+  .logo{font-weight:700;font-size:18px;color:var(--green);white-space:nowrap}
+  .nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .nav a{font-size:13px;color:var(--dim);border:1px solid #232a31;border-radius:8px;
+    padding:6px 12px;text-decoration:none}
+  .nav a.dim{opacity:.6}
+
+  /* ── ПЕРВЫЙ ЭКРАН: воспроизведение настоящего прогона ── */
+  .hero{border:1px solid var(--line2);border-radius:16px;overflow:hidden;
+    background:var(--panel)}
+  .herotop{display:flex;align-items:baseline;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;padding:14px 18px 10px;border-bottom:1px solid var(--line)}
+  .herotop h1{margin:0;font-size:19px;line-height:1.25;font-weight:650;flex:1 1 260px}
+  .herotop h1 b{color:var(--green)}
+  .stamp{font-size:12px;color:var(--dim2);white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+
+  .term{height:clamp(230px,38vh,320px);overflow:hidden;position:relative;
+    background:#080b0e;padding:10px 0}
+  .feed{position:absolute;left:0;right:0;bottom:10px;padding:0 16px;
+    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .row{display:grid;grid-template-columns:52px 14px 1fr;gap:8px;
+    padding:3px 0;opacity:0;transform:translateY(6px);
+    animation:in .28s ease-out forwards}
+  @keyframes in{to{opacity:1;transform:none}}
+  /* Строки, с которыми лента открывается: без набегания, иначе на старте
+     десяток мигнёт разом и это заметно хуже пустоты. */
+  .row.srazu{animation:none;opacity:1;transform:none}
+  .t{color:#4b5560;font-variant-numeric:tabular-nums;text-align:right}
+  .mark{text-align:center}
+  .row .txt{min-width:0;overflow-wrap:anywhere}
+  .ask .txt{color:#c9d1d9}
+  .ask .mark{color:#4b5560}
+  .out .txt{color:var(--dim)}
+  .out .mark{color:#3a4450}
+  .warnrow .txt{color:var(--warn)}
+  .warnrow .mark{color:var(--warn)}
+  .okrow .txt{color:var(--green)}
+  .okrow .mark{color:var(--green-d)}
+  .think .txt{color:#b18cff;font-style:italic}
+  .think .mark{color:#b18cff}
+  .itog .txt{color:#e9ecef;font-weight:600}
+  .itog .mark{color:var(--green-d)}
+  .fade{position:absolute;left:0;right:0;top:0;height:64px;pointer-events:none;
+    background:linear-gradient(#080b0e,rgba(8,11,14,0))}
+
+  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 16px;border-top:1px solid var(--line);background:#0a0e12}
+  .live{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--green)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green-d);
+    box-shadow:0 0 0 0 rgba(61,220,132,.7);animation:p 1.6s infinite}
+  @keyframes p{to{box-shadow:0 0 0 12px rgba(61,220,132,0)}}
+  .btn{background:#161b21;color:#c9d1d9;border:1px solid #29313a;border-radius:8px;
+    padding:6px 13px;font-size:13px;cursor:pointer;font-family:inherit}
+  .btn:hover{background:#1c232b}
+  .btn.main{background:var(--blue);border-color:var(--blue);color:#fff}
+  .speed{font-size:12px;color:var(--dim2);margin-left:auto;text-align:right}
+
+  .herofoot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:2px;background:var(--line);border-top:1px solid var(--line)}
+  .cell{background:var(--panel);padding:11px 16px}
+  .cell .k{font-size:11.5px;color:var(--dim2);text-transform:uppercase;
+    letter-spacing:.04em}
+  .cell .v{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums}
+  .cell .v small{font-size:12px;font-weight:400;color:var(--dim)}
+
+  .honest{margin:10px 2px 0;font-size:12.5px;color:var(--dim2)}
+
+  /* ── вторым планом ── */
+  h3{font-size:13px;color:var(--dim2);font-weight:500;margin:34px 0 12px;
+    text-transform:uppercase;letter-spacing:.05em}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .card{background:#11151a;border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px}
+  .card .ct{font-weight:600}
+  .card .cd{font-size:13px;color:var(--dim);margin-top:3px}
+  .lbl{background:var(--warn-bg);color:var(--warn);font-size:11px;padding:2px 8px;
+    border-radius:6px;margin-left:8px}
+  .note{margin:26px 0 0;color:var(--dim2);font-size:13.5px;
+    border-top:1px solid var(--line);padding-top:16px}
+
+  @media (max-width:640px){
+    .wrap{padding:12px 14px 32px}
+    /* Меню в один ряд: на 375 четыре кнопки прежнего размера не вставали,
+       и «EN» уезжала на вторую строку, съедая первый экран. */
+    .nav{gap:6px}
+    .nav a{padding:5px 9px;font-size:12.5px}
+    .herotop{padding:12px 14px 8px}
+    .herotop h1{font-size:17px}
+    /* Высота подобрана так, чтобы строка с числами влезала целиком:
+       при 812 экрана низ героя был 841 — числа обрезались. */
+    .term{height:clamp(170px,26vh,215px)}
+    .bar{padding:9px 13px}
+    .cell{padding:9px 14px}
+    .feed{font-size:12px;padding:0 12px}
+    .row{grid-template-columns:44px 12px 1fr;gap:6px}
+    .speed{margin-left:0;width:100%;text-align:left}
+  }
+  /* Телефон, положенный набок: высоты 375, и первый экран не влезал —
+     низ героя выходил на 607. Всё сжимается, числа встают в один ряд. */
+  @media (max-height:520px) and (orientation:landscape){
+    .banner{padding:5px 14px;font-size:11.5px}
+    .wrap{padding:8px 16px 24px}
+    .top{padding:4px 0 8px}
+    .logo{font-size:16px}
+    .nav a{padding:4px 9px;font-size:12px}
+    .herotop{padding:9px 14px 7px}
+    .herotop h1{font-size:15px;line-height:1.2}
+    .stamp{font-size:11px}
+    .term{height:104px;padding:6px 0}
+    .feed{font-size:11.5px;line-height:1.42;bottom:7px}
+    .fade{height:34px}
+    .bar{padding:6px 13px;gap:8px}
+    .btn{padding:4px 11px;font-size:12px}
+    .speed{font-size:11px}
+    .herofoot{grid-template-columns:repeat(4,1fr)}
+    .cell{padding:6px 11px}
+    .cell .k{font-size:10px}
+    .cell .v{font-size:14px}
+    .cell .v small{font-size:11px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .row{animation:none;opacity:1;transform:none}
+    .dot{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="banner">МАКЕТ первого экрана. Вариант 1 «Живое доказательство», живое = вариант 3 «воспроизведение настоящего прогона».</div>
+
+<div class="wrap">
+  <div class="top">
+    <div class="logo">aka-gst</div>
+    <div class="nav">
+      <a href="#">Работа</a>
+      <a href="#" class="dim">Игры</a>
+      <a href="#" class="dim">Рассказы</a>
+      <a href="#" class="dim">EN</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="herotop">
+      <h1>Агента спросили, сколько места на первом экране.<br>
+          Он померил — и <b>дважды поймал на вранье собственный измеритель</b>.</h1>
+      <div class="stamp">настоящий прогон · 5 сентября, 00:42</div>
+    </div>
+
+    <div class="term">
+      <div class="fade"></div>
+      <div class="feed" id="feed" aria-live="polite"></div>
+    </div>
+
+    <div class="bar">
+      <span class="live"><span class="dot"></span><span id="state">идёт</span></span>
+      <button class="btn main" id="play">Пауза</button>
+      <button class="btn" id="again">Сначала</button>
+      <span class="speed" id="speed">прогон 12:30 · отметки времени настоящие</span>
+    </div>
+
+    <div class="herofoot">
+      <div class="cell"><div class="k">нашлось</div>
+        <div class="v">363 КБ <small>на значке 34×34</small></div></div>
+      <div class="cell"><div class="k">страница станет</div>
+        <div class="v">529 КБ <small>было 861</small></div></div>
+      <div class="cell"><div class="k">поймал себя</div>
+        <div class="v">4 раза <small>из 43 действий</small></div></div>
+      <div class="cell"><div class="k">заняло</div>
+        <div class="v">12:30 <small>без человека</small></div></div>
+    </div>
+  </div>
+
+  <p class="honest">Это запись настоящей работы, а не постановка: команды, ответы и
+  отметки времени взяты из журнала прогона как есть — вместе с ошибкой в
+  регулярном выражении, которую агент допустил сам. Двенадцать с половиной
+  минут показаны за тридцать три секунды. Промежутки сохранены, но подрезаны с
+  обоих концов — короче 0,9 с и длиннее 2,6 с не бывает, иначе одни шаги
+  мелькали бы, а на других запись стояла бы минутами. В ленту вынесены узловые
+  шаги: 29 строк из 43 действий. Лента открывается уже набранной — начальную
+  часть, счёт и размеры, видно сразу, — а дальше идёт в темпе прогона. Порядок
+  шагов и сами отметки времени не тронуты, у итога метки времени нет: это
+  вывод, а не событие.</p>
+
+  <!-- Было «вторым экраном» — неправда: на 1440x900 карточки видны на 760–860
+       при окне 900, то есть на первом же экране. Подпись обещала расположение,
+       которого нет, и на большом мониторе его не добиться никакой вёрсткой.
+       «Вторым планом» — про иерархию, и это правда везде. -->
+  <h3>Проекты — вторым планом</h3>
+  <div class="grid">
+    <div class="card"><div class="ct">QueQuest</div><div class="cd">Python и LLM в браузере</div></div>
+    <div class="card"><div class="ct">Игры <span class="lbl">10+</span></div><div class="cd">веб-прототипы механик</div></div>
+    <div class="card"><div class="ct">Практикумы</div><div class="cd">локальные AI-агенты</div></div>
+    <div class="card"><div class="ct">Рассказы</div><div class="cd">23 текста, читалка</div></div>
+  </div>
+
+  <p class="note">Первый экран показывает не список работ, а <b>как эта работа
+  делается</b>. Для места, где важна не сборка кода, а умение заметить, что
+  измеритель врёт, — это и есть предъявляемое умение.</p>
+</div>
+
+<script>
+// Прогон настоящий: отметки времени из журнала сессии, UTC+3.
+// Начало 00:42:03, конец 00:54:33 — двенадцать с половиной минут.
+// Промежутки НЕ выровнены: 6, 7, 10, 51, 94, 151 секунда — так и было.
+//
+// В окне 43 действия агента (посчитано по журналу, id вызовов уникальны —
+// дублей нет). Здесь узловые: 29 строк. Это ВЫБОРКА, и так написано под
+// лентой — иначе кто-нибудь пересчитает строки и поймает нас на разнице.
+// Число «17 шагов» в первой сборке я взял из головы; проверка по журналу
+// дала 43. Ровно та ошибка, о которой эта страница и рассказывает.
+const ПРОГОН = [
+  [ '00:42:03', 'ask',  'сколько картинок грузит главная и сколько из них ленивых' ],
+  [ '00:42:04', 'out',  '27 картинок, 20 ленивых → 7 жадных' ],
+  [ '00:42:16', 'ask',  'сколько весят эти семь' ],
+  [ '00:42:17', 'out',  '757 912 байт. Крупнейший — 363 476' ],
+  [ '00:42:26', 'out',  'его размер: 512×512' ],
+  [ '00:42:32', 'out',  'а показывают его: 34 пикселя' ],
+  [ '00:42:39', 'think','значит везём в 15 раз больше пикселей, чем видно. Проверить, не крупнее ли он где-то ещё' ],
+  [ '00:42:40', 'out',  'один вызов на весь сайт' ],
+  [ '00:42:55', 'out',  'уменьшенный до 128×128 весит 30 700 байт' ],
+  [ '00:43:55', 'ask',  'доказать, что глазами не отличить' ],
+  [ '00:43:56', 'warn', '28.1 дБ, максимум 150/255 — отличается заметно' ],
+  [ '00:44:10', 'think','не сходится. Такой разницы тут быть не может — проверить саму меру' ],
+  [ '00:44:19', 'ok',   'мера сравнивала цвет в ПОЛНОСТЬЮ ПРОЗРАЧНЫХ точках, где не видно ничего' ],
+  [ '00:44:20', 'out',  'на настоящем фоне: 31.9 дБ. Отрицательный контроль: 13.0 дБ' ],
+  [ '00:44:40', 'out',  'осмотр при увеличении в 6 раз: три варианта неразличимы' ],
+  [ '00:45:26', 'ask',  'а что из загруженного вообще видно на первом экране телефона' ],
+  [ '00:45:27', 'out',  'из 7 загруженных видно 3. Остальные 565 КБ — ниже сгиба' ],
+  [ '00:47:00', 'think','очевидная правка — отложить их ленивой загрузкой. Проверить, а не поверить' ],
+  [ '00:47:01', 'out',  'якоря правки: 1, 1, 1 — все единственные' ],
+  [ '00:47:50', 'warn', 'замер упал: TypeError — в моём же скрипте остался мусор от копипасты' ],
+  [ '00:47:59', 'ok',   'убрал, замер пошёл' ],
+  [ '00:50:04', 'out',  'замер ДО: 744 КБ картинок' ],
+  [ '00:50:30', 'warn', 'замер ПОСЛЕ: загрузились все восемь. Ленивость не сработала' ],
+  [ '00:50:31', 'ok',   'браузер тянет всё ближе 1250 пикселей к экрану. Самая дальняя — на 2043' ],
+  [ '00:50:32', 'think','отчитайся я по разметке — назвал бы экономию 565 КБ, которой нет' ],
+  [ '00:51:14', 'warn', 'второй путь: один файл при пересжатии ВЫРОС на 82%' ],
+  [ '00:54:10', 'warn', 'своя же проверка ругается на SVG — ошибка в регулярном выражении' ],
+  [ '00:54:33', 'ok',   'исправлено, проверены ОБА исхода: SVG ушёл, PNG остался' ],
+  // У итога метки времени НЕТ намеренно: это вывод, а не событие журнала.
+  // Проставить ему секунду значило бы подделать ровно то, чем эта страница
+  // хвалится. Последнее настоящее событие — 00:54:33.
+  [ '',         'итог', '363 476 → 30 700 байт. Страница 861 → 529 КБ' ],
+];
+
+const МЕТКИ = { ask:'›', out:' ', warn:'⚠', ok:'✔', think:'·', 'итог':'=' };
+const КЛАСС = { ask:'ask', out:'out', warn:'warnrow', ok:'okrow', think:'think', 'итог':'itog' };
+
+// Подобрано замером, а не на глаз: при ×40 и минимуме 260 мс все 27 шагов
+// пролетали за пять секунд — прочесть нельзя, а ради чтения всё и делается.
+// При ×25 и минимуме 900 мс прогон идёт около сорока секунд.
+const УСКОРЕНИЕ = 25;
+const МИН = 900, МАКС = 2600;   // мс: чтобы ни один шаг не мелькнул и не завис
+const ПОВТОРОВ = 3;             // потом останавливаемся: незачем крутить в брошенной вкладке
+
+// Это ПОТОЛОК, а не норма: останавливает набор высота блока, а не счёт.
+// При потолке 10 десктоп упирался в него раньше, чем заполнялся блок 320
+// пикселей, и в первую секунду оставалось 55 пикселей пустоты. При 12
+// заполняется целиком на обоих.
+const НАЧАЛЬНЫХ = 12;
+
+const лента = document.getElementById('feed');
+const кнопка = document.getElementById('play');
+const заново = document.getElementById('again');
+const состояние = document.getElementById('state');
+
+const всекунды = (t) => { const [ч,м,с] = t.split(':').map(Number); return ч*3600 + м*60 + с; };
+
+let шаг = 0, таймер = null, идёт = true, круг = 1;
+
+const пауза = (i) => {
+  if (i >= ПРОГОН.length - 1) return 2400;
+  // У итоговой строки метки времени нет — до неё держим обычную паузу.
+  if (!ПРОГОН[i+1][0] || !ПРОГОН[i][0]) return 1800;
+  const d = всекунды(ПРОГОН[i+1][0]) - всекунды(ПРОГОН[i][0]);
+  return Math.min(МАКС, Math.max(МИН, (d * 1000) / УСКОРЕНИЕ));
+};
+
+const строка = ([t, вид, текст], сразу) => {
+  const el = document.createElement('div');
+  el.className = 'row ' + КЛАСС[вид] + (сразу ? ' srazu' : '');
+  const мет = document.createElement('span'); мет.className = 'mark'; мет.textContent = МЕТКИ[вид];
+  const врм = document.createElement('span'); врм.className = 't'; врм.textContent = t ? t.slice(3) : '';
+  const тхт = document.createElement('span'); тхт.className = 'txt'; тхт.textContent = текст;
+  el.append(врм, мет, тхт);
+  return el;
+};
+
+// Лента открывается уже набранной: пустой прямоугольник в первые секунды —
+// это то, из-за чего человек уходит, не дождавшись сути. Замер Глаз-Ушей:
+// на 2.5 секунде в ленте три строки и 235 пикселей пустоты, а заполнялась
+// она к десятой.
+//
+// Набираем ЦЕЛЫМИ строками и ровно столько, сколько влезает в блок на этом
+// экране. Фиксированное число давало на телефоне перебор: последняя строка
+// лезла за верхнюю кромку и обрезалась — половина буквы, а набок четверть,
+// и это читалось не как «выше есть ещё», а как брак вёрстки.
+const набрать = () => {
+  лента.textContent = '';
+  const рамка = document.querySelector('.term');
+  const доступно = рамка.clientHeight - 20;   // 10 сверху и снизу под отступы
+  let i = 0;
+  while (i < Math.min(НАЧАЛЬНЫХ, ПРОГОН.length - 1)) {
+    const строчка = строка(ПРОГОН[i], true);
+    лента.append(строчка);
+    if (лента.getBoundingClientRect().height > доступно) { строчка.remove(); break; }
+    i += 1;
+  }
+  шаг = i;
+  // Подпись считаем, а не пишем руками: сколько строк набрано сразу, зависит
+  // от высоты экрана, значит и оставшееся время воспроизведения — тоже.
+  // Прежняя «33 с» была верна ровно до того, как появился начальный набор.
+  let мс = 0;
+  for (let k = i; k < ПРОГОН.length - 1; k += 1) мс += пауза(k);
+  const скорость = document.getElementById('speed');
+  if (скорость) скорость.textContent =
+    `прогон 12:30 · остаток идёт ${Math.round(мс / 1000)} с · отметки времени настоящие`;
+};
+
+const дальше = () => {
+  if (шаг >= ПРОГОН.length) {
+    // Пришедший в середине должен увидеть движение, а не застывший конец.
+    // Но крутить вечно в брошенной вкладке незачем — три круга и стоп.
+    if (круг < ПОВТОРОВ) {
+      круг += 1;
+      состояние.textContent = 'прогон закончен · пойдёт заново';
+      таймер = setTimeout(() => { набрать(); состояние.textContent = 'идёт'; таймер = setTimeout(дальше, 1400); }, 5000);
+      return;
+    }
+    состояние.textContent = 'прогон закончен';
+    кнопка.textContent = 'Ещё раз';
+    идёт = false;
+    return;
+  }
+  лента.append(строка(ПРОГОН[шаг]));
+  // Держим ленту короткой: старое уходит, как в настоящем терминале.
+  while (лента.children.length > 14) лента.firstChild.remove();
+  таймер = setTimeout(дальше, пауза(шаг));
+  шаг += 1;
+};
+
+const старт = () => {
+  идёт = true; состояние.textContent = 'идёт'; кнопка.textContent = 'Пауза';
+  if (шаг === 0) { набрать(); таймер = setTimeout(дальше, 1400); return; }
+  дальше();
+};
+const стоп  = () => { идёт = false; clearTimeout(таймер); состояние.textContent = 'пауза'; кнопка.textContent = 'Продолжить'; };
+const сброс = () => { clearTimeout(таймер); лента.textContent = ''; шаг = 0; круг = 1; старт(); };
+
+кнопка.addEventListener('click', () => {
+  if (шаг >= ПРОГОН.length) return сброс();
+  идёт ? стоп() : старт();
+});
+заново.addEventListener('click', сброс);
+
+// Пока вкладку не видно, ничего не крутим: незачем жечь батарею.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && идёт) стоп();
+});
+
+// Кому движение мешает — показываем прогон целиком, без анимации.
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  ПРОГОН.forEach((с) => лента.append(строка(с, true)));
+  while (лента.children.length > 14) лента.firstChild.remove();
+  состояние.textContent = 'прогон целиком';
+  кнопка.textContent = 'Проиграть';
+  идёт = false;
+  шаг = ПРОГОН.length;
+  document.getElementById('speed').textContent = 'движение выключено по настройке браузера';
+} else {
+  старт();
+}
+</script>
+</body>
+</html>

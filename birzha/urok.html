@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>Лаборатория решений</title>
+<script>
+  // счётчик: не на localhost и не с диска; ?test выключает события (правило 30)
+  if (location.protocol !== 'file:' && !/^(localhost|127\.)/.test(location.hostname)) {
+    document.write('<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"><\/script>');
+  }
+</script>
+<style>
+  :root{--фон:#0c0e13;--плитка:#14171f;--кромка:#232733;--текст:#e8eaf0;--тихий:#7e8598;--зелёный:#4ade80;--жёлтый:#fbbf24;--красный:#f87171;--лиловый:#a78bfa}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#05060a;color:var(--текст);font:15px/1.45 -apple-system,"SF Pro Text",Roboto,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+  .экран{max-width:430px;min-height:100dvh;margin:auto;background:var(--фон);padding:8px 12px 0;display:flex;flex-direction:column;gap:6px}
+  .экран[hidden]{display:none!important}
+  .шапка{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;line-height:1.25}
+  .шапка b{font-size:12px;letter-spacing:.08em;color:var(--тихий);font-weight:600}
+  .шапка span{font-size:12px;color:var(--тихий);font-variant-numeric:tabular-nums}
+  .насайт{white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 12px;border:1px solid var(--кромка);border-radius:10px;color:var(--текст);text-decoration:none;font-size:11px;letter-spacing:.06em}
+  .ярлык{font-size:11px;letter-spacing:.1em;color:var(--тихий);font-weight:700}
+  .плитка{background:var(--плитка);border:1px solid var(--кромка);border-radius:12px;padding:8px 11px}
+  .гипотеза .ярлык{color:var(--лиловый)}.гипотеза p{font-size:13px;line-height:1.28;margin-top:3px;font-weight:600}
+  details summary::-webkit-details-marker{display:none}
+  .гипотеза .низ{display:flex;gap:12px;margin-top:4px;font-size:11px;color:var(--тихий);flex-wrap:wrap}
+  .строка{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:1px 0;font-variant-numeric:tabular-nums}
+  .строка>span:first-child{color:var(--тихий);font-size:12px}.строка>span:last-child{font-size:14px;font-weight:600;text-align:right}
+  .моно{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13px}
+  .цена{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .цена div{background:var(--плитка);border:1px solid var(--кромка);border-radius:12px;padding:6px 4px;text-align:center}
+  .цена .к{font-size:9px;letter-spacing:.06em;color:var(--тихий)}.цена .з{font-size:15px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+  .итог{border-radius:12px;padding:8px 11px;border:1px solid #2c3040;background:#16171d}
+  .итог.минус{background:#1d1216;border-color:#4b2027}.итог.плюс{background:#0f1a12;border-color:#1f4a2c}
+  .итог .верх{font-size:11px;letter-spacing:.08em;font-weight:700}.итог .число{font-size:22px;font-weight:800;margin-top:1px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .итог .почему{font-size:12px;color:var(--тихий);margin-top:4px;line-height:1.3}
+  .сломалось{background:#1b1608;border:1px solid #4a3a10;border-radius:12px;padding:8px 11px}
+  .сломалось .ярлык{color:var(--жёлтый)}.сломалось p{font-size:13px;margin-top:3px;line-height:1.3}
+  .сломалось.честно{background:#0f1a12;border-color:#1f4a2c}.сломалось.честно .ярлык{color:var(--зелёный)}
+  .было,.стало{display:flex;gap:8px;align-items:flex-start;padding:4px 0;font-size:13px}
+  .метка{font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;flex:none;margin-top:1px}
+  .было .метка{background:#2a2028;color:#b98a95}.стало .метка{background:#14301f;color:var(--зелёный)}
+  .было span:last-child{color:var(--тихий);text-decoration:line-through}
+  .низ-экрана{margin-top:auto;position:sticky;bottom:0;background:var(--фон);padding:6px 0 10px;display:flex;flex-direction:column;gap:6px}
+  .счёт{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--кромка);padding-top:6px}
+  .счёт div{text-align:center}.счёт .з{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}.счёт .к{font-size:10px;color:var(--тихий);letter-spacing:.04em;margin-top:1px;line-height:1.15}
+  .кнопки{display:flex;gap:8px}
+  .кнопка{flex:1;text-align:center;min-height:46px;padding:12px;border-radius:12px;font-size:15px;font-weight:700;border:0;cursor:pointer;font-family:inherit}
+  .кнопка.главная{background:var(--зелёный);color:#06210f}.кнопка.вторая{background:transparent;border:1px solid var(--кромка);color:var(--текст)}
+  .крупно{font-size:20px;font-weight:800;line-height:1.2}
+  .разбор{background:var(--плитка);border:1px solid var(--кромка);border-radius:14px;overflow:hidden}
+  .разбор .р{display:flex;justify-content:space-between;gap:10px;padding:7px 12px;border-bottom:1px solid var(--кромка);font-variant-numeric:tabular-nums}
+  .разбор .р:last-child{border-bottom:0}.разбор .р.вывод{background:#1d1216}
+  .разбор .р span:first-child{color:var(--тихий);font-size:12px}.разбор .р span:last-child{font-weight:700;white-space:nowrap}
+  .шкала{display:grid;grid-template-columns:auto 1fr auto;gap:6px 8px;align-items:center;margin-top:6px;font-size:11px;color:var(--тихий);font-variant-numeric:tabular-nums}
+  .шкала .п{height:16px;border-radius:4px;display:flex;overflow:hidden;background:#1b1f28}.шкала .п i{height:100%;display:block}
+  .лента i{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-style:normal;overflow:hidden;white-space:nowrap}
+  .подпись{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--тихий)}
+  .г{display:flex;align-items:baseline;gap:8px;padding:3px 0;font-size:13px;border-bottom:1px solid #1b1f28}.г:last-child{border-bottom:0}
+  .г b{font-size:11px;color:var(--тихий);font-weight:700;width:20px;flex:none}.г span{flex:1;color:var(--тихий)}.г i{font-style:normal;font-size:11px;font-weight:700;flex:none}
+  .полоска{height:3px;background:#1b1f28;border-radius:2px;overflow:hidden}.полоска i{display:block;height:100%;width:0;background:#7e8598}
+  svg{width:100%;height:84px;display:block;background:var(--плитка);border:1px solid var(--кромка);border-radius:12px}
+  .цз{color:var(--зелёный)}.цк{color:var(--красный)}.цж{color:var(--жёлтый)}
+  .мелко{font-size:11px;color:var(--тихий);line-height:1.3}
+</style>
+</head>
+<body>
+
+<!-- ЭКРАН 1: прогон -->
+<section class="экран" id="э1">
+  <div class="шапка"><div><b id="э1-шапка">УРОК 4 · ПОЧЕМУ БОТ ПРОИГРАЛ · настоящие цены BTC, деньги ненастоящие</b><br><span id="э1-шаг">…</span></div><a class="насайт" href="https://aka-gst.ru/">НА САЙТ</a></div>
+  <svg id="граф" viewBox="0 0 400 84" preserveAspectRatio="none"></svg>
+  <div class="полоска"><i id="полоска"></i></div>
+  <div class="плитка гипотеза"><div class="ярлык" id="э1-гип-ярлык">ИДЕЯ БОТА</div><p id="э1-гипотеза">…</p><div class="низ"><span id="э1-правило">правило v1</span><span id="э1-участок">участок: …</span></div></div>
+  <div class="плитка" id="э1-простыми"><div class="ярлык" style="margin-bottom:6px">ЧТО ПРОИСХОДИТ, ПРОСТЫМИ СЛОВАМИ</div><p id="э1-фраза" style="font-size:15px;line-height:1.35;min-height:60px">Бот ждёт: цена должна пойти вверх заметнее обычного.</p></div>
+  <details class="плитка" style="padding:6px 11px"><summary class="ярлык" style="cursor:pointer;margin:0">ПОДРОБНЕЕ, ДЛЯ ТЕХ КТО ХОЧЕТ ЦИФРЫ</summary><div style="margin-top:6px">
+    <div class="строка"><span>закрытие свечи</span><span class="моно" id="у-закр">—</span></div>
+    <div class="строка"><span>быстрая средняя (5)</span><span class="моно" id="у-быстр">—</span></div>
+    <div class="строка"><span>медленная средняя (20)</span><span class="моно" id="у-медл">—</span></div>
+    <div class="строка"><span>разрыв между ними</span><span class="моно" id="у-разрыв">—</span></div>
+    <div class="строка"><span>сигнал</span><span id="у-сигнал">ждём</span></div>
+  </div></details>
+  <div class="цена">
+    <div><div class="к">ЦЕНА МОДЕЛИ</div><div class="з" id="ц-модели">—</div></div>
+    <div><div class="к">КОМИССИЯ</div><div class="з" id="ц-комис">0.10%</div></div>
+    <div><div class="к">ЗАДЕРЖКА</div><div class="з" id="ц-задерж">1 свеча</div></div>
+  </div>
+  <div class="итог" id="э1-итог"><div class="верх" id="и-верх">РЕШЕНИЕ</div><div class="число" id="и-число">—</div><div class="почему" id="и-почему">бот ждёт пересечения средних</div></div>
+  <div class="сломалось" id="э1-сломалось" hidden><div class="ярлык">ПОЧЕМУ ПРОИГРЫВАЕТ</div><p id="э1-слом-текст"></p></div>
+  <div class="низ-экрана"><div class="счёт">
+    <div><div class="з" id="с-сделок">0</div><div class="к">сделок<br>на бумаге</div></div>
+    <div><div class="з" id="с-нетто">0.00%</div><div class="к">итог с<br>издержками</div></div>
+    <div><div class="з" id="с-кошелёк">1000</div><div class="к">USDT<br>в кошельке</div></div>
+  </div>
+  <div class="кнопки" id="э1-кнопки"><button class="кнопка главная" id="к-итог" disabled style="opacity:.45">Разбор — когда прогон дойдёт до конца</button></div></div>
+</section>
+
+<!-- ЭКРАН 2: итог -->
+<section class="экран" id="э2" hidden>
+  <div class="шапка"><div><b>ПРОГОН · ИТОГ</b><br><span id="э2-шапка">…</span></div><a class="насайт" href="https://aka-gst.ru/">НА САЙТ</a></div>
+  <div class="крупно" id="э2-заголовок">…</div>
+  <p class="мелко" style="font-size:14px" id="э2-подзаг">…</p>
+  <div class="разбор" id="э2-разбор"></div>
+  <div class="сломалось"><div class="ярлык">ПРИЧИНА, СЛОВАМИ</div><p id="э2-причина"></p></div>
+  <div class="плитка"><div class="ярлык">ПРЕИМУЩЕСТВО ПРОТИВ ИЗДЕРЖЕК, ОДНА ШКАЛА</div><div class="шкала" id="э2-шкала"></div><div class="подпись"><span id="э2-было"></span><span id="э2-стало"></span></div></div>
+  <div class="плитка"><div class="ярлык" style="margin-bottom:6px">ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ</div>
+    <div class="строка"><span id="ок-период-ярлык">на новом участке</span><span id="ок-период">…</span></div>
+    <div class="строка"><span>на испорченном входе</span><span id="ок-порча">…</span></div>
+    <div class="строка"><span>на случайном рынке, медиана из 15</span><span id="ок-случай">…</span></div>
+    <div class="строка"><span>значит измеритель</span><span id="ок-вывод">…</span></div>
+  </div>
+  <div class="низ-экрана"><div class="счёт">
+    <div><div class="з" id="э2-сделок">0</div><div class="к">сделок<br>на бумаге</div></div>
+    <div><div class="з">0 ₽</div><div class="к">настоящих<br>денег</div></div>
+    <div><div class="з цз" id="э2-причин">1</div><div class="к">причина<br>найдена</div></div>
+  </div>
+  <div class="кнопки"><button class="кнопка главная" id="к-дальше">Что дальше</button><button class="кнопка вторая" id="к-назад1">К прогону</button></div></div>
+</section>
+
+<!-- ЭКРАН 3: что дальше -->
+<section class="экран" id="э3" hidden>
+  <div class="шапка"><div><b>ЧТО ДАЛЬШЕ</b><br><span id="э3-шапка">…</span></div><a class="насайт" href="https://aka-gst.ru/">НА САЙТ</a></div>
+  <div class="крупно" id="э3-заголовок">…</div>
+  <div class="плитка"><div class="ярлык" style="margin-bottom:6px">ЧЕМУ НАУЧИЛИСЬ</div><div class="было"><span class="метка" id="н-было-м">v1</span><span id="н-было"></span></div><div class="стало"><span class="метка" id="н-стало-м">v2</span><span id="н-стало"></span></div></div>
+  <div class="плитка гипотеза"><div class="ярлык">НОВАЯ ГИПОТЕЗА</div><p id="э3-гипотеза"></p><div class="низ"><span id="э3-участок"></span><span>тот же кошелёк</span></div></div>
+  <div class="плитка"><div class="ярлык" style="margin-bottom:6px">ЧЕМ ЭТО ПРОВЕРЯЕТСЯ</div>
+    <div class="строка"><span>участок данных</span><span class="моно">старый и новый</span></div>
+    <div class="строка"><span>комиссия и задержка</span><span class="моно">в расчёте</span></div>
+    <div class="строка"><span>испорченный вход</span><span class="моно">прогоняется</span></div>
+    <div class="строка"><span>случайный рынок</span><span class="моно">15 прогонов</span></div>
+  </div>
+  <div class="сломалось честно"><div class="ярлык">ЧЕСТНО</div><p>Если и эта гипотеза не переживёт новый участок — так и будет написано. Опровергнутая гипотеза считается результатом.</p></div>
+  <div class="плитка"><div class="ярлык" style="margin-bottom:7px">ЧТО УЖЕ ПРОВЕРИЛИ</div><div id="э3-журнал"></div></div>
+  <div class="низ-экрана"><div class="кнопки"><button class="кнопка главная" id="к-проверить">Проверить v2</button><button class="кнопка вторая" id="к-заново">Заново с v1</button></div>
+  <p class="мелко">Публичные свечи из кэша, виртуальный кошелёк, никакой биржи в коде. Учебная лаборатория, не совет по сделкам.</p></div>
+</section>
+
+<script src="data/BTCUSDT-15m.js"></script>
+<script src="src/sim.js"></script>
+<script src="src/kontrol.js"></script>
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const параметры = new URLSearchParams(location.search);
+  const testRun = параметры.has('test');
+  const track = (name, data) => { if (testRun) return false; try { const u = window.umami; if (typeof u?.track !== 'function') return false; u.track(name, data); return true; } catch { return false; } };
+  const свечи = window.SVECHI.candles;
+  const pct = Sim.pct;
+  const фмт = x => x.toLocaleString('ru-RU', { maximumFractionDigits: 0 });
+  const дата = t => new Date(t).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  const проверено = []; // журнал гипотез этой сессии
+  let таймер = null, текущее = null;
+
+  function экран(id) { ['э1', 'э2', 'э3'].forEach(k => $(k).hidden = k !== id); window.scrollTo(0, 0); }
+
+  // --- график: закрытия, средние, сделки ---
+  const W = 400, H = 84;
+  // окно в 120 свечей до текущей: на 6000 свечах в 400 точек не видно ни средних, ни сделок
+  const ОКНО = 120;
+  function рисовать(closes, fast, slow, доI, сделки) {
+    const от = Math.max(0, доI - ОКНО + 1), до = Math.min(closes.length - 1, от + ОКНО - 1);
+    const x = i => (i - от) / (ОКНО - 1) * (W - 8) + 4;
+    let mn = Infinity, mx = -Infinity;
+    for (let i = от; i <= до; i++) { for (const v of [closes[i], fast[i], slow[i]]) { if (v == null) continue; if (v < mn) mn = v; if (v > mx) mx = v; } }
+    if (mx === mn) mx = mn + 1;
+    const y = v => H - 8 - (v - mn) / (mx - mn) * (H - 16);
+    const путь = (arr, a, b) => { let s = ''; for (let i = a; i <= b; i++) { if (arr[i] == null) continue; s += (s ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(arr[i]).toFixed(1); } return s; };
+    let svg = `<path d="${путь(closes, от, до)}" stroke="#2d3340" fill="none" stroke-width="1"/>`;
+    svg += `<path d="${путь(closes, от, доI)}" stroke="#aab2c5" fill="none" stroke-width="1.2"/>`;
+    svg += `<path d="${путь(fast, от, доI)}" stroke="#4ade80" fill="none" stroke-width="1.6"/><path d="${путь(slow, от, доI)}" stroke="#fbbf24" fill="none" stroke-width="1.6"/>`;
+    for (const s of сделки) {
+      if (s.vyhod.i < от) continue;
+      const цв = s.netto_pct > 0 ? '#4ade80' : '#f87171';
+      if (s.vhod.i >= от) svg += `<path d="M${x(s.vhod.i).toFixed(1)} ${(y(s.vhod.tsena_ispolneniya) + 9).toFixed(1)} l-5 8 h10 z" fill="#4ade80"/>`;
+      svg += `<path d="M${x(s.vyhod.i).toFixed(1)} ${(y(s.vyhod.tsena_ispolneniya) - 9).toFixed(1)} l-5 -8 h10 z" fill="${цв}"/>`;
+    }
+    if (closes[доI] != null) svg += `<circle cx="${x(доI).toFixed(1)}" cy="${y(closes[доI]).toFixed(1)}" r="3.5" fill="#e8eaf0"/>`;
+    svg += `<text x="6" y="12" font-size="9" fill="#4ade80">куда идёт цена сейчас</text><text x="110" y="12" font-size="9" fill="#fbbf24">как обычно</text><text x="${W - 6}" y="12" font-size="9" fill="#7e8598" text-anchor="end">последние ${ОКНО} свечей</text>`;
+    $('граф').innerHTML = svg;
+  }
+
+  // --- считаем всё по правилу один раз ---
+  function посчитать(id) {
+    const правило = Sim.PRAVILA[id];
+    const с = Sim.progon({ candles: свечи, pravilo: id });
+    const без = Sim.progon({ candles: свечи, pravilo: id, izderzhki: Sim.BEZ_IZDERZHEK });
+    const карта = Sim.karta(без, с);
+    const { staryy, novyy } = Sim.razdelit(свечи, 0.6);
+    const старый = Sim.progon({ candles: staryy, pravilo: id }).itog, новый = Sim.progon({ candles: novyy, pravilo: id }).itog;
+    const уверенность = Sim.uverennost(старый, новый);
+    let порча = 'НЕ ЗАМЕЧЕНО'; try { Sim.progon({ candles: Kontrol.isportit(свечи, 'NaN в закрытии'), pravilo: id }); } catch (e) { порча = 'замечено'; }
+    const случай = Kontrol.naSluchaynom(свечи, id, undefined, 15);
+    return { id, правило, с, без, карта, старый, новый, граница: novyy[0].t, уверенность, порча, случай };
+  }
+
+  // --- экран 1: прогон с прокруткой журнала ---
+  function запуск(id) {
+    clearInterval(таймер);
+    текущее = посчитать(id);
+    const { правило, с } = текущее;
+    экран('э1');
+    const closes = свечи.map(s => s.c), fast = Sim.smaRyad(closes, правило.params.fast), slow = Sim.smaRyad(closes, правило.params.slow);
+    $('э1-гип-ярлык').textContent = 'ИДЕЯ БОТА · вариант ' + (проверено.length + 1);
+    $('э1-гипотеза').textContent = правило.gipoteza;
+    $('э1-правило').textContent = 'правило ' + id;
+    $('э1-участок').textContent = `участок: ${дата(с.period.ot)} — ${дата(с.period.do)}`;
+    $('э1-сломалось').hidden = true; $('к-итог').disabled = true; $('к-итог').style.opacity = '.45'; $('к-итог').textContent = 'Разбор — когда прогон дойдёт до конца';
+    $('э1-итог').className = 'итог'; $('и-верх').textContent = 'РЕШЕНИЕ'; $('и-число').textContent = '—'; $('и-почему').textContent = 'бот ждёт пересечения средних';
+    $('с-сделок').textContent = '0'; $('с-нетто').textContent = '0.00%'; $('с-нетто').className = 'з'; $('с-кошелёк').textContent = фмт(с.itog.koshelyok_start);
+    const ж = с.zhurnal, шаг = Math.max(25, Math.min(140, 40000 / Math.max(1, ж.length)));
+    let k = 0, сделок = 0;
+    const показать = () => {
+      const e = ж[k];
+      if (e.faza === 'решение') {
+        const s = e.signal;
+        $('у-закр').textContent = фмт(s.close); $('у-быстр').textContent = фмт(s.smaFast); $('у-медл').textContent = фмт(s.smaSlow);
+        $('у-разрыв').textContent = (s.gap * 100).toFixed(2) + '%';
+        const цв = e.deystvie === 'купить' ? 'цз' : e.deystvie === 'продать' ? 'цк' : 'цж';
+        $('у-сигнал').innerHTML = `<span class="${цв}">${e.deystvie}</span>`;
+        if (e.deystvie === 'купить') $('э1-фраза').innerHTML = `Цена пошла вверх заметнее обычного → бот <b class="цз">покупает</b> по ${фмт(e.tsena_modeli)}. За вход заплатит комиссию.`;
+        else if (e.deystvie === 'продать') $('э1-фраза').innerHTML = `Цена развернулась вниз → бот <b class="цк">продаёт</b>. Сейчас узнаем, что вышло.`;
+        else $('э1-фраза').innerHTML = `Цена дёрнулась, но бот ${e.deystvie === 'держать' ? 'уже в позиции — держит' : 'пропускает'}.`;
+        $('ц-модели').textContent = фмт(e.tsena_modeli);
+        if (e.deystvie !== 'купить' && e.deystvie !== 'продать') { $('э1-итог').className = 'итог'; $('и-верх').textContent = e.deystvie.toUpperCase(); $('и-число').textContent = '—'; $('и-почему').textContent = e.prichina; }
+        else { $('э1-итог').className = 'итог'; $('и-верх').textContent = e.deystvie.toUpperCase(); $('и-число').textContent = 'заявка'; $('и-почему').textContent = e.prichina + '. Исполнится на следующей свече: цена и комиссия появятся тогда'; }
+      } else if (e.sdelka) {
+        сделок++;
+        const минус = e.sdelka.netto_pct < 0;
+        $('э1-итог').className = 'итог ' + (минус ? 'минус' : 'плюс');
+        $('и-верх').innerHTML = `<span class="${минус ? 'цк' : 'цз'}">СДЕЛКА ЗАКРЫТА В ${минус ? 'МИНУС' : 'ПЛЮС'}</span>`;
+        $('и-число').innerHTML = `<span class="${минус ? 'цк' : 'цз'}">${pct(e.sdelka.netto_pct)}</span>`;
+        const до = pct(e.sdelka.brutto_pct);
+        $('и-почему').textContent = минус && e.sdelka.brutto_pct > 0
+          ? `Ход был ${до}, но меньше издержек: вышел по ${фмт(e.tsena_ispolneniya)} вместо ${фмт(e.tsena_modeli)}, плюс комиссия ${e.komissiya.toFixed(2)} USDT.`
+          : `Без издержек ${до}, с ними ${pct(e.sdelka.netto_pct)}. Комиссия ${e.komissiya.toFixed(2)} USDT, исполнение по ${фмт(e.tsena_ispolneniya)}.`;
+        $('э1-фраза').innerHTML = минус
+          ? (e.sdelka.brutto_pct > 0 ? `Угадал направление, цена и правда чуть выросла (${до}) — но комиссия туда и обратно больше этого роста. <b class="цк">Сделка ${pct(e.sdelka.netto_pct)}.</b> Это ${сделок}-я такая.` : `Не угадал: цена пошла не туда. <b class="цк">${pct(e.sdelka.netto_pct)}</b>, и комиссию всё равно заплатил. Сделок уже ${сделок}.`)
+          : `Угадал и заработал: <b class="цз">${pct(e.sdelka.netto_pct)}</b> после комиссии. Таких сделок мало — запомни это.`;
+        $('с-сделок').textContent = сделок; $('с-кошелёк').textContent = фмт(e.koshelyok.quote);
+        const нетто = e.koshelyok.quote / с.itog.koshelyok_start - 1;
+        $('с-нетто').textContent = pct(нетто); $('с-нетто').className = 'з ' + (нетто < 0 ? 'цк' : 'цз');
+        if (сделок >= 10 && нетто < 0) { $('э1-сломалось').hidden = false; $('э1-слом-текст').textContent = `Уже ${сделок} сделок, кошелёк ${pct(нетто)}. Каждая сделка стоит около 0.30% денег на комиссию и разницу цены, а бот выигрывает на сделке в среднем меньше. Он не глупый — он слишком часто торгует.`; }
+      } else {
+        $('и-почему').textContent = `исполнено по ${фмт(e.tsena_ispolneniya)} (модель ждала ${фмт(e.tsena_modeli)}), комиссия ${e.komissiya.toFixed(2)} USDT`;
+      }
+      рисовать(closes, fast, slow, e.i, с.sdelki.slice(0, сделок));
+      $('полоска').style.width = (k / (ж.length - 1) * 100) + '%';
+      $('э1-шаг').textContent = `шаг ${k + 1} из ${ж.length} · ${дата(e.t)}`;
+      k++;
+      if (k >= ж.length) { clearInterval(таймер); конец(); }
+    };
+    const конец = () => {
+      $('к-итог').disabled = false; $('к-итог').style.opacity = '1'; $('к-итог').textContent = 'Смотреть разбор';
+      $('э1-сломалось').hidden = false; $('э1-слом-текст').textContent = текущее.карта.prichina;
+      { const б = текущее.без.itog, с_ = с.itog;
+      $('э1-фраза').innerHTML = `<b>Итог простыми словами.</b> Бот торговал ${с_.sdelok} раз за два месяца. Если бы биржа не брала комиссию, он вышел бы в ${pct(б.netto_pct)}: угадывал чуть чаще, чем ошибался. Но каждая сделка стоила денег, и ${с_.sdelok} комиссий съели ${(с_.izderzhki_pct * 100).toFixed(0)}% кошелька. <b class="цк">Проиграл не потому, что не угадывал, а потому что дёргался.</b> Реже торгуешь — меньше отдаёшь бирже.`; }
+      track('lab-progon-zavershyon', { pravilo: id, netto_pct: +(с.itog.netto_pct * 100).toFixed(2), sdelok: с.itog.sdelok });
+      window.LAB = { itog: с.itog, karta: текущее.карта, uverennost: текущее.уверенность, ekran: 'э1' };
+    };
+    таймер = setInterval(показать, шаг);
+    window.LAB_DOKRUTIT = () => { clearInterval(таймер); while (k < ж.length) показать(); };
+    показать();
+    if (параметры.has('dokrutit')) { window.LAB_DOKRUTIT(); const э = параметры.get('ekran'); if (э === 'э2' || э === 'э3') итог(); if (э === 'э3') дальше(); } // для съёмки кадров
+  }
+
+  // --- экран 2: разбор ---
+  function итог() {
+    const { id, с, без, карта, старый, новый, граница, уверенность, порча, случай } = текущее;
+    const старт = с.itog.koshelyok_start;
+    const брутто = без.itog.netto_pct, комис = -с.itog.komissii_quote / старт, испол = -с.itog.ispolnenie_quote / старт, нетто = с.itog.netto_pct;
+    const сложный = нетто - (брутто + комис + испол); // потери считаются в момент сделки, а кошелёк уменьшается — разница это сложный процент
+    экран('э2');
+    $('э2-шапка').textContent = `${с.zhurnal.length} шагов · ${с.itog.sdelok} сделок · правило ${id}`;
+    const провал = карта.vyvod === 'провал';
+    $('э2-заголовок').innerHTML = провал ? (брутто > 0 ? '<span class="цк">Преимущество съедено издержками</span>' : '<span class="цк">Преимущества не было вовсе</span>') : '<span class="цз">Правило пережило издержки</span>';
+    $('э2-подзаг').textContent = провал ? (брутто > 0 ? 'Без комиссии и задержки правило выглядело прибыльным. С ними — нет. Это не сбой, это проверка.' : 'Даже без комиссии и задержки правило теряло. Издержки тут ни при чём — сломана гипотеза.') : 'С комиссией и задержкой правило осталось в плюсе на этом участке. Это ещё не доказательство — смотрим новый участок.';
+    const ц = v => `<span class="${v >= 0 ? 'цз' : 'цк'}">${pct(v)}</span>`;
+    let строки = `<div class="р"><span>чистое преимущество правила, без издержек</span>${ц(брутто)}</div><div class="р"><span>комиссия 0.10% за сторону, ${с.itog.sdelok} сделок</span>${ц(комис)}</div><div class="р"><span>исполнение: задержка в свечу и проскальзывание</span>${ц(испол)}</div>`;
+    if (Math.abs(сложный) > 0.001) строки += `<div class="р"><span>сложный процент: потери уменьшали капитал</span>${ц(сложный)}</div>`;
+    строки += `<div class="р вывод"><span style="color:var(--текст)">осталось игроку</span>${ц(нетто)}</div>`;
+    $('э2-разбор').innerHTML = строки;
+    $('э2-причина').textContent = карта.prichina;
+    const издержки = Math.abs(комис) + Math.abs(испол), макс = Math.max(Math.abs(брутто), издержки) || 1;
+    const дк = Math.abs(комис) / макс * 100, ди = Math.abs(испол) / макс * 100, дп = Math.abs(брутто) / макс * 100;
+    $('э2-шкала').innerHTML = `<span>преимущество</span><div class="п"><i style="width:${дп.toFixed(1)}%;background:${брутто >= 0 ? '#4ade80' : '#f87171'}"></i></div><span class="${брутто >= 0 ? 'цз' : 'цк'}">${pct(брутто)}</span>`
+      + `<span>издержки</span><div class="п"><i style="width:${дк.toFixed(1)}%;background:#f87171"></i><i style="width:${ди.toFixed(1)}%;background:#a33d47"></i></div><span class="цк">−${(издержки * 100).toFixed(2)}%</span>`;
+    $('э2-было').innerHTML = '<span style="color:#f87171">■</span> комиссия · <span style="color:#a33d47">■</span> исполнение'; $('э2-стало').textContent = `издержки в ${(издержки / Math.max(1e-9, Math.abs(брутто))).toFixed(1)} раза больше преимущества`;
+    $('ок-период-ярлык').textContent = `на новом участке с ${дата(граница)} (${новый.sdelok} сделок)`;
+    const пережило = новый.netto_pct > 0 && старый.netto_pct > 0;
+    $('ок-период').innerHTML = пережило ? `<span class="цз">пережило ${pct(новый.netto_pct)}</span>` : `<span class="цк">${новый.netto_pct > 0 ? 'плюс ' + pct(новый.netto_pct) + ', но случайный' : 'не пережило ' + pct(новый.netto_pct)}</span>`;
+    $('ок-порча').innerHTML = порча === 'замечено' ? '<span class="цз">замечено</span>' : '<span class="цк">НЕ ЗАМЕЧЕНО</span>';
+    $('ок-случай').innerHTML = случай.mediana_netto_pct < 0 ? `<span class="цз">${pct(случай.mediana_netto_pct)}, не зарабатывает</span>` : `<span class="цк">${pct(случай.mediana_netto_pct)} — подозрительно</span>`;
+    $('ок-вывод').textContent = порча === 'замечено' && случай.mediana_netto_pct < 0 ? 'исправен' : 'НЕИСПРАВЕН';
+    $('э2-сделок').textContent = с.itog.sdelok;
+    window.LAB.ekran = 'э2';
+  }
+
+  // --- экран 3: что дальше ---
+  function дальше() {
+    const { id, правило, карта, уверенность, с } = текущее;
+    if (!проверено.some(p => p.id === id)) проверено.push({ id, текст: правило.nazvanie, итог: уверенность.status === 'пережило новый период' ? 'выжила' : 'опровергнута' });
+    const след = id === 'v1' ? 'v2' : null;
+    экран('э3');
+    $('э3-шапка').textContent = 'гипотеза ' + (проверено.length + 1);
+    $('э3-заголовок').textContent = след ? 'Ход слишком мал против издержек. Ждём подтверждения.' : 'Порог не спас. Следующая гипотеза — про режим рынка.';
+    $('н-было-м').textContent = id; $('н-было').textContent = правило.nazvanie + (правило.params.porog ? '' : ', вход на любом пересечении');
+    $('н-стало-м').textContent = след || '—'; $('н-стало').textContent = след ? Sim.PRAVILA[след].nazvanie + ': вход, когда разрыв средних ≥ 0.3%, то есть больше издержек сделки' : карта.novoe_pravilo;
+    $('э3-гипотеза').textContent = след ? Sim.PRAVILA[след].gipoteza : 'Пересечения средних на 15-минутных свечах не дают хода больше издержек. Следующая гипотеза должна различать боковик и тренд — её ещё нет в лаборатории.';
+    $('э3-участок').textContent = `проверим на ${дата(с.period.ot)} — ${дата(с.period.do)}, потом на новом участке`;
+    $('э3-журнал').innerHTML = проверено.map((p, i) => `<div class="г"><b>${i + 1}</b><span>${p.id} · ${p.текст}</span><i class="${p.итог === 'выжила' ? 'цз' : 'цк'}">${p.итог}</i></div>`).join('');
+    $('к-проверить').hidden = !след; $('к-проверить').textContent = след ? 'Проверить ' + след : '';
+    $('к-проверить').onclick = () => { track('lab-povtor-drugaya-gipoteza', { ot: id, k: след }); запуск(след); };
+    window.LAB.ekran = 'э3';
+  }
+
+  $('к-итог').addEventListener('click', итог);
+  $('к-дальше').addEventListener('click', дальше);
+  $('к-назад1').addEventListener('click', () => экран('э1'));
+  $('к-заново').addEventListener('click', () => { проверено.length = 0; запуск('v1'); });
+  window.LAB_ZAPUSK = запуск; window.LAB_ITOG = итог; window.LAB_DALSHE = дальше; // пульт
+  запуск('v1');
+})();
+</script>
+</body>
+</html>

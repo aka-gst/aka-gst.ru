@@ -21,6 +21,7 @@ const pending = new Map();
 function unavailableResult(message, checks = []) {
   return {
     stdout: '',
+    events: [],
     error: {
       type: 'PythonUnavailable',
       text: message || 'Python не загрузился.',
@@ -111,7 +112,7 @@ export function restartRunner() {
   return bootRunner();
 }
 
-export async function runPython({ source, preamble = '', checks = [], stdin = [] }) {
+export async function runPython({ source, preamble = '', checks = [], stdin = [], eventVar = '__quest_events__' }) {
   const ready = await bootRunner();
   if (!ready) return unavailableResult(runner.message, checks);
   const id = ++counter;
@@ -121,6 +122,7 @@ export async function runPython({ source, preamble = '', checks = [], stdin = []
       restartRunner();
       resolve({
         stdout: '',
+        events: [],
         error: {
           type: 'Timeout',
           text: 'Python пришлось перезапустить: код не ответил вовремя.',
@@ -132,6 +134,6 @@ export async function runPython({ source, preamble = '', checks = [], stdin = []
       });
     }, HARD_LIMIT);
     pending.set(id, { resolve, timer, checks });
-    worker.postMessage({ type: 'run', id, source, preamble, checks, stdin, timeLimit: SOFT_LIMIT });
+    worker.postMessage({ type: 'run', id, source, preamble, checks, stdin, eventVar, timeLimit: SOFT_LIMIT });
   });
 }

@@ -6,7 +6,10 @@
 :root {
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --sans: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --maxw: 1180px;
+  /* Ширина содержимого: было 1180 при экранах 1920 и шире — Сергей дважды
+     сказал, что «всё жмётся». Ограничение осталось (бесконечная строка
+     нечитаема), но выросло до 1400: практикум занимал 0.40 ширины экрана. */
+  --maxw: 1400px;
   --r: 12px;
 
   /* Тема «Работа» — графит, один сигнальный цвет, ничего лишнего. */
@@ -109,7 +112,7 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
   position: absolute; left: 12px; top: -60px; z-index: 20;
   padding: 10px 14px; border-radius: 8px;
   background: var(--accent); color: #08120c; font-weight: 700; text-decoration: none;
-  transition: top .15s ease;
+  transition: top var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease);
 }
 .skip:focus { top: 12px; }
 
@@ -156,7 +159,7 @@ ul, ol, dl { margin: 0; padding: 0; list-style: none; }
      полноцветная, и переключатель виден как переключатель. */
   color: var(--text);
   font: inherit; font-size: 13px; font-weight: 600;
-  transition: background .15s ease, color .15s ease;
+  transition: background var(--an-mikro, 150ms) linear, color var(--an-mikro, 150ms) linear;
 }
 /* Игры зовут ярче работы — за них и цепляется глаз. Значок геймпада
    светится акцентом даже когда вкладка не выбрана. */
@@ -197,7 +200,7 @@ html[data-track="play"] .track-switch button[aria-pressed="true"] {
 .social {
   display: grid; place-items: center; width: 34px; height: 34px;
   border-radius: 9px; color: var(--muted);
-  transition: color .15s ease, background .15s ease;
+  transition: color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear;
 }
 .social:hover { color: var(--text); background: var(--bg-soft); }
 .social svg { fill: currentColor; }
@@ -215,7 +218,7 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .story-lead p:not(.kicker) { max-width:560px; color:var(--muted); line-height:1.5; }
 .story-all-link { align-self:start; padding:0; border:0; background:none; color:var(--accent); font:700 13px var(--sans); white-space:nowrap; cursor:pointer; }
 .story-shelves { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-.story-lead-book { display:grid; grid-template-columns:94px minmax(0,1fr); gap:12px; align-items:center; min-height:138px; padding:10px; border:1px solid var(--line); border-radius:11px; background:none; color:var(--text); font:700 16px var(--sans); text-align:left; transition:border-color .15s ease, background .15s ease; cursor:pointer; }
+.story-lead-book { display:grid; grid-template-columns:94px minmax(0,1fr); gap:12px; align-items:center; min-height:138px; padding:10px; border:1px solid var(--line); border-radius:11px; background:none; color:var(--text); font:700 16px var(--sans); text-align:left; transition: border-color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear; cursor:pointer; }
 .story-lead-book:hover, .story-lead-book:focus-visible { border-color:var(--accent); background:var(--card-hover); outline:0; }
 .story-lead-book[aria-expanded="true"] { border-color:var(--accent); background:var(--accent-dim); box-shadow:0 0 22px rgba(255,115,181,.12); }
 .story-lead-book img { width:94px; height:116px; object-fit:cover; border:1px solid var(--line); border-radius:7px; box-shadow:0 10px 22px rgba(0,0,0,.3); }
@@ -235,13 +238,38 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .story-collection button:hover, .story-collection button:focus-visible { color:var(--accent); outline:0; }
 .story-reader-inline { grid-column:1 / -1; margin-top:4px; padding:24px; border:1px solid var(--line); border-radius:12px; background:rgba(0,0,0,.11); }
 .story-reader-inline > button { padding:0; border:0; background:none; color:var(--accent); font:700 13px var(--sans); cursor:pointer; }
-.story-reader-copy { max-width:760px; color:var(--text); font-size:17px; line-height:1.72; }
+.story-reader-inline > .story-to-top { font-size:24px; line-height:1; }
+.story-reader-inline.is-entering { animation: story-reader-in var(--an-raskrytie, 280ms) var(--an-vyhod, cubic-bezier(.2,.8,.2,1)) both; }
+.story-reader-inline.is-exiting { animation: story-reader-out var(--an-mikro, 150ms) var(--an-uhod, ease) both; }
+@keyframes story-reader-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@keyframes story-reader-out { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(-6px); } }
+.story-reader-copy { max-width:780px; color:var(--text); font:20px/1.75 Georgia,serif; letter-spacing:.005em; }
+.story-reader-copy, .story-reader-inline > h2, .story-reader-inline > .kicker { margin-inline:auto; width:100%; max-width:780px; }
+.story-reader-copy p { margin:0 0 .82em; text-align:left; }
 .story-reader-copy .story-break { width:38%; margin:28px 0; border:0; border-top:1px solid var(--line); }
-.story-to-top { position:fixed; right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); z-index:30; display:flex; align-items:center; gap:7px; min-height:44px; padding:10px 14px; border:1px solid var(--accent); border-radius:999px; background:rgba(15,12,25,.92); box-shadow:0 10px 34px #0009; color:var(--text); font:700 12px var(--sans); cursor:pointer; backdrop-filter:blur(10px); }
+/* Короткая страница: подвал к низу окна.
+   Мерено 4 сентября на /praktikum/, десктоп 1440x900: содержимое кончалось
+   на 582, подвал висел на 65% высоты, под ним 318 px фона — 35% экрана.
+   Читалось как «страница оборвалась». Класс ставится точечно, а не на body
+   вообще: у главной своя раскладка с панелями, и трогать её незачем. */
+.page-short { display: flex; flex-direction: column; min-height: 100dvh; }
+.page-short > main { flex: 1 0 auto; }
+/* Кадр практикума: показывает содержание курса, а не обложку. Снят под
+   353 — ширину карточки на обеих ширинах экрана. */
+.course-shot { display:block; width:100%; height:auto; margin:0 0 12px; border:1px solid var(--line); border-radius:8px; }
+.course-stack { margin: 10px 0 0; color: var(--muted, #97968f); font-size: 12px; line-height: 1.5; }
+
+.story-to-top { position:fixed; right:max(32px,env(safe-area-inset-right)); bottom:max(32px,env(safe-area-inset-bottom)); z-index:30; width:48px; height:48px; display:grid; place-items:center; padding:0; border:1px solid var(--accent); border-radius:50%; background:rgba(15,12,25,.92); box-shadow:0 10px 34px #0009; color:var(--text); font:700 24px/1 var(--sans); cursor:pointer; backdrop-filter:blur(10px); }
 .story-to-top:hover, .story-to-top:focus-visible { background:var(--accent-dim); outline:2px solid var(--accent); outline-offset:2px; }
 .story-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 24px; margin-top:14px; padding:13px 18px; border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:13px; }
 .story-bar b { color:var(--accent); font-size:16px; }.story-bar a { margin-left:auto; color:var(--text); font-weight:700; text-decoration:none; }
-@media (max-width:640px){.story-lead{grid-template-columns:1fr; padding:20px;}.story-all-link{justify-self:start;}.story-shelves{grid-template-columns:1fr;}.story-lead-book{grid-template-columns:76px 1fr;min-height:104px;}.story-lead-book img{width:76px;height:94px;}.story-collection{grid-template-columns:86px 1fr;gap:14px;padding:14px;}.story-collection > img{width:86px;height:128px;}.story-collection ol{columns:1;margin-top:14px;}.story-reader-inline{padding:18px;}.story-reader-copy{font-size:16px;}.story-to-top span{display:none;}.story-to-top{width:44px;justify-content:center;padding:0;}.story-bar a{margin-left:0;}}
+@media (max-width:640px){.story-lead{grid-template-columns:1fr; padding:20px;}.story-all-link{justify-self:start;}.story-shelves{grid-template-columns:1fr;}.story-lead-book{grid-template-columns:76px 1fr;min-height:104px;}.story-lead-book img{width:76px;height:94px;}.story-collection{grid-template-columns:86px 1fr;gap:14px;padding:14px;}.story-collection > img{width:86px;height:128px;}.story-collection ol{columns:1;margin-top:14px;}.story-reader-inline{margin-inline:-36px;padding:18px;}.story-reader-copy{font-size:18px;line-height:1.72;}.story-to-top{right:max(24px,env(safe-area-inset-right));bottom:max(24px,env(safe-area-inset-bottom));}.story-bar a{margin-left:0;}}
+@media (prefers-reduced-motion:reduce){.work-comics .work-put-main::after{animation:none;display:none}}
+@media (prefers-reduced-motion:reduce){.story-reader-inline.is-entering,.story-reader-inline.is-exiting{animation-duration:120ms;animation-name:story-reader-fade}.story-reader-inline.is-exiting{animation-direction:reverse}@keyframes story-reader-fade{from{opacity:0}to{opacity:1}}}
+.practicum-more .practicum-detail { height:auto; min-height:76px; }
+.practicum-more-body[hidden] { display:none; }
+.practicum-more-body:not([data-open]) { visibility:hidden; }
+.practicum-more-body[data-open] { visibility:visible; }
 
 /* ── Первый экран работы ──────────────────────────────────────────── */
 /* На первом экране две реальные системы: приватный AI-шлюз и продукт с
@@ -258,10 +286,13 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-lead-fact { margin-top: 12px; color: var(--text) !important; font-size: 13px !important; }
 .work-lead-fact b { color: var(--accent); }
 .work-gateway-proof { position:relative; align-self:stretch; display:block; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); text-decoration:none; }
-.work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform .35s ease,filter .35s ease; }
+.work-gateway-proof img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left top; filter:brightness(1.15) contrast(1.16) saturate(1.22); transition:transform var(--an-raskrytie, 280ms) var(--an-spokoyno, ease), filter var(--an-raskrytie, 280ms) linear; }
 .work-gateway-proof span { display: block; padding: 8px 10px; font: 11px/1.2 var(--mono); color: var(--muted); }
 .work-dharma-shot { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
-.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:center; transition:transform .35s ease,filter .35s ease; }
+/* object-position левее по просьбе Сергея 6 сентября: кадр магазина был
+   сдвинут вправо, а читают его слева, рядом с текстом. Пустая правая часть
+   там нормальна — это его слова. */
+.work-dharma-shot img { display:block; width:100%; height:100%; min-height:166px; object-fit:cover; object-position:left center; transition:transform var(--an-raskrytie, 280ms) var(--an-spokoyno, ease), filter var(--an-raskrytie, 280ms) linear; }
 .dharma-journey { position:absolute; right:10px; bottom:10px; z-index:1; display:flex; align-items:center; gap:6px; padding:7px 8px; border:1px solid #65e5b55c; border-radius:999px; background:#07120edd; color:#c8ffe9; font:600 9px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase; opacity:.78; }
 .dharma-journey i { display:block; width:12px; height:1px; background:linear-gradient(90deg,#65e5b5,#d3fff0); transform-origin:left center; }
 .work-dharma:hover .dharma-journey, .work-dharma:focus-visible .dharma-journey { opacity:1; border-color:#65e5b5; box-shadow:0 0 18px #46dca34d; }
@@ -273,8 +304,124 @@ html[data-track="stories"] .panel[data-panel="stories"] { display: block; }
 .work-system-link { align-self:end; color:var(--accent); font-size:13px; font-weight:700; text-decoration:none; }
 .work-gateway-proof:hover, .work-gateway-proof:focus-visible, .work-dharma:hover, .work-dharma:focus-visible { border-color: var(--accent); outline: 0; }
 .work-gateway-proof:hover img, .work-gateway-proof:focus-visible img, .work-dharma:hover img, .work-dharma:focus-visible img { transform: scale(1.035); filter: saturate(1.12); }
-.work-duet-note { margin: 14px 0 0; color: var(--muted); font: 12px/1.4 var(--mono); }
+/* ═══ Первый экран: две колонки одной высоты ═══════════════════════════
+   Правки Сергея 6 сентября 2026. Было: две карточки в ряд, справа под
+   текстом Dharma пустота на пол-экрана (карточка тянулась до высоты
+   соседа), а подпись под обеими читалась как относящаяся только к левой.
+   Стало: слева шлюз, справа Dharma и под ней блок комикса — он и добирает
+   остаток высоты, поэтому пустоты не остаётся по устройству, а не по
+   подгонке. Комикс заодно стал крупнее, о чём и была просьба.            */
+.work-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+/* Сергей, 6 сентября: «опять правый блок выше левого!» — и он был прав на
+   ВСЕХ ширинах, а не только на своей. Мой прежний замер смотрел на колонки
+   сетки: они равны по устройству, 713 и 713, и я отчитался этим числом.
+   Человек же видит, где кончается СОДЕРЖИМОЕ, а слева оно кончалось на
+   35 пикселей выше: карточка была задана по содержанию, и остаток колонки
+   оставался пустым, тогда как справа его добирал блок комикса.
+   Теперь остаток забирает тот, кто в колонке один: слева — карточка шлюза
+   (у неё внутри строка 1fr, растёт кадр отчёта), справа — блок комикса. */
+/* Порядок в правой колонке задан Сергеем 6 сентября: сверху комикс — на
+   уровне Gateway, — под ним Dharma. И обе стрелочные подписи должны стоять
+   в одну линию: для этого подпись у обеих колонок последняя, а излишек
+   высоты забирает то, что стоит выше неё. Слева это карточка шлюза, справа
+   блок комикса. */
+.work-col--gateway > .work-system { flex: 1 1 auto; }
+.work-col--dharma > .work-system { flex: 0 0 auto; }
+.work-col > .work-put { flex: 1 1 auto; }
+.work-col > .work-duet-note { flex: 0 0 auto; margin-top: auto; }
+/* Подпись теперь у каждой карточки своя, со стрелкой вверх — к ней.
+   Третьего предложения («две разные рабочие системы, а не концепты») нет:
+   его слова — «уже можно открыть исходный код и пройти по сайту». */
+.work-duet-note { margin: 0; color: var(--muted); font: 12px/1.4 var(--mono); }
+.work-duet-note i { font-style: normal; color: var(--accent); margin-right: 5px; }
 .work-duet-note b { color: var(--text); }
+
+/* Живое окно шлюза в карточке первого проекта.
+   Свёрнуто по умолчанию: первый экран дороже, чем этот блок, и разворачивает
+   его тот, кому интересно. Шаги проступают один за другим — но НЕ по таймеру
+   от загрузки, а по открытию, иначе анимация играет в закрытом блоке впустую.
+   Работает и без JS: <details> раскрывается сам, шаги просто появляются сразу. */
+.gw-live { margin: 14px 0 0; border-top: 1px solid var(--line); padding-top: 12px; }
+.gw-live > summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center;
+  gap: 7px; min-height: 44px; font: 600 13px/1.3 var(--sans); color: var(--text); }
+.gw-live > summary::-webkit-details-marker { display: none; }
+.gw-live > summary i { font-style: normal; color: var(--muted); transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
+.gw-live[open] > summary i { transform: rotate(90deg); }
+.gw-live > summary:hover i { color: var(--text); }
+.gw-steps { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 7px; }
+.gw-steps li { display: grid; grid-template-columns: 15px 1fr; gap: 9px; align-items: baseline;
+  font: 12.5px/1.45 var(--mono); }
+.gw-steps li b { grid-column: 2; font-weight: 700; color: var(--text); }
+.gw-steps li span { grid-column: 2; color: var(--muted); }
+.gw-steps li::before { grid-column: 1; grid-row: 1 / span 2; font-size: 12px; line-height: 1.45; }
+.gw-steps li[data-gw="ok"]::before   { content: "·"; color: var(--muted); }
+.gw-steps li[data-gw="warn"]::before { content: "⚠"; color: #ffd479; }
+.gw-steps li[data-gw="fix"]::before  { content: "✔"; color: #3ddc84; }
+.gw-steps li[data-gw="fix"] b { color: #8ce89a; }
+.gw-note { margin: 11px 0 0; font: 11.5px/1.5 var(--mono); color: var(--muted); }
+
+/* Проступание шагов: включается классом, который ставит скрипт при открытии.
+   Задержку ведёт переменная, а не :nth-child — прогонов девять, и шагов у них
+   от трёх до пяти; список правил на каждый номер пришлось бы дописывать
+   руками, и на шестом он бы кончился молча. */
+.gw-live.igraet .gw-run:not([hidden]) .gw-steps li {
+  opacity: 0; animation: gw-vhod var(--an-raskrytie, 280ms) var(--an-vyhod, ease-out) forwards;
+  animation-delay: calc(var(--gw-i, 0) * .6s + .05s);
+}
+/* Уход перед сменой прогона: не мигание, а короткое затухание блока целиком. */
+.gw-live .gw-run.uhodit { animation: gw-uhod var(--an-raskrytie, 280ms) var(--an-uhod, ease-in) forwards; }
+@keyframes gw-uhod { to { opacity: 0 } }
+.gw-case { margin: 9px 0 0; font: 11px/1.45 var(--mono); color: var(--muted); opacity: .85; }
+/* Кому движение мешает — шаги просто стоят на месте, и смены прогонов нет:
+   человек читает один целиком, а не догоняет уезжающее. */
+@media (prefers-reduced-motion: reduce) {
+  .gw-live.igraet .gw-run:not([hidden]) .gw-steps li { opacity: 1; animation: none; }
+  .gw-live .gw-run.uhodit { animation: none; }
+}
+@keyframes gw-vhod { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) {
+  .gw-live.igraet .gw-steps li { opacity: 1; animation: none; }
+}
+.work-put { display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 10px; margin: 0; padding: 18px; border: 1px solid var(--line); border-radius: 12px;
+  background: linear-gradient(135deg, var(--bg-soft), var(--panel)); }
+.work-put .kicker { margin: 0; }
+.work-put-sub { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.work-put-links { display: flex; gap: 14px; flex-wrap: wrap; margin: 0; }
+.work-put-main { font: 600 16px/1.25 var(--sans); color: var(--text); text-decoration: none;
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; min-height: 48px;
+  display: inline-flex; align-items: center; }
+.work-put-main:hover { background: var(--card-hover); }
+/* Сергей: «выглядит как просто слова». Делаем настоящей кнопкой, по которой
+   ИЗРЕДКА пробегает одна полоса света — период 7 с, сам блик 1.1 с, то есть
+   85% времени кнопка неподвижна. Мельтешения нет намеренно: движение должно
+   привлекать раз в несколько секунд, а не дёргать. */
+.work-put-main { position: relative; overflow: hidden; background: var(--panel);
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset; }
+.work-put-main::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 42%;
+  left: -60%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.13) 45%, transparent);
+  animation: put-blik 7s ease-in-out infinite;
+}
+@keyframes put-blik {
+  0%, 84% { left: -60%; }
+  100%    { left: 130%; }
+}
+/* Кому движение мешает — блика нет вовсе, кнопка остаётся кнопкой. */
+@media (prefers-reduced-motion: reduce) {
+  .work-put-main::after { animation: none; display: none; }
+}
+.work-put-alt { font: 12px/1.4 var(--mono); color: var(--muted); text-decoration: none;
+  border-bottom: 1px solid var(--line); }
+.work-put-alt:hover { color: var(--text); }
+.work-comics { align-items: stretch; justify-content: center; gap: 12px; }
+.work-col--dharma > .work-comics { flex: 0 0 auto; min-height: 0; padding: 18px; }
+.work-comics:hover, .work-comics:focus-within { border-color: var(--accent); box-shadow: 0 0 24px #7356d933; }
+.work-comics .work-put-main { width: 100%; justify-content: space-between; }
+.work-comics .work-put-main::after { animation: comics-scan 9s ease-in-out infinite; }
+ .work-comics .work-put-main::after { background: linear-gradient(100deg, transparent, #b68bff 45%, transparent); }
+@keyframes comics-scan { 0%, 90% { transform: translateX(-160%); opacity: 0; } 92% { opacity: 1; } 100% { transform: translateX(360%); opacity: 0; } }
 
 /* Сигнал возвращается с прежней частотой, но не «режет» блок мгновенным взмахом. */
 @media (prefers-reduced-motion: no-preference) {
@@ -458,7 +605,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
    а не исчезнет навсегда. */
 [data-reveal] {
   opacity: 0; transform: translateY(14px);
-  transition: opacity .6s cubic-bezier(.22, .61, .36, 1), transform .6s cubic-bezier(.22, .61, .36, 1);
+  transition: opacity var(--an-stranica, 500ms) var(--an-vyhod, ease-out), transform var(--an-stranica, 500ms) var(--an-vyhod, ease-out);
 }
 [data-reveal].is-visible { opacity: 1; transform: none; }
 
@@ -479,7 +626,11 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .block-head h2 { margin: 8px 0 10px; font-size: clamp(22px, 2.6vw, 30px); }
 .block-head > p:last-child { color: var(--muted); font-size: 14px; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px; }
+/* min(310px, 100%) вместо 310px: на экране 320 под сетку остаётся 288, и
+   жёсткие 310 выпихивали карточки за край — страницу можно было сдвинуть
+   вбок на 31 пиксель. Нашёл Тестер 6 сентября 2026. На широких экранах
+   ничего не меняется: там 100% больше трёхсот десяти. */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); gap: 14px; }
 
 .card {
   display: flex; flex-direction: column; gap: 10px;
@@ -487,7 +638,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   background: var(--panel);
   /* Без overflow: hidden — иначе карточка обрезает всплывающую панель
      «чем покрыто». Скругление верха берёт на себя сама полоса чисел. */
-  transition: border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .15s ease;
+  transition: border-color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear, transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease), box-shadow var(--an-mikro, 150ms) linear;
 }
 /* Отклик на наведение. Было −2 точки без тени: Тестер померил наведением
    настоящей мыши, и на карточке высотой под 900 точек две точки глаз считает
@@ -508,7 +659,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   color: inherit; text-decoration: none;
   background-image: linear-gradient(var(--accent), var(--accent));
   background-size: 0 1px; background-position: 0 100%; background-repeat: no-repeat;
-  transition: background-size .18s ease, color .15s ease;
+  transition: background-size var(--an-mikro, 150ms) linear, color var(--an-mikro, 150ms) linear;
 }
 .card-title:hover { color: var(--accent); background-size: 100% 1px; }
 /* Ссылка — само название, а не вся карточка: растянутая на карточку
@@ -575,7 +726,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
      переход по opacity не отработал, панель осталась бы невидимой в
      «видимом» состоянии — отказ, который никто не заметит. */
   visibility: hidden; pointer-events: none; transform: translateY(-4px);
-  transition: transform .15s ease;
+  transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease);
 }
 .evidence:hover .evidence-panel,
 .evidence:focus-within .evidence-panel {
@@ -635,7 +786,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .card-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: auto; padding-top: 4px; }
 .link {
   font-size: 13px; font-weight: 600; text-decoration: none; color: var(--accent);
-  border-bottom: 1px solid transparent; transition: border-color .15s ease;
+  border-bottom: 1px solid transparent; transition: border-color var(--an-mikro, 150ms) linear;
 }
 .link:hover { border-bottom-color: currentColor; }
 .link b { font-weight: 400; }
@@ -682,17 +833,62 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 
 /* Один главный квест, а не три одинаково тяжёлые карточки. Два практикума
    остаются рядом как инструменты, не перенося и не выдавливая QueQuest. */
-.practicum-switch .practicum-pilot-grid { display:grid; grid-template-columns:minmax(0, 2fr) minmax(280px, 1fr); gap:14px; align-items:stretch; }
-.quequest-card { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--accent) 48%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, color-mix(in srgb, var(--accent-dim) 78%, #140d2a), var(--panel) 64%); }
+/* Кадр QueQuest — во всю ширину НАД практикумами, практикумы в ряд под ним.
+   Решение Сергея 4 сентября, вариант «2». Число за жалобой: строка в правой
+   колонке шла по 29 символов при читаемых 45–75, потому что колонке
+   оставалось 250 px. Колонки были 745 : 373, ровно два к одному.
+   После перестановки строка стала 50 символов — в полосе.
+   Кадр НЕ обрезаем: исходник 1280x720, то есть ровно 16:9, и при aspect-ratio
+   16/9 не теряется ничего. Пробовали срезать до 1130x380 — у слогана «ТЫ
+   БОЛЬШЕ НЕ НУЖЕН ЭТОЙ РАБОТЕ» отрезало верхнюю строку, пропадали шапка игры
+   и подпись PALLET. Смотреть надо картинку, а не долю экрана. */
+.practicum-switch .practicum-pilot-grid { display:grid; grid-template-columns:1fr; gap:18px; align-items:stretch; }
+/* Блок должен занимать экран, а не больше. Замер до правки на 2000×1150:
+   блок 1488 при доступных 1079 — кадр QueQuest начинался на 1055, то есть у
+   самой кромки, а кнопка «Показать переход» уходила на 1648, под сгиб.
+   Раскладку не меняем: одна колонка, QueQuest сверху во всю ширину — это
+   выбор Сергея (вариант 2, коммит 4d19b29). Вписываем ВЫСОТУ: карточке
+   QueQuest даём остаток экрана, картинка масштабируется внутрь (object-fit
+   уже cover), практикумы под ней остаются нетронутыми. */
+@media (min-width: 901px) {
+  /* Потолок теперь на самой карточке QueQuest, а не на всей сетке. Причина:
+     под ней появилось раскрытие «ещё практикумы», и потолок на сетке резал
+     бы раскрытое содержимое — человек нажал бы кнопку и увидел обрезок. */
+  .practicum-switch .practicum-pilot-grid {
+    grid-template-rows: minmax(320px, auto) minmax(0, auto);
+  }
+  .practicum-switch .quequest-card { max-height: min(560px, calc(100dvh - 360px)); }
+  /* Практикумы жёстко заданы в 570 (строка 831), и при нехватке места весь
+     дефицит съедал кадр: он падал до 120 пикселей — полоска вместо сцены.
+     Здесь отпускаем их высоту и разрешаем прокрутку внутри: кадру гарантируем
+     320, остальное делим. Размен назван вслух, а не подобран молча. */
+  .practicum-switch .practicum-side { height: auto; min-height: 0; }
+  .practicum-switch .practicum-detail-stage { height: auto; min-height: 0; }
+  /* Кадру задано соотношение 16:9, и его высоту диктует ШИРИНА, а не место.
+     От этого при первой попытке рамка ужалась с 789 до 372, а кадр остался
+     636 и вылез наружу — кнопка «Показать переход» уехала на 221 пиксель
+     ниже своей же карточки, поверх практикумов. Поймала проверка «кнопка
+     внутри карточки», а не глаз. Поэтому здесь соотношение отпускаем и
+     делаем кадр гибкой строкой: он занимает остаток и масштабируется внутрь. */
+  .practicum-switch .quequest-card { min-height: 0; height: 100%;
+    grid-template-rows: minmax(120px, 1fr) auto; }
+  .practicum-switch .quequest-visual { aspect-ratio: auto; min-height: 0; height: 100%; }
+  .practicum-switch .quequest-poster,
+  .practicum-switch .quequest-video { min-height: 0; height: 100%; }
+}
+.practicum-switch .practicum-side { display:block; }
+.practicum-switch .practicum-detail-stage { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+@media (max-width:760px) { .practicum-switch .practicum-detail-stage { grid-template-columns:1fr; } }
+
+.quequest-card { --quequest-neon:#9b5cff; --quequest-pale:#d9c9ff; display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(260px, .85fr); min-height:390px; overflow:hidden; border:1px solid color-mix(in srgb, var(--quequest-neon) 72%, var(--line)); border-radius:var(--r); background:linear-gradient(135deg, #1b1030, var(--panel) 64%); box-shadow:0 0 0 1px color-mix(in srgb, var(--quequest-neon) 14%, transparent), 0 18px 54px rgba(33, 15, 65, .32); }
 .quequest-visual { position:relative; display:block; min-height:0; overflow:hidden; border:0; border-right:1px solid var(--line); padding:0; background:#080a0f; cursor:pointer; text-align:left; }
 .quequest-poster, .quequest-video { display:block; width:100%; height:100%; min-height:390px; object-fit:cover; object-position:center; }
-.quequest-video { position:absolute; inset:0; opacity:0; transition:opacity .22s ease; }
+.quequest-video { position:absolute; inset:0; opacity:0; transition: opacity var(--an-mikro, 150ms) linear; }
 .quequest-visual.is-playing .quequest-video, .quequest-visual.is-finished .quequest-video { opacity:1; }
 .quequest-play-label { position:absolute; left:14px; bottom:14px; z-index:2; display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid #cbb9ff66; border-radius:999px; background:#0d0a1cdd; color:#f1edff; font:600 11px/1 var(--mono); letter-spacing:.04em; }
 .quequest-visual:hover .quequest-play-label, .quequest-visual:focus-visible .quequest-play-label { border-color:#cbb9ff; box-shadow:0 0 18px #8063e955; }
 .quequest-copy { display:grid; align-content:center; gap:12px; padding:26px; }
 .quequest-heading { display:flex; align-items:center; gap:9px; }
-.quequest-heading img { width:34px; height:34px; object-fit:contain; filter:drop-shadow(0 0 12px #8d6cff88); }
 .quequest-heading .kicker { margin:0; }
 .quequest-copy h3 { margin:0; font-size:clamp(31px, 4vw, 48px); line-height:1; }
 .quequest-copy .tagline { margin:0; color:var(--text); font-size:16px; line-height:1.48; }
@@ -705,6 +901,15 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .practicum-detail[hidden] { display:none; }
 .practicum-detail-shot { align-self:start; aspect-ratio:1/1; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
 .practicum-detail-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:top center; }
+/* На узких экранах кадр в карточке практикума — квадрат 76 px, в котором
+   ничего не разглядеть, а текст ужимается до 245 px и идёт по 28 символов в
+   строке при читаемых 45–75. Ставим кадр НАД текстом и меняем пропорцию на
+   16:9: он становится настоящей картинкой, а строка получает полную ширину.
+   Замерено 4 сентября на 390 px. */
+@media (max-width:640px) {
+  .practicum-detail { grid-template-columns:1fr; }
+  .practicum-detail-shot { aspect-ratio:16/9; }
+}
 .practicum-detail-copy { display:grid; align-content:start; gap:8px; min-width:0; }
 .practicum-detail-copy .card-head { display:block; padding:0; }
 .practicum-detail-copy .status { display:none; }
@@ -713,9 +918,9 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 .practicum-detail-copy .metric-chips { gap:5px; }
 .practicum-detail-copy .metric-chip { padding:4px 6px; font-size:10px; }
 .practicum-detail-copy .card-links { margin-top:2px; }
-@media (min-width:901px) { .quequest-card { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:570px; min-height:0; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { align-content:center; gap:8px; padding:16px 20px; }.quequest-copy .tagline { font-size:15px; line-height:1.4; }.practicum-side { height:570px; }.practicum-detail-stage { height:456px; }.practicum-detail { overflow:auto; } }
+@media (min-width:901px) { .quequest-card { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:auto; min-height:0; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { align-content:center; gap:8px; padding:16px 20px; }.quequest-copy .tagline { font-size:15px; line-height:1.4; }.practicum-side { height:570px; }.practicum-detail-stage { height:456px; }.practicum-detail { overflow:auto; } }
 @media (max-width:900px) { .practicum-switch .practicum-pilot-grid { grid-template-columns:1fr; }.practicum-side { grid-template-columns:minmax(180px, .72fr) minmax(0, 1.28fr); gap:10px; }.practicum-switch .practicum-tabs { margin:0; }.practicum-detail { min-height:0; }.quequest-card { min-height:0; } }
-@media (max-width:640px) { .quequest-card { grid-template-columns:1fr; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { padding:18px; }.quequest-copy .tagline { font-size:14px; }.practicum-side { grid-template-columns:1fr; }.practicum-switch .practicum-tabs { grid-template-columns:1fr 1fr; }.practicum-switch .practicum-tabs button { min-height:50px; font-size:11px; }.practicum-detail { grid-template-columns:66px minmax(0,1fr); min-height:0; }.practicum-detail-copy .metric-chips { display:none; }.quequest-play-label { left:10px; bottom:10px; } }
+@media (max-width:640px) { .quequest-card { grid-template-columns:1fr; }.quequest-visual { border-right:0; border-bottom:1px solid var(--line); aspect-ratio:16/9; }.quequest-poster, .quequest-video { min-height:0; }.quequest-copy { padding:18px; }.quequest-copy .tagline { font-size:14px; }.practicum-side { grid-template-columns:1fr; }.practicum-switch .practicum-tabs { grid-template-columns:1fr 1fr; }.practicum-switch .practicum-tabs button { min-height:50px; font-size:11px; }.practicum-detail { min-height:0; }.practicum-detail-copy .metric-chips { display:none; }.quequest-play-label { left:10px; bottom:10px; } }
 @media (prefers-reduced-motion:reduce) { .quequest-video { display:none; }.quequest-play-label::before { content:"Кадр"; }.quequest-play-label { cursor:default; } }
 
 /* ── Заявка о партнёрстве ─────────────────────────────────────────── */
@@ -784,7 +989,11 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 }
 .skills-more:hover, .skills-more:focus-visible { color: var(--ink); }
 
-.skills { display: flex; flex-wrap: wrap; gap: 12px; }
+/* Колонки навыков росли до высоты самой длинной: флекс по умолчанию
+   растягивает дочерние. Отсюда у «Product Engineering» полколонки пустоты,
+   а у «Надёжности AI» — под завязку. Пусть каждая колонка будет по своему
+   содержимому. */
+.skills { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
 .skill {
   flex: 1 1 200px; min-width: 0;
   padding: 16px 18px; background: var(--panel);
@@ -808,10 +1017,8 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
 /* У мест работы отклика не было вовсе: `transition: all` стоял, а правила
    :hover не существовало. Подъём тут ставить нельзя по двум причинам —
    карточка не ссылка (проверено: 7 из 7 карточек проектов это <a>, а из
-   шести мест работы ни одно), и лежат они плитками через зазор в 1 точку,
-   который подъём бы разорвал. Поэтому подсветка: она говорит «вот эта
-   строка», а не «сюда можно нажать» (правило 10). */
-.job { transition: background .15s ease; }
+   шести мест работы ни одно), и лежат они плитками через зазор в 1 точку, который подъём бы разорвал. Поэтому подсветка: она говорит «вот эта
+   строка», а var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
 .job:hover { background: var(--card-hover); }
 /* Снимок в строке опыта идёт во второй столбец, к тексту, а не в узкую
    колонку с датой: полоса журнала шириной 170 пикселей — марка, а не
@@ -835,7 +1042,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
      подмены сдвигалась. */
   object-fit: cover; object-position: top center;
   opacity: 0; pointer-events: none;
-  transition: opacity .25s ease;
+  transition: opacity var(--an-mikro, 150ms) linear;
 }
 .shot .gclip.is-playing { opacity: 1; }
 
@@ -862,7 +1069,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
    Выше 206 начинается «кричит» — это их граница, не наша догадка. */
 .job .shot img { max-height: 132px; width: auto; margin: 0 auto; }
 .job .shot a { display: block; border-radius: 8px; }
-.job .shot img { transition: transform .15s ease, box-shadow .15s ease; }
+.job .shot img { transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease), box-shadow var(--an-mikro, 150ms) linear; }
 .job .shot a:hover img, .job .shot a:focus-visible img {
   transform: scale(1.03); box-shadow: 0 8px 20px -6px #000a;
 }
@@ -896,7 +1103,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   color: inherit; text-decoration: none;
   background-image: linear-gradient(var(--accent), var(--accent));
   background-size: 0 1px; background-position: 0 100%; background-repeat: no-repeat;
-  transition: background-size .18s ease, color .15s ease;
+  transition: background-size var(--an-mikro, 150ms) linear, color var(--an-mikro, 150ms) linear;
 }
 .job-site:hover, .job-site:focus-visible { color: var(--accent); background-size: 100% 1px; }
 .job-site b { font-weight: 400; font-size: .8em; color: var(--dim); }
@@ -926,7 +1133,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   cursor: pointer; color: var(--text); font-size: 14px; font-weight: 650; list-style: none;
 }
 .project-index summary::-webkit-details-marker { display: none; }
-.project-index summary b { color: var(--accent); font-size: 17px; transition: transform .18s ease; }
+.project-index summary b { color: var(--accent); font-size: 17px; transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
 .project-index[open] summary { border-bottom: 1px solid var(--line); }
 .project-index[open] summary b { transform: rotate(180deg); }
 .project-index .list { border: 0; border-radius: 0 0 var(--r) var(--r); }
@@ -938,7 +1145,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   display: flex; align-items: center; gap: 14px;
   padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r);
   background: var(--panel); color: inherit; text-decoration: none;
-  transition: border-color .15s ease, background .15s ease;
+  transition: border-color var(--an-mikro, 150ms) linear, background var(--an-mikro, 150ms) linear;
 }
 .channel:hover { border-color: var(--accent); background: var(--card-hover); }
 .channel svg { flex: none; fill: currentColor; color: var(--muted); }
@@ -968,7 +1175,7 @@ html { scroll-padding-top: calc(var(--shapka, 71px) + 17px); }
   border: 1px solid var(--line); border-radius: 16px;
   background: linear-gradient(160deg, var(--panel), var(--bg-soft));
   text-decoration: none; color: inherit;
-  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease), border-color var(--an-mikro, 150ms) linear, box-shadow var(--an-mikro, 150ms) linear;
 }
 a.gcard:focus-visible,
 a.gcard.is-lit {
@@ -996,7 +1203,7 @@ a.gcard.is-lit {
 .gshot {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; opacity: .84; filter: saturate(1.1);
-  transition: opacity .25s ease, transform .35s ease;
+  transition: opacity var(--an-mikro, 150ms) linear, transform .35s ease;
 }
 a.gcard:focus-visible .gshot,
 a.gcard.is-lit .gshot { opacity: 1; transform: scale(1.06); }
@@ -1008,14 +1215,14 @@ a.gcard.is-lit .gshot { opacity: 1; transform: scale(1.06); }
 .gclip {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; opacity: 0; pointer-events: none;
-  transition: opacity .3s ease, transform .35s ease;
+  transition: opacity var(--an-raskrytie, 280ms) var(--an-vyhod, ease), transform var(--an-raskrytie, 280ms) var(--an-vyhod, ease);
 }
 a.gcard.is-lit .gclip { transform: scale(1.06); }
 .gclip.is-playing { opacity: 1; }
 
 .gart i {
   position: absolute; display: block;
-  transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;
+  transition: transform var(--an-raskrytie, 280ms) var(--an-vyhod, ease), opacity var(--an-raskrytie, 280ms) var(--an-vyhod, ease);
 }
 
 /* ACID UNO — веер карт. */
@@ -1184,7 +1391,7 @@ article.gcard .launch { color: var(--dim); }
   border: 1px solid transparent;
   color: var(--muted); text-decoration: none;
   font-size: 13px; white-space: nowrap;
-  transition: color .15s ease, border-color .15s ease;
+  transition: color var(--an-mikro, 150ms) linear, border-color var(--an-mikro, 150ms) linear;
 }
 .topbar-link:hover, .topbar-link:focus-visible { color: var(--text); border-color: var(--line); }
 
@@ -1236,8 +1443,18 @@ article.gcard .launch { color: var(--dim); }
 
 @media (max-width: 640px) {
   main { padding: 0 16px 60px; }
-  .work-lead { margin-top: 18px; padding: 18px; }
-  .work-duet { grid-template-columns: 1fr; gap: 12px; }
+  /* Кнопка «Путь» — на первый экран. Замер до правки: она стояла на 922 при
+     экране 844, то есть ниже сгиба, а просили именно первый экран. Ставим её
+     между Gateway (кончается на 552) и Дармой (начиналась на 564) — заголовок
+     раздела остаётся первым, ничего больше не двигается по смыслу.
+     display:contents растворяет обёртку, чтобы карточки и кнопка стали
+     соседями и слушались order; gap при этом теряется, поэтому отступы явные. */
+  .work-lead { margin-top: 18px; padding: 18px; display: flex; flex-direction: column; }
+  .work-duet { display: contents; }
+  .work-gateway { order: 1; }
+  .work-put { order: 2; margin: 12px 0 0; }
+  .work-dharma { order: 3; margin-top: 12px; }
+  .work-duet-note { order: 4; }
   .work-system { min-height:0; padding:18px; }
   .work-lead h1 { font-size: 31px; }
   .work-gateway-copy > p:not(.kicker) { font-size: 13px; line-height: 1.45; }
@@ -1306,6 +1523,275 @@ article.gcard .launch { color: var(--dim); }
 }
 .shot-full-close:hover, .shot-full-close:focus-visible { color: var(--fg); border-color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
-  .shot-full { animation: shot-full-in .18s ease-out; }
+  .shot-full { animation: shot-full-in var(--an-mikro, 150ms) var(--an-vyhod, ease-out); }
   @keyframes shot-full-in { from { opacity: 0; } to { opacity: 1; } }
 }
+
+/* ═══ Мастерская: рама вокруг ленты «Живого цеха» ═══════════════════════
+   Ленту рисует сам цех — она приезжает готовым куском со своими стилями
+   и своей палитрой. Наше дело здесь только рама и подпись: править чужую
+   вёрстку внутри рамы нельзя, иначе при следующем файле правка отвалится.
+
+   Вкладка пока одна, и она НЕ кнопка: кнопка, которая ничего не меняет,
+   читается как поломка. Появится вторая — станет переключателем. */
+.masterskaya .mast-tabs {
+  display: flex; gap: 2px; margin: 0 0 12px;
+  padding: 3px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--bg-soft); width: max-content; max-width: 100%;
+}
+.masterskaya .mast-tab {
+  padding: 7px 15px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; color: var(--text);
+}
+.masterskaya .mast-tab.is-current {
+  background: var(--accent); color: #08120c; box-shadow: var(--glow);
+}
+.masterskaya .mast-panel {
+  border: 1px solid var(--line); border-radius: 16px;
+  background: var(--bg-soft); padding: 12px;
+}
+/* Возраст снимка стоит НАД лентой: внутри неё написано «работает прямо
+   сейчас», и человек должен прочитать дату раньше этих слов. */
+.masterskaya .mast-stamp {
+  margin: 2px 4px 10px; font-size: 12px; color: var(--muted);
+}
+@media (max-width: 700px) {
+  .masterskaya .mast-panel { padding: 8px; border-radius: 14px; }
+  .masterskaya .mast-stamp { margin: 2px 2px 8px; }
+}
+
+/* ═══ Совсем узкие экраны (320 и уже) ═══════════════════════════════════
+   Тестер, 6 сентября 2026: на 320 у главной scrollWidth 351 при clientWidth
+   320 — страницу можно было сдвинуть вбок на 31 пиксель. Виноваты были два
+   места: сетка карточек (починена выше) и кнопки переключателя разделов.
+   Кнопки лежат в flex и по умолчанию не сжимаются ниже своего содержимого,
+   а «Рассказы» со значком в 15 пунктов туда не влезают втроём.
+   Крупные цели на телефоне трогать нельзя — их выбрали после того, как
+   живой человек не нашёл переход к играм, — поэтому высота и ширина в треть
+   остаются, а уходит только значок: подпись человек читает, значок узнаёт.  */
+@media (max-width: 359px) {
+  .track-switch button { min-width: 0; padding: 12px 6px; font-size: 13px; gap: 0; }
+  .track-switch button svg { display: none; }
+  .topbar { padding: 12px 12px; }
+}
+
+/* ═══ «Ещё практикумы»: раскрытие без скачка ═════════════════════════════
+   Сергей 6 сентября 2026: «опять дохуя свободного места, бессмысленно; они
+   не сильно важные после QueQuest» — и выбрал спрятать за кнопку.
+
+   Высоту ведёт сетка: строка едет от 0fr к 1fr. У height:auto нет
+   анимируемого значения, поэтому раскрытие через него — это рывок; приём
+   взят из Аниматеки, где он и записан. Содержимое при этом не трогаем
+   вовсе, иначе внутренние карточки пересчитывали бы раскладку каждый кадр. */
+.practicum-more { display: grid; gap: 0; min-height: 0; }
+/* Кнопка встроена в нижнюю зону главной карточки. 44 точки оставляем и мыши,
+   и пальцу: уменьшаем раскрываемые карточки, а не честную область нажатия. */
+.practicum-more-btn {
+  justify-self: start; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 11px 16px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--panel); color: var(--text);
+  font: 600 13px/1.2 var(--sans); cursor: pointer;
+  transition: background var(--an-mikro, 150ms) linear, border-color var(--an-mikro, 150ms) linear;
+}
+.practicum-more-btn:hover { background: var(--card-hover); border-color: var(--accent); }
+.practicum-more-btn b { color: var(--accent); transition: transform var(--an-mikro, 150ms) var(--an-vyhod-rezkiy, ease); }
+.practicum-more-btn[aria-expanded="true"] b { transform: rotate(180deg); }
+.practicum-more-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--an-raskrytie, 280ms) var(--an-vyhod, cubic-bezier(.22,.61,.36,1));
+}
+.practicum-more-body > * { overflow: hidden; min-height: 0; }
+.practicum-more-body[data-open] { grid-template-rows: 1fr; }
+/* Кому движение мешает — состояние меняется мгновенно, а не «анимация без
+   анимации»: раскрытие происходит, движения нет. */
+@media (prefers-reduced-motion: reduce) {
+  .practicum-more-body { transition: none; }
+  .practicum-more-btn b { transition: none; }
+}
+
+/* Чип на кадре шлюза. Сергей выбрал вариант В: «запрос → обрыв → ответ всё
+   равно» — не про устройство, а про то, чем шлюз ценен. Вид тот же, что у
+   чипа Dharma (он ему нравится), поэтому класс переиспользован целиком, а
+   здесь только место: у Dharma чип справа внизу, у шлюза справа внизу лёг бы
+   на подпись «66 проверок». */
+.work-gateway-proof span.gw-journey {
+  display: flex; flex-wrap: nowrap; white-space: nowrap;
+  right: 10px; bottom: 10px; top: auto; left: auto; width: max-content;
+  padding: 7px 8px; font: 600 9px/1 var(--mono); color: #c8ffe9;
+}
+.work-gateway-proof span.gw-journey b { white-space: nowrap; }
+.work-gateway-proof:hover .gw-journey, .work-gateway-proof:focus-visible .gw-journey { opacity: 1; border-color: #65e5b5; box-shadow: 0 0 18px #46dca34d; }
+
+/* ═══ Подложка карточки QueQuest ════════════════════════════════════════
+   Сергей 6 сентября: «поле с названием пустоватое: QueQuest большим справа
+   снизу, а „Игра · Python“ и описание про ящики — с левой стороны».
+   Две колонки: слева знак, кикер и фраза про ящики; справа внизу — имя,
+   крупно. Имя прижато к нижней кромке, поэтому пустота уходит вверх, где
+   её держит текст, а не остаётся дырой под названием.                     */
+@media (min-width: 901px) {
+  .quequest-copy {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .72fr);
+    align-items: stretch; gap: 20px 32px;
+  }
+  .quequest-left { display: grid; align-content: center; justify-items:start; gap: 8px; min-width: 0; }
+  .quequest-cta { display:grid; align-content:end; justify-items:end; gap:12px; min-width:0; }
+  .quequest-copy h3 {
+    margin: 0; text-align: right;
+    font-size: clamp(48px, 6vw, 76px); line-height: .88; letter-spacing: -.035em;
+  }
+}
+/* На телефоне колонок нет: имя над текстом, как и было. */
+@media (max-width: 900px) {
+  .quequest-left { display: grid; gap: 8px; }
+  .quequest-cta { display:grid; gap:10px; margin-top:10px; }
+  .quequest-copy h3 { margin: 0; font-size:clamp(36px, 6vw, 48px); }
+  .quequest-brand img { width:60px; height:60px; }
+}
+
+/* Разделение «22 мышью, 44 пальцем» снято 6 сентября по решению Рота:
+   Сергей просил половинную высоту ПО ВИДУ, а не по попаданию, а свод (29б)
+   требует области нажатия не меньше 44 точек. Кнопка стала легче за счёт
+   шрифта и отступов, а цель осталась пальцевой. */
+
+/* ═══ Карточка QueQuest: картинка ведёт в игру ══════════════════════════
+   Сергей 6 сентября: «где ссылка? почему по картинке не переходит!!??».
+   Картинка была кнопкой, которая играла ролик, а единственная ссылка на
+   игру лежала в списке далеко внизу страницы. Человек кликал по картинке и
+   ждал игру — и был прав.
+
+   Теперь картинка и заголовок — ссылки, ролик переехал на отдельную кнопку
+   рядом, и есть явная «Открыть игру» пальцевого размера. */
+.quequest-visual { display: block; text-decoration: none; }
+.quequest-play-btn {
+  position: absolute; left: 12px; bottom: 12px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 44px; padding: 11px 15px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  color: var(--text); font: 600 13px/1 var(--sans); cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background var(--an-mikro, 150ms) linear, border-color var(--an-mikro, 150ms) linear;
+}
+.quequest-play-btn:hover { background: var(--panel); border-color: var(--accent); }
+.quequest-play-btn b { color: var(--accent); }
+.quequest-stage { position: relative; display: grid; min-height: 0; }
+.quequest-open {
+  justify-self: end; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 12px 20px;
+  border: 1px solid var(--quequest-neon); border-radius: 10px;
+  background: var(--quequest-neon); color: #0b0712;
+  font: 700 15px/1 var(--sans); text-decoration: none;
+}
+.quequest-open:hover { background:#ab75ff; box-shadow:0 0 28px rgba(155,92,255,.5); }
+.quequest-copy h3 a { color: inherit; text-decoration: none; }
+.quequest-copy h3 a:hover { color: var(--quequest-pale); }
+.quequest-brand { display:inline-flex; align-items:center; justify-content:flex-end; gap:14px; }
+.quequest-brand img { width:72px; height:72px; flex:none; object-fit:contain; filter:drop-shadow(0 0 18px rgba(155,92,255,.58)); }
+.quequest-brand span { white-space:nowrap; }
+
+/* Дополнительные практикумы — короткая справка, а не второй главный экран.
+   На десктопе две карточки остаются в ряд; на телефоне — две плотные строки.
+   Метрики уже есть внутри самих практикумов и здесь только раздували блок. */
+.practicum-more .practicum-detail { grid-template-columns:52px minmax(0,1fr); gap:10px; padding:10px; }
+.practicum-more .practicum-detail-shot { width:52px; height:52px; aspect-ratio:1; }
+.practicum-more .practicum-detail-copy { align-content:center; gap:4px; }
+.practicum-more .practicum-detail-copy h3 { font-size:16px; }
+.practicum-more .practicum-detail-copy .kicker,
+.practicum-more .practicum-detail-copy .tagline { display:none; }
+.practicum-more .practicum-detail-copy .metric-chips,
+.practicum-more .practicum-detail-copy .chips { display:none; }
+.practicum-more .card-links { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.practicum-more .card-links a:not(:first-child) { display:none; }
+@media (max-width:900px) {
+  .quequest-copy { padding:16px; }
+  .quequest-open { justify-self:stretch; justify-content:center; }
+  .quequest-brand { justify-content:flex-start; gap:10px; }
+  .quequest-brand img { width:60px; height:60px; }
+  .practicum-more .practicum-detail { grid-template-columns:56px minmax(0,1fr); min-height:82px; }
+  .practicum-more .practicum-detail-shot { width:56px; height:56px; }
+}
+
+/* Строка терминала рядом с названием сайта: фразы, которые Сергей ловил и
+   записывал сам. Его правка: «рядом с названием сайта, а не отдельной полосой
+   ниже… пусть читается как строка терминала возле логотипа, а не как баннер» —
+   поэтому ни рамки, ни подложки, только знак, текст и курсор.
+   Высота фиксирована: фразы разной длины и набираются по букве, а без
+   фиксации шапка дышала бы на каждом символе. */
+.hero-term {
+  display: flex; align-items: center; gap: 6px;
+  flex: 1 1 auto; min-width: 0;
+  font: 500 11.5px/1.45 var(--mono); color: var(--dim);
+  height: 1.45em; overflow: hidden;
+}
+.hero-term-znak { flex: none; color: var(--accent); opacity: .8; }
+.hero-term-tekst { min-width: 0; white-space: pre-wrap; }
+/* Курсор виден ТОЛЬКО пока строка набирается или стирается. Слова Сергея:
+   «бесит постоянно моргающая штука, прямо отвлекает» — и он прав: мигающий
+   прямоугольник рядом с неподвижным текстом тянет взгляд на себя без всякой
+   причины. Пока фраза просто висит, курсора нет вовсе, а мигает он вдвое
+   медленнее прежнего. */
+.hero-term-kursor {
+  flex: none; width: .55em; height: 1em; background: var(--accent);
+  opacity: 0; transition: opacity 120ms linear;
+}
+.hero-term[data-nabor] .hero-term-kursor {
+  opacity: .75; animation: term-migat 2.1s steps(1, end) infinite;
+}
+@keyframes term-migat { 0%, 49% { opacity: .75 } 50%, 100% { opacity: 0 } }
+/* Глитч как его делают в вебе, а не сдвиг всей строки: расщепление на
+   красный и голубой каналы через тень, короткий срез полосой и дрожание на
+   доли пикселя. Ничего из этого не занимает места — ни тень, ни clip-path,
+   ни transform на layout не влияют, поэтому высота строки не двигается.
+   Срабатывает редко и коротко: 260 мс, иначе мешает читать. */
+.hero-term[data-glitch] .hero-term-tekst { animation: term-glitch 260ms steps(1, end) 1; }
+@keyframes term-glitch {
+  0%   { text-shadow: none; clip-path: none; transform: none }
+  15%  { text-shadow: 1.6px 0 rgba(255,42,86,.85), -1.6px 0 rgba(60,235,255,.75);
+         clip-path: inset(18% 0 42% 0); transform: translateX(-.6px) }
+  35%  { text-shadow: -1.4px 0 rgba(255,42,86,.8), 1.4px 0 rgba(60,235,255,.7);
+         clip-path: inset(52% 0 12% 0); transform: translateX(.8px) }
+  55%  { text-shadow: 1.2px 0 rgba(255,42,86,.7), -1.2px 0 rgba(60,235,255,.6);
+         clip-path: none; transform: none }
+  75%  { text-shadow: -.8px 0 rgba(255,42,86,.5), .8px 0 rgba(60,235,255,.45);
+         clip-path: inset(0 0 68% 0) }
+  100% { text-shadow: none; clip-path: none; transform: none }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Ни мигания, ни глитча вовсе: человек, попросивший меньше движения,
+     получает строку, которая просто меняется. */
+  .hero-term[data-nabor] .hero-term-kursor { animation: none; opacity: .45; }
+  .hero-term[data-glitch] .hero-term-tekst { animation: none; }
+}
+@media (max-width: 900px) {
+  /* Уходит на вторую строку шапки: рядом с названием места уже нет, а резать
+     фразу нельзя. Две строки высоты — самая длинная фраза помещается целиком. */
+  .topbar { flex-wrap: wrap; }
+  .hero-term { flex-basis: 100%; order: 9; height: calc(1.45em * 2); align-items: flex-start; }
+}
+
+
+/* Полоска пути у Gateway оживает так же, как у Dharma: Сергею нравится, как
+   у Dharma «выбор — агент — заказ» проявляется по шагам, и он попросил тот же
+   ритм у «запрос — обрыв — ответ всё равно». Кривая, длительность и задержка
+   второго отрезка взяты у Dharma один в один — иначе карточки на одном экране
+   вели бы себя по-разному, и это читалось бы как недоделка.
+   Высоту не трогаем: анимируется только масштаб по горизонтали. */
+@media (prefers-reduced-motion: no-preference) {
+  .work-gateway-proof:hover .gw-journey i,
+  .work-gateway-proof:focus-visible .gw-journey i { animation: dharma-route .8s ease-in-out both; }
+  .work-gateway-proof:hover .gw-journey i:nth-of-type(2),
+  .work-gateway-proof:focus-visible .gw-journey i:nth-of-type(2) { animation-delay: .38s; }
+}
+
+/* «(с)» после фразы — шутка Сергея про патентованные фразы ИИ. Чуть тусклее
+   самой фразы и не разрывается внутри себя: на узком экране переносится
+   целиком, а не по одной скобке. */
+.hero-term-c { flex: none; white-space: nowrap; opacity: .55; }
+
+/* На коротких страницах (практикум и прочие) main лежит внутри флекса
+   .page-short и потому сжимался ПО СОДЕРЖИМОМУ: max-width на него не влиял
+   вовсе, и страница занимала 0.40 ширины экрана при 1920. Сергей сказал про
+   это дважды — «всё жмётся к левому краю».
+   Ширину задаём явно: элемент флекса иначе не растягивается, сколько бы
+   максимума ему ни назначили. */
+.page-short > main { width: 100%; }

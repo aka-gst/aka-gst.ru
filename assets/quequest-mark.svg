@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Знак QueQuest</title>
+  <desc id="desc">Серверное ядро внутри буквы Q</desc>
+  <defs>
+    <linearGradient id="ring" x1="20" y1="16" x2="108" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d9c9ff"/>
+      <stop offset=".48" stop-color="#9b5cff"/>
+      <stop offset="1" stop-color="#6d37e8"/>
+    </linearGradient>
+    <radialGradient id="core" cx="0" cy="0" r="1" gradientTransform="translate(64 61) rotate(90) scale(42)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9b5cff" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#0b0814"/>
+    </radialGradient>
+  </defs>
+  <path d="M64 8 105 31v48l-41 24-41-24V31L64 8Z" fill="url(#core)" stroke="#332154" stroke-width="3"/>
+  <path d="M91 91 108 108" fill="none" stroke="#9b5cff" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="62" cy="59" r="38" fill="none" stroke="url(#ring)" stroke-width="8"/>
+  <path d="M44 39h36a6 6 0 0 1 6 6v32a6 6 0 0 1-6 6H44a6 6 0 0 1-6-6V45a6 6 0 0 1 6-6Z" fill="#100b1d" stroke="#d9c9ff" stroke-width="4"/>
+  <path d="M39 53h46M39 68h46" fill="none" stroke="#6d37e8" stroke-width="4"/>
+  <path d="M48 46h18M48 61h24M48 76h14" fill="none" stroke="#f1edff" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="77" cy="46" r="3" fill="#b88cff"/>
+  <circle cx="77" cy="76" r="3" fill="#b88cff"/>
+</svg>

@@ -15,6 +15,10 @@ const pages = {
   "programs/index.html": "programs.html",
 };
 const internal = new Set(["schedule", "psycluborion", "pweducation", "consultation", "services", "programs"]);
+// Оставляем без домена намеренно: куда должен вести /contacts — решает
+// владелец, вопрос у него с 4 сентября 2026. До ответа не трогаем, иначе
+// уведём людей туда, куда никто не договаривался. Встречается 12 раз.
+const bezDomena = new Set(["contacts"]);
 
 function localHref(raw = "") {
   const decoded = raw.replace(/&amp;/g, "&");
@@ -24,7 +28,17 @@ function localHref(raw = "") {
   const suffix = found ? found[2] : "";
   if (!path || path === "index.html") return `/psy-admin/${suffix}`;
   if (internal.has(path)) return `/psy-admin/${path}/${suffix}`;
-  return /members\/login|payment|pay|cart|order/i.test(decoded) ? "#psy-demo-notice" : raw;
+  if (/members\/login|payment|pay|cart|order/i.test(decoded)) return "#psy-demo-notice";
+  // Внешняя ссылка БЕЗ домена. Снимок Тильды хранит соседние страницы
+  // заказчицы относительными («/alteredstates-online»), а на нашем адресе
+  // такой путь ведёт в никуда: aka-gst.ru отдаёт 404. Раньше сюда попадал
+  // `raw`, то есть ссылка оставалась битой — семь штук на pweducation.
+  // Абсолютные ссылки на orion-center.ru этой ветки не достигают: их
+  // разбирает `found` выше и возвращает как есть.
+  if (!found && decoded.startsWith("/") && !bezDomena.has(path)) {
+    return `https://orion-center.ru/${path}${suffix}`;
+  }
+  return raw;
 }
 
 function sanitise(html, widgetPath) {
@@ -68,9 +82,22 @@ function sanitise(html, widgetPath) {
     html,body{max-width:100%;overflow-x:hidden}
     .t-records,.t-records_animated,.t-rec,.t396__elem,.t396__group,.t-animate{opacity:1!important;visibility:visible!important}
     #psy-demo-notice{position:fixed;z-index:2147482990;left:12px;bottom:12px;max-width:min(390px,calc(100vw - 24px));padding:10px 12px;border-radius:8px;background:#171420e8;color:#fff;font:12px/1.35 Arial,sans-serif;box-shadow:0 8px 28px #0005}#psy-demo-notice b{display:block;margin-bottom:2px}.psy-demo-form{opacity:.58;pointer-events:none}
+    /* В статической копии Tilda feed не запускается. Пустой контейнер не
+       должен оставлять вместо новостей экран пустоты; реальные карточки,
+       если они появятся в разметке, автоматически вернут блок. */
+    #rec288715564:has(.js-feed-container:empty){display:none}
+    /* Экспортная сетка T522 подтягивает первую линию на 10px внутрь текста.
+       Отступ относится только к списку расписания, не меняя сам текст. */
+    #rec1773853311 .t522>.t-container:not(.t-section__container){padding-top:26px}
   </style></head>`);
-  page = page.replace(/<body\b([^>]*)>/i, `<body$1><aside id="psy-demo-notice"><b>Тестовая версия PsyAdmin</b>Не официальный сайт «Орион-С». Заявки поступают в тестовую панель; оплата, аналитика и личный кабинет отключены.</aside>`);
-  const widget = `<script type="module" src="${widgetPath}?v=psy-widget-20260903-15"></script>`;
+  page = page.replace(/<body\b([^>]*)>/i, `<body$1><aside id="psy-demo-notice"><b>Тестовая версия PsyAdmin</b>Не официальный сайт «Орион-С». Заявки поступают в тестовую панель; оплата и личный кабинет отключены.</aside>`);
+  // Счётчик страниц. Он БЫЛ здесь (коммит f565a17) и пропал, когда страницу
+  // пересобрали поверх снимка сайта заказчицы: sanitise вырезает из снимка
+  // все script и возвращает только виджет. Возвращён 6 сентября по правилу 30
+  // вместе со снятием слова «аналитика» из предупреждения — иначе страница
+  // обещала бы человеку то, чего на ней уже нет.
+  const счётчик = '<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>';
+  const widget = `${счётчик}<script type="module" src="${widgetPath}?v=psy-widget-20260909-08&theme=orion-blue-20260908"></script>`;
   const complete = page.includes("</body>") ? page.replace("</body>", `${widget}</body>`) : `${page}${widget}`;
   return complete.replace(/[ \t]+$/gm, "");
 }

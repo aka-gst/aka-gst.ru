@@ -226,6 +226,7 @@ def _quest_run(payload):
     checks = request.get('checks') or []
     stdin_lines = list(request.get('stdin') or [])
     limit = float(request.get('timeLimit', 8))
+    event_var = request.get('eventVar') or ''
 
     ns = {'__name__': '__main__', '__quest_source__': source}
     buffer = io.StringIO()
@@ -265,6 +266,20 @@ def _quest_run(payload):
     sys.stdout, sys.stderr, builtins.input = saved_out, saved_err, saved_input
 
     stdout = buffer.getvalue()
+    events = []
+    if error is None and event_var:
+        try:
+            raw_events = ns.get(event_var, [])
+            if not isinstance(raw_events, list) or len(raw_events) > 32:
+                raise ValueError('invalid world event list')
+            events = json.loads(json.dumps(raw_events))
+        except Exception as exc:
+            error = {
+                'type': 'WorldEventError',
+                'text': 'Мир не принял команды Python: %s' % exc,
+                'hint': 'Команды миру должны быть обычным списком из простых значений.',
+                'line': None,
+            }
     results = []
     for spec in checks:
         if error is not None:
@@ -282,6 +297,7 @@ def _quest_run(payload):
 
     return json.dumps({
         'stdout': stdout,
+        'events': events,
         'error': error,
         'checks': results,
         'ms': int((time.monotonic() - started) * 1000),
@@ -328,10 +344,10 @@ self.onmessage = async (event) => {
     return;
   }
   if (message.type === 'run') {
-    const { id, source, preamble, checks, stdin, timeLimit } = message;
+    const { id, source, preamble, checks, stdin, eventVar, timeLimit } = message;
     try {
       const py = await ensurePyodide();
-      py.globals.set('__quest_request__', JSON.stringify({ source, preamble, checks, stdin, timeLimit }));
+      py.globals.set('__quest_request__', JSON.stringify({ source, preamble, checks, stdin, eventVar, timeLimit }));
       const raw = py.runPython('_quest_run(__quest_request__)');
       self.postMessage({ type: 'result', id, result: JSON.parse(raw) });
     } catch (error) {
@@ -340,6 +356,7 @@ self.onmessage = async (event) => {
         id,
         result: {
           stdout: '',
+          events: [],
           error: { type: 'RunnerError', text: String(error && error.message || error), hint: null, line: null },
           checks: (checks || []).map(() => ({ ok: false, detail: '' })),
           ms: 0,

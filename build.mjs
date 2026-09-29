@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // Генерирует index.html из data/site.json и data/projects.json.
 // Запуск: node build.mjs
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { trustedQaRunUrl } from './lib/qa-run-url.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const read = (name) => JSON.parse(readFileSync(join(root, 'data', name), 'utf8'));
@@ -21,6 +23,62 @@ const utro = read('utro.json');
 // поднять число.
 const assetVersion = (relative) =>
   createHash('sha256').update(readFileSync(join(root, relative))).digest('hex').slice(0, 8);
+
+// Дата файла — так, чтобы она пережила клон репозитория. Голое время
+// изменения врёт дважды: у свежесозданного файла это «сегодня» вместо дня
+// съёмки, а после git clone все файлы получают время выкачки, и все даты на
+// сайте стали бы одной. Поэтому: пока правка не закоммичена — время правки
+// (она и есть свежая), после коммита — дата коммита этого файла.
+// Требование Сергея от 6 сентября 2026: «дата должна быть датой файла/съёмки
+// и меняться сама», руками её не писать.
+const датаФайла = (relative) => {
+  const полный = join(root, relative);
+  try {
+    const грязный = execSync(`git status --porcelain -- ${JSON.stringify(relative)}`, { cwd: root }).toString().trim();
+    if (!грязный) {
+      const iso = execSync(`git log -1 --format=%cI -- ${JSON.stringify(relative)}`, { cwd: root }).toString().trim();
+      if (iso) return new Date(iso);
+    }
+  } catch (e) {
+    console.warn(`  ! дата файла ${relative}: git не ответил, беру время изменения`);
+  }
+  return statSync(полный).mtime;
+};
+
+// ── Кривые и длительности из Аниматеки ───────────────────────────────
+// Сергей называет плавную анимацию нашей слабой стороной, и он прав по
+// числам: на сайте было 48 переходов и девять разных кривых, в основном
+// голый ease — то есть системы не было вовсе, каждый писал своё.
+//
+// Аниматека лежит отдельной библиотекой (~/dev/animateka), и её значения
+// читаются ОТСЮДА, а не переписываются руками: скопированное число живёт
+// своей жизнью и через месяц расходится с источником. Файл читается при
+// сборке, переменные уезжают в разметку — лишнего запроса из браузера нет.
+const АНИМАТЕКА = '/Users/gst/dev/animateka/animateka.json';
+const анимТокены = (() => {
+  if (!existsSync(АНИМАТЕКА)) {
+    console.warn('  ! аниматеки нет на месте — кривые останутся прежними');
+    return '';
+  }
+  const а = JSON.parse(readFileSync(АНИМАТЕКА, 'utf8'));
+  const имена = {
+    'мягкий_выход': 'vyhod', 'резкий_выход': 'vyhod-rezkiy', 'спокойный': 'spokoyno',
+    'уход': 'uhod', 'пружина': 'pruzhina', 'пружина_мягче': 'pruzhina-myagche',
+  };
+  const строки = [];
+  for (const [ключ, короткое] of Object.entries(имена)) {
+    const к = а.кривые[ключ];
+    if (к) строки.push(`--an-${короткое}: cubic-bezier(${к.bezier.join(', ')})`);
+  }
+  // Из вилки берём середину: библиотека задаёт класс, а не точное число,
+  // и выбирать внутри класса надо по размеру движущегося. Для сайта середина.
+  const серёдка = (пара) => Math.round((пара[0] + пара[1]) / 2);
+  for (const [ключ, короткое] of Object.entries({ 'микро': 'mikro', 'раскрытие': 'raskrytie', 'страница': 'stranica' })) {
+    const д = а.длительности[ключ];
+    if (д) строки.push(`--an-${короткое}: ${серёдка(д.мс)}ms`);
+  }
+  return `:root{${строки.join(';')}}`;
+})();
 
 const cssVersion = assetVersion('assets/site.css');
 const jsVersion = assetVersion('assets/app.js');
@@ -405,6 +463,7 @@ const suiteRows = qa.tests.suites
 
 const live = qa.evaluation.live;
 const det = qa.evaluation.deterministic;
+const qaRunUrl = trustedQaRunUrl(qa.commit.run_url);
 
 // Доказательство к числам выше: сам отчёт и консоль, которой их снимали.
 const reportProof = flagship.shots?.length
@@ -445,7 +504,7 @@ const reportScreen = `
                 <p class="card-links">
                   <a class="link link-repo" href="${esc(qa.project.repository)}" target="_blank" rel="noopener">Исходный код <b>↗</b></a>
                   <a class="link link-report" href="${esc(qa.project.report)}" target="_blank" rel="noopener">Allure-отчёт <b>↗</b></a>
-                  <a class="link link-run" data-metric-run href="${esc(qa.commit.run_url)}" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>
+                  ${qaRunUrl ? `<a class="link link-run" data-metric-run href="${esc(qaRunUrl)}" target="_blank" rel="noopener">Смотреть прогон <b>↗</b></a>` : ''}
                 </p>
               </div>
               <div class="report-metrics" aria-label="Результаты последнего прогона">${headlineCards}</div>
@@ -560,8 +619,31 @@ const listRow = (project) => {
 
 const allWork = db.projects.filter((p) => p.tracks.includes('work'));
 const allPlay = db.projects.filter((p) => p.tracks.includes('play') && p.kind === 'game');
-const playable = db.projects.filter((p) => p.groups.includes('playable'));
-const otherGames = allPlay.filter((p) => !p.groups.includes('playable'));
+// Порядок карточек назвал Сергей 7 сентября, дословно и целиком. Прежде
+// список делился на «Играбельное» и «Остальное» — деление он попросил убрать:
+// «пусть будет просто список игр карточками, все подряд, без деления».
+const ПОРЯДОК_ИГР = [
+  'acid-uno', 'tetcolor', 'neon-lines', 'technomagic', 'puzzle-quest', 'stealth',
+  'neon-claw', 'worm', 'odin-udar', 'knb', 'perelom', 'coin-flip',
+];
+{
+  // Падаем громко, если названа игра, которой нет в данных: молча пропущенная
+  // игра — это игра, исчезнувшая с витрины, и заметит это он, а не мы.
+  const есть = new Set(db.projects.map((p) => p.id));
+  const пропали = ПОРЯДОК_ИГР.filter((id) => !есть.has(id));
+  if (пропали.length) throw new Error(`в порядке игр названы несуществующие: ${пропали.join(', ')}`);
+}
+const игрыПоПорядку = [...allPlay].sort((а, б) => {
+  const иа = ПОРЯДОК_ИГР.indexOf(а.id);
+  const иб = ПОРЯДОК_ИГР.indexOf(б.id);
+  // Не названные уходят в конец, а не исчезают: новая игра встанет последней
+  // и будет видна, а не потеряется молча.
+  return (иа < 0 ? 999 : иа) - (иб < 0 ? 999 : иб);
+});
+const неНазванные = allPlay.filter((p) => !ПОРЯДОК_ИГР.includes(p.id));
+if (неНазванные.length) {
+  console.warn(`  ! игры вне порядка Сергея, встали в конец: ${неНазванные.map((p) => p.id).join(', ')}`);
+}
 const projectById = (id) => db.projects.find((project) => project.id === id);
 const qaQuest = projectById('qa-quest');
 const dharmaAi = projectById('dharma-ai');
@@ -573,7 +655,7 @@ if (!qaQuest || !dharmaAi || practicumProjects.some((project) => !project)) {
 
 const practicumImage = (shot) => {
   const { w, h } = imageSize(`assets/shots/${shot.file}`);
-  return `<img src="${shotSrc(shot.file)}" alt="${esc(shot.alt)}" width="${w}" height="${h}" decoding="async">`;
+  return `<img src="${shotSrc(shot.file)}" alt="${esc(shot.alt)}" width="${w}" height="${h}" loading="lazy" decoding="async">`;
 };
 
 const practicumRouteIntro = {
@@ -582,10 +664,8 @@ const practicumRouteIntro = {
 };
 
 const practicumCard = (project, active, extra = '') => `
-          <article class="practicum-detail" id="practicum-panel-${esc(project.id)}" role="tabpanel"
-            aria-labelledby="practicum-tab-${esc(project.id)}" data-practicum-panel="${esc(project.id)}"${
-              active ? '' : ' hidden'
-            }>
+          <article class="practicum-detail" id="practicum-panel-${esc(project.id)}"
+            data-practicum-panel="${esc(project.id)}">
             <div class="practicum-detail-shot">${practicumImage(project.shots[0])}</div>
             <div class="practicum-detail-copy">
               <div class="card-head">
@@ -600,33 +680,42 @@ const practicumCard = (project, active, extra = '') => `
           </article>`;
 
 const practicumSwitch = `
-      <section class="block practicum-switch" aria-labelledby="practicums-title" data-practicum-switch>
+      <section class="block practicum-switch" aria-labelledby="practicums-title">
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Главный маршрут — QueQuest. Два следующих помогают проверить локальную модель и собрать агента.</p>
+          <p>Учишься писать правила на Python — и работа начинает делаться без тебя.</p>
         </div>
         <div class="practicum-pilot-grid">
           <article class="quequest-card" aria-labelledby="quequest-title">
-            <button class="quequest-visual" type="button" data-quequest-play aria-label="Показать путь QueQuest: от ручной работы к автоматике">
-              <img class="quequest-poster" src="/assets/shots/quequest-automation.jpg?v=${assetVersion('assets/shots/quequest-automation.jpg')}" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
-              <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=${assetVersion('assets/clips/clip-quequest-manual-to-ai.webm')}" aria-hidden="true"></video>
-              <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
-            </button>
-            <div class="quequest-copy">
-              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=${assetVersion('assets/qa-quest-server-core.png')}" alt="Знак QueQuest" width="512" height="512" decoding="async"><p class="kicker">Квест · Python</p></div>
-              <h3 id="quequest-title">QueQuest</h3>
-              <p class="tagline">Сначала герой тащит груз сам. Потом пишет настоящее Python-правило — и механическая рука продолжает разрешённую работу.</p>
+            <div class="quequest-stage">
+              <a class="quequest-visual" id="quequest-visual" href="/qa-quest/" data-quequest-play data-umami-event="project-open" data-umami-event-project="qa-quest" aria-label="Открыть игру QueQuest">
+                <img class="quequest-poster" loading="lazy" src="/assets/shots/quequest-automation.jpg?v=${assetVersion('assets/shots/quequest-automation.jpg')}" alt="Герой QueQuest внутри защиты компьютера окружён вирусами" width="1280" height="720" decoding="async">
+                <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=${assetVersion('assets/clips/clip-quequest-manual-to-ai.webm')}" aria-hidden="true"></video>
+              </a>
+              <button class="quequest-play-btn" type="button" data-quequest-play-for="quequest-visual">Показать переход <b aria-hidden="true">→</b></button>
+            </div>
+            <div class="quequest-copy quequest-actions">
+              <div class="quequest-left">
+                <div class="quequest-heading"><p class="kicker">Игра · Python</p></div>
+                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+                <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы <b aria-hidden="true">↓</b></button>
+              </div>
+              <div class="quequest-cta">
+                <h3 id="quequest-title"><a class="quequest-brand" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest"><img src="/assets/quequest-mark.svg?v=${assetVersion('assets/quequest-mark.svg')}" alt="" width="128" height="128" loading="lazy" decoding="async"><span>QueQuest</span></a></h3>
+                <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Автоматизировать рутину <b aria-hidden="true">↗</b></a>
+              </div>
             </div>
           </article>
-          <aside class="practicum-side" aria-label="Дополнительные практикумы">
-            <div class="practicum-tabs" role="tablist" aria-label="Дополнительные практикумы">
-              ${practicumProjects.map((project, index) => `<button type="button" id="practicum-tab-${esc(project.id)}" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" aria-controls="practicum-panel-${esc(project.id)}" data-practicum-to="${esc(project.id)}">${esc(project.title.replace('Практикум: ', ''))}</button>`).join('')}
+          <div class="practicum-more">
+            <div class="practicum-more-body" id="practicum-more-body" hidden inert aria-hidden="true">
+              <aside class="practicum-side" aria-label="Дополнительные практикумы">
+                <div class="practicum-detail-stage">
+                  ${practicumProjects.map((project) => practicumCard(project, true)).join('').trim()}
+                </div>
+              </aside>
             </div>
-            <div class="practicum-detail-stage">
-              ${practicumProjects.map((project, index) => practicumCard(project, index === 0)).join('').trim()}
-            </div>
-          </aside>
+          </div>
         </div>
       </section>`;
 
@@ -637,21 +726,131 @@ const leadImage = (file, alt) => {
   return `<img src="${shotSrc(file)}" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async">`;
 };
 
+// ── Записи прогонов шлюза ────────────────────────────────────────────
+// Сергей 6 сентября 2026: «дата должна быть датой файла/съёмки и меняться
+// сама». Здесь она и берётся из времени файла data/gw-progony.json: правишь
+// запись — дата на странице меняется сама, руками её больше никто не пишет.
+// Раньше в разметке стояло «5 сентября» строкой, и следующая запись оставила
+// бы её вчерашней навсегда.
+// «9 записи» — так не говорят. Русское число требует трёх форм, и это не
+// украшение: строку читает человек, а не счётчик.
+const склонение = (n, одна, две, много) => {
+  const х = Math.abs(n) % 100, е = х % 10;
+  if (х > 10 && х < 20) return много;
+  if (е > 1 && е < 5) return две;
+  return е === 1 ? одна : много;
+};
+
+const gwПрогоны = read('gw-progony.json');
+const gwПрогон = gwПрогоны.прогоны[0];
+// У записи прогона своё время, и оно вернее файлового: файл могли положить
+// в репозиторий на день позже прогона — ровно так и вышло с первой записью.
+// Поэтому: есть «когда» из журнала — берём его, нет — дату файла. Руками не
+// пишем ни то, ни другое.
+// Время прогона, а не «съёмки»: это час, когда тест действительно бежал на
+// нашей машине, и подписано оно словом «прогон». Все девять записей сейчас
+// из одного прогона — тогда честнее сказать это один раз, чем повторить
+// девять; разойдутся по времени — покажем у каждой свою.
+const когдаПрогон = (iso) => {
+  const д = new Date(iso);
+  const дата = д.toLocaleString('ru-RU', { day: 'numeric', month: 'numeric', timeZone: 'Europe/Moscow' });
+  const час = д.toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
+  return `${дата} в ${час}`;
+};
+const времена = [...new Set(gwПрогоны.прогоны.map((п) => п.когда).filter(Boolean))];
+const gwОдинПрогон = времена.length === 1;
+const gwКогда = времена.length
+  ? (gwОдинПрогон ? `прогон ${когдаПрогон(времена[0])}` : `${времена.length} прогонов, последний ${когдаПрогон(времена.sort().at(-1))}`)
+  : датаФайла('data/gw-progony.json').toLocaleString('ru-RU', { day: 'numeric', month: 'long', timeZone: 'Europe/Moscow' });
+// Все прогоны лежат в разметке, показывается один. Так блок работает и без
+// скрипта — человек увидит первый прогон целиком, — а со скриптом они идут
+// по кругу. Просьба Сергея от 6 сентября: «не один сценарий, а 5-10 разных
+// из реальной практики, каждый раз выпадает другой».
+const gwШаги = gwПрогоны.прогоны.map((прогон, i) => `<div class="gw-run" data-run="${i}"${i ? ' hidden' : ''}>
+                <ol class="gw-steps">
+${прогон.шаги.map((ш) => `                  <li data-gw="${esc(ш.вид)}"><b>${esc(ш.что)}</b><span>${esc(ш.как)}</span></li>`).join('\n')}
+                </ol>
+                <p class="gw-case">${esc(прогон.имя)}${gwОдинПрогон || !прогон.когда ? '' : ` · прогон ${esc(когдаПрогон(прогон.когда))}`} · ${esc(прогон.примечание)}</p>
+              </div>`).join('\n              ');
+
+// Полоска терминала с фразами, которые Сергей ловил и записывал сам.
+// Его задумка: «мож пусть на сайте будет полоска терминала, куда иногда
+// вылезают прикольные фразы такие?» — чтобы человек увидел, что ИИ бывает
+// живым и смешным, а не только полезным.
+//
+// Фразы переносятся ДОСЛОВНО из его коллекции (правило 35а): ни сокращать,
+// ни приглаживать нельзя. Поводы и пометки, лежащие рядом в его файле, на
+// сайт не идут — только сама фраза. Источник — data/frazy.json, копия в
+// репозитории, чтобы страница не зависела от файла в личной папке.
+const фразыСергея = (() => {
+  const путь = join(root, 'data/frazy.json');
+  if (!existsSync(путь)) {
+    console.warn('  ! data/frazy.json нет — полоска терминала не выводится');
+    return [];
+  }
+  const д = JSON.parse(readFileSync(путь, 'utf8'));
+  const все = Array.isArray(д.frazy) ? д.frazy : [];
+  // Решения Сергея от 7 сентября, по фразам поимённо. В его файле они
+  // остаются все — на витрину идут не все, и это его отбор, не наш.
+  const НЕ_НА_САЙТ = ['Перед показом заказчику не забудь написать боту хоть /start.'];
+  return все.filter((ф) => !НЕ_НА_САЙТ.includes(ф));
+})();
+
+const polosaFraz = фразыСергея.length
+  ? `<div class="hero-term" data-term aria-hidden="true">
+        <span class="hero-term-znak"></span><span class="hero-term-tekst"></span><span class="hero-term-c"></span><span class="hero-term-kursor"></span>
+      </div>
+          <script type="application/json" data-term-frazy>${JSON.stringify(фразыСергея).replace(/</g, '\\u003c')}</script>`
+  : '';
+
+const workPathImage = 'put/put-documentary-pilot.webp';
+const workPathImageSize = imageSize(`assets/${workPathImage}`);
+const workPathChapters = put.chapters
+  .map((chapter) => `<li data-work-path-chapter="${esc(chapter.id)}"><span class="sr-only">${esc(chapter.title)}</span></li>`)
+  .join('');
+const workPath = `
+        <article class="work-path" aria-label="Путь: семь глав">
+          <div class="work-path-copy">
+            <p class="kicker">Путь</p>
+            <p class="work-path-thesis">${esc(put.subtitle)}</p>
+            <a class="work-path-cta" href="/put/comic/">Комикс: как я дошёл до жизни такой <span aria-hidden="true">→</span></a>
+          </div>
+          <figure class="work-path-visual">
+            <img src="/assets/${workPathImage}?v=${assetVersion(`assets/${workPathImage}`)}" alt="${esc(put.hero.imageAlt)}" width="${workPathImageSize.w}" height="${workPathImageSize.h}" decoding="async">
+            <figcaption class="sr-only">Семь глав пути Сергея: от желания через ошибку и проверку к следующей вещи.</figcaption>
+            <div class="work-path-route">
+              <div class="work-path-stages" aria-hidden="true"><span>желание</span><span>ошибка</span><span>проверка</span><span>следующая вещь</span></div>
+              <ol class="work-path-chapters" aria-label="Семь глав пути">${workPathChapters}</ol>
+            </div>
+          </figure>
+        </article>`;
+
 const workLead = `
       <section class="work-lead" aria-labelledby="work-lead-title">
+${workPath}
         <div class="work-duet">
+          <div class="work-col work-col--gateway">
           <article class="work-system work-gateway">
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
-              <p>Связывает AI-агентов с приложениями, держит работу стабильной и защищает данные — без передачи наружу.</p>
+              <p>Мост между твоими программами и нейросетью: пропускает запросы, держит связь при сбоях и не отдаёт данные наружу.</p>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
+              <span class="gw-journey dharma-journey" aria-hidden="true"><b>запрос</b><i></i><b>обрыв</b><i></i><b>ответ всё равно</b></span>
               ${leadImage('allure-gateway.png', 'Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено')}
               <span><b data-metric="tests">66</b> проверок · живой LLM и браузер ↗</span>
             </a>
+            <details class="gw-live">
+              <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
+<div class="gw-runs">${gwШаги}</div>
+              <p class="gw-note">${gwПрогоны.прогоны.length} ${склонение(gwПрогоны.прогоны.length, 'запись', 'записи', 'записей')} из журналов, ${esc(gwКогда)}. Шлюз настоящий, отказы настоящие — поддельный только источник ответа. Повторяется одной командой из репозитория.</p>
+            </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя.</p>
+          </div>
+          <div class="work-col work-col--dharma">
           <a class="work-system work-dharma" href="${esc(dharmaAi.links[0].url)}" target="_blank" rel="noopener"${analytics(dharmaAi)}>
             <div class="work-dharma-shot">
               ${leadImage(dharmaAi.shots[0].file, dharmaAi.shots[0].alt)}
@@ -664,8 +863,9 @@ const workLead = `
             </div>
             <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Другой ведёт покупателя к заказу.</p>
+          </div>
         </div>
-        <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>`;
 
 // На главной показываем один вход в обучение. Второй маршрут остаётся
@@ -717,6 +917,97 @@ const partnerForm = `
             <button type="submit">Отправить запрос</button>
             <p class="partner-status" data-contact-status aria-live="polite"></p>
           </form>`;
+
+// ── Мастерская: лента «Живого цеха» ──────────────────────────────────
+// Ленту кладут Руки файлом data/tseh/zhivoy-tseh.html по своему расписанию,
+// сборка вставляет её в страницу. Один источник и одна копия: держать её ещё
+// и отдельным файлом на сервере — значит завести вторую, которая разъедется
+// с первой (правило 27). Живого запроса нет вовсе: страница показывает снимок.
+const ПУТЬ_ЦЕХА = 'data/tseh/zhivoy-tseh.html';
+
+// Файл приезжает от чужого генератора и по расписанию, то есть его никто не
+// читает глазами перед вставкой. Значит читать должна сборка — и падать, а не
+// вставлять молча (правило 7р). Список прицельный: всё, что может выполниться,
+// принять ввод или сходить наружу.
+// svg разрешён с 6 сентября 2026 по просьбе Рук: «Карту команды» — станции,
+// пути, разрыв на потерянной связи — на псевдоэлементах не нарисуешь, а
+// диагональ и вовсе никак. Запрет на него был не про картинки, а про то, что
+// умеет исполняться и ходить наружу; голые фигуры не умеют ни того, ни
+// другого. Опасное внутри svg названо поимённо и осталось запрещённым:
+// <script> исполняется, <foreignObject> втаскивает обратно всю разметку,
+// <use> и <image> тянут внешний файл, xlink:href — старая форма того же.
+const опасноеВЦехе = (html) => [
+  [/<script/i, 'тег <script>'],
+  [/<iframe/i, 'тег <iframe>'],
+  [/<(input|form|textarea|button|select)\b/i, 'поле ввода или кнопка'],
+  [/\son[a-z]+\s*=/i, 'обработчик события on*'],
+  [/https?:\/\//i, 'внешний адрес'],
+  [/url\s*\(/i, 'загрузка через url()'],
+  [/@import/i, '@import в стилях'],
+  [/<(link|object|embed|img|image|video|audio)\b/i, 'внешний ресурс'],
+  [/<(foreignObject|use)\b/i, 'svg тянет наружу или втаскивает разметку'],
+  [/xlink:href/i, 'xlink:href — старая форма внешней ссылки'],
+].filter(([re]) => re.test(html)).map(([, имя]) => имя);
+
+const цех = (() => {
+  const полный = join(root, ПУТЬ_ЦЕХА);
+  if (!existsSync(полный)) {
+    console.warn(`  !! ленты нет: ${ПУТЬ_ЦЕХА} — Мастерская выйдет с честной пометкой`);
+    return null;
+  }
+  const html = readFileSync(полный, 'utf8');
+  const беда = опасноеВЦехе(html);
+  if (беда.length) {
+    throw new Error(`${ПУТЬ_ЦЕХА}: в ленте ${беда.join(', ')} — не вставляю в страницу`);
+  }
+  return { html: html.trim(), снят: statSync(полный).mtime };
+})();
+
+// Время съёмки лента теперь называет сама («снимок 04:26 · цех работал в эту
+// минуту»), и вторая дата рядом только сбивала бы: моя показывала бы, когда
+// файл скопировали, а не когда цех снимали. Поэтому здесь остаётся то, чего
+// лента сказать не может: что это статический снимок, а не живой запрос. И
+// предупреждение, когда снимок залежался, — тогда её собственным словам про
+// «эту минуту» верить уже нельзя.
+const цехПодпись = (() => {
+  if (!цех) return 'Лента ещё не приезжала. Как только цех пришлёт файл, он появится здесь.';
+  const часов = (Date.now() - цех.снят.getTime()) / 3600000;
+  const хвост = 'обновляется файлом от цеха, а не запросом из браузера';
+  if (часов < 6) return хвост.charAt(0).toUpperCase() + хвост.slice(1);
+  const давно = часов < 48 ? `${Math.round(часов)} часов` : `${Math.round(часов / 24)} суток`;
+  return `Снимок не обновлялся ${давно} — времени внутри него верить нельзя · ${хвост}`;
+})();
+
+const masterskaya = `
+      <section class="block masterskaya" id="masterskaya" aria-labelledby="masterskaya-title">
+        <div class="block-head">
+          <p class="kicker">Мастерская</p>
+          <h2 id="masterskaya-title">Как это сделано — видно изнутри</h2>
+          <p>Не рассказ о процессе, а его след: чем заняты машины и агенты, пока идёт работа.</p>
+        </div>
+        <div class="mast-tabs" role="list">
+          <span class="mast-tab is-current" role="listitem" aria-current="true">Живой цех</span>
+        </div>
+        <div class="mast-panel">
+          <p class="mast-stamp">${esc(цехПодпись)}</p>
+${цех ? цех.html : ''}
+        </div>
+      </section>`;
+
+// ── Какой вкладке принадлежит якорь ──────────────────────────────────
+// Скрипт в шапке восстанавливает вкладку ДО первой отрисовки и до сих пор
+// знал только три хеша — #work, #games, #stories. Открывший ссылку на
+// раздел внутри вкладки (#masterskaya) получал запомненную вкладку, а
+// раздел оставался скрытым: Сергей так и не увидел Мастерскую. Карта
+// собирается из самих панелей, поэтому новый раздел попадает в неё сам и
+// никому не надо об этом помнить.
+const якоряПанелей = (панели) => {
+  const карта = {};
+  for (const [трек, html] of панели) {
+    for (const m of html.matchAll(/\sid="([A-Za-z0-9_-]+)"/g)) карта[m[1]] = трек;
+  }
+  return карта;
+};
 
 // ── Панель «Работа» ──────────────────────────────────────────────────
 const workPanel = `
@@ -876,6 +1167,33 @@ const storyBodyInline = (slug) =>
     .map((p) => /^\*\*\*$|^\*\s*\*\s*\*$/.test(p) ? '<hr class="story-break">' : `<p>${esc(p)}</p>`)
     .join('\n');
 
+// Рассказ без своей обложки берёт обложку сборника — решение владельца
+// 31 августа: «там где нет обложек — ставить обложку сборника». На самой
+// странице рассказа места хватает, поэтому показывается обложка целиком.
+// Поле coverBy остаётся внутренней записью и на сайте не выводится.
+const чемИллюстрирован = (story, collection) => {
+  if (story.cover) {
+    return { файл: story.cover, свой: true, alt: `Обложка рассказа «${story.title}»` };
+  }
+  if (!collection?.cover) return null;
+  return {
+    файл: collection.cover, свой: false, сборник: collection.title, кусок: story.slug,
+    alt: `Фрагмент обложки сборника «${collection.title}»`,
+  };
+};
+
+const storyCoverInline = (story) => {
+  const image = чемИллюстрирован(story, story.book);
+  if (!image) return '';
+  const relative = `assets/covers/${image.файл}`;
+  const { w, h } = imageSize(relative);
+  return `<figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/${relative}?v=${assetVersion(relative)}" alt="${esc(image.свой ? `Обложка рассказа «${story.title}»` : `Обложка сборника «${image.сборник}»`)}"
+       width="${w}" height="${h}" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure>`;
+};
+
 const storyCollectionPanel = (collection) => {
   const intro = collection.stories.find((story) => /^(вступление|предисловие)$/i.test(story.title));
   const contents = collection.stories.filter((story) => story !== intro);
@@ -893,15 +1211,7 @@ const storyCollectionPanel = (collection) => {
 const playPanel = `
         <section class="block block--lead" aria-label="Играбельное">
 ${playBar}
-          <div class="ggrid">${playable.map(gameCard).join('')}
-          </div>
-        </section>
-
-        <section class="block" aria-labelledby="other-games-title">
-          <div class="block-head">
-            <h2 id="other-games-title">Остальное</h2>
-          </div>
-          <div class="ggrid">${otherGames.map(gameCard).join('')}
+          <div class="ggrid">${игрыПоПорядку.map(gameCard).join('')}
           </div>
         </section>
 
@@ -930,8 +1240,8 @@ ${сборникиПоказ.map((collection) => `
         <div class="story-collections">
 ${сборникиПоказ.map(storyCollectionPanel).join('\n')}
         </div>
-        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑ <span>Наверх</span></button></article>
-        <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
+        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 tabindex="-1" data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑</button></article>
+        <div class="story-source" hidden>${storyList.map((story) => `<article data-story-source="${esc(story.book.id)}--${esc(story.slug)}" data-story-book="${esc(story.book.title)}" data-story-title="${esc(story.title)}">${storyCoverInline(story)}${storyBodyInline(`${story.book.id}--${story.slug}`)}</article>`).join('')}</div>
       </section>`;
 
 // ── Сборка страницы ──────────────────────────────────────────────────
@@ -964,14 +1274,18 @@ const html = `<!doctype html>
     <meta name="twitter:title" content="${esc(site.title)}">
     <meta name="twitter:description" content="${esc(site.description)}">
     <meta name="twitter:image" content="${esc(site.url)}${esc(site.ogImage)}">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
+    <link rel="stylesheet" href="/assets/work-path.css?v=${assetVersion('assets/work-path.css')}">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
-        var t = location.hash === '#games' ? 'play'
-              : location.hash === '#stories' ? 'stories'
-              : location.hash === '#work' ? 'work'
-              : localStorage.getItem('aka-gst:track');
+        var ЯКОРЯ = ${JSON.stringify(якоряПанелей([['work', workPanel], ['play', playPanel], ['stories', storiesPanel]]))};
+        var h = location.hash.slice(1);
+        var t = h === 'games' ? 'play'
+              : h === 'stories' ? 'stories'
+              : h === 'work' ? 'work'
+              : (ЯКОРЯ[h] || localStorage.getItem('aka-gst:track'));
         if (t === 'play' || t === 'work' || t === 'stories') document.documentElement.dataset.track = t;
       } catch (e) {}
     </script>
@@ -981,6 +1295,7 @@ const html = `<!doctype html>
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
       ${brand('work', { switchable: true })}
+      ${polosaFraz}
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work">${trackIcon(
           'work'
@@ -1018,11 +1333,74 @@ ${socialLinks('footer')}
 </html>
 `;
 
-writeFileSync(join(root, 'index.html'), html);
+// ── Точка в конце коротких строк ─────────────────────────────────────
+// Сергей 6 сентября 2026: «точки в конце предложения убери — ты знаешь, что
+// я это не люблю везде; в Dharma вижу точку в конце, в Gateway вижу точку в
+// конце». Слово «везде» здесь главное: это не про две карточки.
+//
+// Сделано проходом по готовой странице, а не правкой каждой строки руками:
+// текстов на карточках десятки, их правят разные сессии, и следующая правка
+// вернула бы точку молча. Список классов прицельный — только то, что человек
+// читает как подпись; абзацы страниц и рассказы не задеты. Точки МЕЖДУ
+// предложениями внутри строки остаются, снимается последняя. Вопросительный
+// и восклицательный знаки не трогаются: правило про точку.
+const БЕЗ_ТОЧКИ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'work-path-thesis',
+  'gw-case', 'gw-note', 'mast-stamp', 'kicker', 'job-role', 'shot-caption'];
+// Описания на первом экране лежат в <p> БЕЗ класса — их ловим по контейнеру.
+// Первая версия прохода их не видела вовсе, а проверка тоже смотрела только
+// на классы и радостно показывала ноль. Ровно те строки, на которые Сергей и
+// показал пальцем, — «в Dharma вижу точку, в Gateway вижу точку».
+const БЕЗ_ТОЧКИ_ВНУТРИ = ['work-gateway-copy', 'work-dharma-copy'];
+
+const снятьТочки = (страница) => {
+  let снято = 0;
+  const годится = (текст) => {
+    const голый = текст.replace(/<[^>]+>/g, '').trimEnd();
+    // «…» и сокращения не трогаем: снимаем точку только после буквы, цифры
+    // или закрывающей скобки-кавычки, и только если перед ней не точка.
+    return /[\wа-яё\d)»]$/i.test(голый) && !/\.$/.test(голый);
+  };
+  const снять = (образец) => {
+    страница = страница.replace(образец, (всё, начало, текст, конец) => {
+      if (!годится(текст)) return всё;
+      снято += 1;
+      return начало + текст + конец;
+    });
+  };
+  // Элемент с нужным классом: содержимое может содержать вложенные теги.
+  snyat_klassy();
+  function snyat_klassy() {
+    for (const тег of ['p', 'span', 'li', 'h3']) {
+      снять(new RegExp(
+        `(<${тег}[^>]*class="[^"]*\\b(?:${БЕЗ_ТОЧКИ.join('|')})\\b[^"]*"[^>]*>)((?:(?!</${тег}>)[\\s\\S])*?)\\.(</${тег}>)`, 'g'));
+    }
+  }
+  // <p> внутри названного контейнера, даже если у самого <p> класса нет.
+  for (const контейнер of БЕЗ_ТОЧКИ_ВНУТРИ) {
+    страница = страница.replace(
+      new RegExp(`(<div[^>]*class="[^"]*\\b${контейнер}\\b[^"]*"[^>]*>(?:(?!</div>)[\\s\\S])*)`, 'g'),
+      (кусок) => кусок.replace(/(<p(?![^>]*class="kicker")[^>]*>)((?:(?!<\/p>)[\s\S])*?)\.(<\/p>)/g,
+        (всё, н, т, к) => { if (!годится(т)) return всё; снято += 1; return н + т + к; }));
+  }
+  if (снято) console.log(`  точек в конце снято: ${снято}`);
+  return страница;
+};
+
+writeFileSync(join(root, 'index.html'), снятьТочки(html));
 
 // ── Индекс раздела практикумов ───────────────────────────────────────
 // Редирект /praktikum вёл в пустоту, пока этой страницы не было.
 const courses = db.projects.filter((p) => p.courseFeed);
+
+// Кадр для карточки практикума. Снят «Глазами» под ширину 353 — ровно ту, в
+// которой карточка живёт на обеих ширинах экрана (353 на десктопе, 358 на
+// телефоне). Показывает СОДЕРЖАНИЕ, а не верх страницы: заголовок, метки и
+// кнопка на карточке уже есть, и снимок обложки повторил бы их слово в слово.
+// Соответствие сверено по описанию проекта, а не по имени файла.
+const kadrPraktikuma = {
+  'praktikum-testing': 'praktikum-marshruty.png',
+  'ai-agent-service-lab': 'praktikum-chto-rabotaet.png',
+};
 
 const courseRows = courses
   .map((project) => {
@@ -1030,6 +1408,13 @@ const courseRows = courses
     const t = course?.totals || {};
     return `
         <a class="card" href="${esc(project.courseFeed.mount)}">
+          ${
+            kadrPraktikuma[project.id]
+              ? `<img class="course-shot" src="/assets/shots/${kadrPraktikuma[project.id]}?v=${assetVersion(
+                  `assets/shots/${kadrPraktikuma[project.id]}`
+                )}" alt="" width="353" height="122" decoding="async" loading="lazy">`
+              : ''
+          }
           <p class="kicker">${esc(project.kicker)}</p>
           <h3>${esc(course?.title || project.title)}</h3>
           <p class="tagline">${esc(course?.subtitle || project.tagline)}</p>
@@ -1038,6 +1423,11 @@ const courseRows = courses
             <li><b>${esc(t.experiments ?? '—')}</b> <span>практических работ</span></li>
             <li><b>~${esc(t.estimate_minutes ?? '—')} мин</b> <span>чтения</span></li>
           </ul>
+          ${
+            Array.isArray(project.stack) && project.stack.length
+              ? `<p class="course-stack">${project.stack.map((t) => esc(t)).join(' · ')}</p>`
+              : ''
+          }
           <span class="link">Открыть <b>→</b></span>
         </a>`;
   })
@@ -1055,10 +1445,11 @@ const praktikumPage = `<!doctype html>
     <link rel="canonical" href="${esc(site.url)}/praktikum/">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
   </head>
-  <body>
+  <body class="page-short">
     <header class="topbar">
       ${brand()}
     </header>
@@ -1128,6 +1519,7 @@ const enPage = `<!doctype html>
     <link rel="alternate" hreflang="en" href="${esc(site.url)}/en/">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>
   </head>
@@ -1239,6 +1631,7 @@ const readerHead = (title, description, canonical) => `
     <link rel="canonical" href="${esc(canonical)}">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
     <script defer src="/assets/afterimage-scroll.js?v=${assetVersion('assets/afterimage-scroll.js')}"></script>
@@ -1261,15 +1654,17 @@ ${socialLinks('reader')}
         </nav>
       </header>`;
 
-// Боковой список на больших экранах: сборники и рассказы внутри. Нужен,
-// чтобы переключаться между текстами не возвращаясь в оглавление. На узких
-// экранах не выводится — там он занял бы весь первый экран.
+// Оглавление на больших экранах стоит сбоку, а на узких входит в общий поток.
+// Сборники сворачиваются, поэтому мобильный первый экран не занят всеми
+// двадцатью тремя ссылками сразу.
 const readerSide = (current) => `
       <nav class="reader-side" aria-label="Все рассказы">
 ${сборникиПоказ
-  .map(
-    (c) => `        <p class="reader-side-book">${esc(c.title)}</p>
-        <ul>
+  .map((c) => {
+    const active = c.stories.some((st) => st.slug === current);
+    return `        <details class="reader-side-group${active ? ' is-current' : ''}"${active ? ' open' : ''}>
+          <summary class="reader-side-book" id="reader-side-${esc(c.id)}" aria-expanded="${active}" aria-controls="reader-side-list-${esc(c.id)}"><span>${esc(c.title)}</span><span class="reader-side-meta">${esc(c.year)} · ${esc(c.stories.length)} ${plural(c.stories.length, ['текст', 'текста', 'текстов'])}</span>${active ? '<span class="reader-side-current">текущий сборник</span>' : ''}</summary>
+        <ul id="reader-side-list-${esc(c.id)}">
 ${c.stories
   .map(
     (st) => `          <li><a href="/rasskazy/${esc(st.slug)}/"${
@@ -1277,8 +1672,9 @@ ${c.stories
     }>${esc(st.title)}</a></li>`
   )
   .join('\n')}
-        </ul>`
-  )
+        </ul>
+        </details>`;
+  })
   .join('\n')}
       </nav>`;
 
@@ -1316,30 +1712,6 @@ const копияОбложки = (вид, file, исток = file) => {
 // Миниатюра в оглавлении: 44 пикселя на экране, 132 в файле — под тройную
 // плотность. Раньше сюда шёл оригинал в 900 пикселей, и оглавление весило
 // 2.3 МБ при разметке в 19 КБ.
-// Рассказ без своей обложки берёт обложку сборника — решение владельца
-// 31 августа: «там где нет обложек — ставить обложку сборника». В список
-// идёт КУСОК её, а не целая: у «А потом наступит счастье» своей обложки нет
-// ни у одного из семи рассказов, и семь одинаковых квадратиков подряд
-// перестают быть списком — различать в нём труднее, чем когда картинок нет
-// вовсе (правило 17). На самой странице рассказа кусок незачем: там места
-// хватает, и показывается обложка сборника целиком.
-//
-// Кто рисовал обложку, на сайте больше не пишется: «убери отсюда чьи
-// обложки, я заплатил за все которые не из инета» — владелец, 31 августа
-// 2026. Поле coverBy в data/stories.json остаётся, это его собственная
-// запись; просто ничто её не выводит. Обложки рисовал
-// человек, и права на чужую работу — не то место, где экономят.
-const чемИллюстрирован = (st, c) => {
-  if (st.cover) {
-    return { файл: st.cover, свой: true, alt: `Обложка рассказа «${st.title}»` };
-  }
-  if (!c?.cover) return null;
-  return {
-    файл: c.cover, свой: false, сборник: c.title, кусок: st.slug,
-    alt: `Фрагмент обложки сборника «${c.title}»`,
-  };
-};
-
 const миниатюра = (и) => {
   const o = и.свой
     ? копияОбложки('mini', и.файл)
@@ -1721,6 +2093,7 @@ const notFound = `<!doctype html>
     <title>Страница не найдена — ${esc(site.handle)}</title>
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>
@@ -1769,6 +2142,7 @@ const unavailable = `<!doctype html>
     <title>Сервис недоступен — ${esc(site.handle)}</title>
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
+    <style>${анимТокены}</style>
     <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
   </head>
   <body>

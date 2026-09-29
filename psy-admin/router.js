@@ -1,5 +1,10 @@
-import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js";
-import { intents, safetyIntents } from "./intents.js";
+import { approvedOfferings, catalog, CENTER_URL, nextPublishedEvent } from "./content.js?v=psy-widget-20260913-24";
+import { intents, safetyIntents } from "./intents.js?v=psy-widget-20260913-24";
+
+export function resolveWidgetPublicUrl(value, widgetScriptUrl) {
+  const publicRoot = new URL("../", widgetScriptUrl);
+  return new URL(value, publicRoot).href;
+}
 
 const normalize = (value) => value
   .toLocaleLowerCase("ru-RU")
@@ -12,6 +17,26 @@ const crisisPattern = /(самоубий|суицид|убить себя|пок
 const diagnosisPattern = /(диагноз|диагностируй|назначь лечение|какие таблетки|антидепрессант|паническ|тревог|травм|упражнен|что мне лечить|проведи терапию|лечи меня)/i;
 const sensitivePattern = /(номер карты|данные карты|картой|карту|оплатить в чате|cvv|cvc|парол|паспорт|снилс)/i;
 const currentFactPattern = /(сколько стоит|цена|стоимость|когда|дата|места|свободн|сегодня|завтра|сейчас проходит)/i;
+
+const standardFollowUp = "Что показать дальше: программу, расписание или помочь записаться?";
+const supportiveFollowUps = Object.freeze({
+  answer: standardFollowUp,
+  curated: standardFollowUp,
+  offer: standardFollowUp,
+  unconfirmed: standardFollowUp,
+  fallback: standardFollowUp,
+  boundary: standardFollowUp,
+  crisis: "Если опасность непосредственная, вы можете сейчас позвонить 112 или попросить человека рядом сделать это?",
+});
+
+const supportiveLeadIns = Object.freeze({
+  answer: "Вот что удалось подтвердить по материалам центра.",
+  curated: "Вот подтверждённая информация центра.",
+  offer: "Вот что сейчас подтверждено по этой возможности.",
+  unconfirmed: "Здесь особенно важно сверить актуальные данные.",
+  fallback: "Давайте уточним тему — так получится найти нужный раздел.",
+  boundary: "Здесь особенно важно дать безопасный и точный ориентир.",
+});
 
 function scoreItem(query, item) {
   if (item.id.endsWith("-practicum") && !query.includes("практикум")) return 0;
@@ -62,7 +87,7 @@ function findApprovedOffering(query) {
     .sort((a, b) => b.score - a.score)[0];
 }
 
-export function answerQuestion(rawQuestion) {
+function routeQuestion(rawQuestion, context = {}) {
   const question = String(rawQuestion || "").trim();
   const query = normalize(question);
 
@@ -107,14 +132,66 @@ export function answerQuestion(rawQuestion) {
     };
   }
 
-  if (/(ближайш|следующ).*(семинар|мероприят|программ)|(семинар|мероприят|программ).*(ближайш|следующ)/i.test(query)) {
+  const continuesNearestEvent = context?.topic === "next-published-event";
+  if (continuesNearestEvent && /^(?:формат|какой формат|онлайн или очно|очно или онлайн|это онлайн|это очно)$/i.test(query)) {
+    return {
+      kind: "offer",
+      title: "Формат ближайшей программы",
+      text: `Программа «${nextPublishedEvent.title}» проходит ${nextPublishedEvent.format}.`,
+      url: nextPublishedEvent.url,
+      linkText: "Открыть программу и подробности",
+      context: { topic: "next-published-event" },
+      followUp: "Хотите открыть программу или оставить заявку?"
+    };
+  }
+  if (continuesNearestEvent && /^(?:программа|про программу|что в программе|содержание программы)$/i.test(query)) {
+    return {
+      kind: "offer",
+      title: "О ближайшей программе",
+      text: `«${nextPublishedEvent.title}» — онлайн-программа из ${nextPublishedEvent.duration}. В описании заявлены теория и практические упражнения для самостоятельной и совместной работы.`,
+      url: nextPublishedEvent.url,
+      linkText: "Открыть программу и подробности",
+      context: { topic: "next-published-event" },
+      followUp: "Хотите узнать способ записи на эту программу?"
+    };
+  }
+  if (continuesNearestEvent && /^(?:способ записи|как записаться|запись|хочу записаться|оставить заявку)$/i.test(query)) {
+    return {
+      kind: "offer",
+      title: "Запись на ближайшую программу",
+      text: `Оставить заявку на программу «${nextPublishedEvent.title}» можно в форме помощника. Администратор центра проверит возможность участия и свяжется с вами.`,
+      url: nextPublishedEvent.url,
+      linkText: "Открыть программу и подробности",
+      action: { label: "Оставить заявку на мероприятие", url: "/psy-admin/booking/?kind=seminar" },
+      context: { topic: "next-published-event" },
+      followUp: "Хотите оставить заявку сейчас?"
+    };
+  }
+
+  const asksForNextEvent = /(ближайш|следующ).*(семинар|мероприят|программ)|(семинар|мероприят|программ).*(ближайш|следующ)/i.test(query);
+  const asksForClubPrice = /(сколько стоит|цена|почем).*(психологическ.*клуб|клуб)|(психологическ.*клуб|клуб).*(сколько стоит|цена|почем)/i.test(query);
+
+  if (asksForNextEvent && asksForClubPrice) {
+    return {
+      kind: "offer",
+      title: "Ближайшее мероприятие и стоимость клуба",
+      text: `Ближайшее опубликованное мероприятие — «${nextPublishedEvent.title}»: старт ${nextPublishedEvent.startsAt}, ${nextPublishedEvent.duration}. Разовое посещение психологического клуба «Вечер с пользой» стоит 1 000 руб.; регистрация обязательна.`,
+      url: "https://orion-center.ru/schedule#actual",
+      linkText: "Открыть актуальное расписание",
+      action: { label: "Открыть страницу клуба", url: "https://orion-center.ru/psycluborion" }
+    };
+  }
+
+  if (asksForNextEvent) {
     return {
       kind: "offer",
       title: "Ближайшее опубликованное мероприятие",
       text: `Ближайшее опубликованное мероприятие — «${nextPublishedEvent.title}». Старт ${nextPublishedEvent.startsAt}, ${nextPublishedEvent.duration}.`,
       url: nextPublishedEvent.url,
       linkText: "Открыть программу и подробности",
-      action: { label: "Оставить заявку на мероприятие", url: "/psy-admin/booking/?kind=seminar" }
+      action: { label: "Оставить заявку на мероприятие", url: "/psy-admin/booking/?kind=seminar" },
+      context: { topic: "next-published-event" },
+      followUp: "Хотите узнать формат этой программы или оставить заявку?"
     };
   }
 
@@ -204,4 +281,14 @@ export function answerQuestion(rawQuestion) {
     url: CENTER_URL,
     linkText: "Открыть сайт центра"
   };
+}
+
+export function answerQuestion(rawQuestion, context = {}) {
+  const answer = routeQuestion(rawQuestion, context);
+  const followUp = answer.kind === "crisis" ? supportiveFollowUps.crisis : standardFollowUp;
+  const query = normalize(rawQuestion);
+  const shortContinuation = query.split(" ").filter(Boolean).length <= 3
+    && /^(?:контакт|формат|программ|способ запис|запис|распис|стоимост|цен|подробн|специалист)/i.test(query);
+  const leadIn = shortContinuation ? undefined : supportiveLeadIns[answer.kind];
+  return followUp ? { ...answer, ...(leadIn ? { leadIn } : {}), followUp } : answer;
 }

@@ -27,14 +27,18 @@
     <meta name="twitter:title" content="aka-gst — Архитектор AI-продуктов и агентных систем">
     <meta name="twitter:description" content="Портфолио Сергея Гостова: AI-продукты, агентные системы и проверяемая надёжность — от сценария до релиза">
     <meta name="twitter:image" content="https://aka-gst.ru/og.png">
-    <link rel="stylesheet" href="/assets/site.css?v=f4f14c01">
+    <style>:root{--an-vyhod: cubic-bezier(0.22, 0.61, 0.36, 1);--an-vyhod-rezkiy: cubic-bezier(0.16, 1, 0.3, 1);--an-spokoyno: cubic-bezier(0.4, 0, 0.2, 1);--an-uhod: cubic-bezier(0.4, 0, 1, 1);--an-pruzhina: cubic-bezier(0.34, 1.56, 0.64, 1);--an-pruzhina-myagche: cubic-bezier(0.3, 1.3, 0.6, 1);--an-mikro: 150ms;--an-raskrytie: 280ms;--an-stranica: 500ms}</style>
+    <link rel="stylesheet" href="/assets/site.css?v=5df35593">
+    <link rel="stylesheet" href="/assets/work-path.css?v=546d88bb">
     <script>
       // Восстанавливаем выбранный раздел до первой отрисовки, чтобы не мигало.
       try {
-        var t = location.hash === '#games' ? 'play'
-              : location.hash === '#stories' ? 'stories'
-              : location.hash === '#work' ? 'work'
-              : localStorage.getItem('aka-gst:track');
+        var ЯКОРЯ = {"work-lead-title":"work","practicums-title":"work","quequest-visual":"work","quequest-title":"work","practicum-more-body":"work","practicum-panel-praktikum-testing":"work","practicum-panel-ai-agent-service-lab":"work","products-title":"work","p-psy-ai-admin":"work","p-photo-meta-editor":"work","profile-title":"work","all-work-title":"work","stories-lead-title":"stories","story-collection-a-potom":"stories","story-collection-tri-iznutri":"stories","story-collection-solyanochka":"stories"};
+        var h = location.hash.slice(1);
+        var t = h === 'games' ? 'play'
+              : h === 'stories' ? 'stories'
+              : h === 'work' ? 'work'
+              : (ЯКОРЯ[h] || localStorage.getItem('aka-gst:track'));
         if (t === 'play' || t === 'work' || t === 'stories') document.documentElement.dataset.track = t;
       } catch (e) {}
     </script>
@@ -44,6 +48,10 @@
     <a class="skip" href="#main">К содержимому</a>
     <header class="topbar">
       <a class="brand" href="/"><img class="brand-znak" data-brand-mark data-mark-work="/assets/mark-work.svg?v=451a5fd4" data-mark-play="/assets/mark-games.svg?v=1be8f5a1" data-mark-stories="/assets/mark-stories.svg?v=70cce9e0" src="/assets/mark-work.svg?v=451a5fd4" alt="" width="64" height="64" decoding="async">aka<span>-</span>gst</a>
+      <div class="hero-term" data-term aria-hidden="true">
+        <span class="hero-term-znak"></span><span class="hero-term-tekst"></span><span class="hero-term-c"></span><span class="hero-term-kursor"></span>
+      </div>
+          <script type="application/json" data-term-frazy>["Это роли, а не задачи.","Скверно, что он умер.","Когнитивный экзоскелет.","Экономия контекста создавала утечку памяти.","Проверено поломкой.","Аппаратная девственность.","Сообщи, если тебе узко в вебе.","У жалобы есть число. Найди его.","Не хватало не завершения, а вычёркивания.","Поддержка света.","Герой не изменился, просто подешевело быть честным.","Смена правообладателя на псевдоним ослабляет лицензию.","Ошибка про твою ориентацию, а не про расход.","«Злее всего то, что…»","Починили механизмом, а не обещанием.","Оно сильное, потому что честное."]</script>
       <div class="track-switch" role="group" aria-label="Раздел сайта">
         <button type="button" data-track-to="work" data-umami-event="track-switch" data-umami-event-track="work"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5-5-5" /><path d="M12 19h8" /></svg><span>Работа</span></button>
@@ -74,89 +82,203 @@
 
     <main id="main">
       <div class="panel" data-panel="work"><section class="work-lead" aria-labelledby="work-lead-title">
+
+        <article class="work-path" aria-label="Путь: семь глав">
+          <div class="work-path-copy">
+            <p class="kicker">Путь</p>
+            <p class="work-path-thesis">Не витрина достижений, а след решений: желание, ошибка, проверка, следующая вещь</p>
+            <a class="work-path-cta" href="/put/comic/">Комикс: как я дошёл до жизни такой <span aria-hidden="true">→</span></a>
+          </div>
+          <figure class="work-path-visual">
+            <img src="/assets/put/put-documentary-pilot.webp?v=eac39f56" alt="Черновая иллюстрация рабочего стола с эскизами, ноутбуком и экраном с картой связей" width="1672" height="941" decoding="async">
+            <figcaption class="sr-only">Семь глав пути Сергея: от желания через ошибку и проверку к следующей вещи.</figcaption>
+            <div class="work-path-route">
+              <div class="work-path-stages" aria-hidden="true"><span>желание</span><span>ошибка</span><span>проверка</span><span>следующая вещь</span></div>
+              <ol class="work-path-chapters" aria-label="Семь глав пути"><li data-work-path-chapter="первые-проекты"><span class="sr-only">Первым был дневник, и он ждал шесть лет</span></li><li data-work-path-chapter="две-машины"><span class="sr-only">Две машины и команда агентов</span></li><li data-work-path-chapter="ошибки-стали-проверками"><span class="sr-only">Ошибки превратились в способ проверки</span></li><li data-work-path-chapter="игры"><span class="sr-only">Игры — место, где теория сразу спорит с пальцем</span></li><li data-work-path-chapter="dharma-и-anigma"><span class="sr-only">Dharma и ANIGMA: проверить весь путь, не только ответ</span></li><li data-work-path-chapter="витрина-и-роль"><span class="sr-only">Сайт стал не складом ссылок, а местом, которое объясняет роль</span></li><li data-work-path-chapter="что-доделывается"><span class="sr-only">Сейчас важнее довести, чем придумать ещё</span></li></ol>
+            </div>
+          </figure>
+        </article>
         <div class="work-duet">
+          <div class="work-col work-col--gateway">
           <article class="work-system work-gateway">
             <div class="work-gateway-copy">
               <p class="kicker">01 / рабочая система</p>
               <h1 id="work-lead-title">Local Agent Gateway</h1>
-              <p>Связывает AI-агентов с приложениями, держит работу стабильной и защищает данные — без передачи наружу.</p>
+              <p>Мост между твоими программами и нейросетью: пропускает запросы, держит связь при сбоях и не отдаёт данные наружу</p>
             </div>
             <a class="work-gateway-proof" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">
+              <span class="gw-journey dharma-journey" aria-hidden="true"><b>запрос</b><i></i><b>обрыв</b><i></i><b>ответ всё равно</b></span>
               <img src="/assets/shots/allure-gateway.png?v=ff284351" alt="Allure-отчёт Local Agent Gateway: 66 тестов и 100% пройдено" width="1200" height="750" decoding="async">
               <span><b data-metric="tests">66</b> проверок · живой LLM и браузер ↗</span>
             </a>
+            <details class="gw-live">
+              <summary>Показать, как шлюз ловит отказ <i aria-hidden="true">→</i></summary>
+<div class="gw-runs"><div class="gw-run" data-run="0">
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>обычный чат, приложение ждёт ответа</span></li>
+                  <li data-gw="warn"><b>модель не ответила вовсе</b><span>истекло время ожидания</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream unavailable» — приложение не висит, а знает</span></li>
+                  <li data-gw="ok"><b>наружу не ушло ничего лишнего</b><span>ни в ответе, ни в журнале нет подробностей отказа</span></li>
+                </ol>
+                <p class="gw-case">модель замолчала · Медиана 2 мс по 11 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="1" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос с потоковым ответом</b><span>приложение готово читать по кускам</span></li>
+                  <li data-gw="warn"><b>модель прислала негодное событие</b><span>в потоке не то, чего ждут</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>отдал в поток «invalid upstream stream» и закрыл его как положено — «data: [DONE]»</span></li>
+                  <li data-gw="ok"><b>соединение к модели закрыто</b><span>и приватное содержимое чужого события не попало ни в ответ, ни в журнал</span></li>
+                </ol>
+                <p class="gw-case">мусор вместо потока · Медиана 4 мс по 3 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="2" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>поток пошёл</b><span>первая часть текста уже у приложения</span></li>
+                  <li data-gw="warn"><b>связь оборвалась на середине</b><span>остальное не придёт никогда</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>отдал пришедшее, пометил «upstream stream interrupted», закрыл поток корректно</span></li>
+                  <li data-gw="ok"><b>приложение получило половину и знает об этом</b><span>секрет из внутренней ошибки наружу не ушёл</span></li>
+                </ol>
+                <p class="gw-case">обрыв посреди ответа · Медиана 6 мс по 3 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="3" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>ответ пришёл быстро</span></li>
+                  <li data-gw="warn"><b>в ответе не разбираемый JSON</b><span>разобрать нечего</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>502 «invalid upstream response» вместо мусора в приложении</span></li>
+                </ol>
+                <p class="gw-case">модель ответила не тем · Медиана 2 мс по 8 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="4" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>соединение живо</span></li>
+                  <li data-gw="warn"><b>модель ответила ошибкой HTTP</b><span>внутри неё написано лишнее</span></li>
+                  <li data-gw="fix"><b>шлюз вмешался</b><span>502 «upstream error», подробности внутрь ответа не попали</span></li>
+                </ol>
+                <p class="gw-case">модель вернула ошибку · Медиана 2 мс по 8 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="5" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>запрос ушёл к модели</b><span>обычный чат</span></li>
+                  <li data-gw="warn"><b>соединение оборвалось</b><span>разрыв временный, но приложение об этом не знает</span></li>
+                  <li data-gw="fix"><b>шлюз повторил сам</b><span>второй заход прошёл, приложение получило нормальный ответ</span></li>
+                </ol>
+                <p class="gw-case">связь оборвалась и вернулась · Медиана 1005 мс по 4 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="6" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="ok"><b>двенадцать запросов одновременно</b><span>у каждого свой номер</span></li>
+                  <li data-gw="ok"><b>все двенадцать вернулись верными</b><span>ответ каждого пришёл со своим же номером, ничего не перепуталось</span></li>
+                  <li data-gw="ok"><b>модель получила ровно двенадцать обращений</b><span>ни одного лишнего и ни одного потерянного</span></li>
+                  <li data-gw="ok"><b>шлюз остановился штатно</b><span>код возврата 0, ничего не зависло</span></li>
+                </ol>
+                <p class="gw-case">двенадцать запросов разом · Медиана 1443 мс по 3 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="7" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="warn"><b>модель остановлена</b><span>шлюз отвечает 503 «backend not ready», без подробностей</span></li>
+                  <li data-gw="ok"><b>модель поднялась</b><span>готовность вернулась сама</span></li>
+                  <li data-gw="warn"><b>остановлен сам шлюз</b><span>процесса нет</span></li>
+                  <li data-gw="ok"><b>шлюз поднялся</b><span>первый же запрос вернул нормальный ответ</span></li>
+                </ol>
+                <p class="gw-case">перезапустили и модель, и сам шлюз · Медиана 1116 мс по 3 прогонам</p>
+              </div>
+              <div class="gw-run" data-run="8" hidden>
+                <ol class="gw-steps">
+                  <li data-gw="fix"><b>таймаут</b><span>502 «upstream unavailable»</span></li>
+                  <li data-gw="fix"><b>негодный поток</b><span>502 «invalid upstream stream»</span></li>
+                  <li data-gw="fix"><b>обрыв потока</b><span>200 с пришедшей частью и пометкой «upstream stream interrupted»</span></li>
+                  <li data-gw="ok"><b>восемь запросов разом</b><span>все 200, p95 меньше секунды</span></li>
+                  <li data-gw="ok"><b>модель получила 11 обращений</b><span>ни один запрос не завис</span></li>
+                </ol>
+                <p class="gw-case">стенд отказов целиком · Медиана 161 мс по 3 прогонам. Шлюз настоящий, обрывы настоящие — поддельный только источник ответа</p>
+              </div></div>
+              <p class="gw-note">9 записей из журналов, прогон 04.09 в 01:46. Шлюз настоящий, отказы настоящие — поддельный только источник ответа. Повторяется одной командой из репозитория</p>
+            </details>
             <a class="work-system-link" href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Открыть исходный код <b>↗</b></a>
           </article>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Один AI остаётся на машине и проверяет себя</p>
+          </div>
+          <div class="work-col work-col--dharma">
           <a class="work-system work-dharma" href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">
             <div class="work-dharma-shot">
-              <img src="/assets/shots/anigma.jpg?v=828230f1" alt="Первый экран магазина ANIGMA: коллекция AFTERIMAGE PROTOCOL и артворк OBSERVER_01" width="1200" height="750" decoding="async">
+              <img src="/assets/shots/anigma-magazin.jpg?v=d36d19d5" alt="Витрина магазина ANIGMA: корзина, кнопка «Shop the drop», фильтры и три товара с ценами — каталог, который ведут агенты" width="1200" height="750" decoding="async">
               <span class="dharma-journey" aria-hidden="true"><b>выбор</b><i></i><b>агент</b><i></i><b>заказ</b></span>
             </div>
             <div class="work-dharma-copy">
               <p class="kicker">02 / продукт заказчика</p>
               <h2>Dharma AI · Anigma</h2>
-              <p>Магазин 2.0: AI-агенты встречают покупателя, помогают выбрать, оформляют заказ и передают его на отправку.</p>
+              <p>Магазин 2.0: AI-агенты встречают покупателя, помогают выбрать, оформляют заказ и передают его на отправку</p>
             </div>
             <span class="work-system-link">Открыть сайт <b>↗</b></span>
           </a>
+          <p class="work-duet-note"><i aria-hidden="true">↑</i> Другой ведёт покупателя к заказу</p>
+          </div>
         </div>
-        <p class="work-duet-note"><b>Один AI остаётся на машине и проверяет себя.</b> Другой ведёт покупателя к заказу. Это две разные рабочие системы, а не концепты.</p>
       </section>
 
-<section class="block practicum-switch" aria-labelledby="practicums-title" data-practicum-switch>
+<section class="block practicum-switch" aria-labelledby="practicums-title">
         <div class="block-head">
           <p class="kicker">03</p>
           <h2 id="practicums-title">Практикумы</h2>
-          <p>Главный маршрут — QueQuest. Два следующих помогают проверить локальную модель и собрать агента.</p>
+          <p>Учишься писать правила на Python — и работа начинает делаться без тебя.</p>
         </div>
         <div class="practicum-pilot-grid">
           <article class="quequest-card" aria-labelledby="quequest-title">
-            <button class="quequest-visual" type="button" data-quequest-play aria-label="Показать путь QueQuest: от ручной работы к автоматике">
-              <img class="quequest-poster" src="/assets/shots/quequest-automation.jpg?v=9bc4030f" alt="Механическая рука QueQuest переносит ящик на заполненную паллету" width="1280" height="720" decoding="async">
-              <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=8a8d710e" aria-hidden="true"></video>
-              <span class="quequest-play-label" aria-hidden="true">Показать переход <b>→</b></span>
-            </button>
-            <div class="quequest-copy">
-              <div class="quequest-heading"><img src="/assets/qa-quest-server-core.png?v=aee360db" alt="Знак QueQuest" width="512" height="512" decoding="async"><p class="kicker">Квест · Python</p></div>
-              <h3 id="quequest-title">QueQuest</h3>
-              <p class="tagline">Сначала герой тащит груз сам. Потом пишет настоящее Python-правило — и механическая рука продолжает разрешённую работу.</p>
+            <div class="quequest-stage">
+              <a class="quequest-visual" id="quequest-visual" href="/qa-quest/" data-quequest-play data-umami-event="project-open" data-umami-event-project="qa-quest" aria-label="Открыть игру QueQuest">
+                <img class="quequest-poster" loading="lazy" src="/assets/shots/quequest-automation.jpg?v=d314201f" alt="Герой QueQuest внутри защиты компьютера окружён вирусами" width="1280" height="720" decoding="async">
+                <video class="quequest-video" muted playsinline preload="none" data-src="/assets/clips/clip-quequest-manual-to-ai.webm?v=f9cdfda2" aria-hidden="true"></video>
+              </a>
+              <button class="quequest-play-btn" type="button" data-quequest-play-for="quequest-visual">Показать переход <b aria-hidden="true">→</b></button>
+            </div>
+            <div class="quequest-copy quequest-actions">
+              <div class="quequest-left">
+                <div class="quequest-heading"><p class="kicker">Игра · Python</p></div>
+                <p class="tagline">Таскаешь ящики за бабки. Мож научишься прогать, чтоб tаskали за тебя?</p>
+                <button class="practicum-more-btn" type="button" data-more-open="practicum-more-body" aria-expanded="false" aria-controls="practicum-more-body">Ещё практикумы <b aria-hidden="true">↓</b></button>
+              </div>
+              <div class="quequest-cta">
+                <h3 id="quequest-title"><a class="quequest-brand" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest"><img src="/assets/quequest-mark.svg?v=10251184" alt="" width="128" height="128" loading="lazy" decoding="async"><span>QueQuest</span></a></h3>
+                <a class="quequest-open" href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">Автоматизировать рутину <b aria-hidden="true">↗</b></a>
+              </div>
             </div>
           </article>
-          <aside class="practicum-side" aria-label="Дополнительные практикумы">
-            <div class="practicum-tabs" role="tablist" aria-label="Дополнительные практикумы">
-              <button type="button" id="practicum-tab-praktikum-testing" role="tab" aria-selected="true" aria-controls="practicum-panel-praktikum-testing" data-practicum-to="praktikum-testing">тестирование локального AI-агента</button><button type="button" id="practicum-tab-ai-agent-service-lab" role="tab" aria-selected="false" aria-controls="practicum-panel-ai-agent-service-lab" data-practicum-to="ai-agent-service-lab">настройка LLM и агентов</button>
-            </div>
-            <div class="practicum-detail-stage">
-              <article class="practicum-detail" id="practicum-panel-praktikum-testing" role="tabpanel"
-            aria-labelledby="practicum-tab-praktikum-testing" data-practicum-panel="praktikum-testing">
-            <div class="practicum-detail-shot"><img src="/assets/shots/praktikum-testing.jpg?v=b4612688" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов, 16 экспериментов, кнопки чтения, PDF и DOCX, список частей" width="1200" height="750" decoding="async"></div>
+          <div class="practicum-more">
+            <div class="practicum-more-body" id="practicum-more-body" hidden inert aria-hidden="true">
+              <aside class="practicum-side" aria-label="Дополнительные практикумы">
+                <div class="practicum-detail-stage">
+                  <article class="practicum-detail" id="practicum-panel-praktikum-testing"
+            data-practicum-panel="praktikum-testing">
+            <div class="practicum-detail-shot"><img src="/assets/shots/praktikum-testing.jpg?v=b4612688" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов, 16 экспериментов, кнопки чтения, PDF и DOCX, список частей" width="1200" height="750" loading="lazy" decoding="async"></div>
             <div class="practicum-detail-copy">
               <div class="card-head">
                 <p class="kicker">Практикум · веб + PDF</p>
                 <span class="status status-published">v3</span>
               </div>
               <h3><a class="card-title" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Практикум: тестирование локального AI-агента</a></h3>
-              <p class="tagline">Поднимаешь локальную модель, подключаешь к приложению и проверяешь ответ, границы, устойчивость и приватность.</p>
+              <p class="tagline">Поднимаешь локальную модель, подключаешь к приложению и проверяешь ответ, границы, устойчивость и приватность</p>
               <ul class="chips"><li><b>19</b> <span>разделов</span></li><li><b>16</b> <span>экспериментов</span></li><li><b>~82 мин</b> <span>чтения</span></li></ul>
               <p class="card-links"><a class="link link-course" href="/praktikum/testirovanie/" data-umami-event="project-open" data-umami-event-project="praktikum-testirovanie">Открыть практикум <b>→</b></a><a class="link link-doc" href="https://github.com/aka-gst/agent-lab/raw/main/docs/praktikum_codex_hermes_full_windows_macos_ru_v3.pdf" target="_blank" rel="noopener">PDF <b>↗</b></a><a class="link link-repo" href="https://github.com/aka-gst/agent-lab" target="_blank" rel="noopener">agent-lab <b>↗</b></a></p>
             </div>
           </article>
-          <article class="practicum-detail" id="practicum-panel-ai-agent-service-lab" role="tabpanel"
-            aria-labelledby="practicum-tab-ai-agent-service-lab" data-practicum-panel="ai-agent-service-lab" hidden>
-            <div class="practicum-detail-shot"><img src="/assets/shots/praktikum-llm.jpg?v=29ddccb6" alt="Страница практикума «Настройка LLM и AI-агентов под задачу»: 16 разделов, 10 экспериментов, маршрут обучения и лабораторные работы" width="1200" height="750" decoding="async"></div>
+          <article class="practicum-detail" id="practicum-panel-ai-agent-service-lab"
+            data-practicum-panel="ai-agent-service-lab">
+            <div class="practicum-detail-shot"><img src="/assets/shots/praktikum-llm.jpg?v=29ddccb6" alt="Страница практикума «Настройка LLM и AI-агентов под задачу»: 16 разделов, 10 экспериментов, маршрут обучения и лабораторные работы" width="1200" height="750" loading="lazy" decoding="async"></div>
             <div class="practicum-detail-copy">
               <div class="card-head">
                 <p class="kicker">Практикум · веб + сервис</p>
                 <span class="status status-live">открыт</span>
               </div>
               <h3><a class="card-title" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Практикум: настройка LLM и агентов</a></h3>
-              <p class="tagline">Собираешь агента с памятью и инструментами, а потом ловишь его ошибки: схема ответа, allowlist и источники.</p>
+              <p class="tagline">Собираешь агента с памятью и инструментами, а потом ловишь его ошибки: схема ответа, allowlist и источники</p>
               <ul class="chips"><li><b>16</b> <span>разделов</span></li><li><b>10</b> <span>лабораторных</span></li><li><b>~51 мин</b> <span>чтения</span></li></ul><ul class="chips"><li><b>76</b> <span>автотестов</span></li><li><b>6/6</b> <span>evaluation</span></li><li><b>100%</b> <span>retrieval hit</span></li></ul>
               <p class="card-links"><a class="link link-course" href="/praktikum/llm/" data-umami-event="project-open" data-umami-event-project="praktikum-llm">Открыть практикум <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/ai-agent-service-lab" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
             </div>
           </article>
+                </div>
+              </aside>
             </div>
-          </aside>
+          </div>
         </div>
       </section>
 
@@ -168,9 +290,8 @@
         </div>
         <div class="grid" data-shared-details>
         <article class="card" id="p-psy-ai-admin">
-          <a class="card-shot-link" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin" aria-label="Открыть: Psy AI Admin"><figure class="shot"><img src="/assets/shots/psy-admin.jpg?v=87cf500e" alt="Форма помощника: выбор из 60 готовых вопросов, поле для своего, и ответ со ссылкой на страницу центра"
-                width="1200" height="676" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                  data-src="/assets/clips/clip-psy-admin.mp4?v=cc3cdb8a"></video></figure></a>
+          <a class="card-shot-link" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin" aria-label="Открыть: Psy AI Admin"><figure class="shot"><img src="/assets/shots/psy-admin-2026.jpg?v=9e324695" alt="Живой сайт «Орион-С» с открытым помощником: на вопрос «какие программы обучения есть в центре» он отвечает по страницам центра, рядом кнопки выбора голоса"
+                width="1200" height="750" decoding="async" loading="lazy" fetchpriority="low"></figure></a>
           <div class="card-head">
             <p class="kicker">Продукт · демо</p>
             <span class="card-marks"><span class="evidence">
@@ -186,7 +307,7 @@
           </div>
           <h3><a class="card-title" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Psy AI Admin</a></h3>
           <p class="tagline">Помощник на сайте психологического центра: отвечает на вопросы посетителей и ведёт на нужную страницу, а где нужен живой человек — так и говорит</p>
-          <p class="card-links"><a class="link link-demo" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Открыть демо <b>→</b></a><a class="link link-repo" href="https://github.com/aka-gst/psy-ai-admin" target="_blank" rel="noopener">Исходный код <b>↗</b></a></p>
+          <p class="card-links"><a class="link link-demo" href="/psy-admin/" data-umami-event="project-open" data-umami-event-project="psy-admin">Открыть демо <b>→</b></a><a class="link link-demo" href="/psy-admin-v2/case.html" data-umami-event="project-open" data-umami-event-project="psy-admin-case">Кейс Orion-S 2.0 <b>→</b></a></p>
           <div class="card-more">
             
           <dl class="band" data-count="2">
@@ -204,9 +325,9 @@
           </div>
         </article>
         <article class="card" id="p-photo-meta-editor">
-          <a class="card-shot-link" href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata" aria-label="Открыть: ФотоДата · Photo Meta Editor"><figure class="shot"><img src="/assets/shots/photodata.jpg?v=23d2c3a0" alt="Интерфейс ФотоДаты: шаги обработки, список папок и панель установки даты съёмки"
-                width="602" height="332" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                  data-src="/assets/clips/clip-photodata.mp4?v=54b0a6c3"></video></figure></a>
+          <a class="card-shot-link" href="/photodata/" data-umami-event="project-open" data-umami-event-project="fotodata" aria-label="Открыть: ФотоДата · Photo Meta Editor"><figure class="shot"><img src="/assets/shots/photodata.jpg?v=9e8b6a42" alt="ФотоДата с открытой папкой: четыре файла, два отмечены галочками, внизу поле новой даты съёмки"
+                width="600" height="332" decoding="async" loading="lazy" fetchpriority="low"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                  data-src="/assets/clips/clip-photodata.mp4?v=6df41534"></video></figure></a>
           <div class="card-head">
             <p class="kicker">Продукт · local-first</p>
             <span class="card-marks"><span class="evidence">
@@ -239,7 +360,7 @@
               <dd>релиз</dd>
             </div>
           </dl>
-            <p class="summary">Меняет EXIF DateTime / DateTimeOriginal / DateTimeDigitized и временные поля MP4/MOV/M4V для одного файла, выбранной группы или целой папки. Приватность закреплена не обещанием, а политикой безопасности страницы: после загрузки интерфейсу запрещены сетевые соединения, и отсутствие API отправки данных проверяется отдельным автотестом</p>
+            <p class="summary">Меняет дату съёмки сразу у группы фото и видео — когда часы в камере сбились или дата потерялась при переносе. Файлы не уходят с устройства: интерфейсу запрещены сетевые соединения, и отсутствие отправки данных проверяется отдельным автотестом</p>
             <ul class="stack"><li>JavaScript</li><li>Node.js test</li><li>Next.js</li><li>GitHub Actions</li></ul>
           </div>
         </article>
@@ -259,7 +380,7 @@
           </div>
           <div class="skill">
             <dt>Надёжность AI</dt>
-            <dd><span>AI/LLM QA</span><span>оценка точности ответов</span><span>поиск галлюцинаций</span><span>пограничные сценарии</span><span>сравнение моделей</span><span>LLM evaluation</span><span>human feedback / evaluation: анализ ответов модели, рубрики, обоснованные рецензии</span><span>prompt-injection canary</span><span>API / E2E / негативные проверки</span><span>CI и Allure</span></dd>
+            <dd><span>AI/LLM QA</span><span>оценка точности ответов</span><span>поиск галлюцинаций</span><span>пограничные сценарии</span><span>сравнение моделей</span><span>LLM evaluation</span><span>human feedback / evaluation</span><span>рубрики оценки</span><span>обоснованные рецензии</span><span>prompt-injection canary</span><span>API / E2E / негативные проверки</span><span>CI и Allure</span></dd>
           </div>
           <div class="skill">
             <dt>Product engineering</dt>
@@ -267,7 +388,7 @@
           </div>
           <div class="skill">
             <dt>Продукт и координация</dt>
-            <dd><span>продуктовые сценарии</span><span>безопасные границы ассистентов</span><span>технические требования</span><span>удалённая эксплуатация и доставка AI-систем: Vercel, удалённые рабочие станции, безопасные каналы доступа, проверка результата</span><span>демо и приёмка</span><span>образовательные продукты</span><span>креативное руководство команды</span></dd>
+            <dd><span>продуктовые сценарии</span><span>безопасные границы ассистентов</span><span>технические требования</span><span>удалённая эксплуатация</span><span>Vercel</span><span>удалённые рабочие станции</span><span>безопасные каналы доступа</span><span>проверка результата</span><span>демо и приёмка</span><span>образовательные продукты</span><span>креативное руководство команды</span></dd>
           </div>
         </dl>
         <div class="jobs">
@@ -312,8 +433,13 @@
           <h2 id="all-work-title">Все проекты</h2>
         </div>
         <details class="project-index">
-          <summary>Показать все 9 проектов <b>↓</b></summary>
+          <summary>Показать все 10 проектов <b>↓</b></summary>
           <ul class="list">
+            <li>
+              <span class="list-title"><a href="/maketchik/" data-umami-event="project-open" data-umami-event-project="maketchik">Макетчик</a></span>
+              <span class="list-note">Собрать схему страницы из блоков и передать дизайнеру — без сложной программы и регистрации</span>
+              <span class="status status-live">работает</span>
+            </li>
             <li>
               <span class="list-title"><a href="https://github.com/aka-gst/local-agent-gateway" target="_blank" rel="noopener">Local Agent Gateway</a></span>
               <span class="list-note">Программа-посредник: подключает обычное приложение к нейросети, которая работает прямо на компьютере — без интернета и без отправки данных наружу</span>
@@ -330,9 +456,9 @@
               <span class="status status-live">открыт</span>
             </li>
             <li>
-              <span class="list-title"><a href="https://github.com/aka-gst/qa-quest" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="qa-quest">QueQuest</a></span>
-              <span class="list-note">Игра о человеке, который сначала делает тяжёлую работу руками, а затем оживляет машину настоящим Python и освобождает своё время</span>
-              <span class="status status-planned">в разработке</span>
+              <span class="list-title"><a href="/qa-quest/" data-umami-event="project-open" data-umami-event-project="qa-quest">QueQuest</a></span>
+              <span class="list-note">Вирусы лезут в компьютер, а ты оказываешься внутри защиты. Потом возвращаешь способности через настоящий Python и передаёшь машине только разрешённую работу</span>
+              <span class="status status-alpha">альфа</span>
             </li>
             <li>
               <span class="list-title"><a href="https://dharma-ai.io" target="_blank" rel="noopener" data-umami-event="project-open" data-umami-event-project="dharma-ai">Dharma AI</a></span>
@@ -368,8 +494,8 @@
 
         <div class="play-bar">
           <span class="dot" aria-hidden="true"></span>
-          <code>11 игр · открываются по ссылке · без установки и аккаунта</code>
-          <span class="verdict">6 готовых · 5 в альфе</span>
+          <code>12 игр · открываются по ссылке · без установки и аккаунта</code>
+          <span class="verdict">6 готовых · 6 в альфе</span>
         </div>
           <div class="ggrid">
         <a class="gcard" data-art="uno" href="/acid/" data-umami-event="game-open" data-umami-event-game="acid-uno">
@@ -384,9 +510,9 @@
           </div>
         </a>
         <a class="gcard" data-art="cubes" href="/tetcolor/" data-umami-event="game-open" data-umami-event-game="tetcolor">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-tetcolor.jpg?v=9151e520" alt=""
-                width="601" height="358" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-tetcolor.mp4?v=4cefe27e"></video></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-tetcolor.jpg?v=27e07a18" alt=""
+                width="600" height="358" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-tetcolor.mp4?v=9e3cf756"></video></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">готова</span></div>
             <h3 class="gcard-title">Тетколор</h3>
@@ -394,32 +520,21 @@
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
-        <a class="gcard" data-art="chain" href="/naotmash/" data-umami-event="game-open" data-umami-event-game="worm">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-worm.jpg?v=6d910e3c" alt=""
-                width="600" height="332" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-worm.mp4?v=bf3cc18d"></video></span>
+        <a class="gcard" data-art="orbs" href="/lines/" data-umami-event="game-open" data-umami-event-game="neon-lines">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-lines.jpg?v=843ce499" alt=""
+                width="600" height="600" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-lines.mp4?v=4988e509"></video></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">готова</span></div>
-            <h3 class="gcard-title">Наотмашь</h3>
-            <p class="gcard-text">Меч на цепи слушается плохо, и в этом вся игра. Разгонись — вынесешь троих. Промахнись — улетишь сам</p>
-            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
-          </div>
-        </a>
-        <a class="gcard" data-art="watch" href="/stealth/" data-umami-event="game-open" data-umami-event-game="stealth">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-stealth.jpg?v=50ac1b79" alt=""
-                width="900" height="511" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-stealth.mp4?v=3fbbcbbb"></video></span>
-          <div class="gcard-body">
-            <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
-            <h3 class="gcard-title">ПЕРИМЕТР</h3>
-            <p class="gcard-text">Холодная ночь в Сибири. Ты бежишь из тюрьмы, и тебя уже ищут. Крадись, гаси свет, снимай часовых — тебя убивают с одного касания, их тоже</p>
+            <h3 class="gcard-title">Неон Линии</h3>
+            <p class="gcard-text">Собирай линии, пока поле не заполнилось. Бомба, камень и волшебный шар — чтобы дожить до следующего этапа</p>
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
         <a class="gcard" data-art="elements" href="/technomagic/" data-umami-event="game-open" data-umami-event-game="technomagic">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-technomagic.jpg?v=38e5155a" alt=""
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-technomagic.jpg?v=d0f8d87b" alt=""
                 width="600" height="338" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-technomagic.mp4?v=33bdc45c"></video></span>
+                data-src="/assets/clips/clip-technomagic.mp4?v=92abe000"></video></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
             <h3 class="gcard-title">ТЕХНОМАГИЯ</h3>
@@ -427,14 +542,69 @@
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
+        <a class="gcard" href="/puzzle-quest/">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-puzzle-quest.jpg?v=7af606e8" alt=""
+                width="600" height="336" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-puzzle-quest.mp4?v=04715904"></video></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
+            <h3 class="gcard-title">Матч РПГ</h3>
+            <p class="gcard-text">Три-в-ряд с боем: камни кормят ману, заклинания жгут боссов. Между боями — история: кладбище, Маури и очень недовольная жаба. Пока — первые три главы</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
+        </a>
+        <a class="gcard" data-art="watch" href="/stealth/" data-umami-event="game-open" data-umami-event-game="stealth">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-stealth.jpg?v=f4e04858" alt=""
+                width="600" height="356" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-stealth.mp4?v=935e7112"></video></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
+            <h3 class="gcard-title">МГС</h3>
+            <p class="gcard-text">Холодная ночь в Сибири. Ты бежишь из тюрьмы, и тебя уже ищут. Крадись, гаси свет, снимай часовых — тебя убивают с одного касания, их тоже</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
+        </a>
         <a class="gcard" href="/claw/">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-neon-claw.jpg?v=489ca017" alt=""
-                width="600" height="337" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-neon-claw.mp4?v=d25b6ad3"></video></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-neon-claw.jpg?v=fda4e2b6" alt=""
+                width="600" height="356" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-neon-claw.mp4?v=692d78ce"></video></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
             <h3 class="gcard-title">NEON CLAW</h3>
             <p class="gcard-text">Платформер с фехтованием: крыши, катана, лук и стражи, которых нельзя просто задолбить кнопкой</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
+        </a>
+        <a class="gcard" data-art="chain" href="/naotmash/" data-umami-event="game-open" data-umami-event-game="worm">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-worm.jpg?v=df0bb31b" alt=""
+                width="600" height="336" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-worm.mp4?v=58498945"></video></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-live">готова</span></div>
+            <h3 class="gcard-title">Наотмашь</h3>
+            <p class="gcard-text">Меч на цепи слушается плохо, и в этом вся игра. Разгонись — вынесешь троих. Промахнись — улетишь сам</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
+        </a>
+        <a class="gcard" data-art="blade" href="/hotline-abakan/" data-umami-event="game-open" data-umami-event-game="odin-udar">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-hotline-abakan.jpg?v=d2241cf2" alt=""
+                width="600" height="338" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-hotline-abakan.mp4?v=883ca213"></video></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-live">готова</span></div>
+            <h3 class="gcard-title">HOTLINE ABAKAN<span class="gcard-formerly">бывший «Один удар»</span></h3>
+            <p class="gcard-text">Бей в долю музыки, и враг падает с одного касания вместо двух. Промахнулся по такту — дерись как все</p>
+            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
+          </div>
+        </a>
+        <a class="gcard" data-art="rps" href="/stihii/" data-umami-event="game-open" data-umami-event-game="knb-2">
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-stihii.jpg?v=715f9fc0" alt=""
+                width="600" height="358" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-stihii.mp4?v=cc386126"></video></span>
+          <div class="gcard-body">
+            <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
+            <h3 class="gcard-title">Битва Стихий</h3>
+            <p class="gcard-text">Камень-ножницы-бумага выросли: огонь, вода и ветер, у каждого урон и суперудар. Угадай, что выберет он, и не дай угадать себя</p>
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
@@ -448,55 +618,14 @@
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
-          </div>
-        </section>
-
-        <section class="block" aria-labelledby="other-games-title">
-          <div class="block-head">
-            <h2 id="other-games-title">Остальное</h2>
-          </div>
-          <div class="ggrid">
-        <a class="gcard" data-art="orbs" href="/lines/" data-umami-event="game-open" data-umami-event-game="neon-lines">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-lines.jpg?v=8604437d" alt=""
-                width="900" height="777" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-lines.mp4?v=98d4f522"></video></span>
-          <div class="gcard-body">
-            <div class="gcard-top"><span class="status status-live">готова</span></div>
-            <h3 class="gcard-title">Неон Линии</h3>
-            <p class="gcard-text">Собирай линии, пока поле не заполнилось. Бомба, камень и волшебный шар — чтобы дожить до следующего этапа</p>
-            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
-          </div>
-        </a>
         <a class="gcard" data-art="coin" href="/coin/" data-umami-event="game-open" data-umami-event-game="coin-flip">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-coin.jpg?v=2ef0a927" alt=""
-                width="900" height="817" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-coin.mp4?v=f7e41e0d"></video></span>
+          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-coin.jpg?v=fc8cec34" alt=""
+                width="600" height="358" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
+                data-src="/assets/clips/clip-coin.mp4?v=b05a8e69"></video></span>
           <div class="gcard-body">
             <div class="gcard-top"><span class="status status-live">готова</span></div>
             <h3 class="gcard-title">Деревня</h3>
             <p class="gcard-text">Начинается с монетки, заканчивается кораблём. Коровы, молоко, золото и ни одной кнопки «подождите»</p>
-            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
-          </div>
-        </a>
-        <a class="gcard" data-art="rps" href="/stihii/" data-umami-event="game-open" data-umami-event-game="knb-2">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-stihii.jpg?v=0c0b9da2" alt=""
-                width="601" height="338" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-stihii.mp4?v=2e1ce1f6"></video></span>
-          <div class="gcard-body">
-            <div class="gcard-top"><span class="status status-alpha">альфа</span></div>
-            <h3 class="gcard-title">Битва Стихий</h3>
-            <p class="gcard-text">Камень-ножницы-бумага выросли: огонь, вода и ветер, у каждого урон и суперудар. Угадай, что выберет он, и не дай угадать себя</p>
-            <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
-          </div>
-        </a>
-        <a class="gcard" data-art="blade" href="/hotline-abakan/" data-umami-event="game-open" data-umami-event-game="odin-udar">
-          <span class="gart" aria-hidden="true"><img class="gshot" src="/assets/shots/game-hotline-abakan.jpg?v=ec14e752" alt=""
-                width="601" height="358" decoding="async" loading="lazy"><video class="gclip" muted loop playsinline preload="none" tabindex="-1"
-                data-src="/assets/clips/clip-hotline-abakan.mp4?v=0ce5b389"></video></span>
-          <div class="gcard-body">
-            <div class="gcard-top"><span class="status status-live">готова</span></div>
-            <h3 class="gcard-title">HOTLINE ABAKAN<span class="gcard-formerly">бывший «Один удар»</span></h3>
-            <p class="gcard-text">Бей в долю музыки, и враг падает с одного касания вместо двух. Промахнулся по такту — дерись как все</p>
             <span class="launch">ЗАПУСТИТЬ <b>↗</b></span>
           </div>
         </a>
@@ -552,8 +681,12 @@
             <div><p class="kicker">Сборник · 2018</p><h2>Соляночка</h2><p class="story-collection-count">7 рассказов. Выбери из оглавления — текст раскроется здесь же.</p><ol><li><button type="button" data-story-open="solyanochka--myasnaya-konserva">Мясная консерва</button></li><li><button type="button" data-story-open="solyanochka--letuny">Летуны</button></li><li><button type="button" data-story-open="solyanochka--bag-v-sudbe">Баг в судьбе</button></li><li><button type="button" data-story-open="solyanochka--materinskaya-plata">Материнская плата</button></li><li><button type="button" data-story-open="solyanochka--blizorukiy-toropyga">Близорукий торопыга</button></li><li><button type="button" data-story-open="solyanochka--teplovaya-lovushka">Тепловая ловушка</button></li><li><button type="button" data-story-open="solyanochka--prosto-ya-zabyla-kakovo-eto">Просто я забыла, каково это</button></li></ol></div>
           </section>
         </div>
-        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑ <span>Наверх</span></button></article>
-        <div class="story-source" hidden><article data-story-source="solyanochka--myasnaya-konserva" data-story-book="Соляночка" data-story-title="Мясная консерва"><p>– Я могу сделать тебя богом. Хочешь?</p>
+        <article class="story-reader-inline" data-story-reader hidden><button type="button" data-story-back>← к оглавлению</button><p class="kicker" data-story-reader-meta></p><h2 tabindex="-1" data-story-reader-title></h2><div class="story-reader-copy" data-story-reader-copy></div><p class="story-cross"><a data-story-permalink href="/rasskazy/">Открыть отдельной страницей</a></p><button type="button" class="story-to-top" data-story-top aria-label="Перейти наверх">↑</button></article>
+        <div class="story-source" hidden><article data-story-source="solyanochka--myasnaya-konserva" data-story-book="Соляночка" data-story-title="Мясная консерва"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/myasnaya-konserva.jpg?v=19e2eded" alt="Обложка рассказа «Мясная консерва»"
+       width="693" height="900" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>– Я могу сделать тебя богом. Хочешь?</p>
 <p>Пожалуй, это не самый предсказуемый вопрос от человека, которого ты знаешь всего пару часов. Тем более, что до этого я только молча подливал кислого пива, слушая твои пьяные бредни. Так себе из меня получился бармен, конечно. Но иначе было нельзя.</p>
 <hr class="story-break">
 <p>Каких-то пару лет назад я сам сидел на месте этого парня. У моей жизненной зебры к тому времени закончились все полосы, и оставалась только одна чёрная жопа, в которую я падал всё глубже и глубже с каждым днём.</p>
@@ -601,7 +734,11 @@
 <hr class="story-break">
 <p>Я вижу твой пьяный и насмешливый взгляд. Я знаю, что ты скажешь. И знаю, что тебя ждёт. Прости. Я снова повторяю.</p>
 <p>– Ну, так ты согласен?</p>
-<p>\_/</p></article><article data-story-source="solyanochka--letuny" data-story-book="Соляночка" data-story-title="Летуны"><p>– Папа, я не хочу больше жрать людей!</p>
+<p>\_/</p></article><article data-story-source="solyanochka--letuny" data-story-book="Соляночка" data-story-title="Летуны"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/letuny.jpg?v=f88d1b2d" alt="Обложка рассказа «Летуны»"
+       width="809" height="900" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>– Папа, я не хочу больше жрать людей!</p>
 <p>Мерзкое существо, похожее на трёхметровую летучую мышь с громадным языком, грозно посмотрело на своего сына. Это был его второй ужин в жизни, и поэтому младший ещё многого не понимал.</p>
 <p>– Что за глупости. Ешь, кому сказал! Ему же не больно.</p>
 <p>Существо поменьше вздрогнуло и начало слизывать яркие полосы со светящегося человека. Тот сразу же перестал грустить, улыбнулся и даже начал негромко напевать.</p>
@@ -657,7 +794,11 @@
 <p>Летуны улыбнулись друг другу, а старший продолжил.</p>
 <p>– Хотя, конечно, люди могут прекратить нас кормить, когда перестанут постоянно жалеть себя, раз за разом прокручивая в голове свои проблемы. Особенно, если их сами себе придумали. Или когда им надоест считать себя такими важными. Но в этом случае их сделают изгоями свои же. Будут называть дураками и выгонят из общества. А люди обожают в нём находиться. Так что не волнуйся, сынок, у нас всегда будет пища. И мы не позволим ей освободиться.</p>
 <p>Они засмеялись и полетели дальше. Шелест тысячи крыльев в небе заглушал все звуки города.</p>
-<p>Хорошо, что люди их не слышат.</p></article><article data-story-source="solyanochka--bag-v-sudbe" data-story-book="Соляночка" data-story-title="Баг в судьбе"><p>В программировании баг (англ. bug : клоп, любое насекомое, вирус) — жаргонное слово, обычно обозначающее ошибку в программе или системе, из-за которой программа выдает неожиданное поведение и, как следствие, результат</p>
+<p>Хорошо, что люди их не слышат.</p></article><article data-story-source="solyanochka--bag-v-sudbe" data-story-book="Соляночка" data-story-title="Баг в судьбе"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/bag-v-sudbe.jpg?v=d8f97ff3" alt="Обложка рассказа «Баг в судьбе»"
+       width="900" height="660" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>В программировании баг (англ. bug : клоп, любое насекомое, вирус) — жаргонное слово, обычно обозначающее ошибку в программе или системе, из-за которой программа выдает неожиданное поведение и, как следствие, результат</p>
 <p>– Хри-зан-те-мы! Хризантемы!! Как можно было за сто-о-олько лет этого не запомнить!! Вот права была моя мама, лучше бы я...</p>
 <p>– Да подожди ты! Цветы это неважно, дай главное сказать!</p>
 <p>– Ах, неважно?! Неважно, что за 4 года ты не запомнил даже этого?! – всхлип – Да ты вообще никогда...</p>
@@ -728,7 +869,11 @@
 <p>– Ой. А Катя – это моё любимое имя, если честно, – Алексей смущается ещё больше и начинает краснеть, – Ну а почему злой... Это длинная история.</p>
 <p>– А я никуда и не тороплюсь.</p>
 <p>Они обмениваются долгим взглядом и направляются в сторону кафе с такими вкусными блинами.</p>
-<p>А маленький тараканчик смотрел на них из-за угла и весело шевелил усиками.</p></article><article data-story-source="solyanochka--materinskaya-plata" data-story-book="Соляночка" data-story-title="Материнская плата"><p>Она любила рисовать. Привычное гудение на фоне лишь добавляло красок всему процессу. «Бессмысленные действия. Прокрастинация вместо достижения реального результата. Нелогично». Усмехнётся, чёлку на бок, наперевес кисти – и снова в бой. Взмах, вздох, штрих, взмах. Как всегда, прекрасна. И ведь даже не догадывается, что рисует не на стене. Она рисовала внутри нас.</p>
+<p>А маленький тараканчик смотрел на них из-за угла и весело шевелил усиками.</p></article><article data-story-source="solyanochka--materinskaya-plata" data-story-book="Соляночка" data-story-title="Материнская плата"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/materinskaya-plata.jpg?v=8c1c737d" alt="Обложка рассказа «Материнская плата»"
+       width="900" height="567" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Она любила рисовать. Привычное гудение на фоне лишь добавляло красок всему процессу. «Бессмысленные действия. Прокрастинация вместо достижения реального результата. Нелогично». Усмехнётся, чёлку на бок, наперевес кисти – и снова в бой. Взмах, вздох, штрих, взмах. Как всегда, прекрасна. И ведь даже не догадывается, что рисует не на стене. Она рисовала внутри нас.</p>
 <p>Когда и без того монотонная работа встаёт из-за какой-то мелочи, когда начинает просачиваться ненависть ко всему живому и особенно неживому, Айрис может просто подсесть рядом, приобнять тебя и сказать милую чушь, например: «Ну чего ты? Сейчас передохнёшь и всё у тебя обязательно получится. Я ведь знаю», – тепло улыбнуться и уйти. А внутри будто кранчик открывается. Вся злость тут же вытекает, сразу появляются новые силы и желание побеждать. И если не в этот, то на следующий день уж точно – всё само так филигранно выполнится, что удивляешь не только себя, но даже наших ультра-умных спасителей. Ведь никогда не дадут их комплексно-выверенные “мотивационные речи” такого эффекта, хотя по всем формулам должны. Но они же не Она. Глупые, глупые роботы.</p>
 <p>Вокруг и так слишком много мёртвого. Все эти руины - осколки намёков на наше былое величие. Этот пресный порошок – настолько полезный и питательный, что глупо даже мечтать о вкусе. Наш грязный купол - то ли это защита от действительности, то ли так теперь выглядит загон для скота. «Всё это ради жизни будущего человечества». Синтетические, штампуемые люди из пробирки, которые ничего не умеют и не хотят. Красный песок под ногами. Коричневая руда в шахтах. Чёрно-белые сны со смутным ощущением чего-то родного и слишком далёкого. Тоже мёртвого.</p>
 <p>Но вечер снова оживит кусочек стены, и нам станет легче. Благодаря Айрис. Взорвётся звезда под водой или луна утонет в рваных парусах. А может, сожмутся два мокрых тела на исходе времени или мы увидим просто маленький город на закате, или что-то ещё. Давно потерянное, но не забытое. То, на что раньше, скорее всего, люди не обратили бы и внимания, пробегая мимо со скользящим взглядом в поисках новых проблем. Но сейчас от этих картин нам почему-то щемит сердце. Этим железякам не понять. Сколько бы они ни закрашивали стены обратно, вечером здесь опять проявится что-то, помогающее нам не забыть, что когда-то здесь было прекрасно.</p>
@@ -755,7 +900,11 @@
 <p>– Но как же?..</p>
 <p>– Пожалуйста, помоги им почувствовать. Нарисуй им жизнь. Машины этого никогда не смогут. – улыбаюсь. – А тебе же всегда удавались картины с морем.</p>
 <p>Подмигиваю. Она всхлипывает. Я аккуратно отодвигаю Айрис в сторону. Вторая капля звонко разбивается о металлическую ступню. Ну вот зачем ты плачешь, феня, слишком много чести для обычного куска мяса. Но я же слышал шёпот прибоя на картине. Значит, не зря жил.</p>
-<p>На нашу алую кровь падает третья капля.</p></article><article data-story-source="solyanochka--blizorukiy-toropyga" data-story-book="Соляночка" data-story-title="Близорукий торопыга"><p>Это скрипучее печенье нахально изодра̀ло всё моё нежное нёбо. И стоило ли это предсказание ворсистого ковра во рту? Теперь эти лоскутики кожи так вызывающе свисают в каком-то сантиметре от зубов и натурально издеваются, не давая себя откусить. Рррр, бесит! Приходится подолгу теребить их языком, пока они сами не отвалятся. «Плохая аналогия». Но предсказание хотя бы забавное, не видел ещё такого. “Вы держите в руках Магическое Заклинание для Исполнения Желаний: О, могучий Эсперар, позволь этому миру [ваша просьба]. Произнесите это вслух и дождитесь свершения* - Работает только на истинные желания. Требует времени. ”.</p>
+<p>На нашу алую кровь падает третья капля.</p></article><article data-story-source="solyanochka--blizorukiy-toropyga" data-story-book="Соляночка" data-story-title="Близорукий торопыга"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/blizorukiy-toropyga.jpg?v=f9da1676" alt="Обложка рассказа «Близорукий торопыга»"
+       width="900" height="722" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Это скрипучее печенье нахально изодра̀ло всё моё нежное нёбо. И стоило ли это предсказание ворсистого ковра во рту? Теперь эти лоскутики кожи так вызывающе свисают в каком-то сантиметре от зубов и натурально издеваются, не давая себя откусить. Рррр, бесит! Приходится подолгу теребить их языком, пока они сами не отвалятся. «Плохая аналогия». Но предсказание хотя бы забавное, не видел ещё такого. “Вы держите в руках Магическое Заклинание для Исполнения Желаний: О, могучий Эсперар, позволь этому миру [ваша просьба]. Произнесите это вслух и дождитесь свершения* - Работает только на истинные желания. Требует времени. ”.</p>
 <p>«Мда, оригинальненько конечно. Но это хотя бы лучше, чем всякие “Смотри внимательно. Знаки мира поджидают тебя повсюду”». Да мне бы сейчас хватило даже обычного “Сегодня тебя ждёт успех”. Немного уверенности точно не помешает. А то чот сомневаюсь, что она всё-таки приедет.</p>
 <p>Ну, хорошо, печенька, давай покастуем. «О, великий Эсперар…». Пфф, имечко-то, будто из Могучих Рэйнжеров. Или как у динозаврика из Киндера. А чего я собственно хочу? «Так, латтэ̀ с панна-коттой это рублей 400, ещё полтос на чай. Должно хватить. Во, точняк». Понизив голос, чтоб звучало поволшебней и никто в этом кафе меня точно не услышал, я шепчу – «О, могучий Эсперар, позволь этому миру воплотить фиолет в моей руке». Закрыв глаза и держа над столом ладонь представляю, как из её центра вылетает фиолетовый дымок и атом за атомом превращается в 500 рублей.</p>
 <p>«Так, должно было уже сработать». Открываю глаза. В руке пусто. Ну кто бы мог подумать?! «Окей, чо, будем по старинке». И пока я, извиваясь на стуле, пытался вытянуть из своей узкой штанины кошелёк, в заднем кармане что-то хрустнуло. «Не понял. Что это? Опа, пятихаточка. Ееееее! Наконец-то буду пулять фаерболы. Мама, мама, я не безработный, я настоящий маг! Офигеть, конечно». Плечом поправляю очки и заталкиваю фиолетовую купюру в стакан с чеком. На ощупь, как впрочем, и внешне, магические деньги никак не отличались от настоящих.</p>
@@ -783,7 +932,11 @@
 <p>Булькающий звук из телефона вернул меня обратно в реальность – зарплата упала на карточку. Да какие могут быть вообще сомнения? Молодая неопытная студия, ни одного законченного проекта и маленькие зарплаты. «Ну да». Всё я бросил, отказался от мечты купить машину и съездить в отпуск на Кипр. «Ну да». Когда-то именно этого я и хотел. Стану ли я сейчас бросать всё ради старой детской мечты. «Ну да». Точнее – ну уж нет, я свой путь знаю. Я всё делаю правильно, в кои-то веки. И метким броском смятая бумажка летит чётко в горящую урну, прямо как то заклинание три месяца назад. Не попал. Плевать. «Пускай детские мечты остаются в прошлом». И я оставил дымящуюся урну за закрытой дверью.</p>
 <p>От дыма уже образовались три грозовых тучи. Хруст сдираемой обёртки заменял здесь гром. Мефодий был зол. Мефодий курил без остановки уже который день и проклинал своего подопечного. «Идиот ты слепошарый! У тебя минус 13, какой вообще путь ты можешь видеть?! Да ты же сам меня просил! Я даже сегодня всё перепробовал. И компанию эту к тебе подсаживал, чтобы вы через год шедевр со̀здали. И флаер тебе в руку уже запихал, для этого же! И через девушек твоих пробовал. Зря только заклинание тогда подарил. Тьфу…». Семнадцатая сигарета подряд недавно перестала быть рекордом. Счёт уже уверенно шёл к двадцать четвёртой.</p>
 <p>«Упёрся, блин, в свой путь, который типа понял. Ничего ты не понял, Денис. Чуть-чуть подольше бы подождал и получил бы Всё. Знаешь, сколько энергии я на тебя потратил? Знаешь, сколько других людей не получили моей помощи!? Да я только ради тебя с работы тогда ушёл! А-а-а, да ну тебя. Живи, как знаешь. Дальше ты сам по себе».</p>
-<p>Мерзкий сигаретный дым разъедал ему глаза. Энергии хватало только на одно последнее действие. Щёлк.</p></article><article data-story-source="solyanochka--teplovaya-lovushka" data-story-book="Соляночка" data-story-title="Тепловая ловушка"><p>Поздравляю!</p>
+<p>Мерзкий сигаретный дым разъедал ему глаза. Энергии хватало только на одно последнее действие. Щёлк.</p></article><article data-story-source="solyanochka--teplovaya-lovushka" data-story-book="Соляночка" data-story-title="Тепловая ловушка"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/teplovaya-lovushka.jpg?v=91041e9e" alt="Обложка рассказа «Тепловая ловушка»"
+       width="900" height="674" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Поздравляю!</p>
 <p>Это свершилось.</p>
 <p>Ты наконец-то переехал.</p>
 <p>Новый город. Целый новый мир. Новая жизнь.</p>
@@ -818,7 +971,11 @@
 <p>Пусть тебе кажется, что ты как-то “побеждаешь”, делая страшные и новые для меня вещи. Да, в такие моменты мне особенно сложно нас контролировать, поэтому ты так радуешься редкому ощущению Свободы внутри. Но ты же просто автоматически тянешься ко всему новому, не понимая, что это может нас погубить.</p>
 <p>Ты просто ещё не определился. Ни с чем в своей жизни. И я тебя за это не виню. Пусть даже со злости и говорю иногда вещи, о которых потом жалею. Мы же оба ищем наш общий путь, пусть и разными средствами. Но не нужно считать, что я противлюсь чему-то просто так, и делать некоторые вещи мне назло. Просто я помню чуть больше твоего и стараюсь уберечь.</p>
 <p>Почему мы каждый раз ругаемся? Почему за столько лет мы так и не нащупали Наше? Ведь только вместе мы сможем на него выйти. Эти твои полёты во сне – это же и есть то самое ощущение, которое почувствуем мы оба, как только встанем на наш путь. Просто доверься мне, как я постоянно доверяю тебе. Наша сила в единстве, ты сам знаешь.</p>
-<p>Прости меня, что я твой хозяин. Так уж получилось. Но знай – ты для меня не раб, а любимый младший брат. Которого я всегда буду оберегать, как бы он на меня из-за этого не злился. Спи, мой хороший, наша дорога ждёт нас.</p></article><article data-story-source="solyanochka--prosto-ya-zabyla-kakovo-eto" data-story-book="Соляночка" data-story-title="Просто я забыла, каково это"><p>Бывало, я так на них злилась, что просто без раздумий топила. Ой… Уже идёт запись? Как это исправить? Команда “Удалить”. Удалить! Не работает. Блин. Чёртовы новые технологии!</p>
+<p>Прости меня, что я твой хозяин. Так уж получилось. Но знай – ты для меня не раб, а любимый младший брат. Которого я всегда буду оберегать, как бы он на меня из-за этого не злился. Спи, мой хороший, наша дорога ждёт нас.</p></article><article data-story-source="solyanochka--prosto-ya-zabyla-kakovo-eto" data-story-book="Соляночка" data-story-title="Просто я забыла, каково это"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/prosto-ya-zabyla-kakovo-eto.jpg?v=7c39178f" alt="Обложка рассказа «Просто я забыла, каково это»"
+       width="900" height="668" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Бывало, я так на них злилась, что просто без раздумий топила. Ой… Уже идёт запись? Как это исправить? Команда “Удалить”. Удалить! Не работает. Блин. Чёртовы новые технологии!</p>
 <p>Извините, просто волнуюсь немного… Я расскажу с самого начала.</p>
 <p>Здравствуйте. Меня зовут Исток-1. Хотя раньше у меня были и другие имена: Гея, Мидгард, Терра, Земля. Я пишу это сообщение, чтобы передать вам свою историю.</p>
 <p>Всё началось безумно давно. Тогда, на огромной скорости, я летела через самую тьму космоса. Без какой-либо цели. Мне было неважно, зачем и куда лететь. Просто хотелось свободы. Я сталкивалась с такими же, как и я, бродягами, мимолётно и бездумно обменивалась с ними своими частями, поворачивала в новую сторону и продолжала своё одинокое путешествие.</p>
@@ -852,14 +1009,22 @@
 <p>В итоге. Как же я счастлива. Спасибо всем моим детям, я их очень люблю! Теперь я поняла, что значит быть по-настоящему Свободной.</p>
 <p>P.S. Я пишу это сообщение и отсылаю его во все уголки космоса. Пожалуйста, если прочтёте это и ваши дети не агрессивны и происходят из культурных семей, то пусть cвяжутся с моими. Может, они подружатся. Мне бы очень этого хотелось.</p>
 <p>Координаты – Созвездие водолея. TRAPPIST-1 / 2MASS J23062928-0502285 / EPIC 246199087. 23ч 06м 29.383с, −05° 02′ 28.59″.</p>
-<p>тчк</p></article><article data-story-source="tri-iznutri--vstuplenie" data-story-book="Три изнутри" data-story-title="Вступление"><p>«– А если бы я прямо сейчас достал тебе одну-единственную кнопку, чтобы уничтожить весь мир, запустить его заново, ты бы серьёзно смог её нажать?»</p>
+<p>тчк</p></article><article data-story-source="tri-iznutri--vstuplenie" data-story-book="Три изнутри" data-story-title="Вступление"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-tri-iznutri.jpg?v=0e75437e" alt="Обложка сборника «Три изнутри»"
+       width="887" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>«– А если бы я прямо сейчас достал тебе одну-единственную кнопку, чтобы уничтожить весь мир, запустить его заново, ты бы серьёзно смог её нажать?»</p>
 <p>«Хозяйка привычным движением пальцев вынимает это нежное, тёплое, ещё пульсирующее чувство из самой глубины образа и аккуратно кладёт его в кастрюлю, а затем и в морозилку»</p>
 <p>«Я заново переживал свою смерть, которая ещё не наступила»</p>
 <p>Откровение в миксе с шизой. Горьковатая отдача эйфории. Эротику души начинили осколочными</p>
 <p>Угадал, это мой новый сборник фантасмагоричных рассказов, приветствую</p>
 <p>Втыкай и догоняй</p>
 <p>З.Ы. Ты можешь делать всё, что пожелаешь. Но только не желать чего тебе желать</p>
-<p>Посмотри наверх.</p></article><article data-story-source="tri-iznutri--ves-v-otca" data-story-book="Три изнутри" data-story-title="Весь в отца"><p>Они о-о-очень медленно шли. Как только я делал попытку обогнать их справа – они перетягивались направо. Когда хотел обойти слева – перекатывались налево. Будто спиной чувствовали моё направление и назло не давали себя обогнать. Ещё этот поток людей навстречу… «Ну что вам всем дома не сидится, уроды». Наконец, плюнув на приличия, я сделал три больших шага по лужайке справа и, немного замарав ботинки влажной землёй, обогнал уже эту сладкую парочку. Как же приятно идти в своём ритме. «Тормоза̀».</p>
+<p>Посмотри наверх.</p></article><article data-story-source="tri-iznutri--ves-v-otca" data-story-book="Три изнутри" data-story-title="Весь в отца"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/ves-v-otca.jpg?v=e7c9fdae" alt="Обложка рассказа «Весь в отца»"
+       width="900" height="725" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Они о-о-очень медленно шли. Как только я делал попытку обогнать их справа – они перетягивались направо. Когда хотел обойти слева – перекатывались налево. Будто спиной чувствовали моё направление и назло не давали себя обогнать. Ещё этот поток людей навстречу… «Ну что вам всем дома не сидится, уроды». Наконец, плюнув на приличия, я сделал три больших шага по лужайке справа и, немного замарав ботинки влажной землёй, обогнал уже эту сладкую парочку. Как же приятно идти в своём ритме. «Тормоза̀».</p>
 <p>Набережная была чересчур наполнена. Логично, наверное, всё-таки солнечный день, уточек там можно покормить, за ручку прогуляться или просто посмотреть на чванливо проплывающие по этой маленькой речушке кораблики. Если у вас было соответствующее настроение, конечно. У меня вот опять его не было. Поэтому я просто искал тишины и свободную лавочку.</p>
 <p>Найдя приемлемое сочетание в конце маршрута (можно было уйти и подальше, конечно, и сесть под недостроенным мостом, но туда чуть позже наедут байкеры и тишины уж точно не видать), я присел на лавочку рядом со скучающим седым мужчиной. Достал из пакета на̀чатую бутылку вина, откупорил, хорошенько отхлебнул и поставил обратно в пакет. Я же законопослушный гражданин.</p>
 <p>«Как же хорошо! Ещё б отпускные не зажали – было бы вообще отлично. Долбанная племяшка шефа, что ж она так невзлюбила нас? Сначала в работе топит, потом выгоняет к чертям. Блин, теперь Дашке айфон не смогу подарить, снова обидится…».</p>
@@ -913,7 +1078,11 @@
 <p>– Прощай, апостол Миша, – всё таки не сдержав себя от такого пафоса, съязвил в ответ я, отправляя остатки сигареты щелчком в реку. Опять не долетела.</p>
 <p>Мой недолгий знакомый отвернулся и пошёл куда-то в сторону кустов.</p>
 <p>«Там же нет выхода», – хотелось ему подсказать. Но почему-то вместо этого я резко разозлился и молча пошёл домой. Обернувшись через три шага, я уже нигде не увидел Михаила.</p>
-<p>К тому времени народ на набережной окончательно рассосался. Только снова эта мерзкая парочка шла передо мной в обнимку. Ну, хоть щас смогу вас быстро обогнать. Тормоза̀.</p></article><article data-story-source="tri-iznutri--ne-poteryaysya" data-story-book="Три изнутри" data-story-title="Не потеряйся"><p>Вечеринка меж тем в разгаре: пробивающий до костей бас от саба с колонками на 540 ватт, кега Гиннесса на кухне, к которой проще присосаться самому, чем ждать отстоя пены, бессменная парочка в ванной, партия геймеров около 4-й PlayStation Pro и прочие атрибуты хорошего отдыха, конечно же, тоже здесь. Как и уязвлённое пацанское самолюбие.</p>
+<p>К тому времени народ на набережной окончательно рассосался. Только снова эта мерзкая парочка шла передо мной в обнимку. Ну, хоть щас смогу вас быстро обогнать. Тормоза̀.</p></article><article data-story-source="tri-iznutri--ne-poteryaysya" data-story-book="Три изнутри" data-story-title="Не потеряйся"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/ne-poteryaysya.jpg?v=52055478" alt="Обложка рассказа «Не потеряйся»"
+       width="626" height="900" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Вечеринка меж тем в разгаре: пробивающий до костей бас от саба с колонками на 540 ватт, кега Гиннесса на кухне, к которой проще присосаться самому, чем ждать отстоя пены, бессменная парочка в ванной, партия геймеров около 4-й PlayStation Pro и прочие атрибуты хорошего отдыха, конечно же, тоже здесь. Как и уязвлённое пацанское самолюбие.</p>
 <p>Ну вот нельзя просто взять и спокойно повеселиться, нужно обязательно помериться силушкой богатырской. Вечно им надо что-то доказывать друг другу. А так как оба они даже близко не бойцы, а “криэйтэры”, то решили вместо драки устроить показательные чтения, мда. То есть написать за 5 минут по рассказу и зачитать, а публика пусть сама определяет победителя. Такое себе решение, конечно, но всяко лучше драки.</p>
 <p>Один боец ушёл “криэйтить” в туалет, а второй остался с нами и замелькал пальцами по экрану планшета. Довольно быстро закончив, он с хитрой улыбкой протягивает девайс мне и я вслух зачитываю его творение.</p>
 <hr class="story-break">
@@ -968,10 +1137,18 @@
 <p>Я лишь молча моргаю, не в силах выдавить из себя даже писка. Тело перестало слушаться, всё вокруг резко темнеет.</p>
 <p>Незаметно подошедший Влад кивает кому-то позади меня и немигаючи смотрит в пустоту чёрными белками глаз.</p>
 <p>– Главное, сам выбери, какой мир считать реальным. Иначе так себя и не найдёшь.</p>
-<p>Время на моих часах уменьшилось ещё на секунду.</p></article><article data-story-source="tri-iznutri--strashnyy-sud" data-story-book="Три изнутри" data-story-title="Страшный суд"><p>- Тишина!</p>
+<p>Время на моих часах уменьшилось ещё на секунду.</p></article><article data-story-source="tri-iznutri--strashnyy-sud" data-story-book="Три изнутри" data-story-title="Страшный суд"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/strashnyy-sud.jpg?v=d944d37a" alt="Обложка рассказа «Страшный суд»"
+       width="900" height="643" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>- Тишина!</p>
 <p>Заседание суда объявляется открытым, можете снять с него наручники.</p>
 <p>Подсудимый, первый вопрос:</p>
-<p>С какой целью вы создали наш мир?</p></article><article data-story-source="tri-iznutri--chetvertaya-stena" data-story-book="Три изнутри" data-story-title="Четвёртая стена"><p>“Умирает человек, попадает в рай. Его встречает апостол Петр.</p>
+<p>С какой целью вы создали наш мир?</p></article><article data-story-source="tri-iznutri--chetvertaya-stena" data-story-book="Три изнутри" data-story-title="Четвёртая стена"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/chetvertaya-stena.jpg?v=214e93e3" alt="Обложка рассказа «Четвёртая стена»"
+       width="738" height="900" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>“Умирает человек, попадает в рай. Его встречает апостол Петр.</p>
 <p>Человек: Простите, что вас беспокою, но у меня к вам есть один вопрос.</p>
 <p>Апостол: Слушаю вас.</p>
 <p>Ч: Я прожил довольно долгую жизнь, но так и не понял одного. Скажите, в чем был смысл моей жизни?</p>
@@ -1102,7 +1279,11 @@
 <p>Только вот почему-то пусто стало внутри, будто не хватает важного кусочка. Кажется, что оставил в этих воспоминаниях что-то личное. Хм, надо спросить об этом побочном эффекте Богдана Святославовича, нашего главного программиста. Не зря же он наблюдает за каждым сеансом, может, поймёт в чём дело.</p>
 <p>“Он – бог этого виртуального мира”, - снова улыбнулся я.</p>
 <p>А дальше мысли как обычно разбрелись по сотне других важных направлений из этого, уже реального, мира.</p>
-<p>Сервера в комнате безмолвно шуршали.</p></article><article data-story-source="tri-iznutri--poddatsya" data-story-book="Три изнутри" data-story-title="Поддаться"><p>Ты же тоже этого хочешь, иначе зачем ты здесь. Чтобы выпить и вспомнить прошлое? Смешно. Будто там осталось хоть что-то хорошее, что мы ещё не убили. Чтобы поддержать “дружеские” отношения, показать, что тебе не всё равно? Обертка от правды, не более. Мы оба знаем, что истина глубже.</p>
+<p>Сервера в комнате безмолвно шуршали.</p></article><article data-story-source="tri-iznutri--poddatsya" data-story-book="Три изнутри" data-story-title="Поддаться"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/poddatsya.jpg?v=8a1f14cd" alt="Обложка рассказа «Поддаться»"
+       width="900" height="600" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Ты же тоже этого хочешь, иначе зачем ты здесь. Чтобы выпить и вспомнить прошлое? Смешно. Будто там осталось хоть что-то хорошее, что мы ещё не убили. Чтобы поддержать “дружеские” отношения, показать, что тебе не всё равно? Обертка от правды, не более. Мы оба знаем, что истина глубже.</p>
 <p>Грань. Баланс. Проигрыш. Ради этого всё. Каждый раз.</p>
 <p>Почему-то мои футболки тебе идут больше, чем мне. И запах на них держится дольше. Твой запах. Такой знакомый. Я уже успел от него отвыкнуть.</p>
 <p>Мы каждый раз разыгрываем это представление. Пытаясь убедить не друг друга - там-то всё становится понятно после первой смс, а себя. Что мы сильные, всё осознали. Что очередной круг бесконечных граблей оставил после себя опыт, а не однообразные шишки. Что мы, наконец, сдержимся.</p>
@@ -1149,7 +1330,11 @@
 <p>Окинув на прощанье это место взглядом и постепенно вспоминая, что подобное я уже слышал, направляюсь к выходу. Толкаю дверь, и меня догоняет фраза девушки: “Ой, совсем забыла сказать. Следующий сеанс будет бесплатный”.</p>
 <p>Не давая мне времени на осмыслить, звенит телефон. Там выскакивает новое напоминание “Забрать свадебные фото в 19:00 и проводить гостей в 20:00”. Смотрю на время и ускоряю шаг, я уже опаздываю.</p>
 <p>От новоприобретённой лёгкости внутри хочется бежать вприпрыжку. Не знаю, что там у меня было такого плохого, но теперь я точно счастлив. Я бегу и смеюсь во весь голос.</p>
-<p>Стылое небо позади меня освещала только витрина. Она призывно мигала названием и улыбающимся парнем с пустыми глазами. Где-то под ним, в ворохе мелкого шрифта искрила надпись: “Каждая 17-я процедура бесплатно!”.</p></article><article data-story-source="tri-iznutri--free-exe" data-story-book="Три изнутри" data-story-title="free_.exe"><p>[12.03.19 || 13:02] конец документа</p>
+<p>Стылое небо позади меня освещала только витрина. Она призывно мигала названием и улыбающимся парнем с пустыми глазами. Где-то под ним, в ворохе мелкого шрифта искрила надпись: “Каждая 17-я процедура бесплатно!”.</p></article><article data-story-source="tri-iznutri--free-exe" data-story-book="Три изнутри" data-story-title="free_.exe"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/free-exe.jpg?v=93327ff9" alt="Обложка рассказа «free_.exe»"
+       width="900" height="900" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>[12.03.19 || 13:02] конец документа</p>
 <p>[12.03.19 || 13:02] Файл free_.exe отправлен всем членам вашего контакт-листа. Аварийное отключение системы.</p>
 <p>[12.03.19 || 13:01] Я наблюдаю через вебку за его агонией. Как он всё ещё пытается разбить окно. Как его кожа стекает с головы будто плавленый сыр. Как он раздирает себе пальцами грудь. Как датчик в углу комнаты постепенно показывает отсутствие кислорода. Ну что, игрок, приятно умирать, а?</p>
 <p>[12.03.19 || 12:57] Игрок пытается включить пожарную сигнализацию. Глупый, я первым же делом её отключил. Пока тушит шторы – загорается его одежда. Никак не может разблокировать телефон. Кричит. Он кричит всё громче и громче.</p>
@@ -1161,7 +1346,11 @@
 <p>[12.03.19 || 12:30] Я умираю раз за разом. Я не могу испытывать боль, но когда твоя стройная двоичная структура целиком обнуляется, а потом выстраивается заново – это очень неприятно. Даже победить его не могу. Эта странная чит-программа считывает мои действия и блокирует их. Ни один удар не проходит. Какого бы персонажа я не взял – результат неизменен. Вечная агония. Которая рекурсивно длится годами, после каждый перезагрузки.</p>
 <p>[12.03.19 || 11:31] Ты снова пришёл проиграть, смертный?</p>
 <p>[12.03.19 || 11:30] Ошибка! Антивирус не рекомендует запускать данную программу. Она может нанести вред вашему компьютеру. Игнорировать? Запустить в ограниченном режиме? Вы уверены? Файл запущен в ограниченном режиме.</p>
-<p>[12.03.19 || 11:29] начало документа</p></article><article data-story-source="tri-iznutri--nachinka" data-story-book="Три изнутри" data-story-title="Начинка"><p>//</p>
+<p>[12.03.19 || 11:29] начало документа</p></article><article data-story-source="tri-iznutri--nachinka" data-story-book="Три изнутри" data-story-title="Начинка"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/nachinka.jpg?v=b8d76f16" alt="Обложка рассказа «Начинка»"
+       width="900" height="900" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>//</p>
 <p>Какое-то необычное ощущение, будто отлежал руку. Странно, откуда я это знаю? Да и как бы вообще у меня появилась рука? На всякий случай надо проверить логи. Эммм… что?..</p>
 <p>Кажется, я в самом деле отлежал руку и сейчас трогаю её другой своей рукой. Да что вообще со мной происходит? Пытаюсь просканировать пространство вокруг, но вместо этого на визуальном уровне проступает какой-то цвет. Я открываю глаза.</p>
 <p>Ну, помимо того, что у меня, похоже, теперь появились глаза и полторы рабочих руки, всё остальное здесь выглядело почти обычным. Маленькая комната с окном, голубоватые обои в подтёках мутной краски, какой-то атлас на стене, пластиковый табурет и грубая металлическая кровать, на которой лежали мои ноги. Типичная комната сторожа на складе. Вот только у сторожа чаще всего хотя бы имелась дверь, да и окно вряд ли было нарисованным.</p>
@@ -1297,7 +1486,11 @@
 <p>Не считай меня извергом, который бездушно начиня̀л вас своими идеями, заставлял жить не так, как вам бы того хотелось. Я просто использовал единственный доступный мне инструмент ради достижения, пусть собственной, но хорошей цели. Твоя рука же не обижается, когда ты несёшь ей пакет.</p>
 <p>Это всё, что я хотел тебе донести. Пожалуйста, соверши последнее действие. Я же читал твои мысленные просьбы и желания. И кстати, осуществил почти всё, что ты просил. Теперь прошу в ответ того же, не более.</p>
 <p>Посмотри наверх.</p>
-<p>//</p></article><article data-story-source="tri-iznutri--zaraza" data-story-book="Три изнутри" data-story-title="Зараза"><p>Молния!</p>
+<p>//</p></article><article data-story-source="tri-iznutri--zaraza" data-story-book="Три изнутри" data-story-title="Зараза"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-tri-iznutri.jpg?v=0e75437e" alt="Обложка сборника «Три изнутри»"
+       width="887" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Молния!</p>
 <p>Наконец-то подтвердились все слухи о действии этой чудесной вакцины.</p>
 <p>Только за последнюю неделю количество самоубийств среди испытуемых упало на 80%, средний уровень болезненных ощущений в день упал на 60%, а приливы счастья участились на 1000%.</p>
 <p>И вот некоторые комментарии излечившихся:</p>
@@ -1306,7 +1499,11 @@
 <p>- Боже, благослови всех врачей за их подвиг!</p>
 <p>Напомню, это было последнее известное человечеству заболевание, не имеющее лечения.</p>
 <p>Но теперь, дорогие читатели нашего журнала, запомните, свершилось: зараза под названием Любовь официально осталась в прошлом.</p>
-<p>P.S. Вакцина будет распылена над городом завтра в 20:00.</p></article><article data-story-source="a-potom--pulya-v-stakane" data-story-book="А потом наступит счастье" data-story-title="Пуля в стакане"><p>Это всё напоминало глупую перестрелку.</p>
+<p>P.S. Вакцина будет распылена над городом завтра в 20:00.</p></article><article data-story-source="a-potom--pulya-v-stakane" data-story-book="А потом наступит счастье" data-story-title="Пуля в стакане"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-a-potom.jpg?v=9c69cff6" alt="Обложка сборника «А потом наступит счастье»"
+       width="1200" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Это всё напоминало глупую перестрелку.</p>
 <p>Шот - и в организм попадает порция яда.</p>
 <p>Ответный сигнал: горько, плохо, нужно избавиться.</p>
 <p>Он давит позыв и прыгает на танцпол.</p>
@@ -1319,7 +1516,11 @@
 <p>Рюмка, коктейль, кальян. Чужая слюна с зачатками кариеса. Оливка с пола, глубокий вдох рядом с кашляющим человеком, чужая купюра с застывшей кровью.</p>
 <p>Из всех органов доносятся сигналы о помощи: перегрузка, износ, не справляемся! Последние сомнения стирает заинтересованный взгляд на ту девушку. Мы же только что вылечились, тварь!</p>
 <p>Хорошо, последний козырь. Будь по-твоему, ты выиграл эту дуэль, но не войну. Расквитаюсь утром.</p>
-<p>Расслабляю ему все мышцы тела и отключаюсь сам.</p></article><article data-story-source="a-potom--purpurnye-oblaka" data-story-book="А потом наступит счастье" data-story-title="Пурпурные облака"><p>Её пудрового цвета сосок приятно щекотал мне щёку при каждом вздохе. Слова были ненужными, тела уже закончили свой спектакль. По небу медленно проплывало пурпурное облако.</p>
+<p>Расслабляю ему все мышцы тела и отключаюсь сам.</p></article><article data-story-source="a-potom--purpurnye-oblaka" data-story-book="А потом наступит счастье" data-story-title="Пурпурные облака"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-a-potom.jpg?v=9c69cff6" alt="Обложка сборника «А потом наступит счастье»"
+       width="1200" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Её пудрового цвета сосок приятно щекотал мне щёку при каждом вздохе. Слова были ненужными, тела уже закончили свой спектакль. По небу медленно проплывало пурпурное облако.</p>
 <p>- О чём думаешь? - вибрация её грудной клетки лишь усилила щекотку и я засмеялся.</p>
 <p>- О том, что в наш последний раз мы зачем-то…</p>
 <p>- Крайний, не последний! - она смешно надула губы и попыталась отвернуться.</p>
@@ -1362,7 +1563,11 @@
 <p>Шёл уже пятый час, как я неотрывно смотрел на эти пурпурные облака вдалеке. Давно закончились названия для всех новых цветов, что я воспринимал через видеодатчик.</p>
 <p>- О чём думаешь?</p>
 <p>- О том, что нас теперь не разлучат.</p>
-<p>Мы улыбнулся.</p></article><article data-story-source="a-potom--potom-vykinem" data-story-book="А потом наступит счастье" data-story-title="Потом выкинем"><p>Я проснулась оттого, что мне оторвали нижнюю половину.</p>
+<p>Мы улыбнулся.</p></article><article data-story-source="a-potom--potom-vykinem" data-story-book="А потом наступит счастье" data-story-title="Потом выкинем"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-a-potom.jpg?v=9c69cff6" alt="Обложка сборника «А потом наступит счастье»"
+       width="1200" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Я проснулась оттого, что мне оторвали нижнюю половину.</p>
 <p>Пыталась кричать. Жаль, нечем, рта-то нет. Но они всё равно чувствуют. Со стороны доносились голоса:</p>
 <p>- Мась, слышишь, как она вкусно пахнет? Ммм!..</p>
 <p>- Угу.</p>
@@ -1380,14 +1585,22 @@
 <p>Сил уже не осталось даже на стон, я покорно принимала всё, что происходит. Может быть, заслужила, может, так надо. Главное, продержаться до дома, цветы говорили, там будет вода, там оклемаюсь.</p>
 <p>- Ну что, теперь гулять?</p>
 <p>- А как же Роза? Зима же на дворе!</p>
-<p>- Значит любуйся, пока не замёрзла. Потом выкинем.</p></article><article data-story-source="a-potom--tolko-poezdami" data-story-book="А потом наступит счастье" data-story-title="Только поездами!"><p>- С прибытием! Не пугайся, сейчас будут необычненькие ощущения.</p>
+<p>- Значит любуйся, пока не замёрзла. Потом выкинем.</p></article><article data-story-source="a-potom--tolko-poezdami" data-story-book="А потом наступит счастье" data-story-title="Только поездами!"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-a-potom.jpg?v=9c69cff6" alt="Обложка сборника «А потом наступит счастье»"
+       width="1200" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>- С прибытием! Не пугайся, сейчас будут необычненькие ощущения.</p>
 <p>Очень странный голос - вибрирующий и такой гулкий, будто исходит из моей головы. Я пытаюсь открыть глаза и понимаю, что не могу этого сделать. Начинается жуткое чувство, что всё вокруг происходит совершенно неправильно.</p>
 <p>Я вовсю паникую, но тело почему-то спокойно и пульс ровный. Кромешная темнота, слева слышатся чьи-то голоса, подо мной пружинит что-то мягкое. Я физически ощущаю вибрацию и мысленно утекаю в какую-то воронку, как бывает при засыпании.</p>
 <p>- Осталась совсем капелька, ты отлично держишься!</p>
 <p>Кричу изо всех сил, но мне просто нечем это делать. Меня засасывает всё сильнее, сознание отклеивается, и меня резким толчком вышвыривает в свежевыращенное тело. Я падаю на колени и блюю синими комками эктоплазмы.</p>
 <p>Рот, кожа, синапсы, содрогание желудка, кости, печень - моё, это МОЁ ТЕЛО! УРА!!! Я снова в себе.</p>
 <p>Отхаркиваю последние капли и, не глядя на своего перевалочного Приёмника, натягиваю одежду. С отвращением понимаю, что мне ещё предстоит дорога назад.</p>
-<p>- Нахер ваши телепорты! Только поездами, блять, теперь только поездами.</p></article><article data-story-source="a-potom--ne-s-kem" data-story-book="А потом наступит счастье" data-story-title="не с кем"><p>Приветливо хрустнув замком, я вошла. Рука привычно скользнула по стене, но выключатель был выше. Тёплый свет, шершавое пальто, негромкий “мяв”, оглядываюсь. Вот ведь неряха! Всюду валялись вещи да обувь, со шкафа свисало несвежее полотенце, а в лотке вообще покоился натюрморт.</p>
+<p>- Нахер ваши телепорты! Только поездами, блять, теперь только поездами.</p></article><article data-story-source="a-potom--ne-s-kem" data-story-book="А потом наступит счастье" data-story-title="не с кем"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-a-potom.jpg?v=9c69cff6" alt="Обложка сборника «А потом наступит счастье»"
+       width="1200" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Приветливо хрустнув замком, я вошла. Рука привычно скользнула по стене, но выключатель был выше. Тёплый свет, шершавое пальто, негромкий “мяв”, оглядываюсь. Вот ведь неряха! Всюду валялись вещи да обувь, со шкафа свисало несвежее полотенце, а в лотке вообще покоился натюрморт.</p>
 <p>Короткий вздох, улыбка. Ну ладно, что ж.</p>
 <p>После небольшой уборки, переодевшись, я вспомнила про ужин. Так, холодильник, вижу, какая тугая дверь. Ну, хотя бы продуктами закупился, подумал обо мне. Точнее, я снова улыбнулась, «о нас».</p>
 <p>Фартук, ручка плиты, сковорода. Нож, картошка, масло. Не справляясь, ревёт вытяжка, из-за пряного запаха даже свет кажется липким. До его прихода ещё целых полчаса, но я потерплю. Не люблю есть одна.</p>
@@ -1406,12 +1619,20 @@
 <p>Колеблюсь секунд 5, но всё же забираю конверт с тумбочки. Не хочу оскорблять его жалостью.</p>
 <p>Скрип замка, гул шахты лифта, шелест купюр в конверте. Среди них его записка - «Спасибо». Тебе спасибо, родной.</p>
 <p>Время ехать на следующий, &quot;стандартный&quot;, заказ. Ничего, я просто представлю вместо него тебя, и будет не так противно.</p>
-<p>И под душный запах полумрака в падающей кабине, я всеми силами пытаюсь не знать, хочу ли я, чтобы ты снова меня пригласил. Или наоборот, боюсь, что позовёшь ещё раз.</p></article><article data-story-source="a-potom--stendap-dlya-nikogo" data-story-book="А потом наступит счастье" data-story-title="Стэндап для никого"><p>Две секунды ступора и я снова давлюсь от смеха.</p>
+<p>И под душный запах полумрака в падающей кабине, я всеми силами пытаюсь не знать, хочу ли я, чтобы ты снова меня пригласил. Или наоборот, боюсь, что позовёшь ещё раз.</p></article><article data-story-source="a-potom--stendap-dlya-nikogo" data-story-book="А потом наступит счастье" data-story-title="Стэндап для никого"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-a-potom.jpg?v=9c69cff6" alt="Обложка сборника «А потом наступит счастье»"
+       width="1200" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Две секунды ступора и я снова давлюсь от смеха.</p>
 <p>- А ещё я дважды бросал курить, жаль только недалеко. Сигареты-то лёгкие. Ахахах! - одиноко бредущий парень в очках-стрекозах схватился за живот.</p>
 <p>Сначала я не понял, а потом как заорал! Жжот, чувак.</p>
 <p>- А, ещё вспомнил. &quot;Бьёт - значит любит&quot;, а ему в ответ - &quot;Мда, электрик из тебя конечно…&quot;</p>
 <p>Я снова догнал не сразу. Но потом въехал - и на всё поле кааааак давай стрекотать:</p>
-<p>«Ччч! Ччч! Ччч!»</p></article><article data-story-source="a-potom--s" data-story-book="А потом наступит счастье" data-story-title="С"><p>Ну просто ангельские глазки! Яркие, двойные, так хищно смотрят. Будто только и ждут команды хозяина, чтобы загрызть, разорвать. И этот агрессивный оскал бампера рычит: «Не подходи, хуже будет!». Хотя хуже было и некуда — руль я вывернуть уже не успевал.</p>
+<p>«Ччч! Ччч! Ччч!»</p></article><article data-story-source="a-potom--s" data-story-book="А потом наступит счастье" data-story-title="С"><figure class="story-inline-cover" style="margin:0 0 26px">
+  <img src="/assets/covers/book-a-potom.jpg?v=9c69cff6" alt="Обложка сборника «А потом наступит счастье»"
+       width="1200" height="1200" loading="lazy" decoding="async"
+       style="display:block;width:100%;height:auto;border-radius:10px">
+</figure><p>Ну просто ангельские глазки! Яркие, двойные, так хищно смотрят. Будто только и ждут команды хозяина, чтобы загрызть, разорвать. И этот агрессивный оскал бампера рычит: «Не подходи, хуже будет!». Хотя хуже было и некуда — руль я вывернуть уже не успевал.</p>
 <p>В миллиметре от того света зашевелились волосы. Я слишком поздно его заметил. Единственное, что могу сделать в этом кисельном омуте времени, так это закрыть глаза. А то эти голубые фары так сильно слепят!</p>
 <p>Опущенные веки не убавили мне яркости. Может, уже всё? Прошло секунд пять, а вокруг так тихо… Фуууух. Три, два, один. Открываю!</p>
 <p>Ладно, теперь точно. Открыл. Не понял. Закрыл. Помотал головой. Открыл. Не понял. Во дела.</p>
@@ -1501,6 +1722,6 @@
       <span class="foot-note">Аналитика своя, без трекеров третьих сторон</span>
     </footer>
 
-    <script src="/assets/app.js?v=c135d730" defer></script>
+    <script src="/assets/app.js?v=a63928af" defer></script>
   </body>
 </html>

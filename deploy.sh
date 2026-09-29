@@ -30,6 +30,10 @@ for arg in "$@"; do
 done
 
 # Что именно отдаётся посетителю. Всё остальное остаётся дома.
+# .githooks/ исключены везде и навсегда: 28 августа список личных слов уже
+# уехал в веб-корень, а сегодня черновой прогон снова показал .githooks в
+# папке проекта — на этот раз без личных данных, но по той же дороге.
+# Правило 25: белый список сверху, а внутри папок — прицельные запреты.
 # data/ здесь НЕТ намеренно. Сборка читает его из репозитория, странице он
 # не нужен ни при загрузке, ни во время работы — проверено поиском по всем
 # доставленным файлам. А на сервере он отдавал наружу `stories.json` с
@@ -55,11 +59,58 @@ rasskazy
 technomagic
 qa-quest
 psy-admin
+ysi
 photodata
+maketchik
+way
+torgash-gnjeev4lb7
+flow
+birzha
 "
 
+echo "== незакоммиченное в выкладке =="
+# Выкладка шлёт файлы С ДИСКА, а не из коммита, поэтому «в main чисто» ничего
+# не значит: в общем дереве всегда кто-то работает. 6 сентября 2026 так уехала
+# чужая правка assets/app.js, сделанная за минуты до отправки. Стоп до слова
+# автора; своё — закоммитить, тогда видно, что именно уехало.
+if ! sh tools/chuzhoe-v-dereve.sh $PAYLOAD; then
+  if [ "${DEPLOY_S_CHUZHIM:-}" = "1" ]; then
+    echo "== выкладываю вместе с незакоммиченным: DEPLOY_S_CHUZHIM=1 =="
+  else
+    echo "!! выкладка остановлена. Разобрались — DEPLOY_S_CHUZHIM=1 sh deploy.sh --go" >&2
+    exit 1
+  fi
+fi
+
 echo "== сборка =="
+echo "== PsyAdmin: защита от старой выкладки =="
+node psy-admin/tools/release-guard.mjs --live-base "${PSY_ADMIN_LIVE_BASE:-https://aka-gst.ru}"
 node build.mjs
+
+# Набор тестов — ВОРОТА выкладки, а не примечание в отчёте.
+#
+# 6 сентября я дважды выложил при одном красном тесте: прогонял набор,
+# видел «41 прошло, 1 упал» и всё равно шёл дальше — первый раз заметил
+# после выкладки, второй раз тоже. Оба раза сайт не пострадал, но полагаться
+# на то, что я замечу красную строку в потоке вывода, нельзя: внимательность
+# кончается вместе с контекстом, а ворота не кончаются.
+#
+# Пропустить осознанно можно: DEPLOY_BEZ_TESTOV=1 sh deploy.sh --go — но это
+# решение, которое надо принять руками, а не забыть.
+if [ "${DEPLOY_BEZ_TESTOV:-}" = "1" ]; then
+  echo "== тесты пропущены по требованию =="
+else
+  echo "== тесты =="
+  if node --test tests/*.mjs > /tmp/deploy-testy.$$ 2>&1; then
+    grep -E "(pass|fail) [0-9]+$" /tmp/deploy-testy.$$ | sed "s/^/  /"
+    rm -f /tmp/deploy-testy.$$
+  else
+    echo "!! набор тестов красный — выкладка остановлена" >&2
+    grep -E "^..? (not ok|✖|fail )" /tmp/deploy-testy.$$ | head -5 >&2
+    rm -f /tmp/deploy-testy.$$
+    exit 1
+  fi
+fi
 
 missing=""
 for item in $PAYLOAD; do
@@ -167,10 +218,10 @@ echo "== содержимое сайта =="
 if $go; then
   # shellcheck disable=SC2086
   # shellcheck disable=SC2086
-  rsync -avz --omit-dir-times --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
+  rsync -avz --omit-dir-times --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='**/.githooks' --exclude='**/.githooks/**' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
 else
   # shellcheck disable=SC2086
-  rsync -avzn --omit-dir-times --itemize-changes --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
+  rsync -avzn --omit-dir-times --itemize-changes --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='**/.githooks' --exclude='**/.githooks/**' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
   echo
   echo "  (черновой прогон; повторите с --go)"
 fi

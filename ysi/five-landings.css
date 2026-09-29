@@ -1,0 +1,341 @@
+/* Five focused sales pages: each page has one job, one proof, and no scenic empty space. */
+:root { --ink: #142b49; --paper: #f8f6f0; --blue: #155fb8; --coral: #e46847; --sage: #387a61; --line: #d2dce1; }
+body { background: var(--paper); }
+.demo-ribbon { height: 30px; padding: 7px 12px; font-size: 11px; letter-spacing: .13em; }
+.site-header { min-height: 84px; padding: 10px max(28px, calc((100vw - 1440px) / 2)); gap: 20px; }
+.site-header .brand { font-size: 34px; white-space: nowrap; }
+.site-header nav { gap: 8px; flex: 1; }
+.nav-link { min-height: 54px; padding: 8px 11px; border-radius: 4px; }
+.nav-link span { font-size: 14px; }
+.nav-link small { font-size: 10px; }
+.local-state { font-size: 12px; white-space: nowrap; }
+.view.is-active { min-height: 0 !important; height: calc(100svh - 114px) !important; overflow-y: auto; padding: 18px max(28px, calc((100vw - 1440px) / 2)) 20px !important; gap: 12px !important; scrollbar-gutter: stable; }
+.section-intro, .course-hero { margin: 0 !important; }
+.section-intro h1, .course-headline h1 { max-width: 760px; margin: 4px 0 7px !important; font-size: clamp(30px, 2.65vw, 43px) !important; line-height: .98 !important; letter-spacing: -.04em; }
+.section-intro .lede, .course-headline .lede { max-width: 690px; margin: 0 !important; font-size: 17px !important; line-height: 1.38; }
+.course-headline { display: grid !important; grid-template-columns: minmax(0, 1.1fr) minmax(330px, .9fr) !important; gap: 18px !important; align-items: stretch; }
+.course-actions { margin: 10px 0 8px !important; }
+.course-clarifier { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 !important; padding: 0 !important; list-style: none; }
+.course-clarifier li { min-height: 48px; padding: 7px 8px; border-top: 2px solid var(--blue); font-size: 11px; line-height: 1.2; }
+.course-clarifier strong { display: block; margin-bottom: 3px; font-size: 11px; letter-spacing: .06em; }
+.video-card { min-height: 230px !important; padding: 10px !important; transform: none !important; border: 1px solid var(--line); background: #eef2f3 !important; box-shadow: none !important; }
+.video-card iframe { display: block; width: 100%; height: 175px; margin-top: 6px; border: 0; background: #152c48; }
+.video-card a { display: inline-block; margin-top: 10px; color: var(--blue); font-size: 13px; font-weight: 700; }
+.thread-layout { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 0 !important; margin: 0 !important; }
+.course-panel { display: none !important; }
+.course-panel, .guide-panel { min-height: 0 !important; padding: 12px 14px !important; }
+.guide-panel { display: block !important; height: auto !important; align-self: start !important; align-content: initial !important; justify-content: initial !important; }
+.course-panel h2, .guide-panel h2 { margin: 3px 0 10px !important; font-size: 27px !important; line-height: 1.02; }
+.lesson-row { display: block !important; }
+.lesson-copy h3 { margin: 4px 0 7px !important; font-size: 18px !important; }
+.lesson-copy p { margin: 0 0 10px !important; font-size: 14px !important; line-height: 1.35; }
+.guide-topline { margin-bottom: 5px !important; }
+.guide-topline .eyebrow { font-size: 10px !important; }
+.guide-topline h2 { font-size: 24px !important; }
+.status-dot { font-size: 11px !important; }
+.chat-log { display: grid; gap: 5px; max-height: 86px !important; margin: 0 0 6px !important; overflow: auto; }
+.message { max-width: 85% !important; padding: 8px 10px !important; border-radius: 12px !important; }
+.message span { font-size: 10px !important; }
+.message p { margin: 3px 0 0 !important; font-size: 13px !important; line-height: 1.32; }
+.suggestions { gap: 6px !important; margin: 0 0 8px !important; }
+.suggestions button { padding: 6px 8px !important; font-size: 12px !important; }
+.guide-form input, .guide-form button { min-height: 38px !important; }
+.privacy-note { margin: 8px 0 0 !important; font-size: 11px !important; line-height: 1.25; }
+/* The first tab sells the complete, connected future in one interaction. */
+#companion { overflow: hidden !important; }
+.companion-head { display: grid; grid-template-columns: minmax(0, 1fr) 250px; align-items: end; gap: 30px; }
+.companion-head h1 { max-width: 760px; margin: 4px 0 8px; font-size: clamp(34px, 3.35vw, 51px); line-height: .98; letter-spacing: -.045em; }
+.companion-head > div > p:last-child { max-width: 700px; margin: 0; color: #61748a; font-size: 15px; line-height: 1.38; }
+.companion-investment { display: grid; gap: 5px; padding: 13px 15px; border-left: 3px solid var(--coral); background: #fff; }
+.companion-investment span { color: var(--blue); font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.companion-investment strong { font-family: Georgia, serif; font-size: 27px; }
+.companion-investment small { color: #61748a; font-size: 11px; }
+.companion-stage { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 15px; margin-top: 15px; }
+.add-practice { padding: 15px; background: #fff; border: 1px solid var(--line); }
+.add-practice h2 { margin: 3px 0 12px; font-size: 26px; line-height: 1; }
+.add-practice form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+.add-practice label { grid-column: span 1; color: #496078; font-size: 11px; font-weight: 700; }
+.add-practice label:nth-of-type(3), .add-practice input, .add-practice button { grid-column: 1 / -1; }
+.add-practice label span { color: #7b8a97; font-weight: 400; }
+.add-practice select, .add-practice input { min-height: 34px; padding: 6px 8px; border: 1px solid #cbd7dc; background: #f8faf9; color: var(--ink); font: inherit; font-size: 12px; }
+.add-practice .primary { min-height: 38px; margin-top: 4px; font-size: 13px; }
+.preview-reminder { width: 100%; min-height: 34px; margin-top: 7px; font-size: 12px; }
+.preview-reminder:disabled { opacity: .48; cursor: not-allowed; }
+.simulated-note { margin: 9px 0 0; color: #788899; font-size: 10px; line-height: 1.25; }
+.device-orbit { position: relative; display: grid; grid-template-columns: minmax(340px, 1.25fr) minmax(170px, .62fr) minmax(210px, .8fr); align-items: center; gap: 12px; min-height: 315px; padding: 16px; overflow: hidden; border: 1px solid var(--line); background: linear-gradient(135deg, #e6eff3, #f9f6ee 70%); }
+.device { position: relative; z-index: 2; }
+.desktop-device { align-self: stretch; padding: 14px; background: #fff; border: 7px solid #193453; border-radius: 10px; box-shadow: 0 12px 25px rgb(24 51 80 / .17); }
+.device-label { display: flex; justify-content: space-between; color: #c6def0; font-size: 10px; letter-spacing: .08em; }
+.device-label b { color: #fff; font-size: 10px; }
+.desktop-content { display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; min-height: 190px; padding: 16px 4px 4px; color: var(--ink); }
+.desktop-content > div:first-child { padding: 14px; background: #f2f6f4; }
+.desktop-content h3 { margin: 4px 0 7px; font: 700 25px/1 Georgia, serif; }
+.desktop-content p { margin: 0; font-size: 12px; line-height: 1.33; }
+.desktop-guide { display: grid; align-content: center; gap: 7px; padding: 13px; background: #dcecff; color: #24456c; font-size: 12px; line-height: 1.32; }
+.phone-device { align-self: center; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #50677d; }
+.phone-screen { min-height: 254px; padding: 17px 13px; text-align: left; color: #e8f2ff; border: 7px solid #193453; border-radius: 28px; background: #21496e; box-shadow: 0 10px 20px rgb(24 51 80 / .2); }
+.phone-time { display: block; margin-bottom: 25px; font-size: 10px; }
+.phone-screen h3 { margin: 5px 0 9px; font: 700 21px/1 Georgia, serif; }
+.phone-screen p { min-height: 52px; margin: 0; color: #d2e6f8; font-size: 12px; line-height: 1.35; }
+.phone-check { display: inline-block; margin-top: 15px; padding: 5px 7px; border-radius: 999px; background: #3e836a; color: #fff; font-size: 9px; letter-spacing: .04em; }
+.telegram-device { align-self: center; }
+.telegram-bubble { padding: 14px; border-radius: 15px 15px 15px 3px; background: #fff; box-shadow: 0 10px 20px rgb(24 51 80 / .12); color: #29425b; }
+.telegram-bubble b { color: #1673a7; font-size: 12px; }
+.telegram-bubble p { margin: 6px 0 0; font-size: 12px; line-height: 1.35; }
+.telegram-device > p { margin: 8px 0 0; color: #50677d; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.sync-path { position: absolute; z-index: 1; inset: auto 14% 18px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #4d6f8b; font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+.sync-path i { width: 42px; height: 1px; background: #7195b1; }
+.entry-flyout { position: absolute; z-index: 5; right: 22%; top: -100px; display: flex; gap: 8px; width: 235px; padding: 10px; transform: translateY(0); opacity: 0; border-radius: 8px; background: #143d61; color: #fff; box-shadow: 0 14px 28px rgb(15 42 68 / .28); transition: transform .45s ease, opacity .25s ease; }
+.entry-flyout.is-visible { transform: translateY(118px); opacity: 1; }
+.entry-flyout span { display: grid; place-items: center; flex: 0 0 24px; height: 24px; border-radius: 999px; background: #4fa67f; }
+.entry-flyout b { font-size: 12px; }
+.entry-flyout p { margin: 2px 0 0; color: #d6e6f3; font-size: 10px; line-height: 1.25; }
+.device-orbit.is-reminding .desktop-device, .device-orbit.is-reminding .phone-screen, .device-orbit.is-reminding .telegram-bubble { animation: reminder-pulse 1.2s ease 2; }
+@keyframes reminder-pulse { 0%,100% { box-shadow: 0 10px 20px rgb(24 51 80 / .18); } 50% { box-shadow: 0 0 0 5px rgb(228 104 71 / .32), 0 14px 26px rgb(24 51 80 / .22); } }
+.companion-boundaries { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; color: #50677d; font-size: 11px; line-height: 1.32; }
+.companion-boundaries span { padding-top: 8px; border-top: 2px solid #b9ccd6; }
+.companion-boundaries b { color: var(--ink); }
+/* 02: journal is a product surface, not a manifesto. */
+#practice .section-intro { display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: end; }
+#practice .section-intro > .eyebrow, #voice-studio .voice-studio-intro > .eyebrow, #insights .section-intro > .eyebrow, #offer .section-intro > .eyebrow { grid-column: 1 / -1; margin-bottom: -16px !important; }
+#practice .practice-layout { margin-top: 0 !important; grid-template-columns: minmax(330px, .82fr) minmax(0, 1.18fr) !important; gap: 20px !important; }
+#practice .phone-shell { min-height: 282px !important; max-width: 430px; padding: 15px !important; border-radius: 22px !important; }
+#practice .practice-explainer h2 { font-size: 27px !important; line-height: 1.02; }
+#practice .practice-explainer dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#practice .practice-explainer dl div { padding: 10px 0 !important; }
+#practice .sync-card, #practice .voice-card { margin-top: 9px !important; padding: 11px !important; }
+#practice .boundary-strip { margin-top: 14px !important; padding: 11px 13px !important; }
+/* 03: voice studio gets to the product controls immediately. */
+#voice-studio .voice-studio-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; align-items: end; }
+#voice-studio .studio-layout { margin-top: 0 !important; gap: 14px !important; }
+#voice-studio .script-editor, #voice-studio .studio-controls { padding: 15px !important; }
+#voice-studio .studio-heading { margin-bottom: 8px !important; }
+#voice-studio .studio-heading h2 { font-size: 23px !important; line-height: 1.05; }
+#voice-studio .script-tools { margin-top: 7px !important; }
+#voice-studio .studio-controls label { margin-top: 8px !important; }
+#voice-studio textarea { min-height: 92px !important; }
+#voice-studio .voice-library { margin-top: 14px !important; padding: 15px !important; }
+#voice-studio .voice-library-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+#voice-studio .studio-voice { min-height: 80px !important; padding: 8px !important; }
+#voice-studio .studio-boundary { margin-top: 12px !important; padding: 11px !important; }
+/* 04: owner view is a three-frame explainer, never a fake analytics wall. */
+#insights .section-intro { display: grid; grid-template-columns: 1fr .92fr; gap: 30px; align-items: end; }
+#insights .owner-story { margin-top: 0 !important; padding: 16px !important; }
+#insights .owner-story-head { margin-bottom: 12px !important; }
+#insights .owner-story-head h2 { font-size: 28px !important; }
+#insights .journey-scene { gap: 10px !important; }
+#insights .journey-stage { min-height: 202px !important; padding: 15px !important; }
+#insights .owner-boundary { margin: 12px 0 0 !important; padding-top: 10px !important; }
+/* 05: decision page shows scope and price before prose. */
+#offer .section-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: end; }
+#offer .package-grid { margin-top: 0 !important; gap: 10px !important; }
+#offer .package { min-height: 295px !important; padding: 14px !important; }
+#offer .package h2 { font-size: 28px !important; }
+#offer .package ul { margin: 8px 0 !important; }
+#offer .package li { margin-bottom: 4px !important; font-size: 12px !important; line-height: 1.25; }
+#offer .standalone-offer, #offer .next-step { margin-top: 12px !important; padding: 15px !important; }
+@media (max-width: 900px) {
+  .site-header { align-items: flex-start; flex-wrap: wrap; }
+  .site-header nav { width: 100%; overflow-x: auto; }
+  .nav-link { min-width: 140px; }
+  .course-headline, .thread-layout, #practice .section-intro, #practice .practice-layout, #voice-studio .voice-studio-intro, #insights .section-intro, #offer .section-intro { grid-template-columns: 1fr !important; }
+  .course-clarifier, #practice .practice-explainer dl, #voice-studio .voice-library-grid { grid-template-columns: 1fr !important; }
+  .video-card { min-height: 260px !important; }
+  #companion { overflow-y: auto !important; }
+  .companion-head, .companion-stage { grid-template-columns: 1fr; }
+  .device-orbit { grid-template-columns: 1fr; min-height: 0; }
+  .companion-boundaries { grid-template-columns: 1fr; }
+}
+
+/* Desktop concept is a single framed product, not a document with a footer below it. */
+@media (min-width: 901px) {
+  html, body { height: 100%; overflow: hidden; }
+  body { min-height: 100dvh; }
+  main { height: calc(100dvh - 114px); overflow: hidden; }
+  .view.is-active { height: 100% !important; }
+  footer { display: none; }
+}
+
+/* Companion art direction: a calm nocturne rather than an office settings form. */
+#companion {
+  --companion-ink: #102b45;
+  --companion-blue: #3f87c5;
+  --companion-mist: #e3f0f3;
+  --companion-coral: #ff745c;
+  --companion-moss: #4c9a78;
+  background:
+    radial-gradient(circle at 74% 18%, rgb(147 204 222 / .34), transparent 26%),
+    radial-gradient(circle at 16% 86%, rgb(255 188 151 / .22), transparent 30%),
+    #f7f5f0;
+}
+#companion .companion-head { position: relative; }
+#companion .companion-head h1 { max-width: 730px; color: var(--companion-ink); font-family: Iowan Old Style, Georgia, serif; font-weight: 700; letter-spacing: -.055em; }
+#companion .companion-head > div > p:last-child { max-width: 650px; color: #60758b; }
+#companion .companion-investment { border: 0; border-radius: 18px; background: rgb(255 255 255 / .72); box-shadow: 0 12px 30px rgb(38 78 107 / .11); backdrop-filter: blur(12px); }
+#companion .companion-investment::before { content: '◒'; float: right; color: var(--companion-coral); font-size: 20px; }
+#companion .companion-stage { gap: 18px; }
+#companion .add-practice { position: relative; overflow: hidden; padding: 20px; border: 0; border-radius: 22px; background: linear-gradient(160deg, #fff, #edf5f4); box-shadow: 0 16px 36px rgb(33 75 101 / .14); }
+#companion .add-practice::after { content: ''; position: absolute; right: -54px; top: -56px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgb(255 116 92 / .23), transparent 68%); pointer-events: none; }
+#companion .add-practice .course-label { color: var(--companion-blue); }
+#companion .add-practice h2 { position: relative; z-index: 1; max-width: 220px; color: var(--companion-ink); font-family: Iowan Old Style, Georgia, serif; font-size: 28px; letter-spacing: -.04em; }
+#companion .add-practice form { position: relative; z-index: 1; gap: 8px 10px; }
+#companion .add-practice label { align-self: center; color: #506b82; font-size: 11px; letter-spacing: .01em; }
+#companion .add-practice label span { color: var(--companion-moss); }
+#companion .add-practice select, #companion .add-practice input { min-height: 38px; border: 1px solid transparent; border-radius: 11px; background: rgb(255 255 255 / .82); box-shadow: 0 2px 7px rgb(27 65 89 / .08), inset 0 0 0 1px rgb(114 164 183 / .17); transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+#companion .add-practice select:focus, #companion .add-practice input:focus { outline: none; border-color: var(--companion-blue); box-shadow: 0 0 0 3px rgb(63 135 197 / .16); transform: translateY(-1px); }
+#companion .add-practice .primary { border: 0; border-radius: 13px; background: linear-gradient(110deg, #1761b3, #338ed0); box-shadow: 0 12px 20px rgb(23 97 179 / .24); letter-spacing: .01em; }
+#companion .add-practice .primary:hover { transform: translateY(-2px); box-shadow: 0 16px 25px rgb(23 97 179 / .31); }
+#companion .preview-reminder { border: 0; border-radius: 13px; background: rgb(255 255 255 / .66); box-shadow: inset 0 0 0 1px rgb(80 124 150 / .24); color: #627b90; }
+#companion .preview-reminder:not(:disabled) { color: var(--companion-ink); box-shadow: inset 0 0 0 1px rgb(80 124 150 / .34), 0 5px 13px rgb(27 65 89 / .08); }
+#companion .simulated-note { color: #7890a0; }
+#companion .device-orbit { border: 0; border-radius: 26px; background: linear-gradient(135deg, rgb(244 251 252 / .95), rgb(229 239 241 / .78)); box-shadow: inset 0 0 0 1px rgb(88 139 160 / .14), 0 16px 36px rgb(33 75 101 / .1); }
+#companion .device-orbit::before { content: ''; position: absolute; width: 540px; height: 540px; right: 9%; top: -305px; border: 1px solid rgb(63 135 197 / .18); border-radius: 50%; box-shadow: 0 0 0 30px rgb(63 135 197 / .05), 0 0 0 70px rgb(63 135 197 / .035); }
+#companion .desktop-device { border: 1px solid rgb(25 52 83 / .25); border-radius: 18px; background: linear-gradient(145deg, #183b5d, #0c263f); box-shadow: 0 22px 34px rgb(14 43 69 / .25); }
+#companion .device-label { color: #96c3df; }
+#companion .desktop-content { padding-top: 14px; }
+#companion .desktop-content > div:first-child { border-radius: 12px; background: linear-gradient(145deg, #f8faf6, #e5f0ed); }
+#companion .desktop-content h3, #companion .phone-screen h3 { font-family: Iowan Old Style, Georgia, serif; }
+#companion .desktop-guide { border-radius: 12px; background: linear-gradient(145deg, #d9edff, #c8e0f8); }
+#companion .phone-screen { border: 1px solid rgb(25 52 83 / .3); border-radius: 31px; background: linear-gradient(160deg, #245c83, #173754); box-shadow: 0 22px 34px rgb(14 43 69 / .25); }
+#companion .telegram-bubble { border: 1px solid rgb(113 168 190 / .2); border-radius: 17px 17px 17px 5px; background: rgb(255 255 255 / .82); box-shadow: 0 13px 24px rgb(30 79 107 / .1); backdrop-filter: blur(10px); }
+#companion .telegram-bubble b { color: #2983b5; }
+#companion .sync-path { color: #4c84a4; }
+#companion .sync-path i { height: 2px; border-radius: 3px; background: linear-gradient(90deg, #66a8cc, #ff9e81); }
+#companion .companion-boundaries span { border-top-color: rgb(83 140 165 / .32); }
+#companion .entry-flyout { border-radius: 14px; background: linear-gradient(125deg, #173d5e, #236486); }
+@media (prefers-reduced-motion: reduce) {
+  #companion *, #companion *::before, #companion *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* Desktop is a presentation canvas. The bottom of every chosen tab must be visible,
+   rather than hidden behind a disabled scrollbar. */
+@media (min-width: 901px) {
+  .view:not(.is-active) { display: none !important; }
+  .view.is-active { overflow: hidden !important; }
+
+  /* 00 — the complete experience, composed as one working object. */
+  #companion { display: grid !important; grid-template-rows: 112px minmax(0, 1fr) 38px; gap: 10px !important; }
+  #companion .companion-head { grid-template-columns: minmax(0, 1fr) 270px; align-items: center; gap: 26px; }
+  #companion .companion-head h1 { max-width: 700px; margin: 3px 0 5px; font-size: clamp(32px, 2.55vw, 44px); line-height: .96; }
+  #companion .companion-head > div > p:last-child { max-width: 760px; font-size: 13px; line-height: 1.34; }
+  #companion .companion-proof { display: grid; gap: 5px; padding: 14px 16px; border-radius: 18px; background: rgb(255 255 255 / .72); box-shadow: 0 12px 30px rgb(38 78 107 / .11); backdrop-filter: blur(12px); }
+  #companion .companion-proof span { color: var(--companion-blue); font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+  #companion .companion-proof strong { color: var(--companion-ink); font: 700 20px/1.08 Iowan Old Style, Georgia, serif; }
+  #companion .companion-proof small { color: #60758b; font-size: 11px; line-height: 1.3; }
+  #companion .companion-stage { min-height: 0; height: 100%; margin-top: 0; grid-template-columns: 276px minmax(0, 1fr); gap: 16px; }
+  #companion .add-practice, #companion .device-orbit { min-height: 0; height: 100%; box-sizing: border-box; }
+  #companion .add-practice { padding: 16px; }
+  #companion .add-practice h2 { margin: 2px 0 8px; max-width: 230px; font-size: 24px; }
+  #companion .add-practice form { gap: 5px 8px; }
+  #companion .add-practice label { font-size: 10px; }
+  #companion .add-practice select, #companion .add-practice input { min-height: 33px; font-size: 12px; }
+  #companion .add-practice .primary { min-height: 36px; margin-top: 1px; }
+  #companion .preview-reminder { min-height: 31px; margin-top: 5px; }
+  #companion .simulated-note { margin-top: 6px; }
+  #companion .device-orbit { min-height: 0; padding: 14px; grid-template-columns: minmax(325px, 1.25fr) minmax(150px, .53fr) minmax(185px, .72fr); gap: 10px; }
+  #companion .desktop-device { padding: 12px; }
+  #companion .desktop-content { min-height: 0; height: calc(100% - 24px); grid-template-columns: 1.04fr .96fr; padding: 11px 0 0; }
+  #companion .desktop-content > div:first-child { display: grid; align-content: center; padding: 13px; }
+  #companion .desktop-content h3 { margin: 4px 0 7px; font-size: 23px; }
+  #companion .desktop-guide { align-content: center; padding: 12px; }
+  #companion .guide-answer { font: 700 16px/1.1 Iowan Old Style, Georgia, serif; color: #173d61; }
+  #companion .mini-guide-action { width: max-content; padding: 0; border: 0; background: transparent; color: #155fb8; font: 700 11px/1.1 Avenir, system-ui, sans-serif; cursor: pointer; }
+  #companion .voice-cue { display: grid; gap: 3px; padding-top: 8px; border-top: 1px solid rgb(36 69 108 / .18); }
+  #companion .voice-cue b { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+  #companion .voice-cue span { font-size: 11px; line-height: 1.3; }
+  #companion .phone-screen { min-height: 0; height: min(82%, 300px); padding: 14px 12px; }
+  #companion .phone-time { margin-bottom: 18px; }
+  #companion .phone-screen h3 { margin: 4px 0 7px; font-size: 20px; }
+  #companion .phone-screen p { min-height: 0; font-size: 11px; }
+  #companion .phone-check { margin-top: 11px; }
+  #companion .telegram-bubble { padding: 12px; }
+  #companion .telegram-bubble p { font-size: 11px; }
+  #companion .sync-path { display: none; }
+  #companion .companion-boundaries { align-self: center; margin-top: 0; gap: 12px; font-size: 10px; }
+  #companion .companion-boundaries span { padding-top: 5px; }
+
+  /* 01 — course page and real guide are visible together, not one below another. */
+  #course { display: grid !important; grid-template-columns: minmax(0, .93fr) minmax(410px, 1.07fr); grid-template-rows: minmax(0, 1fr); gap: 18px !important; }
+  #course .course-hero { display: contents; }
+  #course .course-headline { display: contents !important; }
+  #course .course-headline > div { grid-column: 1; display: grid; align-content: center; }
+  #course .course-headline h1 { max-width: 610px; font-size: clamp(31px, 2.35vw, 42px) !important; }
+  #course .course-headline .lede { font-size: 14px !important; }
+  #course .course-actions { margin: 9px 0 !important; }
+  #course .course-clarifier { gap: 6px; }
+  #course .course-clarifier li { min-height: 46px; padding: 6px; font-size: 10px; }
+  #course .video-card { grid-column: 1; align-self: end; min-height: 0 !important; height: 205px; padding: 9px !important; }
+  #course .video-card iframe { height: 145px; }
+  #course .video-card a { margin-top: 6px; font-size: 11px; }
+  #course .thread-layout { grid-column: 2; grid-row: 1; display: block !important; min-height: 0; }
+  #course .guide-panel { display: grid !important; grid-template-rows: auto minmax(0, 1fr) auto auto auto; height: 100% !important; box-sizing: border-box; padding: 16px !important; border-radius: 20px; }
+  #course .guide-topline h2 { font-size: 29px !important; }
+  #course .chat-log { align-content: start; max-height: none !important; overflow: hidden; }
+  #course .message { max-width: 92% !important; padding: 11px 12px !important; }
+  #course .message p { font-size: 14px !important; }
+  #course .suggestions { display: grid; grid-template-columns: 1fr 1fr; }
+  #course .privacy-note { margin-top: 6px !important; }
+
+  /* 02 — a compact product screen, not an oversized manifesto. */
+  #practice { display: grid !important; grid-template-rows: 108px minmax(0, 1fr) 42px; gap: 10px !important; }
+  #practice .section-intro { grid-template-columns: 1.12fr .88fr; gap: 20px; align-items: end; }
+  #practice .section-intro > .eyebrow { margin-bottom: -9px !important; }
+  #practice .section-intro h1 { max-width: 620px; font-size: clamp(30px, 2.3vw, 40px) !important; }
+  #practice .section-intro .lede { font-size: 14px !important; }
+  #practice .practice-layout { min-height: 0; height: 100%; grid-template-columns: minmax(290px, .75fr) minmax(0, 1.25fr) !important; gap: 18px !important; }
+  #practice .phone-shell { min-height: 0 !important; height: 100%; box-sizing: border-box; padding: 15px !important; }
+  #practice .phone-shell h2 { margin: 8px 0; font-size: 27px; }
+  #practice .journal-card { min-height: 0; padding: 14px !important; }
+  #practice .practice-explainer { display: grid; grid-template-rows: auto auto auto 1fr; align-content: center; }
+  #practice .practice-explainer h2 { margin: 3px 0 10px !important; font-size: 27px !important; }
+  #practice .practice-explainer dl div { padding: 8px 0 !important; }
+  #practice .practice-explainer dd { font-size: 13px; line-height: 1.28; }
+  #practice .sync-card { margin-top: 10px !important; padding: 10px !important; }
+  #practice .voice-card { display: none; }
+  #practice .boundary-strip { display: grid; grid-template-columns: 250px 1fr; align-items: center; margin: 0 !important; padding: 8px 12px !important; font-size: 11px; }
+
+  /* 03 — type, timing and sample direction live in the first frame. */
+  #voice-studio { display: grid !important; grid-template-rows: 94px 290px minmax(0, 1fr); gap: 10px !important; }
+  #voice-studio .voice-studio-intro { grid-template-columns: 1fr 1fr; gap: 22px; }
+  #voice-studio .voice-studio-intro > .eyebrow { margin-bottom: -7px !important; }
+  #voice-studio .voice-studio-intro h1 { font-size: clamp(28px, 2.15vw, 38px) !important; }
+  #voice-studio .voice-studio-intro .lede { font-size: 14px !important; }
+  #voice-studio .studio-layout { min-height: 0; height: 290px; margin: 0 !important; }
+  #voice-studio .script-editor, #voice-studio .studio-controls { min-height: 0; box-sizing: border-box; padding: 13px !important; }
+  #voice-studio .studio-heading h2 { font-size: 20px !important; }
+  #voice-studio textarea { min-height: 0 !important; height: 112px !important; margin-top: 4px; }
+  #voice-studio .studio-controls h2 { margin: 5px 0 !important; }
+  #voice-studio .studio-controls label { margin-top: 5px !important; }
+  #voice-studio .timing-plan { margin-top: 8px; font-size: 12px; }
+  #voice-studio .voice-library { min-height: 0; height: 100%; box-sizing: border-box; margin: 0 !important; padding: 13px !important; overflow: hidden; }
+  #voice-studio .voice-library-grid { margin-top: 8px; }
+  #voice-studio .studio-voice { min-height: 65px !important; padding: 7px !important; }
+  #voice-studio .voice-ready { margin-top: 8px !important; padding: 7px 9px !important; }
+  #voice-studio .voice-audition { margin-top: 7px !important; }
+  #voice-studio .studio-boundary { display: none; }
+
+  /* 04 — prices belong only on this final decision slide. */
+  #offer { display: grid !important; grid-template-rows: 100px minmax(0, 1fr) 92px; gap: 10px !important; }
+  #offer .section-intro { grid-template-columns: 1fr 1fr; gap: 20px; }
+  #offer .section-intro > .eyebrow { margin-bottom: -8px !important; }
+  #offer .section-intro h1 { font-size: clamp(29px, 2.25vw, 39px) !important; }
+  #offer .section-intro .lede { font-size: 14px !important; }
+  #offer .package-grid { min-height: 0; height: 100%; margin: 0 !important; gap: 10px !important; }
+  #offer .package { min-height: 0 !important; height: 100%; box-sizing: border-box; padding: 13px !important; }
+  #offer .package h2 { margin: 4px 0 !important; font-size: 25px !important; }
+  #offer .package .price { margin: 4px 0 !important; font-size: 25px; }
+  #offer .package .timeline { margin: 0 !important; }
+  #offer .package ul { margin: 7px 0 !important; }
+  #offer .package li { margin-bottom: 3px !important; font-size: 11px !important; }
+  #offer .package .fineprint { margin: 7px 0 0; font-size: 10px; }
+  #offer .standalone-offer { display: none; }
+  #offer .next-step { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px 20px; min-height: 0; height: 92px; box-sizing: border-box; margin: 0 !important; padding: 12px 15px !important; }
+  #offer .next-step .course-label { grid-column: 1; margin: 0; }
+  #offer .next-step h2 { grid-column: 1; margin: 0; font-size: 20px; }
+  #offer .next-step > p:not(.course-label):not(.copy-status) { display: none; }
+  #offer .next-step button { grid-column: 2; grid-row: 1 / span 2; }
+  #offer .copy-status { display: none; }
+
+  /* These ID layouts are declared above; this must win over them when a tab is not selected. */
+  #companion.view:not(.is-active), #course.view:not(.is-active), #practice.view:not(.is-active), #voice-studio.view:not(.is-active), #insights.view:not(.is-active), #offer.view:not(.is-active) { display: none !important; }
+}

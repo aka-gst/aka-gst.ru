@@ -13,7 +13,10 @@
   };
 
   const setTrack = (track, { push = true } = {}) => {
-    if (!['work', 'play', 'stories'].includes(track)) return;
+    if (!['work', 'play', 'stories'].includes(track)) {
+      if (track) console.warn('[app] setTrack: раздела нет, значение отброшено:', track);
+      return;
+    }
     root.dataset.track = track;
     document.title = titles[track];
     const markKey = track === 'play' ? 'markPlay' : track === 'stories' ? 'markStories' : 'markWork';
@@ -39,17 +42,129 @@
     });
   });
 
+  // ── Якорь на раздел ВНУТРИ вкладки ────────────────────────────────
+  // Дефект с экрана Сергея, 6 сентября: он открыл /#masterskaya, а увидел
+  // «Игры» — вкладку, запомненную с прошлого захода. Раздел лежал в скрытой
+  // панели, поэтому браузеру было некуда прыгать, и человек решил, что
+  // Мастерской нет вовсе.
+  //
+  // Скрипт в шапке теперь выбирает вкладку по карте якорей ещё до отрисовки,
+  // а здесь вторая половина: довезти до раздела и повторить то же при смене
+  // хеша, когда страница не перезагружается.
+  // ── Раскрытие «ещё практикумы» ────────────────────────────────────
+  // Кнопка одна, но обработчик общий: следующее такое раскрытие не потребует
+  // ни строчки здесь — хватит атрибута в разметке. Всю плавность делает CSS
+  // (строка сетки едет от 0fr к 1fr), отсюда только состояние: иначе кадры
+  // считал бы главный поток и мы потеряли бы те самые 16.7 мс.
+  for (const кнопка of document.querySelectorAll('[data-more-open]')) {
+    const цель = document.getElementById(кнопка.dataset.moreOpen);
+    if (!цель) { console.warn('[app] нет блока с id', кнопка.dataset.moreOpen); continue; }
+    const тизер = кнопка.parentElement?.querySelector('.practicum-more-teaser');
+    кнопка.addEventListener('click', () => {
+      const открыто = цель.toggleAttribute('data-open');
+      кнопка.setAttribute('aria-expanded', String(открыто));
+      if (тизер) тизер.hidden = открыто;
+      цель.inert = !открыто;
+      цель.setAttribute('aria-hidden', String(!открыто));
+      цель.hidden = !открыто;
+    });
+    цель.inert = true;
+    цель.setAttribute('aria-hidden', 'true');
+    цель.hidden = true;
+    if (тизер) тизер.hidden = false;
+  }
+
+  const ВКЛАДОЧНЫЕ = ['#work', '#games', '#stories'];
+
+  // Прокрутка тут МГНОВЕННАЯ, и это не небрежность. Слово владельца от
+  // 31 августа 2026: «тут снова есть притягивание — уберите его вообще
+  // отовсюду и чтоб он больше не появлялся!!». Плавную самовольную
+  // прокрутку он читает как то же притягивание, и это уже третий заход.
+  // Сторож в verify.sh краснеет и на самом вызове, и на плавном режиме —
+  // я поймал себя именно им, а не памятью. Слова сюда не переписываю: он
+  // ищет их буквально, и объяснение покраснело бы вместе с нарушением.
+  const кЯкорю = (хеш) => {
+    if (!хеш || хеш.length < 2) return false;
+    let цель = null;
+    try {
+      цель = document.getElementById(decodeURIComponent(хеш.slice(1)));
+    } catch (e) {
+      console.warn('[app] негодный якорь в адресе, отброшен:', хеш);
+      return false;
+    }
+    if (!цель) return false;
+    const панель = цель.closest('[data-panel]');
+    if (панель && панель.dataset.panel !== root.dataset.track) {
+      setTrack(панель.dataset.panel, { push: false });
+    }
+    // Панель показалась только что: до следующего кадра её высота нулевая,
+    // и прокрутка уехала бы не туда. Два кадра — раскладка и отрисовка.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      // Цель может быть свёрнута по замыслу — сборники рассказов на главной
+      // раскрываются обложкой. Прыгать в невидимое некуда, поэтому везём к
+      // ближайшему видимому предку: человек окажется у нужного блока, а не
+      // наверху страницы, где он вообще не поймёт, куда попал.
+      let куда = цель;
+      while (куда && !куда.offsetParent && куда.parentElement) куда = куда.parentElement;
+      if (!куда) return;
+      // Отступ считаем сами: scroll-padding-top в CSS работает для прыжка по
+      // якорю самим браузером, а не для нашего расчёта, и без него заголовок
+      // встал бы под липкую шапку.
+      const шапка = parseFloat(getComputedStyle(root).getPropertyValue('--shapka')) || 71;
+      const y = куда.getBoundingClientRect().top + window.scrollY - шапка - 17;
+      window.scrollTo(0, Math.max(0, Math.round(y)));
+    }));
+    return true;
+  };
+
   setTrack(root.dataset.track || 'work', { push: false });
+  if (location.hash && !ВКЛАДОЧНЫЕ.includes(location.hash)) кЯкорю(location.hash);
   addEventListener('hashchange', () => {
-    if (location.hash === '#games') setTrack('play', { push: false });
-    if (location.hash === '#work') setTrack('work', { push: false });
-    if (location.hash === '#stories') setTrack('stories', { push: false });
+    if (location.hash === '#games') { setTrack('play', { push: false }); return; }
+    if (location.hash === '#work') { setTrack('work', { push: false }); return; }
+    if (location.hash === '#stories') { setTrack('stories', { push: false }); return; }
+    кЯкорю(location.hash);
   });
 
   // ── Живые метрики прогона ─────────────────────────────────────────
   // Страница уже собрана со снимком data/qa-metrics.json. Если CI успел
   // опубликовать более свежий отчёт — заменяем значения на месте.
   const FEED = 'https://aka-gst.github.io/local-agent-gateway/qa-metrics.json';
+
+  // BEGIN_QA_RUN_URL_POLICY
+  // GitHub Pages управляет содержимым живого отчёта, но не тем, куда сайт
+  // уводит человека. Разрешён только HTTPS-запуск Actions ровно нашего
+  // репозитория; схема, хост, соседний repo и другой раздел GitHub отвергаются.
+  // Браузерная копия build-политики из lib/qa-run-url.mjs. Тест прогоняет
+  // обе реализации по одним векторам, чтобы они не разошлись молча.
+  const trustedQaRunUrl = (value) => {
+    if (typeof value !== 'string') return null;
+    try {
+      const url = new URL(value);
+      if (
+        url.protocol !== 'https:' ||
+        url.hostname !== 'github.com' ||
+        url.port || url.username || url.password ||
+        !/^\/aka-gst\/local-agent-gateway\/actions\/runs\/[1-9]\d*\/?$/.test(url.pathname)
+      ) return null;
+      // Параметры и фрагмент отчёту не нужны: ссылка всегда ведёт на сам run.
+      url.search = '';
+      url.hash = '';
+      return url.href;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const applyTrustedQaRunUrl = (link, liveValue) => {
+    if (!link) return;
+    const initialRunUrl = trustedQaRunUrl(link.getAttribute('href'));
+    const liveRunUrl = trustedQaRunUrl(liveValue);
+    const runUrl = liveRunUrl || initialRunUrl;
+    if (runUrl) link.href = runUrl;
+    else link.removeAttribute('href');
+  };
+  // END_QA_RUN_URL_POLICY
 
   const formatMoment = (iso) => {
     const date = new Date(iso);
@@ -83,7 +198,7 @@
     if (version && report.project?.version) version.textContent = `v${report.project.version}`;
 
     const run = document.querySelector('[data-metric-run]');
-    if (run && report.commit?.run_url) run.href = report.commit.run_url;
+    applyTrustedQaRunUrl(run, report.commit?.run_url);
 
     if (stamp && report.generated_at) {
       stamp.setAttribute('datetime', report.generated_at);
@@ -422,18 +537,30 @@
       loading ? loading.then(start) : start();
     };
 
-    trigger.addEventListener('click', play);
+    // Сергей 6 сентября: «где ссылка? почему по картинке не переходит!!??»
+    // Картинка была кнопкой, и клик по ней играл ролик вместо того, чтобы
+    // открыть игру. Теперь это ссылка: клик уводит в игру, а ролик остаётся
+    // на наведении и на отдельной кнопке рядом.
+    //
+    // Поэтому клик по САМОЙ картинке ролик больше не запускает: иначе он
+    // начинал бы играть в тот момент, когда человек уже уходит со страницы.
+    if (trigger.tagName !== 'A') trigger.addEventListener('click', play);
     trigger.addEventListener('mouseenter', () => {
       if (window.matchMedia?.('(hover: hover)').matches) play();
     });
     trigger.addEventListener('focusin', play);
+    // Кнопка «показать переход» лежит РЯДОМ с картинкой, а не внутри неё:
+    // кнопка внутри ссылки — недопустимая разметка, и клик по ней достаётся
+    // то одному, то другому в зависимости от браузера.
+    for (const кнопка of document.querySelectorAll(`[data-quequest-play-for="${trigger.id}"]`)) {
+      кнопка.addEventListener('click', play);
+    }
     video.addEventListener('ended', () => {
       trigger.classList.remove('is-playing');
       trigger.classList.add('is-finished');
     });
   });
 })();
-
 // ── Рассказы на главной: обложка → сборник → текст в одной панели ──
 (() => {
   const panel = document.querySelector('.story-lead');
@@ -444,7 +571,36 @@
   const source = panel.querySelector('.story-source');
   const all = panel.querySelector('[data-story-all]');
   let currentCollection = null;
-  const closeReader = () => { if (reader) reader.hidden = true; };
+  let originButton = null;
+  let transitionToken = 0;
+  const closeReader = () => {
+    if (!reader || reader.hidden) return Promise.resolve();
+    const token = ++transitionToken;
+    reader.classList.remove('is-entering'); reader.classList.add('is-exiting');
+    return new Promise((resolve) => setTimeout(() => {
+      if (token !== transitionToken) return resolve();
+      reader.hidden = true; reader.classList.remove('is-exiting');
+      if (originButton?.isConnected) originButton.focus();
+      resolve();
+    }, window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 120 : 200));
+  };
+  reader?.addEventListener('animationend', (event) => {
+    if (reader.classList.contains('is-entering') && event.animationName !== 'story-reader-out') {
+      reader.classList.remove('is-entering');
+    }
+  });
+  // Мгновенный перенос к элементу. Плавную прокрутку сюда возвращать нельзя:
+  // владелец 31 августа 2026 — «уберите его вообще отовсюду и чтоб он больше
+  // не появлялся!!». Убрано именно ощущение самовольного скольжения, а не сам
+  // перенос: без переноса нажатие на телефоне выглядит как ничего — заголовок
+  // читалки встаёт на 870-й пиксель при окне 844.
+  // scroll-padding-top учитываем руками, потому что его знает scrollIntoView,
+  // а им пользоваться нельзя — он под запретом проверки.
+  const кПередвижению = (el) => {
+    if (!el) return;
+    const отступ = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+    scrollTo(0, Math.max(0, el.getBoundingClientRect().top + scrollY - отступ));
+  };
   const showCollection = (id) => {
     currentCollection = id;
     closeReader();
@@ -453,7 +609,7 @@
     all?.setAttribute('aria-expanded', 'false');
     if (all?.querySelector('b')) all.querySelector('b').textContent = '↓';
     const current = collections.find((collection) => collection.dataset.storyCollectionPanel === id);
-    requestAnimationFrame(() => current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    requestAnimationFrame(() => кПередвижению(current));
   };
   covers.forEach((cover) => cover.addEventListener('click', () => showCollection(cover.dataset.storyCollection)));
   all?.addEventListener('click', () => {
@@ -469,18 +625,27 @@
     const story = source?.querySelector(`[data-story-source="${CSS.escape(button.dataset.storyOpen)}"]`);
     if (!story || !reader) return;
     currentCollection = button.dataset.storyOpen.split('--')[0];
+    // Отдельная страница рассказа. Режем по ПЕРВОМУ «--»: слева сборник,
+    // справа slug, и он же — имя папки в /rasskazy/. Сверено по всем 23.
+    const ssylka = reader.querySelector('[data-story-permalink]');
+    if (ssylka) {
+      const slug = button.dataset.storyOpen.slice(button.dataset.storyOpen.indexOf('--') + 2);
+      ssylka.href = slug ? `/rasskazy/${slug}/` : '/rasskazy/';
+    }
     reader.querySelector('[data-story-reader-meta]').textContent = `Рассказ · ${story.dataset.storyBook}`;
     reader.querySelector('[data-story-reader-title]').textContent = story.dataset.storyTitle;
     reader.querySelector('[data-story-reader-copy]').innerHTML = story.innerHTML;
     collections.forEach((collection) => { collection.hidden = true; });
+    originButton = button;
     reader.hidden = false;
-    reader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    reader.classList.remove('is-exiting'); void reader.offsetWidth; reader.classList.add('is-entering');
+    requestAnimationFrame(() => { reader.querySelector('[data-story-reader-title]')?.focus(); кПередвижению(reader); });
   }));
   panel.querySelector('[data-story-back]')?.addEventListener('click', () => {
     if (currentCollection) showCollection(currentCollection);
     else closeReader();
   });
-  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }));
+  panel.querySelector('[data-story-top]')?.addEventListener('click', () => scrollTo(0, 0));
 })();
 
 // ── Заявка о партнёрстве ────────────────────────────────────────────
@@ -570,4 +735,183 @@
     низ.before(кнопка);
     показать(false);
   }
+})();
+
+// Живое окно шлюза: шаги проступают при ОТКРЫТИИ блока, а не при загрузке
+// страницы. Иначе анимация играет в свёрнутом <details> и человек, открыв его
+// через минуту, видит готовый список — то есть эффект тратится впустую.
+(() => {
+  const блок = document.querySelector('.gw-live');
+  if (!блок) return;                 // на других страницах его нет — это норма
+  const шагов = блок.querySelectorAll('.gw-steps li').length;
+  if (!шагов) {
+    // Громко для нас, молча для человека (правило 7р): блок подключили, а шаги
+    // размечать забыли — наша ошибка, и её должно быть видно проверкам.
+    console.warn('[gw] окно шлюза без шагов — разметка не заполнена');
+    return;
+  }
+  // Сергей 6 сентября: «сейчас один раз проиграло и встало». Теперь прогоны
+  // идут по кругу: доиграл — пять секунд подержали готовый список, затухание,
+  // следующий прогон. Следующий берётся случайно из ОСТАЛЬНЫХ, чтобы один и
+  // тот же не выпадал дважды подряд.
+  const прогоны = [...блок.querySelectorAll('.gw-run')];
+  const тихо = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let текущий = прогоны.findIndex((р) => !р.hidden);
+  if (текущий < 0) текущий = 0;
+  let таймер = null;
+
+  // Номер шага — переменной, а не правилом на каждый номер: шагов у прогонов
+  // от трёх до пяти.
+  for (const р of прогоны) {
+    [...р.querySelectorAll('.gw-steps li')].forEach((li, i) => li.style.setProperty('--gw-i', String(i)));
+  }
+
+  const длительность = (i) => {
+    const n = прогоны[i].querySelectorAll('.gw-steps li').length;
+    return (0.05 + (n - 1) * 0.6 + 0.34) * 1000;
+  };
+
+  const играть = (i) => {
+    прогоны.forEach((р, k) => { р.hidden = k !== i; р.classList.remove('uhodit'); });
+    блок.classList.remove('igraet');
+    void блок.offsetWidth;           // перезапуск анимации
+    блок.classList.add('igraet');
+    if (тихо || прогоны.length < 2) return;   // движения не просили — стоим на одном
+    clearTimeout(таймер);
+    таймер = setTimeout(() => {
+      прогоны[i].classList.add('uhodit');
+      таймер = setTimeout(() => {
+        // Следующий — любой, кроме нынешнего.
+        const k = (i + 1 + Math.floor(Math.random() * (прогоны.length - 1))) % прогоны.length;
+        if (блок.open) играть(k);
+      }, 400);
+    }, длительность(i) + 5000);
+  };
+
+  блок.addEventListener('toggle', () => {
+    clearTimeout(таймер);
+    if (!блок.open) { блок.classList.remove('igraet'); return; }
+    играть(текущий);
+  });
+})();
+
+// Строка терминала рядом с названием сайта: фразы, которые Сергей ловил и
+// записывал сам. Его правки: печатать по букве («как будто это программистская
+// такая штука»), слегка глитчить, менять реже — около полуминуты на фразу.
+//
+// Три варианта «видно, что пишет ИИ» переключаются адресом (?vid=a|b|v) —
+// чтобы снять кадры для выбора, не выкладывая сайт трижды. Выбирает Сергей,
+// не мы; до его слова живёт вариант «а».
+(() => {
+  const полоса = document.querySelector('[data-term]');
+  const данные = document.querySelector('[data-term-frazy]');
+  if (!полоса || !данные) return;
+
+  let фразы = [];
+  try { фразы = JSON.parse(данные.textContent); } catch { return; }
+  if (!Array.isArray(фразы) || !фразы.length) return;
+
+  const текст = полоса.querySelector('.hero-term-tekst');
+  const знак = полоса.querySelector('.hero-term-znak');
+  const значокС = полоса.querySelector('.hero-term-c');
+  if (!текст || !знак || !значокС) return;
+
+  // Сергей выбрал приставку «ии:» — вариант «в», навсегда. Робота в логотипе
+  // и значок слева не берём, поэтому и переключателя вариантов больше нет:
+  // мёртвые ветки в коде живут до первой правки и врут следующему читателю.
+  знак.textContent = 'ии:';
+
+  const тихо = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // «Злее всего то, что…» теперь идёт наравне с прочими: его условие «когда
+  // понятно, что это пишет ИИ» выполнено приставкой «ии:».
+
+  const БУКВА = 45;          // мс на символ: длинная фраза набирается за ~2.7 с
+  const ГЛИТЧ_НЕ_ЧАЩЕ = 4500;
+
+  // Порядок случайный — его слово «не, рандом». Подряд одну и ту же не
+  // показываем: два одинаковых появления читаются как зависшая страница.
+  let i = Math.floor(Math.random() * фразы.length);
+  const следующая = () => {
+    if (фразы.length < 2) return i;
+    let к = i;
+    while (к === i) к = Math.floor(Math.random() * фразы.length);
+    return к;
+  };
+  let печать = null;
+  let ждём = null;
+
+  // «(с)» — шутка Сергея: как будто фразы патентованные. Печатается ВМЕСТЕ с
+  // фразой, последними символами набора, а не появляется отдельно готовым:
+  // отдельное появление читалось бы как подпись, а не как часть строки.
+  // Полный цикл, как просил Сергей: набор по букве → фраза висит → стирание
+  // справа налево → пауза на пустоте → следующая. Прежняя простая смена
+  // читалась как подмена кадра, а не как то, что кто-то печатает.
+  const ЗНАЧОК = ' (с)';        // шутка про патентованные фразы ИИ
+  const СТЁРКА = 22;            // стираем быстрее, чем печатаем: набор — мысль, стирание — уборка
+  const ДЕРЖИМ = 22000;         // столько фраза висит целиком
+  const ПУСТО = 900;            // дыхание между фразами
+
+  const показать = (строка, к) => {
+    текст.textContent = строка.slice(0, Math.min(к, строка.length));
+    значокС.textContent = к > строка.length ? ЗНАЧОК.slice(0, к - строка.length) : '';
+  };
+
+  const шаг = (строка, от, до, скорость) => new Promise((готово) => {
+    let к = от;
+    полоса.dataset.nabor = '1';          // курсор виден только здесь
+    печать = setInterval(() => {
+      к += от < до ? 1 : -1;
+      показать(строка, к);
+      if (к === до) { clearInterval(печать); печать = null; delete полоса.dataset.nabor; готово(); }
+    }, скорость);
+  });
+
+  const пауза = (мс) => new Promise((г) => { ждём = setTimeout(г, мс); });
+
+  let живо = true;
+  const круг = async () => {
+    while (живо) {
+      const строка = фразы[i];
+      const всё = строка.length + ЗНАЧОК.length;
+      if (тихо) {
+        показать(строка, всё);
+        await пауза(ДЕРЖИМ);
+      } else {
+        await шаг(строка, 0, всё, БУКВА);
+        await пауза(ДЕРЖИМ);
+        await шаг(строка, всё, 0, СТЁРКА);
+        await пауза(ПУСТО);
+      }
+      i = следующая();
+    }
+  };
+
+  // Глитч редкий и короткий: раз в несколько секунд на четверть секунды, и
+  // только когда строка не пуста — на пустом месте дёргать нечего.
+  let глитч = тихо ? null : setInterval(() => {
+    if (!текст.textContent) return;
+    полоса.dataset.glitch = '1';
+    setTimeout(() => delete полоса.dataset.glitch, 300);
+  }, ГЛИТЧ_НЕ_ЧАЩЕ + Math.random() * 3500);
+
+  круг();
+
+  // Вкладку убрали — цикл останавливаем: печатать в невидимую страницу значит
+  // жечь батарею впустую. Вернулись — начинаем с чистой фразы.
+  document.addEventListener('visibilitychange', () => {
+    живо = !document.hidden;
+    clearInterval(печать); печать = null;
+    clearTimeout(ждём);
+    delete полоса.dataset.nabor;
+    if (глитч) { clearInterval(глитч); глитч = null; }
+    if (!document.hidden) {
+      показать(фразы[i], 0);
+      круг();
+      if (!тихо) глитч = setInterval(() => {
+        if (!текст.textContent) return;
+        полоса.dataset.glitch = '1';
+        setTimeout(() => delete полоса.dataset.glitch, 300);
+      }, ГЛИТЧ_НЕ_ЧАЩЕ + Math.random() * 3500);
+    }
+  });
 })();
