@@ -3,6 +3,15 @@
 /* data-orion-host-polish=20260909: the installed widget may repair only
    named live records. Never change every Tilda section's padding or layout. */
 html[data-orion-host-polish] body { max-width: 100%; overflow-x: hidden; }
+/* Пробовал форсировать бургер Tilda (rec287439237) в промежутке
+   480–950px вместо тесного переноса меню на две строки — рано или поздно
+   (в зависимости от ширины) это тянет за собой внутреннее состояние
+   виджета T228: то дублирует пункты, то протаскивает синюю подложку
+   скрытой выезжающей панели поверх шапки. Не нашёл способа заставить его
+   быть просто бургером снаружи, не трогая то, что Tilda сама решает
+   внутри. Откатил — родной перенос на два ряда в этом диапазоне остаётся
+   тесным, но ничего не течёт и не дублируется. Чтобы сделать по-нормальному,
+   нужен редактор Tilda, а не правка этого файла. */
 html[data-orion-host-polish] .t-btn,
 html[data-orion-host-polish] .t-btnflex,
 html[data-orion-host-polish] .tn-elem[data-elem-type="button"] .tn-atom { transition: transform .22s ease, box-shadow .22s ease, filter .22s ease !important; will-change: transform; }
