@@ -32,12 +32,12 @@ html[data-orion-host-polish] #rec283637377 .t-sociallinks__item a,
 html[data-orion-host-polish] #rec283637377 .t-sociallinks__svg { width: 42px !important; height: 42px !important; }
 
 /* Homepage recovery after the over-compressed 20260908 experiment.
-   Десктопная шапка поверх первого экрана (position:absolute) и с 12.09
-   высотой 100px (HTML-блок в шапке Tilda) — отступ героя обязан быть
-   таким же. Было 60: нижние 40px шапки закрывала картинка, меню и
-   «Оплатить» торчали в неё. Ниже 981px шапка в потоке — там 0, см. ниже. */
+   Шапка (rec3822213101, с 30.09) стоит в потоке, t228__positionstatic,
+   высотой 100px — отступ героя поверх неё не нужен. Раньше висел старый
+   блок поверх страницы (positionabsolute) и отступ был 60 при шапке 100:
+   нижние 40px шапки закрывала картинка, меню и «Оплатить» торчали в неё. */
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 {
-  padding-top: 100px !important;
+  padding-top: 0 !important;
   padding-bottom: 0 !important;
   overflow: visible !important;
 }
@@ -72,27 +72,32 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec9088
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-container,
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__col_center,
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__wrapper {
-    height: calc(100svh - 64px) !important;
-    min-height: calc(100svh - 64px) !important;
+    height: calc(100svh - 91px) !important;
+    min-height: calc(100svh - 91px) !important;
   }
 }
-/* 981–1199px: восемь пунктов не помещаются в строку и переносятся на
-   вторую (замер на 990px: нужно 785px, есть 624). Логотип уже, шрифт
-   и промежутки меньше — ступенями, чтобы на широкой части не мельчить. */
-@media screen and (min-width: 981px) and (max-width: 1199px) {
+/* 981–1479px: восемь пунктов не помещаются в строку. Замер на новом
+   блоке (30.09): при 16px им нужно 970px, в одну строку влезает только
+   с ~1480px. Логотип уже, шрифт и промежутки меньше — ступенями, каждая
+   проверена на своей самой узкой ширине с запасом ≥30px. */
+@media screen and (min-width: 981px) and (max-width: 1479px) {
   html[data-orion-host-polish] #t-header #rec3822213101 .t228__leftside img { width: 110px !important; min-width: 0 !important; max-width: 110px !important; }
 }
 @media screen and (min-width: 981px) and (max-width: 1023px) {
-  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 5px !important; }
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 4px !important; }
   html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item .t-menu__link-item { font-size: 12px !important; }
 }
 @media screen and (min-width: 1024px) and (max-width: 1119px) {
-  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 5px !important; }
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 4px !important; }
   html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item .t-menu__link-item { font-size: 13px !important; }
 }
-@media screen and (min-width: 1120px) and (max-width: 1199px) {
-  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 8px !important; }
+@media screen and (min-width: 1120px) and (max-width: 1279px) {
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 6px !important; }
   html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item .t-menu__link-item { font-size: 14px !important; }
+}
+@media screen and (min-width: 1280px) and (max-width: 1479px) {
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 6px !important; }
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item .t-menu__link-item { font-size: 15px !important; }
 }
 /* The live Tilda animation can stay at its hidden initial frame in a
    backgrounded or throttled tab. Hero content is essential, so it must not
@@ -109,7 +114,9 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec9088
 @media (min-width:961px) {
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__col-left {
     position: relative !important;
-    transform: translateY(-96px) !important;
+    /* -96 было под старую шапку поверх героя; со шапкой в потоке
+       заголовок прилипал к ней (4px). -48 даёт ~50px воздуха. */
+    transform: translateY(-48px) !important;
   }
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .orion-hero-left-action {
     /* Раньше стояла на absolute и подгонялась под высоту соседней колонки
@@ -421,8 +428,8 @@ html[data-orion-host-polish] #t-header > .orion-mobile-menu-duplicate {
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-container,
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__col_center,
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__wrapper {
-    height: calc(100svh - 64px) !important;
-    min-height: calc(100svh - 64px) !important;
+    height: calc(100svh - 91px) !important;
+    min-height: calc(100svh - 91px) !important;
   }
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec1773853311 .t522__right-tablewrapper {
     display: flex !important;
