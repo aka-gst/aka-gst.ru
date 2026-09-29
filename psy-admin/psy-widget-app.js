@@ -1,13 +1,13 @@
-import { appendVoiceInputResult, configureSpeechUtterance, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-25";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-25";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-25";
+import { appendVoiceInputResult, configureSpeechUtterance, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-26";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-26";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-26";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260913-25&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260913-26&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
 
 // Правка хедера и заголовка героя переехала в отдельный, не-модульный
