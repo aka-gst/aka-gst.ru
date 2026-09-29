@@ -50,13 +50,19 @@ function applyHostPagePolish() {
     if (index > 1 && !image.hasAttribute("fetchpriority")) image.loading = "lazy";
   });
 
+  // Раньше кнопка "Расписание центра" подгонялась JS под высоту правой
+  // колонки (position:absolute + вычисленный --orion-hero-action-top).
+  // При заголовке на 5-6 строк это либо клало кнопку поверх текста, либо
+  // отрывало её от заголовка на непредсказуемую высоту — визуально «кнопки
+  // на разной высоте». Теперь кнопка просто в обычном потоке сразу под
+  // заголовком (CSS: margin-top в widget.css) — она никогда не наедет на
+  // текст и всегда на одном и том же расстоянии от него, вне зависимости
+  // от длины заголовка и того, что делает правая колонка.
   const hero = document.querySelector('#allrecords[data-tilda-page-id="17421901"] #rec908825596');
   const heroLeft = hero?.querySelector(".t1120__col-left");
   const heroTitle = heroLeft?.querySelector(".t1120__title");
-  const heroButtons = hero?.querySelector(".t1120__buttons");
-  const registerButton = heroButtons?.querySelector(".t-btnflex_type_button");
   const scheduleButton = hero?.querySelector(".t-btnflex_type_button2");
-  if (heroLeft && heroTitle && heroButtons && registerButton && scheduleButton) {
+  if (heroLeft && heroTitle && scheduleButton) {
     let leftAction = heroLeft.querySelector(".orion-hero-left-action");
     if (!leftAction) {
       leftAction = document.createElement("div");
@@ -64,27 +70,6 @@ function applyHostPagePolish() {
       heroTitle.insertAdjacentElement("afterend", leftAction);
     }
     if (scheduleButton.parentElement !== leftAction) leftAction.append(scheduleButton);
-
-    const alignHeroActions = () => {
-      leftAction.style.removeProperty("--orion-hero-action-top");
-      if (!window.matchMedia("(min-width: 961px)").matches) return;
-      window.requestAnimationFrame(() => {
-        const leftBox = heroLeft.getBoundingClientRect();
-        const registerBox = registerButton.getBoundingClientRect();
-        const titleBox = heroTitle.getBoundingClientRect();
-        // Выравнивать по кнопке регистрации, но не выше конца заголовка:
-        // длинный заголовок (перенос строк на некоторых ширинах) иначе
-        // затягивает кнопку поверх последней строки текста.
-        const alignedTop = registerBox.top - leftBox.top;
-        const belowTitleTop = titleBox.bottom - leftBox.top + 32;
-        leftAction.style.setProperty("--orion-hero-action-top", `${Math.round(Math.max(alignedTop, belowTitleTop))}px`);
-      });
-    };
-    alignHeroActions();
-    if (!window.__orionHeroActionsBound) {
-      window.__orionHeroActionsBound = true;
-      window.addEventListener("resize", alignHeroActions, { passive: true });
-    }
   }
 
   if (/^\/pweducation\/?$/i.test(window.location.pathname) && !document.querySelector(".orion-polish-homebar")) {

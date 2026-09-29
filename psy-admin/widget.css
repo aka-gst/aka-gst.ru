@@ -55,12 +55,16 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec9088
     transform: translateY(-96px) !important;
   }
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .orion-hero-left-action {
-    position: absolute !important;
-    top: var(--orion-hero-action-top, calc(100% + 32px)) !important;
-    right: 0 !important;
-    left: 0 !important;
-    display: flex !important;
-    justify-content: flex-start !important;
+    /* Раньше стояла на absolute и подгонялась под высоту соседней колонки
+       кнопкой JS — при длинном заголовке (перенос на 5-6 строк) это то
+       клало кнопку поверх текста, то отрывало её от заголовка на разную
+       высоту относительно правой колонки. Обычный поток: кнопка всегда
+       сразу под своим заголовком, никогда не наезжает и не гуляет по
+       высоте — просто не выровнена день в день с правой кнопкой, когда
+       тексты разной длины, и это нормально для двух независимых колонок. */
+    margin-top: 32px;
+    display: flex;
+    justify-content: flex-start;
   }
   html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .orion-hero-left-action .t-btn {
     width: min(100%, 360px) !important;
