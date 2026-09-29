@@ -31,9 +31,13 @@ html[data-orion-host-polish] a[style*="#ff7e66"] { color: #1f00a6 !important; }
 html[data-orion-host-polish] #rec283637377 .t-sociallinks__item a,
 html[data-orion-host-polish] #rec283637377 .t-sociallinks__svg { width: 42px !important; height: 42px !important; }
 
-/* Homepage recovery after the over-compressed 20260908 experiment. */
+/* Homepage recovery after the over-compressed 20260908 experiment.
+   Десктопная шапка поверх первого экрана (position:absolute) и с 12.09
+   высотой 100px (HTML-блок в шапке Tilda) — отступ героя обязан быть
+   таким же. Было 60: нижние 40px шапки закрывала картинка, меню и
+   «Оплатить» торчали в неё. Ниже 981px шапка в потоке — там 0, см. ниже. */
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 {
-  padding-top: 60px !important;
+  padding-top: 100px !important;
   padding-bottom: 0 !important;
   overflow: visible !important;
 }
@@ -43,8 +47,52 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec9088
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-container,
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__col_center,
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__wrapper {
-  height: calc(100svh - 60px) !important;
-  min-height: calc(100svh - 60px) !important;
+  height: calc(100svh - 100px) !important;
+  min-height: calc(100svh - 100px) !important;
+}
+
+/* Шапка. В Tilda: мобильное меню rec287439237 до 980px включительно,
+   десктопное rec3822213101 от 981px (штатный порог бургера у T228).
+   Мобильная полоса белая, как десктопная — шапка одного цвета везде. */
+@media (max-width:980px) {
+  html[data-orion-host-polish] #t-header > #rec287439237,
+  html[data-orion-host-polish] #t-header > #rec287439237 .tmenu-mobile {
+    background-color: #ffffff !important;
+  }
+  html[data-orion-host-polish] #t-header > #rec287439237 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 {
+    padding-top: 0 !important;
+  }
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-cover,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-cover__carrier,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-cover__filter,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-container,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__col_center,
+  html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t1120__wrapper {
+    height: calc(100svh - 64px) !important;
+    min-height: calc(100svh - 64px) !important;
+  }
+}
+/* 981–1199px: восемь пунктов не помещаются в строку и переносятся на
+   вторую (замер на 990px: нужно 785px, есть 624). Логотип уже, шрифт
+   и промежутки меньше — ступенями, чтобы на широкой части не мельчить. */
+@media screen and (min-width: 981px) and (max-width: 1199px) {
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__leftside img { width: 110px !important; min-width: 0 !important; max-width: 110px !important; }
+}
+@media screen and (min-width: 981px) and (max-width: 1023px) {
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 5px !important; }
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item .t-menu__link-item { font-size: 12px !important; }
+}
+@media screen and (min-width: 1024px) and (max-width: 1119px) {
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 5px !important; }
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item .t-menu__link-item { font-size: 13px !important; }
+}
+@media screen and (min-width: 1120px) and (max-width: 1199px) {
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item { padding: 0 8px !important; }
+  html[data-orion-host-polish] #t-header #rec3822213101 .t228__list_item .t-menu__link-item { font-size: 14px !important; }
 }
 /* The live Tilda animation can stay at its hidden initial frame in a
    backgrounded or throttled tab. Hero content is essential, so it must not

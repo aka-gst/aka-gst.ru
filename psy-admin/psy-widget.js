@@ -36,8 +36,12 @@ function applyHostPagePolish() {
   // rec300329466 (тот же t-screenmin-480px, те же 9 пунктов меню),
   // появившаяся в Tilda-проекте после 7 сентября 2026. Прячем её прямо —
   // без гадания, без зависимости от того, что и когда отрисовала Tilda.
+  // В черновике Tilda старый блок rec300329466 уже выключен; после
+  // публикации шапки rec3822213101 останется единственным десктопным меню
+  // и прятать его будет нельзя. Прячем только пока оба на странице.
+  const originalMenu = document.getElementById("rec300329466");
   const duplicateMenu = document.getElementById("rec3822213101");
-  if (duplicateMenu) duplicateMenu.style.display = "none";
+  if (originalMenu && duplicateMenu) duplicateMenu.style.display = "none";
 
   document.querySelectorAll(".t-title,.t-name,.t-descr,[field],.orion-review-hint").forEach((element) => {
     const text = element.textContent.replace(/\s+/g, " ").trim();
