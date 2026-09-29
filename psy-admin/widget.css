@@ -59,6 +59,21 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec9088
   min-height: calc(100svh - 100px) !important;
 }
 
+/* Шапка прилипает к верху экрана. Без этого она уезжает с прокруткой, а
+   Chrome при перезагрузке возвращает прежнюю прокрутку — человек видит
+   страницу вовсе без шапки (жалоба 30.09). sticky мешал overflow:hidden
+   у #allrecords: clip режет так же, но не делает обёртку прокручиваемой.
+   Не для старой закэшированной главной — там прозрачное меню поплыло бы
+   поверх всего сайта. */
+html[data-orion-host-polish]:not(:has(#rec300329466)) #allrecords[data-tilda-page-id="17421901"] {
+  overflow: clip !important;
+}
+html[data-orion-host-polish]:not(:has(#rec300329466)) #allrecords[data-tilda-page-id="17421901"] > #t-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 990 !important;
+}
+
 /* Шапка. В Tilda: мобильное меню rec287439237 до 980px включительно,
    десктопное rec3822213101 от 981px (штатный порог бургера у T228).
    Мобильная полоса белая, как десктопная — шапка одного цвета везде. */
