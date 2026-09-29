@@ -41,6 +41,14 @@ html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec9088
   padding-bottom: 0 !important;
   overflow: visible !important;
 }
+/* Страховка: у кого в кэше браузера ещё старая главная (до 30.09), там
+   шапка rec300329466 висит поверх героя — ей нужен отступ, иначе меню
+   ложится прямо на картинку. */
+@media (min-width: 981px) {
+  html[data-orion-host-polish]:has(#rec300329466) #allrecords[data-tilda-page-id="17421901"] #rec908825596 {
+    padding-top: 100px !important;
+  }
+}
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-cover,
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-cover__carrier,
 html[data-orion-host-polish] #allrecords[data-tilda-page-id="17421901"] #rec908825596 .t-cover__filter,
