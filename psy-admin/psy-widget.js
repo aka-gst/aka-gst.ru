@@ -1,13 +1,98 @@
-import { appendVoiceInputResult, configureSpeechUtterance, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260909-08";
-import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260909-08";
+import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-24";
+import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-24";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-24";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
-stylesheet.href = new URL("./widget.css?v=psy-widget-20260909-08&theme=orion-blue-20260908", import.meta.url).href;
+stylesheet.href = new URL("./widget.css?v=psy-widget-20260913-24&theme=orion-blue-20260908", import.meta.url).href;
 document.head.append(stylesheet);
+
+function applyHostPagePolish() {
+  const isLiveOrion = /(^|\.)orion-center\.ru$/i.test(window.location.hostname);
+  const isLocalDemo = /^(127\.0\.0\.1|localhost)$/i.test(window.location.hostname) && /^\/psy-admin\//i.test(window.location.pathname);
+  if (!isLiveOrion && !isLocalDemo) return;
+  document.documentElement.dataset.orionHostPolish = "20260909";
+
+  const headerMenuRecords = [...document.querySelectorAll("#t-header > .r")]
+    .filter((record) => record.querySelector(".tmenu-mobile"));
+  headerMenuRecords.forEach((record) => {
+    record.classList.add("orion-mobile-menu-record");
+    record.classList.remove("orion-mobile-menu-duplicate");
+  });
+  if (window.matchMedia("(max-width: 980px)").matches) {
+    const visibleMenus = headerMenuRecords.filter((record) => record.getBoundingClientRect().height > 0);
+    visibleMenus.slice(0, -1).forEach((record) => record.classList.add("orion-mobile-menu-duplicate"));
+  }
+
+  document.querySelectorAll(".t-title,.t-name,.t-descr,[field],.orion-review-hint").forEach((element) => {
+    const text = element.textContent.replace(/\s+/g, " ").trim();
+    if (/^Отзывы клиентов\s*❤️?$/iu.test(text)) element.textContent = "Отзывы";
+    if (/^Листайте отзывы$/iu.test(text)) element.remove();
+  });
+
+  document.querySelectorAll("img").forEach((image, index) => {
+    image.decoding = "async";
+    if (index > 1 && !image.hasAttribute("fetchpriority")) image.loading = "lazy";
+  });
+
+  const hero = document.querySelector('#allrecords[data-tilda-page-id="17421901"] #rec908825596');
+  const heroLeft = hero?.querySelector(".t1120__col-left");
+  const heroTitle = heroLeft?.querySelector(".t1120__title");
+  const heroButtons = hero?.querySelector(".t1120__buttons");
+  const registerButton = heroButtons?.querySelector(".t-btnflex_type_button");
+  const scheduleButton = hero?.querySelector(".t-btnflex_type_button2");
+  if (heroLeft && heroTitle && heroButtons && registerButton && scheduleButton) {
+    let leftAction = heroLeft.querySelector(".orion-hero-left-action");
+    if (!leftAction) {
+      leftAction = document.createElement("div");
+      leftAction.className = "orion-hero-left-action";
+      heroTitle.insertAdjacentElement("afterend", leftAction);
+    }
+    if (scheduleButton.parentElement !== leftAction) leftAction.append(scheduleButton);
+
+    const alignHeroActions = () => {
+      leftAction.style.removeProperty("--orion-hero-action-top");
+      if (!window.matchMedia("(min-width: 961px)").matches) return;
+      window.requestAnimationFrame(() => {
+        const leftBox = heroLeft.getBoundingClientRect();
+        const registerBox = registerButton.getBoundingClientRect();
+        const titleBox = heroTitle.getBoundingClientRect();
+        // Выравнивать по кнопке регистрации, но не выше конца заголовка:
+        // длинный заголовок (перенос строк на некоторых ширинах) иначе
+        // затягивает кнопку поверх последней строки текста.
+        const alignedTop = registerBox.top - leftBox.top;
+        const belowTitleTop = titleBox.bottom - leftBox.top + 32;
+        leftAction.style.setProperty("--orion-hero-action-top", `${Math.round(Math.max(alignedTop, belowTitleTop))}px`);
+      });
+    };
+    alignHeroActions();
+    if (!window.__orionHeroActionsBound) {
+      window.__orionHeroActionsBound = true;
+      window.addEventListener("resize", alignHeroActions, { passive: true });
+    }
+  }
+
+  if (/^\/pweducation\/?$/i.test(window.location.pathname) && !document.querySelector(".orion-polish-homebar")) {
+    const nav = document.createElement("nav");
+    nav.className = "orion-polish-homebar";
+    nav.setAttribute("aria-label", "Навигация центра Орион-С");
+    nav.innerHTML = '<a class="orion-polish-homebar__brand" href="/">Орион-С</a><a href="/">Главная</a><a href="/schedule">Расписание</a><a href="/consultation">Психологи</a><a href="/contacts">Контакты</a>';
+    document.body.prepend(nav);
+  }
+
+  if (!window.__orionHostPolishResizeBound) {
+    window.__orionHostPolishResizeBound = true;
+    window.addEventListener("resize", applyHostPagePolish, { passive: true });
+  }
+}
+
+applyHostPagePolish();
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyHostPagePolish, { once: true });
+window.setTimeout(applyHostPagePolish, 800);
+window.setTimeout(applyHostPagePolish, 1800);
 
 const mount = document.createElement("div");
 mount.innerHTML = `
@@ -24,6 +109,7 @@ mount.innerHTML = `
           <button class="psy-widget-close" type="button" aria-label="Закрыть помощника">×</button>
         </div>
       </header>
+      <div class="psy-widget-scroll">
       <div class="psy-widget-evaluation">
         <label for="psy-widget-evaluation-select">Частые вопросы</label>
         <select class="psy-widget-evaluation-select" id="psy-widget-evaluation-select">
@@ -82,13 +168,14 @@ mount.innerHTML = `
           <small>После выбора и согласования услуги</small>
         </a>
       </section>
+      <p class="psy-widget-voice-status" aria-live="polite"></p>
+      </div>
       <form class="psy-widget-form">
         <label class="sr-only" for="psy-widget-question">Вопрос помощнику</label>
         <input id="psy-widget-question" maxlength="500" autocomplete="off" placeholder="Например: где посмотреть расписание?" required>
         <button class="psy-widget-mic" type="button" aria-label="Задать вопрос голосом" aria-pressed="false">🎙</button>
         <button type="submit">Спросить</button>
       </form>
-      <p class="psy-widget-voice-status" aria-live="polite"></p>
     </aside>
   </section>`;
 document.body.append(mount);
@@ -127,6 +214,81 @@ const handoffSubject = handoffForm.querySelector("[name='subject']");
 const handoffSubjectLabel = handoffForm.querySelector("[data-handoff-subject-label]");
 let recognition = null;
 let listening = false;
+
+let triggerPositionFrame = 0;
+function scheduleTriggerPosition() {
+  if (triggerPositionFrame) return;
+  triggerPositionFrame = window.requestAnimationFrame(() => {
+    triggerPositionFrame = 0;
+    positionMobileTrigger();
+  });
+}
+
+function positionMobileTrigger() {
+  trigger.style.removeProperty("--psy-widget-mobile-bottom");
+  trigger.style.removeProperty("--psy-widget-mobile-left");
+  trigger.style.removeProperty("--psy-widget-mobile-right");
+  if (!window.matchMedia("(max-width: 620px)").matches || state.open) return;
+
+  const triggerSize = Math.max(44, Math.round(trigger.getBoundingClientRect().width || 52));
+  const safeBottom = 16;
+  const sideInset = 12;
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const protectedRects = [];
+
+  const protectedSelectors = [
+    "#rec908825596 .t-btnflex",
+    "#rec282570514 [data-elem-type='text']",
+    "#rec282570514 [data-elem-type='button']",
+    "#rec283637376 .t567__descr",
+    "#rec283637377 a",
+    "#rec504823956 iframe",
+  ];
+  document.querySelectorAll(protectedSelectors.join(","))
+    .forEach((node) => {
+      if (node.closest(".psy-widget") || ["SCRIPT", "STYLE"].includes(node.tagName)) return;
+      const box = node.getBoundingClientRect();
+      if (box.bottom < 0 || box.top > viewportHeight || box.width === 0 || box.height === 0) return;
+      if (node.matches("a,button,input,select,textarea,iframe") || node.closest("[data-elem-type='button']")) {
+        protectedRects.push(box);
+        return;
+      }
+      if (!node.textContent.replace(/\s+/g, " ").trim()) return;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      protectedRects.push(...range.getClientRects());
+    });
+
+  const overlapScore = (candidate) => protectedRects.reduce((sum, rect) => {
+    const padded = { left: rect.left - 6, top: rect.top - 6, right: rect.right + 6, bottom: rect.bottom + 6 };
+    return sum + Math.max(0, Math.min(candidate.right, padded.right) - Math.max(candidate.left, padded.left))
+      * Math.max(0, Math.min(candidate.bottom, padded.bottom) - Math.max(candidate.top, padded.top));
+  }, 0);
+
+  const bottoms = [];
+  for (let bottom = safeBottom; bottom <= Math.max(safeBottom, viewportHeight - triggerSize - 76); bottom += 68) bottoms.push(bottom);
+  const candidates = ["right", "left"].flatMap((side) => bottoms.map((bottom) => {
+    const left = side === "right" ? viewportWidth - sideInset - triggerSize : sideInset;
+    return { side, bottom, left, right: left + triggerSize, top: viewportHeight - bottom - triggerSize, bottomEdge: viewportHeight - bottom };
+  }));
+  let best = candidates[0];
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (const candidate of candidates) {
+    const score = overlapScore({ left: candidate.left, right: candidate.right, top: candidate.top, bottom: candidate.bottomEdge });
+    if (score < bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+    if (score === 0) break;
+  }
+
+  trigger.style.setProperty("--psy-widget-mobile-bottom", `${best.bottom}px`);
+  trigger.style.setProperty("--psy-widget-mobile-left", best.side === "left" ? `${sideInset}px` : "auto");
+  trigger.style.setProperty("--psy-widget-mobile-right", best.side === "right" ? `${sideInset}px` : "auto");
+  trigger.dataset.dockSide = best.side;
+  trigger.dataset.overlapScore = String(Math.round(bestScore));
+}
 let voiceInputSession = createVoiceInputSession();
 let recognitionRestartTimer = null;
 // Помощник не закрывает человеку страницу сам: на любой ширине он появляется
@@ -134,13 +296,58 @@ let recognitionRestartTimer = null;
 let state = createWidgetState();
 let conversationContext = {};
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const replyAudio = new Audio();
+replyAudio.preload = "auto";
 const voiceCapabilities = {
   recognitionAvailable: Boolean(Recognition),
-  speechAvailable: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
+  speechAvailable: typeof replyAudio.play === "function",
 };
 const widgetPublicUrl = (value) => resolveWidgetPublicUrl(value, import.meta.url);
 
-function appendMessage(role, answer) {
+function handoffKindFor(answer) {
+  const context = [answer.title, answer.text, answer.url, answer.action?.url]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (/аренд|зал|кабинет|services/.test(context)) return "rental";
+  if (/семинар|программ|курс|обуч|расписан|клуб|мероприят|schedule|psyclub|pweducation/.test(context)) return "seminar";
+  return "specialist";
+}
+
+function openHandoffFor(answer) {
+  handoffKind.value = handoffKindFor(answer);
+  renderHandoffMode();
+  handoffSubject.value = answer.title || "";
+  handoffForm.hidden = false;
+  handoffToggle.setAttribute("aria-expanded", "true");
+  handoffToggle.textContent = "Скрыть форму";
+  handoffForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  handoffSubject.focus({ preventScroll: true });
+}
+
+function appendSupportActions(article, answer) {
+  if (answer.kind === "crisis" || answer.kind === "success") return;
+  const area = document.createElement("div");
+  area.className = "psy-widget-followup-actions";
+  const actions = document.createElement("div");
+  actions.className = "psy-widget-followup-buttons";
+  const booking = document.createElement("button");
+  booking.type = "button";
+  booking.dataset.supportAction = "booking";
+  booking.textContent = "Помочь записаться";
+  booking.addEventListener("click", () => openHandoffFor(answer));
+  const payment = document.createElement("a");
+  payment.dataset.supportAction = "payment";
+  payment.href = "https://orion-center.ru/payment";
+  payment.target = "_blank";
+  payment.rel = "noopener noreferrer";
+  payment.textContent = "Помочь оплатить";
+  actions.append(booking, payment);
+  area.append(actions);
+  article.append(area);
+}
+
+function appendMessage(role, answer, { supportActions = false } = {}) {
   const article = document.createElement("article");
   article.className = `psy-widget-message ${role} ${answer.kind || ""}`;
   if (answer.leadIn) {
@@ -187,6 +394,7 @@ function appendMessage(role, answer) {
     followUp.append(question);
     article.append(followUp);
   }
+  if (role === "assistant" && supportActions) appendSupportActions(article, answer);
   messages.append(article);
   article.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -203,6 +411,7 @@ function render() {
   fullScreenButton.setAttribute("aria-pressed", String(state.fullScreen));
   if (state.open && document.activeElement === trigger) questionInput.focus({ preventScroll: true });
   if (state.returnFocusToTrigger) trigger.focus();
+  scheduleTriggerPosition();
 }
 
 function transition(action) {
@@ -256,39 +465,45 @@ function stopListening({ resetDraft = true } = {}) {
 
 function stopVoice({ announce = true } = {}) {
   stopListening();
-  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  replyAudio.pause();
+  replyAudio.currentTime = 0;
   setVoicePlaying(false);
   if (announce) setVoiceStatus("Голос остановлен.");
 }
 
 function voiceIsPlaying() {
-  return root.dataset.voicePlaying === "true" || Boolean(window.speechSynthesis?.speaking);
+  return root.dataset.voicePlaying === "true" || !replyAudio.paused;
 }
 
 function voiceIsActive() {
   return listening || voiceIsPlaying();
 }
 
-async function speakReply(text) {
+async function speakReply(answer, question) {
   const presentation = widgetPresentation(window.innerWidth, voiceCapabilities);
-  const spokenText = sanitizeSpokenText(text);
-  if (!presentation.voice.shouldSpeakReply || !spokenText) return;
+  const clip = resolveVoiceClip({ question, answer });
+  if (!presentation.voice.shouldSpeakReply || !clip?.src) return;
   stopVoice({ announce: false });
-  const utterance = configureSpeechUtterance(new SpeechSynthesisUtterance(spokenText));
-  utterance.addEventListener("start", () => {
-    setVoicePlaying(true);
-    setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
-  }, { once: true });
-  utterance.addEventListener("end", () => {
+  replyAudio.src = new URL(clip.src, import.meta.url).href;
+  replyAudio.currentTime = 0;
+  setVoicePlaying(true);
+  setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
+  try {
+    await replyAudio.play();
+  } catch {
     setVoicePlaying(false);
-    setVoiceStatus("");
-  }, { once: true });
-  utterance.addEventListener("error", () => {
-    setVoicePlaying(false);
-    setVoiceStatus("Ответ показан текстом: браузеру не удалось включить озвучивание.");
-  }, { once: true });
-  window.speechSynthesis.speak(utterance);
+    setVoiceStatus("Ответ показан текстом. Нажмите микрофон или задайте следующий вопрос, чтобы продолжить.");
+  }
 }
+
+replyAudio.addEventListener("ended", () => {
+  setVoicePlaying(false);
+  setVoiceStatus("");
+});
+replyAudio.addEventListener("error", () => {
+  setVoicePlaying(false);
+  setVoiceStatus("Ответ показан текстом: аудиофраза временно недоступна.");
+});
 
 async function ask(question, askedByVoice = false) {
   const value = question.trim();
@@ -313,8 +528,8 @@ async function ask(question, askedByVoice = false) {
     }
   }
   conversationContext = nextConversationContext(result);
-  appendMessage("assistant", result);
-  void speakReply(result.spokenText || result.text);
+  appendMessage("assistant", result, { supportActions: true });
+  void speakReply(result, value);
   if (askedByVoice && !voiceCapabilities.speechAvailable) {
     setVoiceStatus(widgetPresentation(window.innerWidth, voiceCapabilities, true).voice.fallbackMessage);
   }
@@ -355,6 +570,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && state.open) transition("escape");
 });
 window.addEventListener("resize", render);
+window.addEventListener("scroll", scheduleTriggerPosition, { passive: true });
 questionForm.addEventListener("submit", (event) => {
   event.preventDefault();
   void ask(questionInput.value, false);
