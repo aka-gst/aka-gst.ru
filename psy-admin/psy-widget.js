@@ -1,4 +1,4 @@
-import { appendVoiceInputResult, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-24";
+import { appendVoiceInputResult, configureSpeechUtterance, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-24";
 import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-24";
 import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-24";
 
@@ -479,10 +479,41 @@ function voiceIsActive() {
   return listening || voiceIsPlaying();
 }
 
+// Запись из voice-bank всегда в приоритете — звучит живым голосом.
+// Браузерный синтез — только запасной путь для вопросов без готовой записи
+// (иначе виджет обещает озвучку и на них молчит).
+function speakReplyWithBrowserVoice(answer) {
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    setVoiceStatus("Ответ показан текстом: голос для этой темы ещё не записан.");
+    return;
+  }
+  const spokenText = answer.spokenText || sanitizeSpokenText(answer.text || "");
+  if (!spokenText) return;
+  stopVoice({ announce: false });
+  const utterance = configureSpeechUtterance(new SpeechSynthesisUtterance(spokenText));
+  utterance.addEventListener("start", () => {
+    setVoicePlaying(true);
+    setVoiceStatus("Помощник отвечает. Остановить голос можно верхней кнопкой или пробелом.");
+  }, { once: true });
+  utterance.addEventListener("end", () => {
+    setVoicePlaying(false);
+    setVoiceStatus("");
+  }, { once: true });
+  utterance.addEventListener("error", () => {
+    setVoicePlaying(false);
+    setVoiceStatus("Ответ показан текстом: браузеру не удалось включить озвучивание.");
+  }, { once: true });
+  window.speechSynthesis.speak(utterance);
+}
+
 async function speakReply(answer, question) {
   const presentation = widgetPresentation(window.innerWidth, voiceCapabilities);
+  if (!presentation.voice.shouldSpeakReply) return;
   const clip = resolveVoiceClip({ question, answer });
-  if (!presentation.voice.shouldSpeakReply || !clip?.src) return;
+  if (!clip?.src) {
+    speakReplyWithBrowserVoice(answer);
+    return;
+  }
   stopVoice({ announce: false });
   replyAudio.src = new URL(clip.src, import.meta.url).href;
   replyAudio.currentTime = 0;

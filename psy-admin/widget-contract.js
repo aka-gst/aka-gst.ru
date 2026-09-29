@@ -143,6 +143,15 @@ export function sanitizeSpokenText(rawText, linkLabels = []) {
   return (sentences[0] || text).trim().slice(0, 160);
 }
 
+// Запасной голос браузера — только когда для вопроса нет готовой записи
+// в voice-bank (resolveVoiceClip вернул пусто). Не подменяет живую запись,
+// только закрывает случаи без неё, чтобы виджет не молчал вовсе.
+export function configureSpeechUtterance(utterance) {
+  utterance.lang = "ru-RU";
+  utterance.rate = 0.96;
+  return utterance;
+}
+
 export function normalizeAssistantResult(result, fallback) {
   if (!result?.text) return fallback;
   const serverText = String(result.text);
