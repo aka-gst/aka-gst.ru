@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>aka-gst — три направления сайта</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./preview.js" defer></script>
+</head>
+<body data-design="a">
+  <a class="skip" href="#content">К содержимому</a>
+  <div class="preview-bar" aria-label="Локальный выбор дизайна">
+    <strong>aka-gst <span> / пример нового сайта</span></strong>
+    <div class="design-choices" role="group" aria-label="Направление оформления">
+      <button type="button" data-choose="a" aria-pressed="true">01 · Доказательство</button>
+      <button type="button" data-choose="b" aria-pressed="false">02 · Сигнал</button>
+      <button type="button" data-choose="c" aria-pressed="false">03 · Атлас</button>
+    </div>
+    <small>Локальный прототип · 30.09.2026</small>
+  </div>
+
+  <main id="content">
+    <section class="design design-a" data-panel="a" aria-label="Вариант Доказательство">
+      <header class="a-header shell">
+        <a class="wordmark" href="https://aka-gst.ru/" aria-label="aka-gst.ru">aka<span>—</span>gst</a>
+        <nav aria-label="Разделы"><a href="#a-work">Работа</a><a href="#a-games">Игры</a><a href="https://aka-gst.ru/rasskazy/">Рассказы</a></nav>
+        <a class="a-header-contact" href="https://t.me/gostinka27">Обсудить проект</a>
+      </header>
+      <div class="a-hero shell">
+        <div class="a-hero-copy">
+          <p class="a-eyebrow">Сергей Гостов · AI-инженер</p>
+          <h1>Работу лучше <em>показать</em></h1>
+          <p class="a-lede">Собираю AI-продукты и проверяю, что они выдерживают реальные сценарии. Здесь можно открыть результат, а не только прочитать обещание</p>
+          <div class="a-actions"><a class="a-primary" href="#a-work">Смотреть работы</a><a class="a-secondary" href="#a-games">Поиграть</a></div>
+        </div>
+        <figure class="a-hero-image"><img src="../assets/shots/allure-gateway.png" alt="Экран отчёта о проверке Local Agent Gateway"><figcaption>Один из рабочих артефактов: отчёт проверок шлюза</figcaption></figure>
+      </div>
+      <div class="a-marquee" aria-hidden="true"><span>СЦЕНАРИЙ&nbsp;&nbsp; / &nbsp;&nbsp;СБОЙ&nbsp;&nbsp; / &nbsp;&nbsp;ПРОВЕРКА&nbsp;&nbsp; / &nbsp;&nbsp;РЕЗУЛЬТАТ</span></div>
+      <section class="a-cases shell" id="a-work" aria-labelledby="a-cases-title">
+        <div class="a-section-head"><p>Избранные работы</p><h2 id="a-cases-title">Три разных задачи.<br>Один принцип: проверяемый результат</h2></div>
+        <article class="a-case a-case-main">
+          <div class="a-case-text"><span class="a-case-label">AI-продукт / 2026</span><h3>Local Agent Gateway</h3><p>Помогает AI-помощнику работать с программами на вашем компьютере и сохранять результат, если связь оборвалась</p><a href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener">Открыть демонстрацию <span aria-hidden="true">↗</span></a></div>
+          <img src="../assets/shots/gateway-console.jpg" alt="Консоль локального AI-шлюза">
+        </article>
+        <div class="a-case-pair">
+          <article class="a-case"><img src="../assets/shots/psy-admin-2026.jpg" alt="Демонстрация AI-администратора для центра Орион-С"><div class="a-case-text"><span class="a-case-label">Помощник для сайта</span><h3>Psy AI Admin</h3><p>Отвечает по утверждённой базе знаний и ведёт человека к записи</p><a href="https://aka-gst.ru/psy-admin/">Открыть MVP-демо <span aria-hidden="true">↗</span></a></div></article>
+          <article class="a-case"><img src="../assets/shots/photodata.jpg" alt="Редактор метаданных ФотоДата"><div class="a-case-text"><span class="a-case-label">Готовый инструмент</span><h3>ФотоДата</h3><p>Редактор метаданных фотографий. Можно попробовать прямо в браузере</p><a href="https://aka-gst.ru/photodata/">Открыть редактор <span aria-hidden="true">↗</span></a></div></article>
+        </div>
+      </section>
+      <section class="a-games shell" id="a-games"><div><p>Игры</p><h2>Сделано, чтобы играть</h2><span>Неон Линии · ACID UNO · HOTLINE ABAKAN</span></div><a href="https://aka-gst.ru/#games">Открыть игры</a></section>
+      <footer class="a-footer shell"><span>aka—gst / 2026</span><span>Герой не изменился, просто подешевело быть честным</span></footer>
+    </section>
+
+    <section class="design design-b" data-panel="b" aria-label="Вариант Сигнал" hidden>
+      <header class="b-header shell"><a class="b-mark" href="https://aka-gst.ru/">aka<span>gst</span></a><nav aria-label="Разделы"><a href="#b-work">Работа</a><a href="#b-games">Игры</a><a href="https://aka-gst.ru/rasskazy/">Рассказы</a></nav><span class="b-status"><i></i> Открытые проекты</span></header>
+      <div class="b-hero shell">
+        <div class="b-grid" aria-hidden="true"></div>
+        <div class="b-hero-inner"><p class="b-kicker">Портфолио Сергея Гостова</p><h1>Идея —<br>работающая<br><span>система</span></h1><p>AI-инженерия, игры и истории. От первого сценария до вещи, которую можно открыть, проверить и почувствовать</p><a class="b-enter" href="#b-work"><span>Исследовать работы</span><b aria-hidden="true">↘</b></a></div>
+        <div class="b-hero-art"><img src="../assets/hero-signal.jpg" alt=""><span class="b-orbit b-orbit-one"></span><span class="b-orbit b-orbit-two"></span><span class="b-hero-caption">СИГНАЛ / МЕЖДУ ЗАМЫСЛОМ И РЕЗУЛЬТАТОМ</span></div>
+      </div>
+      <div class="b-ticker shell"><span>Не обещание</span><span>Живые продукты</span><span>Проверяемые сценарии</span><span>Игры в браузере</span></div>
+      <section class="b-work shell" id="b-work"><div class="b-title-row"><p>Работа</p><h2>Что можно открыть сейчас</h2></div>
+        <a class="b-feature" href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener"><img src="../assets/shots/gateway-console.jpg" alt="Консоль Local Agent Gateway"><div><span>01 / AI-системы</span><h3>Local Agent Gateway</h3><p>Помощник, который работает на вашем компьютере и не теряет задачу при обрыве связи</p><b>Демонстрация ↗</b></div></a>
+        <div class="b-work-row"><a href="https://aka-gst.ru/psy-admin/"><img src="../assets/shots/psy-admin-2026.jpg" alt="AI-администратор"><span>02 / Psy AI Admin</span><strong>Помощник, который знает границы ответа</strong></a><a href="https://aka-gst.ru/photodata/"><img src="../assets/shots/photodata.jpg" alt="Редактор ФотоДата"><span>03 / ФотоДата</span><strong>Снимок, метаданные, контроль</strong></a></div>
+      </section>
+      <section class="b-games shell" id="b-games"><div><span>Игры / другой режим портфолио</span><h2>Работа заканчивается.<br>Игра продолжается</h2><a href="https://aka-gst.ru/#games">Выбрать игру ↗</a></div><img src="../assets/shots/game-neon-claw.jpg" alt="Кадр NEON CLAW"></section>
+      <footer class="b-footer shell"><span>aka-gst · 2026</span><span>Герой не изменился, просто подешевело быть честным</span></footer>
+    </section>
+
+    <section class="design design-c" data-panel="c" aria-label="Вариант Атлас" hidden>
+      <header class="c-header shell"><a class="c-logo" href="https://aka-gst.ru/">aka<span>gst</span><i>●</i></a><nav aria-label="Разделы"><a href="#c-work">Работа</a><a href="#c-games">Игры</a><a href="https://aka-gst.ru/rasskazy/">Рассказы</a></nav><a href="https://t.me/gostinka27">Связаться</a></header>
+      <div class="c-hero shell"><div class="c-headline"><p>Сергей Гостов / AI-инженер и создатель игр</p><h1>Мир идей,<br><span>которые можно</span><br>открыть</h1><div class="c-hero-actions"><a href="#c-work">Посмотреть проекты</a><span>Работа · Игры · Рассказы</span></div></div><div class="c-hero-grid" aria-label="Предпросмотр проектов"><a class="c-grid-one" href="https://aka-gst.ru/lines/"><img src="../assets/shots/game-lines.jpg" alt="Неон Линии"><span>Неон Линии</span></a><a class="c-grid-two" href="https://aka-gst.ru/qa-quest/"><img src="../assets/shots/qa-quest-boy.jpg" alt="QueQuest"><span>QueQuest</span></a><a class="c-grid-three" href="https://aka-gst.ru/psy-admin/"><img src="../assets/shots/psy-admin-2026.jpg" alt="Psy AI Admin"><span>Psy AI Admin</span></a></div></div>
+      <div class="c-running"><span>СОБРАТЬ</span><span>ПРОВЕРИТЬ</span><span>ПОИГРАТЬ</span><span>РАССКАЗАТЬ</span></div>
+      <section class="c-work shell" id="c-work"><div class="c-section-heading"><p>Работа</p><h2>Инструменты, которым<br>есть что показать</h2></div><div class="c-tiles"><a href="https://aka-gst.github.io/local-agent-gateway/" target="_blank" rel="noopener"><img src="../assets/shots/gateway-console.jpg" alt="Local Agent Gateway"><span>AI-система</span><strong>Local Agent Gateway</strong></a><a href="https://aka-gst.ru/photodata/"><img src="../assets/shots/photodata.jpg" alt="ФотоДата"><span>Редактор</span><strong>ФотоДата</strong></a><a href="https://aka-gst.ru/qa-quest/"><img src="../assets/shots/qa-quest-boy.jpg" alt="Бой в QueQuest"><span>Учебная игра</span><strong>QueQuest</strong></a></div></section>
+      <section class="c-games shell" id="c-games"><div><p>Игры</p><h2>Зайти на пять минут.<br>Остаться дольше</h2><a href="https://aka-gst.ru/#games">Смотреть все игры ↗</a></div><div class="c-game-images"><img src="../assets/shots/game-neon-claw.jpg" alt="NEON CLAW"><img src="../assets/shots/game-acid.jpg" alt="ACID UNO"></div></section>
+      <footer class="c-footer shell"><span>aka—gst</span><span>Герой не изменился, просто подешевело быть честным</span></footer>
+    </section>
+  </main>
+</body>
+</html>
