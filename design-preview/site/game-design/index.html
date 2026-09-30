@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Сергей Гостов — геймдизайн VitalSchool / Education PlayGround: образовательная MMORPG, квесты, системный дизайн, баланс, нарратив, production и мобильные игры." />
+  <meta name="theme-color" content="#07110f" />
+  <title>VitalSchool — Game Design Case Study / Сергей Гостов</title>
+  <link rel="preconnect" href="https://img.youtube.com" />
+  <link rel="preconnect" href="https://gamedev.ru" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="../index.html" aria-label="Вернуться к работам">← aka—gst<span>/</span>GAME DESIGN</a>
+    <nav aria-label="Навигация по кейсу">
+      <a href="#overview">Роль и система</a>
+      <a href="#work">Квесты и баланс</a>
+      <a href="#mobile">Мобильные игры</a>
+      <a href="#sources">Источники</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero section compact-section">
+      <div class="hero-copy reveal">
+        <p class="eyebrow">Game Design Case Study · 2018–2020</p>
+        <h1>VitalSchool <span>Education PlayGround</span></h1>
+        <p class="lede">Образовательная RPG/MMO, где <strong>знания становились игровой силой</strong>: школьные темы превращались в квесты, а подтверждённые знания усиливали навыки, бой и прогрессию персонажа.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#work">Что я делал</a>
+          <a class="btn ghost" href="https://gamedev.ru/projects/forum/?id=242025" target="_blank" rel="noreferrer">Архив разработки ↗</a>
+        </div>
+        <p class="hero-note">Я присоединился в мае 2018 и работал как game / systems / narrative designer, а по факту также закрывал часть production и PM-функций.</p>
+      </div>
+
+      <a class="hero-visual reveal" href="https://youtu.be/b7SGNR0p0sQ" target="_blank" rel="noreferrer" aria-label="Открыть тизер VitalSchool на YouTube">
+        <img src="https://img.youtube.com/vi/b7SGNR0p0sQ/hqdefault.jpg" alt="Кадр из тизера VitalSchool" loading="eager" onerror="this.src='assets/teaser.jpg'" />
+        <span class="play">▶</span>
+        <span class="visual-caption"><b>Тизер VitalSchool</b><small>открывается на YouTube ↗</small></span>
+      </a>
+
+      <div class="facts reveal" aria-label="Ключевые факты">
+        <div><strong>100+</strong><span>квестов и учебных задач</span></div>
+        <div><strong>24.05.2019</strong><span>первая публичная альфа</span></div>
+        <div><strong>4</strong><span>мобильных релиза в 2019</span></div>
+      </div>
+
+      <a class="patent-card reveal" href="https://patents.google.com/patent/RU2695829C1/ru" target="_blank" rel="noreferrer">
+        <span class="patent-label">Патент на ключевой принцип проекта</span>
+        <strong>RU2695829C1 — «Способ контроля и оценки знаний» ↗</strong>
+        <span>Проверяемые знания связываются с игровыми параметрами, навыками и возможностями персонажа.</span>
+      </a>
+    </section>
+
+    <section class="section overview-grid compact-section" id="overview">
+      <div class="overview-copy reveal">
+        <p class="eyebrow">Моя роль + core mechanic</p>
+        <h2>Я связывал обучение, RPG и производство</h2>
+        <p class="lead-small">Моя работа была не только про «придумать квест». Я проектировал систему целиком: что игрок делает, чему учится, что получает в игре и что именно команда должна реализовать.</p>
+
+        <div class="role-grid">
+          <div><b>Game design</b><span>квесты, миры, персонажи, предметы, skills, экономика</span></div>
+          <div><b>Systems / balance</b><span>знания → skill → damage / HP / heal / items / PvE-PvP</span></div>
+          <div><b>Narrative</b><span>сюжет, диалоги, NPC и контекст учебных задач</span></div>
+          <div><b>Production / PM</b><span>постановки команде, приёмка сборок, коммуникация с инвестором</span></div>
+        </div>
+
+        <p class="lead-small">С инвестором я вёл основную рабочую коммуникацию: он помогал идеями и обеспечивал финансирование проекта, а я переводил обсуждения в конкретные задачи, чтобы не отвлекать команду.</p>
+
+        <div class="knowledge-loop">
+          <span>Учебный квест</span><i>→</i><span>Проверка знания</span><i>→</i><span>Рост skill</span><i>→</i><span>Сила в RPG</span>
+        </div>
+      </div>
+
+      <div class="overview-media reveal">
+        <a class="dashboard" href="https://gamedev.ru/files/images/site_tmp01.jpg" target="_blank" rel="noreferrer">
+          <img src="https://gamedev.ru/files/images/site_tmp01.jpg" alt="Концепт личного кабинета VitalSchool с картой знаний" loading="lazy" />
+          <span class="visual-caption"><b>Личный кабинет ученика</b><small>знания и прогресс как часть игрового профиля</small></span>
+        </a>
+        <a class="overview-video" href="https://youtu.be/wLLRgLrFBHY" target="_blank" rel="noreferrer" aria-label="Открыть видео образовательного бафа на YouTube">
+          <img src="https://img.youtube.com/vi/wLLRgLrFBHY/hqdefault.jpg" alt="Образовательный баф VitalSchool" loading="lazy" onerror="this.src='assets/educational-buff-area.jpg'" />
+          <span><b>Образовательный баф</b><small>видео на YouTube ↗</small></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section compact-section" id="work">
+      <div class="section-head tight reveal">
+        <p class="eyebrow">Selected work</p>
+        <h2>Квесты, баланс и сборка — на одном экране</h2>
+      </div>
+
+      <article class="case-row compact reveal">
+        <div class="case-copy">
+          <p class="tag">Quest design · математика, 3 класс</p>
+          <h3>«Умножение на 8» — школьная тема как RPG-квест</h3>
+          <p><b>«Умножение на 8»</b>, <b>«Кратное сравнение»</b> и <b>«Сложение и вычитание в пределах 1000»</b> — это названия квестов по темам школьной программы.</p>
+          <div class="example-list">
+            <p><b>Как работал «Умножение на 8»:</b> мы тестировали игровой шаблон «подай-принеси». Игрок получал задачу через NPC или объект, проходил цепочку действий с предметами, а знание таблицы умножения было условием правильного прохождения.</p>
+            <p><b>Принцип:</b> не показать ребёнку отдельный тест, а встроить математику прямо в привычное игровое действие.</p>
+          </div>
+        </div>
+        <a class="case-media" href="https://youtu.be/uGzi1oL9eZk" target="_blank" rel="noreferrer" aria-label="Открыть видео квеста Умножение на 8 на YouTube">
+          <img src="https://img.youtube.com/vi/uGzi1oL9eZk/hqdefault.jpg" alt="Квест Умножение на 8" loading="lazy" onerror="this.src='assets/quest-multiply-8.jpg'" />
+          <span class="visual-caption"><b>Квест «Умножение на 8»</b><small>видео на YouTube ↗</small></span>
+        </a>
+      </article>
+
+      <article class="case-row compact reverse reveal">
+        <div class="case-copy">
+          <p class="tag">Systems design · balance · production</p>
+          <h3>Баланс должен был выдерживать и школу, и RPG</h3>
+          <p>Вместе с нашим <b>менеджером-математиком</b> я сводил нелинейный баланс боя, мира и экономики. Формулы связывали знания, уровень skill, damage, HP, лечение, предметы и PvE/PvP; в расчётах доходили до действительно сложной математики.</p>
+          <div class="balance-tags"><span>Knowledge</span><span>Skill</span><span>Damage</span><span>HP</span><span>Heal</span><span>Items</span><span>Economy</span><span>PvE/PvP</span></div>
+          <p>Параллельно я ставил задачи художникам и программистам, принимал результат и проверял систему в сборках. Инвестор в баланс не вмешивался: он помогал идеями и обеспечивал финансирование проекта.</p>
+        </div>
+        <a class="case-media" href="https://youtu.be/fe7PkR_rJxU" target="_blank" rel="noreferrer" aria-label="Открыть видео магазина и панели навыков на YouTube">
+          <img src="https://img.youtube.com/vi/fe7PkR_rJxU/hqdefault.jpg" alt="Магазин и панель навыков VitalSchool" loading="lazy" onerror="this.src='assets/shop.jpg'" />
+          <span class="visual-caption"><b>Магазин + skill-система</b><small>экономика и прогрессия · видео на YouTube ↗</small></span>
+        </a>
+      </article>
+    </section>
+
+    <section class="section mobile-section compact-section" id="mobile">
+      <div class="mobile-intro reveal">
+        <p class="eyebrow">После MMO-альфы</p>
+        <h2>Четыре мобильных образовательных релиза</h2>
+        <p>Большую систему разложили на короткие игровые циклы: одна учебная идея — одна понятная механика.</p>
+      </div>
+
+      <div class="mobile-grid compact-mobile">
+        <article class="mobile-card reveal">
+          <img src="https://gamedev.ru/files/images/141609_1569409670_01.jpg" alt="VS Bubbles" loading="lazy" onerror="this.src='assets/vs-bubbles.jpg'">
+          <div><p class="tag">25.09.2019</p><h3>VS Bubbles</h3><p>Таблица умножения и связь умножения с делением через механику пузырей.</p><a href="https://gamedev.ru/projects/forum/?id=247101" target="_blank" rel="noreferrer">Релиз ↗</a></div>
+        </article>
+        <article class="mobile-card reveal">
+          <img src="https://gamedev.ru/files/images/142886_1575384998_01_1.jpg" alt="VS Paddle" loading="lazy">
+          <div><p class="tag">29.11.2019</p><h3>VS Paddle</h3><p>Сравнение целых чисел и дробей через свайпы и «греблю».</p><a href="https://gamedev.ru/projects/forum/?id=248568" target="_blank" rel="noreferrer">Релиз ↗</a></div>
+        </article>
+        <article class="mobile-card reveal">
+          <img src="https://gamedev.ru/files/images/143299_1576869786_01.jpg" alt="Odd VS Even" loading="lazy">
+          <div><p class="tag">20.12.2019</p><h3>Odd VS Even</h3><p>Чётные и нечётные числа: один палец — нечётное, два — чётное.</p><a href="https://gamedev.ru/projects/forum/?id=248962" target="_blank" rel="noreferrer">Релиз ↗</a></div>
+        </article>
+        <article class="mobile-card reveal">
+          <img src="https://gamedev.ru/files/images/143455_1577474575_001.jpg" alt="VS Hops" loading="lazy">
+          <div><p class="tag">27.12.2019</p><h3>VS Hops</h3><p>Счёт до 100 через прыжки на скакалке и ритм действий.</p><a href="https://gamedev.ru/projects/forum/?id=249100" target="_blank" rel="noreferrer">Релиз ↗</a></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer id="sources">
+    <div class="footer-links">
+      <a href="https://gamedev.ru/projects/forum/?id=242025" target="_blank" rel="noreferrer">GameDev.ru ↗</a>
+      <a href="https://patents.google.com/patent/RU2695829C1/ru" target="_blank" rel="noreferrer">RU2695829C1 — патент ↗</a>
+      <a href="https://vk.com/vitalschool" target="_blank" rel="noreferrer">VK ↗</a>
+      <a href="https://www.youtube.com/c/VitalSchool" target="_blank" rel="noreferrer">YouTube ↗</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -2,6 +2,29 @@
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
+  const phraseNode = document.getElementById('phrase-text');
+  const phrases = Array.isArray(window.sitePhrases) ? window.sitePhrases : [];
+  if (phraseNode && phrases.length) {
+    let index = Math.floor(Math.random() * phrases.length);
+    phraseNode.textContent = `${phrases[index]} (с)`;
+    if (!reducedMotion.matches) {
+      const next = () => {
+        index = (index + 1) % phrases.length;
+        const phrase = `${phrases[index]} (с)`;
+        phraseNode.textContent = '';
+        let letter = 0;
+        const type = () => {
+          if (letter < phrase.length) {
+            phraseNode.textContent += phrase[letter++];
+            setTimeout(type, 38);
+          } else setTimeout(next, 10000);
+        };
+        type();
+      };
+      setTimeout(next, 10000);
+    }
+  }
+
   if (!reducedMotion.matches && 'IntersectionObserver' in window) {
     document.documentElement.classList.add('js-motion');
     const reveal = new IntersectionObserver((entries) => {
