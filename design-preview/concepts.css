@@ -211,6 +211,13 @@ h1,h2,h3,p,figure{margin:0}
 .chooser-hero h1{font-size:clamp(58px,6.8vw,112px);line-height:.91;letter-spacing:-.085em;max-width:1050px;margin:25px 0}
 .chooser-hero h1 em{font-style:normal;color:#eab486}
 .chooser-hero>span{font-size:19px;line-height:1.5;color:#bac8c7}
+.chooser-combined{display:flex;align-items:center;justify-content:space-between;gap:25px;margin-bottom:25px;padding:25px 30px;background:#dba77d;color:#11191d;transition:transform .25s ease}
+.chooser-combined:hover{transform:translateY(-4px)}
+.chooser-combined span{display:grid;gap:6px}
+.chooser-combined small{font-size:10px;font-style:normal;font-weight:800;letter-spacing:.18em}
+.chooser-combined strong{font-size:clamp(25px,2.8vw,42px);line-height:1.1;letter-spacing:-.06em}
+.chooser-combined em{font-style:normal;font-size:13px}
+.chooser-combined b{font-size:14px;white-space:nowrap;border-bottom:1px solid currentColor;padding-bottom:6px}
 .chooser-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:19px;padding-bottom:95px}
 .chooser-card{background:#f1eee6;color:#111c20;overflow:hidden;display:flex;flex-direction:column;min-height:550px}
 .chooser-card:nth-child(2){background:#1c172a;color:#fff}
@@ -272,6 +279,7 @@ h1,h2,h3,p,figure{margin:0}
   .a-games{padding-block:80px}.a-game-posters img{height:200px}.a-game-posters a+ a img{height:160px}.a-words{padding-block:80px}
   .s-footer,.w-footer,.a-footer{flex-wrap:wrap;font-size:11px}.s-footer span:last-child,.w-footer span:last-child,.a-footer span:last-child{display:none}
   .chooser-head span{display:none}.chooser-hero{padding-block:50px}.chooser-hero>span{font-size:16px}
+  .chooser-combined{align-items:flex-start;flex-direction:column;padding:22px}.chooser-combined b{margin-top:9px}
   .chooser-card{display:flex}.chooser-image{height:235px}.chooser-copy{min-height:245px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.w-game img,.a-project-image img,.chooser-image img{transition:none}}
