@@ -1,0 +1,277 @@
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+h1,h2,h3,p,figure{margin:0}
+.wrap{width:min(100% - 72px,1440px);margin-inline:auto}
+.skip{position:absolute;left:16px;top:-80px;z-index:100;padding:12px 16px;background:#fff;color:#111}
+.skip:focus{top:8px}
+:focus-visible{outline:3px solid #ff814e;outline-offset:4px}
+.concept-switch{min-height:48px;padding:5px 36px;background:#101317;color:#f4f2eb;display:flex;align-items:center;justify-content:space-between;gap:20px;font:600 11px/1.2 "Avenir Next",Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;position:relative;z-index:10}
+.concept-switch .switch-back{border-bottom:1px solid #a6a8a5;padding-block:4px}
+.concept-switch>span{color:#aaaeb2}
+.concept-switch nav{display:flex;gap:3px}
+.concept-switch nav a{display:grid;place-items:center;width:39px;height:35px;border:1px solid #484e51}
+.concept-switch nav a[aria-current=page]{background:#f4f2eb;color:#111;border-color:#f4f2eb}
+.button{display:inline-flex;align-items:center;justify-content:space-between;gap:35px;min-height:58px;padding:15px 22px;font:700 14px/1.2 "Avenir Next",Arial,sans-serif}
+.button span,.underline-link span{font-size:20px}
+.section-tag{display:block;font:700 11px/1.2 "Avenir Next",Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.underline-link{display:inline-flex;justify-content:space-between;gap:24px;align-items:center;border-bottom:1px solid currentColor;padding-bottom:8px;font:700 15px/1.2 "Avenir Next",Arial,sans-serif}
+
+/* 01 / Systems: a dark physical installation with product evidence. */
+.systems{background:#e9e8e1;color:#152226;font-family:"Avenir Next",Avenir,Arial,sans-serif}
+.s-hero{min-height:min(880px,calc(100svh - 48px));background:#0b1115;color:#f5f1e7;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.s-hero-art{position:absolute;inset:0;background-image:linear-gradient(90deg,#0b1115 0%,#0b1115ed 22%,#0b11157d 48%,transparent 75%),linear-gradient(0deg,#0b1115a6,transparent 32%),url("./assets/system-hero.png");background-size:cover;background-position:center}
+.s-header,.s-hero-content,.s-hero-foot{position:relative;z-index:1}
+.s-header{min-height:94px;border-bottom:1px solid #ffffff38;display:flex;align-items:center;justify-content:space-between}
+.s-logo{font-size:27px;letter-spacing:-.09em;font-weight:900}
+.s-logo span{color:#eaa46f}
+.s-header nav{display:flex;gap:38px;font-size:13px}
+.s-header nav a:hover,.s-contact:hover{text-decoration:underline;text-underline-offset:7px}
+.s-contact{font-size:13px;font-weight:700;border:1px solid #ffffff71;padding:12px 15px}
+.s-contact span{margin-left:25px}
+.s-hero-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding-block:70px 85px}
+.s-overline{font:700 11px/1.2 "Avenir Next",Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#bfc9c8}
+.s-overline span{padding-inline:10px;color:#eaa46f}
+.s-hero h1{font-size:clamp(66px,7.2vw,132px);line-height:.88;letter-spacing:-.09em;max-width:850px;margin:32px 0 26px;font-weight:800}
+.s-hero h1 em{font-style:normal;color:#eaa46f}
+.s-lead{font-size:clamp(17px,1.3vw,22px);line-height:1.5;max-width:540px;color:#d3d9d6}
+.s-actions{display:flex;align-items:center;gap:33px;margin-top:38px}
+.button-copper{background:#eaa46f;color:#0b1115}
+.button-copper:hover{background:#ffd0a8}
+.s-text-link{font-size:14px;font-weight:700;border-bottom:1px solid #bfc9c8;padding-bottom:7px}
+.s-text-link span{padding-left:22px}
+.s-hero-foot{border-top:1px solid #ffffff38;min-height:55px;display:flex;justify-content:space-between;align-items:center;color:#aab7b6;font-size:10px;letter-spacing:.16em;font-weight:700}
+.s-intro{display:grid;grid-template-columns:1.2fr .8fr;gap:9%;padding-block:120px 105px;align-items:end}
+.s-intro .section-tag{color:#a2582f;margin-bottom:26px}
+.s-intro h2,.s-worlds h2,.s-stories h2{font-size:clamp(48px,5.6vw,93px);line-height:.99;letter-spacing:-.077em}
+.s-intro h2 i,.s-worlds h2 i{font-style:normal;color:#b56435}
+.s-intro>p{font-size:20px;line-height:1.55;max-width:460px;padding-bottom:8px}
+.s-feature{display:grid;grid-template-columns:.42fr .58fr;background:#152126;color:#f5f1e7;min-height:610px}
+.s-feature-copy{padding:64px 5vw 58px 60px;display:flex;flex-direction:column;align-items:flex-start}
+.s-feature-copy .section-tag{color:#eaa46f}
+.s-feature h3{font-size:clamp(48px,4.6vw,78px);line-height:.95;letter-spacing:-.08em;margin:36px 0 25px}
+.s-feature p{font-size:18px;line-height:1.55;color:#c9d2d0;max-width:420px}
+.s-feature .underline-link{margin-top:auto;color:#eaa46f}
+.s-feature small{margin-top:25px;color:#829392;font-size:11px}
+.s-feature-visual{display:grid;place-items:center;min-width:0;padding:55px;background:radial-gradient(circle at 45% 35%,#375459,#17282c 54%,#0d1719 100%)}
+.s-window{width:100%;max-width:660px;border:1px solid #90abb380;background:#0b101b;box-shadow:30px 35px 60px #0007;transform:perspective(1300px) rotateY(-6deg) rotateX(3deg)}
+.s-window-top{height:35px;display:flex;align-items:center;gap:6px;padding:0 13px;background:#26333a}
+.s-window-top span{width:7px;height:7px;border-radius:50%;background:#8a9ea1}
+.s-window-top b{font:600 9px/1 monospace;letter-spacing:.14em;color:#a7bcbd;margin-left:auto}
+.s-window img{width:100%;aspect-ratio:1.48;object-fit:cover;object-position:top}
+.s-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding-block:22px 120px}
+.s-grid>a{padding:25px;background:#f7f5ef;display:grid;gap:22px}
+.s-grid .section-tag{color:#a2582f}
+.s-grid img{width:100%;aspect-ratio:1.8;object-fit:cover}
+.s-grid a>div{display:flex;align-items:end;justify-content:space-between;gap:15px}
+.s-grid h3{font-size:clamp(28px,2.5vw,42px);letter-spacing:-.06em}
+.s-grid a>div span{font-size:13px;font-weight:700;border-bottom:1px solid;padding-bottom:4px}
+.s-worlds{background:#0d171b;color:#f5f1e7}
+.s-worlds-inner{display:grid;grid-template-columns:1fr 1fr;gap:7%;align-items:center;padding-block:110px}
+.s-worlds .section-tag{color:#eaa46f;margin-bottom:26px}
+.s-worlds h2 i{color:#eaa46f}
+.s-worlds p{font-size:19px;color:#bccbca;max-width:390px;margin:24px 0 35px}
+.button-light{background:#f0ece2;color:#111d1f}
+.s-worlds-shots{display:grid;grid-template-columns:1.1fr .72fr;align-items:end;gap:16px}
+.s-worlds-shots img{width:100%;height:310px;object-fit:cover;border:7px solid #354c50;box-shadow:15px 15px 0 #0008}
+.s-worlds-shots img+img{height:225px;transform:translateY(30px)}
+.s-stories{display:grid;grid-template-columns:1fr .55fr;gap:8%;align-items:center;padding-block:110px}
+.s-stories .section-tag{color:#a2582f;margin-bottom:28px}
+.s-stories .underline-link{margin-top:35px}
+.s-stories img{max-height:500px;max-width:360px;width:100%;object-fit:cover;box-shadow:18px 22px 0 #d2cabe}
+.s-footer{border-top:1px solid #b7b7b1;display:flex;justify-content:space-between;gap:20px;padding-block:35px;font-size:12px;color:#4c5a5b}
+
+/* 02 / Worlds: the games lead, with real playable projects immediately below. */
+.worlds{background:#0a0c14;color:#f8f4f4;font-family:"Avenir Next",Avenir,Arial,sans-serif}
+.w-hero{min-height:min(900px,calc(100svh - 48px));position:relative;overflow:hidden;background:#171029;display:flex;flex-direction:column}
+.w-hero-art{position:absolute;inset:0;background-image:linear-gradient(90deg,#090b13bd,transparent 70%),linear-gradient(0deg,#090b13 0%,#090b1333 40%,#090b130a 75%),url("./assets/worlds-hero.png");background-size:cover;background-position:center}
+.w-header,.w-hero-content,.w-hero-note{position:relative;z-index:1}
+.w-header{min-height:91px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff61}
+.w-logo{font-size:27px;font-weight:900;letter-spacing:-.08em}
+.w-logo span{font-size:11px;vertical-align:top;margin-left:4px;color:#ffd3a8}
+.w-header nav{display:flex;gap:36px;text-transform:uppercase;font-size:12px;letter-spacing:.1em;font-weight:700}
+.w-contact{border-bottom:1px solid #fff;padding-bottom:7px;font-weight:700;font-size:13px}
+.w-hero-content{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding-block:100px 62px}
+.w-hero-content>p{font:700 11px/1.2 "Avenir Next",Arial,sans-serif;letter-spacing:.19em}
+.w-hero-content>p span{color:#ffb28e;padding-inline:10px}
+.w-hero h1{font-family:"Avenir Next Condensed","Arial Narrow",Impact,sans-serif;text-transform:uppercase;font-stretch:condensed;font-size:clamp(84px,10.5vw,194px);line-height:.78;letter-spacing:-.075em;max-width:1300px;margin:30px 0 38px;text-shadow:0 6px 25px #0009}
+.w-hero h1 em{font-style:normal;color:#ffd1ad}
+.w-hero-bottom{display:flex;align-items:center;gap:38px}
+.w-primary{background:#f8f4f4;color:#0c0d16;display:inline-flex;align-items:center;justify-content:space-between;gap:55px;min-height:64px;padding:16px 21px;font-weight:800}
+.w-primary span{font-size:24px}
+.w-hero-bottom p{font-size:16px;line-height:1.5;color:#e8e3ec}
+.w-hero-note{min-height:48px;display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.15em;font-weight:700;color:#f6e6e4}
+.w-games{padding-block:112px 125px}
+.w-section-head{display:grid;grid-template-columns:1fr 2fr;gap:20px;align-items:start;margin-bottom:45px}
+.w-section-head>span,.w-system-copy>span,.w-stories>div>span{color:#ffae95;font-size:11px;letter-spacing:.18em;font-weight:800}
+.w-section-head h2,.w-system h2,.w-stories h2{font-size:clamp(50px,5.7vw,95px);line-height:.95;letter-spacing:-.075em}
+.w-section-head h2 i,.w-system h2 i,.w-stories h2 i{font-style:normal;color:#ffab91}
+.w-section-head>p{grid-column:2;font-size:17px;color:#aeb7c4}
+.w-game-grid{display:grid;grid-template-columns:1.4fr 1fr;grid-template-rows:repeat(2,295px);gap:17px}
+.w-game{position:relative;overflow:hidden;display:block;background:#1d2632}
+.w-game-main{grid-row:1/3}
+.w-game img{width:100%;height:100%;object-fit:cover;transition:transform .45s}
+.w-game:hover img{transform:scale(1.04)}
+.w-game-shade{position:absolute;inset:0;background:linear-gradient(0deg,#04060fee,transparent 67%)}
+.w-game div{position:absolute;inset:auto 30px 25px;display:flex;flex-direction:column;align-items:start;gap:8px}
+.w-game small{font-size:10px;letter-spacing:.15em;font-weight:700;color:#ffc5ad}
+.w-game strong{font-family:"Avenir Next Condensed","Arial Narrow",Impact,sans-serif;font-size:clamp(38px,4vw,70px);line-height:.9;letter-spacing:-.04em}
+.w-game-main strong{font-size:clamp(70px,8vw,145px)}
+.w-game div>span{font-size:13px;font-weight:700;border-bottom:1px solid;padding-bottom:5px;margin-top:10px}
+.w-all{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #53606d;min-height:68px;margin-top:20px;font-size:15px;font-weight:700}
+.w-all span{font-size:20px}
+.w-system{background:#171824;padding-block:110px}
+.w-system-inner{display:grid;grid-template-columns:.9fr 1.1fr;gap:8%;align-items:center}
+.w-system h2{margin:28px 0}
+.w-system-copy>p{font-size:18px;line-height:1.55;max-width:490px;color:#bec2cf}
+.w-system-links{margin-top:35px}
+.w-system-links a{min-height:55px;border-top:1px solid #5d6070;display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:700}
+.w-system-links a:last-child{border-bottom:1px solid #5d6070}
+.w-system-image{padding:15px;background:#303144;transform:rotate(2deg);box-shadow:22px 22px 0 #0c0c16}
+.w-system-image img{width:100%;height:460px;object-fit:cover;object-position:top}
+.w-system-image div{font-size:10px;letter-spacing:.15em;margin-top:12px}
+.w-stories{display:grid;grid-template-columns:1fr 1fr;gap:8%;align-items:center;padding-block:125px}
+.w-stories h2{margin:24px 0 38px}
+.w-stories a{border-bottom:1px solid #fff;padding-bottom:7px;font-weight:700}
+.w-book-stack{display:flex;align-items:center;padding-inline:20px}
+.w-book-stack img{width:52%;max-height:500px;object-fit:cover;box-shadow:15px 20px 25px #000a;transform:rotate(-6deg)}
+.w-book-stack img+img{transform:rotate(7deg) translate(-23px,25px)}
+.w-footer{border-top:1px solid #464850;padding-block:35px;display:flex;justify-content:space-between;gap:20px;font-size:11px;letter-spacing:.1em;color:#aab0bb}
+
+/* 03 / Atelier: an authored portfolio, using actual covers and project stills. */
+.atelier{background:#ede9de;color:#282622;font-family:"Avenir Next",Avenir,Arial,sans-serif}
+.a-header{min-height:96px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #8f8d86}
+.a-logo{font:800 31px/1 "Avenir Next",Arial,sans-serif;letter-spacing:-.09em}
+.a-logo span{color:#ad4a33}
+.a-header nav{display:flex;gap:38px;font-size:13px;font-weight:700}
+.a-contact{font-size:13px;font-weight:700;border-bottom:1px solid;padding-bottom:6px}
+.a-hero{min-height:730px;display:grid;grid-template-columns:1.1fr .9fr;gap:5%;align-items:center;padding-block:90px 95px}
+.a-overline,.a-section-head>p,.a-games-inner>div>p,.a-words>div>p{color:#a24530;font-size:11px;letter-spacing:.17em;font-weight:800}
+.a-hero h1,.a-section-head h2,.a-games h2,.a-words h2{font-family:"Iowan Old Style",Georgia,serif;font-weight:500;letter-spacing:-.065em;line-height:.97}
+.a-hero h1{font-size:clamp(65px,7.4vw,126px);margin:38px 0 28px}
+.a-hero h1 em,.a-section-head h2 i,.a-games h2 i,.a-words h2 i{color:#ad4a33;font-weight:500}
+.a-lede{font-size:19px;line-height:1.55;max-width:510px}
+.a-hero-cta{display:inline-flex;align-items:center;justify-content:space-between;gap:55px;margin-top:38px;border:1px solid #282622;padding:17px 20px;min-height:57px;font-weight:700;font-size:14px;box-shadow:5px 5px 0 #282622}
+.a-hero-cta:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 #282622}
+.a-hero-cta span{font-size:21px}
+.a-collage{height:585px;position:relative;min-width:0}
+.a-collage-back{position:absolute;inset:35px 7% 50px 9%;background:#c9d6ce;transform:rotate(6deg);border:1px solid #353d35}
+.a-book{position:absolute;left:8%;top:5px;width:52%;transform:rotate(-9deg);box-shadow:16px 19px 0 #2d2620}
+.a-book img{width:100%;height:475px;object-fit:cover}
+.a-book figcaption{position:absolute;top:12px;left:12px;background:#ede9de;padding:8px 10px;font-size:10px;letter-spacing:.15em;font-weight:800}
+.a-screen{position:absolute;right:1%;bottom:20px;width:62%;border:9px solid #252832;background:#252832;transform:rotate(6deg);box-shadow:10px 16px 20px #1115}
+.a-screen img{width:100%;aspect-ratio:1.75;object-fit:cover}
+.a-screen figcaption{color:#fff;font-size:10px;letter-spacing:.12em;padding:11px 4px 3px}
+.a-stamp{position:absolute;right:3%;top:30px;width:130px;height:130px;border-radius:50%;background:#ad4a33;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:13px;font-weight:900;line-height:1.1;letter-spacing:.09em;transform:rotate(15deg);box-shadow:6px 6px 0 #6f3026}
+.a-stamp span{font-size:24px;margin-top:4px}
+.a-running{background:#282622;color:#f2eee4;padding-block:15px}
+.a-running .wrap{display:flex;justify-content:space-between;gap:15px;font:800 11px/1.2 "Avenir Next",Arial,sans-serif;letter-spacing:.18em}
+.a-projects{padding-block:115px}
+.a-section-head{display:grid;grid-template-columns:.6fr 1.4fr;gap:40px;align-items:start;margin-bottom:60px}
+.a-section-head h2,.a-games h2,.a-words h2{font-size:clamp(52px,5.3vw,92px)}
+.a-project-gallery{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px}
+.a-project{display:flex;flex-direction:column;background:#f8f6f0;border:1px solid #bcb8ac;min-width:0}
+.a-project-image{height:245px;overflow:hidden;background:#d6d4cc}
+.a-project-large .a-project-image{height:360px}
+.a-project-image img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.a-project:hover .a-project-image img{transform:scale(1.04)}
+.a-project-info{padding:24px;display:flex;flex-direction:column;align-items:start;flex:1}
+.a-project-info>span{font-size:10px;color:#ad4a33;letter-spacing:.15em;font-weight:800}
+.a-project-info h3{font:500 clamp(27px,2.5vw,42px)/1.05 "Iowan Old Style",Georgia,serif;letter-spacing:-.04em;margin:17px 0}
+.a-project-info p{font-size:15px;line-height:1.5;margin-bottom:25px}
+.a-project-info b{margin-top:auto;border-bottom:1px solid;padding-bottom:5px;font-size:13px}
+.a-games{background:#2a2a2f;color:#f4eee6;padding-block:110px}
+.a-games-inner{display:grid;grid-template-columns:.9fr 1.1fr;gap:8%;align-items:center}
+.a-games h2{margin:25px 0 38px}
+.a-games-inner>div>p{color:#efad94}
+.a-games a:not(.a-game-posters a){font-size:16px;font-weight:700;border-bottom:1px solid;padding-bottom:7px}
+.a-game-posters{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:end}
+.a-game-posters a{background:#16191e;padding:9px;box-shadow:11px 11px 0 #0d0d10}
+.a-game-posters img{width:100%;height:360px;object-fit:cover}
+.a-game-posters a+ a img{height:280px}
+.a-game-posters span{display:block;padding:12px 5px 4px;font-size:12px;font-weight:700}
+.a-words{display:grid;grid-template-columns:1fr 1fr;gap:8%;align-items:center;padding-block:120px}
+.a-words h2{margin:26px 0 35px}
+.a-words a{font-size:16px;font-weight:700;border-bottom:1px solid;padding-bottom:7px}
+.a-words-art{display:flex;align-items:center}
+.a-words-art img{width:54%;max-height:420px;object-fit:cover;transform:rotate(-6deg);box-shadow:12px 15px 0 #c5bfb2}
+.a-words-art img+img{transform:rotate(7deg) translate(-22px,26px)}
+.a-footer{border-top:1px solid #a5a095;padding-block:33px;display:flex;justify-content:space-between;gap:18px;font-size:12px}
+
+/* Comparison page. */
+.chooser{background:#111a1f;color:#f4efe6;font-family:"Avenir Next",Avenir,Arial,sans-serif}
+.chooser-head{padding-block:28px;display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid #ffffff40}
+.chooser-head strong{font-size:25px;letter-spacing:-.08em}
+.chooser-head span{font-size:12px;color:#bdc8c7;letter-spacing:.12em}
+.chooser-hero{padding-block:70px 56px}
+.chooser-hero p{color:#eab486;font-size:11px;letter-spacing:.2em;font-weight:800}
+.chooser-hero h1{font-size:clamp(58px,6.8vw,112px);line-height:.91;letter-spacing:-.085em;max-width:1050px;margin:25px 0}
+.chooser-hero h1 em{font-style:normal;color:#eab486}
+.chooser-hero>span{font-size:19px;line-height:1.5;color:#bac8c7}
+.chooser-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:19px;padding-bottom:95px}
+.chooser-card{background:#f1eee6;color:#111c20;overflow:hidden;display:flex;flex-direction:column;min-height:550px}
+.chooser-card:nth-child(2){background:#1c172a;color:#fff}
+.chooser-card:nth-child(3){background:#ede9de;color:#282622}
+.chooser-image{height:275px;overflow:hidden;position:relative}
+.chooser-image img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.chooser-card:hover .chooser-image img{transform:scale(1.04)}
+.chooser-image span{position:absolute;left:17px;top:17px;background:#fff;color:#161c1f;padding:8px 10px;font-size:10px;font-weight:800;letter-spacing:.15em}
+.chooser-card:nth-child(3) .chooser-image{background:#c8c2b5;display:flex;align-items:center;justify-content:center;gap:10px}
+.chooser-card:nth-child(3) .chooser-image img{width:35%;height:85%;object-fit:cover;transform:rotate(-8deg);box-shadow:9px 11px 0 #272925}
+.chooser-card:nth-child(3) .chooser-image img+img{transform:rotate(8deg)}
+.chooser-copy{padding:28px;display:flex;flex-direction:column;flex:1}
+.chooser-copy small{font-size:10px;letter-spacing:.15em;font-weight:800;color:#aa5e36}
+.chooser-card:nth-child(2) .chooser-copy small{color:#ffc2a3}
+.chooser-copy h2{font-size:clamp(34px,3vw,55px);line-height:.95;letter-spacing:-.07em;margin:17px 0}
+.chooser-copy p{line-height:1.5;color:inherit;opacity:.75;max-width:340px}
+.chooser-copy b{margin-top:auto;border-top:1px solid currentColor;padding-top:18px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.chooser-copy b span{font-size:23px}
+.chooser-foot{border-top:1px solid #ffffff40;padding-block:25px;color:#bac8c7;font-size:12px;line-height:1.5}
+
+@media(max-width:1100px){
+  .s-feature-copy{padding:42px}.s-feature-visual{padding:35px}
+  .a-hero{grid-template-columns:1fr 1fr}.a-collage{height:500px}.a-book img{height:400px}
+  .a-project-gallery{grid-template-columns:1fr 1fr}.a-project-large{grid-column:1/-1}
+  .chooser-grid{gap:12px}.chooser-card{min-height:510px}.chooser-image{height:220px}
+}
+@media(max-width:800px){
+  .wrap{width:min(100% - 40px,1440px)}
+  .s-intro,.s-feature,.s-worlds-inner,.s-stories,.w-system-inner,.w-stories,.a-hero,.a-games-inner,.a-words{grid-template-columns:1fr}
+  .s-intro{padding-block:75px;gap:35px}.s-feature-visual{min-height:390px}.s-grid{padding-bottom:75px}
+  .s-worlds-inner,.s-stories{gap:45px;padding-block:75px}
+  .w-section-head{grid-template-columns:1fr}.w-section-head>p{grid-column:1}.w-game-grid{grid-template-columns:1fr 1fr;grid-template-rows:360px 270px}.w-game-main{grid-row:auto;grid-column:1/-1}
+  .w-system-inner{gap:55px}.w-system-image img{height:330px}.w-stories{gap:65px}
+  .a-hero{gap:25px;padding-block:75px}.a-collage{width:min(100%,540px);justify-self:center}.a-section-head{grid-template-columns:1fr;gap:20px}.a-games-inner,.a-words{gap:60px}
+  .chooser-grid{grid-template-columns:1fr}.chooser-card{min-height:0;display:grid;grid-template-columns:1fr 1fr}.chooser-image{height:320px}.chooser-copy{padding:25px}
+}
+@media(max-width:600px){
+  .wrap{width:min(100% - 34px,1440px)}
+  .concept-switch{padding-inline:16px;gap:8px}.concept-switch>span{display:none}
+  .s-header,.w-header,.a-header{min-height:74px}.s-header nav,.w-header nav,.a-header nav{display:none}
+  .s-contact,.w-contact,.a-contact{font-size:12px}.s-contact span{margin-left:6px}
+  .s-hero,.w-hero{min-height:calc(100svh - 48px)}
+  .s-hero-art{background-position:65% center;background-image:linear-gradient(90deg,#0b1115dc,#0b111584 80%),linear-gradient(0deg,#0b1115cc,transparent 65%),url("./assets/system-hero.png")}
+  .s-hero-content{padding-block:50px}.s-hero h1{font-size:clamp(49px,12vw,70px);margin:25px 0}.s-overline{font-size:10px;line-height:1.5}
+  .s-lead{font-size:16px}.s-actions{gap:18px;flex-wrap:wrap;margin-top:30px}.s-hero-foot span:last-child{display:none}
+  .s-intro h2,.s-worlds h2,.s-stories h2,.w-section-head h2,.w-system h2,.w-stories h2,.a-section-head h2,.a-games h2,.a-words h2{font-size:clamp(43px,11vw,63px)}
+  .s-intro>p{font-size:17px}.s-feature-copy{padding:35px 25px;min-height:420px}.s-feature h3{font-size:55px}.s-feature-visual{min-height:300px;padding:25px}
+  .s-grid{grid-template-columns:1fr}.s-grid a>div{align-items:start;flex-direction:column}
+  .s-worlds-shots img{height:190px}.s-worlds-shots img+img{height:150px}.s-stories img{max-width:270px}
+  .w-hero-art{background-position:57% center;background-image:linear-gradient(0deg,#090b13 0%,#090b139c 50%,#090b1329 100%),url("./assets/worlds-hero.png")}
+  .w-hero-content{padding-block:90px 45px}.w-hero h1{font-size:clamp(59px,14vw,90px);margin:22px 0 32px}.w-hero-bottom{align-items:start;flex-direction:column;gap:18px}
+  .w-hero-bottom p{font-size:14px}.w-hero-note span:last-child{display:none}
+  .w-games{padding-block:80px}.w-game-grid{display:flex;flex-direction:column}.w-game{height:270px}.w-game-main{height:370px}.w-game-main strong{font-size:70px}.w-game strong{font-size:43px}
+  .w-system{padding-block:75px}.w-system-image{transform:none;box-shadow:12px 12px 0 #0c0c16}.w-system-image img{height:230px}.w-book-stack{padding:0}
+  .a-hero{padding-block:60px 20px}.a-hero h1{font-size:clamp(57px,12vw,77px)}.a-lede{font-size:16px}
+  .a-collage{height:440px}.a-book{width:55%;left:6%}.a-book img{height:340px}.a-screen{width:65%;bottom:12px}.a-stamp{width:95px;height:95px;top:18px;font-size:10px}
+  .a-running .wrap{flex-wrap:wrap}.a-running span{flex-basis:40%;font-size:10px}
+  .a-projects{padding-block:80px}.a-project-gallery{grid-template-columns:1fr}.a-project-large{grid-column:auto}.a-project-image,.a-project-large .a-project-image{height:255px}
+  .a-games{padding-block:80px}.a-game-posters img{height:200px}.a-game-posters a+ a img{height:160px}.a-words{padding-block:80px}
+  .s-footer,.w-footer,.a-footer{flex-wrap:wrap;font-size:11px}.s-footer span:last-child,.w-footer span:last-child,.a-footer span:last-child{display:none}
+  .chooser-head span{display:none}.chooser-hero{padding-block:50px}.chooser-hero>span{font-size:16px}
+  .chooser-card{display:flex}.chooser-image{height:235px}.chooser-copy{min-height:245px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.w-game img,.a-project-image img,.chooser-image img{transition:none}}
