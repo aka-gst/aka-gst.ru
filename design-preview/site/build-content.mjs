@@ -2,61 +2,46 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { selectProjects } from './content-policy.mjs';
-
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
 const read = name => JSON.parse(readFileSync(path.join(root, 'data', name), 'utf8'));
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const url = value => value?.startsWith('/') ? `https://aka-gst.ru${value}` : value;
 const replace = (file, key, html) => {
-  const filename = path.join(here, file);
-  const source = readFileSync(filename, 'utf8');
-  const start = `<!-- GENERATED:${key} -->`;
-  const end = `<!-- /GENERATED:${key} -->`;
-  if (source.split(start).length !== 2 || source.split(end).length !== 2) throw Error(`${file}: ${key} markers must occur once`);
-  writeFileSync(filename, source.replace(new RegExp(`${start}[\\s\\S]*?${end}`), `${start}\n${html}\n${end}`));
+ const filename = path.join(here,file), source = readFileSync(filename,'utf8');
+ const start = `<!-- GENERATED:${key} -->`, end = `<!-- /GENERATED:${key} -->`;
+ if (source.split(start).length!==2 || source.split(end).length!==2) throw Error(`${file}: ${key} markers must occur once`);
+ writeFileSync(filename,source.replace(new RegExp(`${start}[\\s\\S]*?${end}`),`${start}\n${html}\n${end}`));
 };
-
-const projects = read('projects.json').projects;
-const site = read('site.json');
-const stories = read('stories.json');
-const phraseSource = read('frazy.json').frazy;
-const phraseSelection = [
-  'Это роли, а не задачи.',
-  'Когнитивный экзоскелет.',
-  'У жалобы есть число. Найди его.',
-  'Проверено поломкой.',
-  'Починили механизмом, а не обещанием.',
-  'Оно сильное, потому что честное.'
-];
-const phrases = phraseSelection.map(phrase => {
-  if (!phraseSource.includes(phrase)) throw Error(`Missing exact phrase: ${phrase}`);
-  return phrase;
-});
-writeFileSync(path.join(here, 'phrases.js'), `window.sitePhrases = ${JSON.stringify(phrases)};\n`);
-
-const work = selectProjects(projects, 'work');
-const workHtml = work.map((project, index) => {
-  const isQuest = project.id === 'qa-quest';
-  const link = isQuest ? {url:'#quequest'} : project.links?.find(item => ['demo', 'site', 'course', 'report'].includes(item.type)) || project.links?.[0];
-  const shot = isQuest ? {file:'quequest-warehouse-current.png', alt:'Первая смена QueQuest на складе'} : project.shots?.[0];
-  const image = shot ? `<img src="../../assets/shots/${esc(shot.file)}" alt="${esc(shot.alt)}" loading="lazy">` : '<span class="catalog-monogram" aria-hidden="true">◎</span>';
-  return `<a class="catalog-row" href="${esc(url(link?.url || '#all-work'))}" ${link?.url?.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}><span class="catalog-num">${String(index + 1).padStart(2,'0')}</span><span class="catalog-thumbnail">${isQuest ? '<img src="./assets/quequest-warehouse-current.png" alt="Первая смена QueQuest на складе" loading="lazy">' : image}</span><span class="catalog-title"><small>${esc(project.kicker)}</small><strong>${esc(project.title)}</strong><span>${esc(isQuest ? 'Сначала работа руками, затем автоматизация: Python появляется, когда он нужен игроку.' : project.tagline)}</span></span><span class="catalog-status">${isQuest ? 'В разработке' : 'Кейс'} </span><span class="catalog-arrow" aria-hidden="true">↗</span></a>`;
-}).join('\n');
-replace('index.html', 'WORK', workHtml);
-
-const exp = site.profile.experience.filter(item => item.show);
-replace('index.html', 'RESUME', exp.map(item => `<article class="resume-item"><span>${esc(item.period)}</span><div><h4>${esc(item.org)}</h4><p>${esc(item.role)}</p>${item.org.includes('Инди-студия') ? '<a href="./game-design/">Открыть кейс VitalSchool ↗</a>' : ''}</div></article>`).join('\n'));
-replace('index.html', 'SKILLS', site.profile.skills.map(group => `<div class="skill-group"><h4>${esc(group.group)}</h4><p>${group.items.map(esc).join(' · ')}</p></div>`).join('\n'));
-
-const games = selectProjects(projects, 'games');
-replace('games.html', 'GAMES', games.map((project, index) => {
-  const link = project.links?.find(item => ['play', 'demo'].includes(item.type)) || project.links?.[0];
-  const shot = project.shots?.[0];
-  const media = shot ? `<img src="../../assets/shots/${esc(shot.file)}" alt="${esc(shot.alt)}" loading="lazy">` : '';
-  return `<a class="game-tile" href="${esc(url(link?.url || '#play'))}"><span class="game-tile-image">${media}<span class="game-tile-number">${String(index + 1).padStart(2,'0')}</span></span><span class="game-tile-copy"><small>${esc(project.kicker)} · демо</small><strong>${esc(project.id === 'puzzle-quest' ? 'Матч Квест' : project.title)}</strong><span>${esc(project.tagline)}</span><b>${project.id === 'qa-quest' ? 'Открыть демо курса' : 'Играть'} ↗</b></span></a>`;
-}).join('\n'));
-
-replace('stories.html', 'STORIES', stories['сборники'].map(collection => `<section class="collection"><div class="collection-heading"><img src="../../assets/covers/${esc(collection.cover)}" alt="Обложка сборника «${esc(collection.title)}»" loading="lazy"><div><span>${esc(collection.year)} / ${collection.stories.length} историй</span><h3>${esc(collection.title)}</h3><p>${esc(typeof collection['фокус'] === 'string' ? collection['фокус'] : 'Истории из сборника')}</p></div></div><div class="collection-links">${collection.stories.map((story,index) => `<a href="https://aka-gst.ru/rasskazy/${encodeURIComponent(story.slug)}/"><span>${String(index+1).padStart(2,'0')}</span><strong>${esc(story.title)}</strong><span>Читать ↗</span></a>`).join('')}</div></section>`).join('\n'));
-
-console.log(`Generated ${work.length} work entries, ${games.length} games, ${stories['сборники'].reduce((n,collection) => n + collection.stories.length,0)} stories, ${phrases.length} phrases.`);
+const projects = [...read('projects.json').projects,...JSON.parse(readFileSync(path.join(here,'catalog-additions.json'),'utf8'))];
+const site=read('site.json'), stories=read('stories.json'), phraseSource=read('frazy.json').frazy;
+const phrases=['Это роли, а не задачи.','Когнитивный экзоскелет.','У жалобы есть число. Найди его.','Проверено поломкой.','Починили механизмом, а не обещанием.','Оно сильное, потому что честное.'];
+for(const phrase of phrases) if(!phraseSource.includes(phrase)) throw Error(`Missing exact phrase: ${phrase}`);
+writeFileSync(path.join(here,'phrases.js'),`window.sitePhrases = ${JSON.stringify(phrases)};\n`);
+const icons={github:'<path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.58 9.58 0 0 1 12 6.81c.85 0 1.71.12 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.58 4.94.36.31.68.92.68 1.85v2.76c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/>',x:'<path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-7.5L5.5 22H2.3l8.3-9.5L1 2h6.2l4.4 6.9L18.9 2Zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20Z"/>',telegram:'<path d="m21.7 3.3-3.4 17c-.3 1.2-.9 1.5-1.9.9l-5.2-3.9-2.5 2.4c-.3.3-.5.5-1 .5l.4-5.3L17.8 5.5c.4-.4-.1-.6-.6-.3L5.2 12.8.1 11.2c-1.1-.3-1.1-1.1.2-1.6L20.5 1.8c.9-.3 1.7.2 1.2 1.5Z"/>'};
+for(const [file,section] of [['index.html','work'],['games.html','games'],['stories.html','stories']]){
+ const nav=[['index.html','Работа','work'],['games.html','Игры','games'],['stories.html','Рассказы','stories']].map(([f,label,s])=>`<a href="./${f}?v=20261001-4" ${s===section?'aria-current="page"':''}>${label}</a>`).join('');
+ const social=[['github','GitHub','https://github.com/aka-gst'],['x','Twitter / X','https://x.com/aka_gst'],['telegram','Telegram','https://t.me/gostinka27']].map(([icon,label,href])=>`<a class="social" href="${href}" target="_blank" rel="noopener" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[icon]}</svg></a>`).join('');
+ replace(file,'HEADER',`<header class="site-header"><div class="header-inner site-width"><a class="brand" href="./index.html?v=20261001-4" aria-label="aka-gst — главная"><img src="../../assets/mark-${section==='games'?'games':section}.svg" alt="" width="32" height="32">aka<span>-</span>gst</a><div class="phrase" aria-label="Фразы из рабочих заметок"><span class="phrase-label">ИИ:</span><span class="phrase-text" id="phrase-text">Проверено поломкой.</span><button class="phrase-toggle" type="button" aria-label="Остановить ленту фраз" aria-pressed="false">Ⅱ</button></div><nav class="main-nav" aria-label="Разделы сайта">${nav}</nav><div class="social-links"><a class="social language" href="https://aka-gst.ru/en/" aria-label="English version">EN</a>${social}</div><a class="pill header-contact" href="https://t.me/gostinka27" target="_blank" rel="noopener">Обсудить проект ↗</a></div></header>`);
+}
+const card=(p,section)=>{
+ const q=p.id==='qa-quest', shot=p.shots?.[0], isGame=section==='games';
+ const src=q&&!isGame?'./assets/quequest-warehouse-current.png':p.preview?`./assets/${p.preview}`:shot?`../../assets/shots/${shot.file}`:null;
+ const media=src?`<img src="${esc(src)}" alt="${esc(q&&!isGame?'Новая первая смена QueQuest':shot?.alt||`Экран ${p.title}`)}" loading="lazy">`:`<span class="project-symbol" aria-hidden="true">${esc(p.monogram||'↔')}</span><span class="image-label">${p.pending?'Проект в разработке':'Свой сервер'}</span>`;
+ const link=p.links?.find(l=>['play','demo','site','course','report'].includes(l.type))||p.links?.[0];
+ const href=url(link?.url);
+ const title=p.id==='puzzle-quest'?'Матч Квест':p.title;
+ const description=q&&!isGame?'Сначала работа руками, затем автоматизация: Python появляется, когда он нужен игроку.':p.tagline;
+ const label=p.pending?'Запуск после проверки':q&&isGame?'Демо курса ↗':isGame?'Играть ↗':'Открыть ↗';
+ const tag=p.pending?'article':'a';
+ return `<${tag} class="project-card ${p.pending?'is-pending':''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${href?.startsWith('http')?'target="_blank" rel="noopener"':''}><div class="project-image">${media}</div><div class="project-copy"><small>${esc(p.kicker)}</small><h3>${esc(title)}</h3><p>${esc(description)}</p><span class="card-action">${label}</span></div></${tag}>`;
+};
+const work=selectProjects(projects,'work');
+replace('index.html','WORK',work.filter(p=>!['local-agent-gateway','dharma-ai'].includes(p.id)).map(p=>card(p,'work')).join('\n'));
+replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`<article class="resume-item"><span>${esc(i.period)}</span><div><h3>${esc(i.org)}</h3><p>${esc(i.role)}</p>${i.org.includes('Инди-студия')?'<a class="pill" href="./game-design/">Кейс VitalSchool · геймдизайн ↗</a>':''}</div></article>`).join('\n'));
+replace('index.html','SKILLS',site.profile.skills.map(g=>`<div class="skill-group"><h4>${esc(g.group)}</h4><p>${g.items.map(esc).join(' · ')}</p></div>`).join('\n'));
+const games=selectProjects(projects,'games');
+replace('games.html','GAMES',games.map(p=>card(p,'games')).join('\n'));
+replace('stories.html','BOOKS',stories['сборники'].map(c=>`<a class="book" href="#${esc(c.id)}" aria-label="Сборник «${esc(c.title)}»"><img src="../../assets/covers/${esc(c.cover)}" alt="Обложка ${esc(c.title)}"><span>${esc(c.title)}</span></a>`).join('\n'));
+replace('stories.html','STORIES',stories['сборники'].map(c=>`<section class="collection" id="${esc(c.id)}"><div class="collection-heading"><span>${esc(c.year)} · ${c.stories.length} историй</span><h3>${esc(c.title)}</h3></div><div class="collection-links">${c.stories.map((s,i)=>`<a href="https://aka-gst.ru/rasskazy/${encodeURIComponent(s.slug)}/"><span>${String(i+1).padStart(2,'0')}</span><strong>${esc(s.title)}</strong><span aria-hidden="true">↗</span></a>`).join('')}</div></section>`).join('\n'));
+console.log(`Generated ${work.length} work entries, ${games.length} games, 3 collections, ${phrases.length} phrases.`);
