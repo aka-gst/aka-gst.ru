@@ -2,6 +2,38 @@
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
+  for (const frame of document.querySelectorAll('.animation-frame')) {
+    const video = frame.querySelector('video');
+    const toggle = frame.querySelector('.animation-toggle');
+    if (!video || !toggle) continue;
+    const sync = () => {
+      toggle.setAttribute('aria-pressed', String(!video.paused));
+      toggle.textContent = video.paused ? 'Запустить анимацию' : 'Остановить анимацию';
+    };
+    toggle.addEventListener('click', async () => {
+      if (!video.paused) video.pause();
+      else {
+        try { await video.play(); }
+        catch { toggle.textContent = 'Повторить запуск'; return; }
+      }
+      sync();
+    });
+    video.addEventListener('play', sync);
+    video.addEventListener('pause', sync);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) video.pause();
+    });
+    reducedMotion.addEventListener('change', () => {
+      if (reducedMotion.matches) video.pause();
+    });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(entries => {
+        if (!entries[0].isIntersecting) video.pause();
+      }).observe(frame);
+    }
+    sync();
+  }
+
   const phraseNode = document.getElementById('phrase-text');
   const phrases = Array.isArray(window.sitePhrases) ? window.sitePhrases : [];
   if (phraseNode && phrases.length) {
