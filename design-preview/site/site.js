@@ -6,23 +6,39 @@
   const phrases = Array.isArray(window.sitePhrases) ? window.sitePhrases : [];
   if (phraseNode && phrases.length) {
     let index = Math.floor(Math.random() * phrases.length);
-    phraseNode.textContent = `${phrases[index]} (с)`;
-    if (!reducedMotion.matches) {
-      const next = () => {
+    const toggle = document.querySelector('.phrase-toggle');
+    let paused = false;
+    let timer;
+    let glitchTimer;
+    const show = () => {
+      const text = `${phrases[index]} (с)`;
+      phraseNode.textContent = text;
+      phraseNode.dataset.text = text;
+    };
+    const schedule = () => {
+      clearTimeout(timer);
+      clearTimeout(glitchTimer);
+      phraseNode.classList.remove('is-glitching');
+      if (paused || reducedMotion.matches || document.hidden) return;
+      timer = setTimeout(() => {
         index = (index + 1) % phrases.length;
-        const phrase = `${phrases[index]} (с)`;
-        phraseNode.textContent = '';
-        let letter = 0;
-        const type = () => {
-          if (letter < phrase.length) {
-            phraseNode.textContent += phrase[letter++];
-            setTimeout(type, 38);
-          } else setTimeout(next, 10000);
-        };
-        type();
-      };
-      setTimeout(next, 10000);
-    }
+        show();
+        phraseNode.classList.add('is-glitching');
+        glitchTimer = setTimeout(() => phraseNode.classList.remove('is-glitching'), 320);
+        timer = setTimeout(schedule, 320);
+      }, 10000);
+    };
+    toggle?.addEventListener('click', () => {
+      paused = !paused;
+      toggle.setAttribute('aria-pressed', String(paused));
+      toggle.setAttribute('aria-label', paused ? 'Продолжить ленту фраз' : 'Остановить ленту фраз');
+      toggle.textContent = paused ? '▶' : 'Ⅱ';
+      schedule();
+    });
+    reducedMotion.addEventListener('change', schedule);
+    document.addEventListener('visibilitychange', schedule);
+    show();
+    schedule();
   }
 
   if (!reducedMotion.matches && 'IntersectionObserver' in window) {
