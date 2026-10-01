@@ -523,3 +523,23 @@ h1,h2,h3,p,figure,blockquote{margin:0}
   .play-copy .hero-actions{order:5;margin-top:22px}
   .game-state{order:6;margin-top:24px}
 }
+
+@media(max-width:540px){
+  .proof-grid{display:flex;flex-direction:column;align-items:stretch;gap:0;padding-top:28px}
+  .proof-copy{display:contents}
+  .proof-copy .eyebrow{order:1}
+  .proof-copy h1{order:2;font-size:clamp(43px,12.3vw,60px);margin:16px 0 24px}
+  .proof-stage{order:3;height:265px;grid-template-rows:1fr 84px;margin-bottom:24px}
+  .proof-copy .hero-intro{order:4}
+  .proof-copy .hero-actions{order:5;flex-direction:row;align-items:center;gap:16px;margin-top:22px}
+  .proof-copy .hero-actions .action-primary{padding-inline:18px}
+  .proof-metrics{order:6;margin-top:28px}
+}
+
+@media(min-width:541px) and (max-width:1050px) and (orientation:landscape){
+  .proof-grid{grid-template-columns:1fr 1fr;gap:24px;padding-block:24px}
+  .proof-copy h1{font-size:48px;margin-block:16px}
+  .proof-copy .hero-intro{font-size:14px}
+  .proof-stage{height:300px;grid-template-rows:1fr 85px;transform:none}
+  .proof-metrics{margin-top:24px}
+}
