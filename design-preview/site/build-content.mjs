@@ -21,7 +21,10 @@ if(!strokaQ) throw Error('пустая строка QueQuest для «Работ
 const site=read('site.json'), stories=read('stories.json'), phraseSource=read('frazy.json').frazy;
 const phrases=['Это роли, а не задачи.','Когнитивный экзоскелет.','У жалобы есть число. Найди его.','Проверено поломкой.','Починили механизмом, а не обещанием.','Оно сильное, потому что честное.'];
 for(const phrase of phrases) if(!phraseSource.includes(phrase)) throw Error(`Missing exact phrase: ${phrase}`);
-writeFileSync(path.join(here,'phrases.js'),`window.sitePhrases = ${JSON.stringify(phrases)};\n`);
+// 03.10.2026 Сергей: «вот тебе твиты для ии ещё» — список shapka в data/frazy.json, посимвольно (35а).
+const shapka=read('frazy.json').shapka||[];
+for(const f of shapka) if(typeof f!=='string'||!f.trim()) throw Error('пустая фраза в frazy.json/shapka');
+writeFileSync(path.join(here,'phrases.js'),`window.sitePhrases = ${JSON.stringify([...phrases,...shapka])};\n`);
 const icons={github:'<path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.58 9.58 0 0 1 12 6.81c.85 0 1.71.12 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.58 4.94.36.31.68.92.68 1.85v2.76c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/>',x:'<path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-7.5L5.5 22H2.3l8.3-9.5L1 2h6.2l4.4 6.9L18.9 2Zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20Z"/>',telegram:'<path d="m21.7 3.3-3.4 17c-.3 1.2-.9 1.5-1.9.9l-5.2-3.9-2.5 2.4c-.3.3-.5.5-1 .5l.4-5.3L17.8 5.5c.4-.4-.1-.6-.6-.3L5.2 12.8.1 11.2c-1.1-.3-1.1-1.1.2-1.6L20.5 1.8c.9-.3 1.7.2 1.2 1.5Z"/>'};
 for(const [file,section] of [['index.html','work'],['games.html','games'],['stories.html','stories']]){
  const nav=[['index.html','Работа','work'],['games.html','Игры','games'],['stories.html','Рассказы','stories']].map(([f,label,s])=>`<a href="./${f}?v=20261001-6" ${s===section?'aria-current="page"':''}>${label}</a>`).join('');

@@ -46,6 +46,7 @@
       const text = `${phrases[index]} (с)`;
       phraseNode.textContent = text;
       phraseNode.dataset.text = text;
+      phraseNode.title = text; // длинная фраза в шапке обрезается многоточием — полный текст при наведении
     };
     const schedule = () => {
       clearTimeout(timer);
