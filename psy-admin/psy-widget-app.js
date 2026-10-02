@@ -4,6 +4,20 @@ import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-26";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
+const eventsApiUrl = new URL("./booking/api/events", import.meta.url).href;
+
+// Обезличенный счётчик сервера записи: только имя события и короткий ключ
+// страницы — ни текста вопроса, ни контактов, ни адреса. Молча глохнет:
+// сломать виджет на сайте центра он не вправе.
+function track(event, page) {
+  try {
+    fetch(eventsApiUrl, { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify(page ? { event, page } : { event }) }).catch(() => {});
+  } catch {}
+}
+const pageKey = () => {
+  const rest = location.pathname.replace(/^\/+|\/+$/g, "");
+  return rest ? rest.replace(/[^a-z0-9]+/gi, "-").toLowerCase().slice(0, 40) : "home";
+};
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";
@@ -103,6 +117,7 @@ mount.innerHTML = `
     </aside>
   </section>`;
 document.body.append(mount);
+track("page_view", pageKey());
 
 // В снимке намеренно нет стороннего JavaScript Tilda. Возвращаем только
 // безопасную механику мобильного меню, чтобы копия оставалась проходимой.
@@ -240,6 +255,7 @@ function handoffKindFor(answer) {
 
 function openHandoffFor(answer) {
   handoffKind.value = handoffKindFor(answer);
+  track(handoffKind.value === "rental" ? "hall_open" : "booking_open");
   renderHandoffMode();
   handoffSubject.value = answer.title || "";
   handoffForm.hidden = false;
@@ -339,7 +355,9 @@ function render() {
 }
 
 function transition(action) {
+  const wasOpen = state.open;
   state = reduceWidgetState(state, action);
+  if (!wasOpen && state.open) track("assistant_open");
   render();
 }
 
@@ -541,6 +559,7 @@ handoffToggle.addEventListener("click", () => {
   const expanded = handoffToggle.getAttribute("aria-expanded") !== "true";
   handoffToggle.setAttribute("aria-expanded", String(expanded));
   handoffForm.hidden = !expanded;
+  if (expanded) track("form_shown");
   handoffToggle.textContent = expanded ? "Скрыть форму" : "Оставить заявку";
   if (expanded) handoffKind.focus({ preventScroll: true });
 });
