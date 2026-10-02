@@ -54,7 +54,10 @@ const датаФайла = (relative) => {
 // читаются ОТСЮДА, а не переписываются руками: скопированное число живёт
 // своей жизнью и через месяц расходится с источником. Файл читается при
 // сборке, переменные уезжают в разметку — лишнего запроса из браузера нет.
-const АНИМАТЕКА = '/Users/gst/dev/animateka/animateka.json';
+// С сентября 2026 аниматека живёт в ~/dev/_services/animateka; старый путь — запасной.
+// Без этой поправки сборка тихо выпускала страницы с пустым <style> (найдено 02.10.2026).
+const АНИМАТЕКА = ['/Users/gst/dev/_services/animateka/animateka.json', '/Users/gst/dev/animateka/animateka.json']
+  .find(p => existsSync(p)) || '/Users/gst/dev/_services/animateka/animateka.json';
 const анимТокены = (() => {
   if (!existsSync(АНИМАТЕКА)) {
     console.warn('  ! аниматеки нет на месте — кривые останутся прежними');
@@ -2209,3 +2212,7 @@ console.log(
     html.length
   } байт`
 );
+
+// Новая главная (решение Сергея 02.10.2026): три страницы кандидата из
+// design-preview/site кладутся в корень поверх старой главной. Откат — убрать строку.
+await import('./tools/novaya-glavnaya.mjs');

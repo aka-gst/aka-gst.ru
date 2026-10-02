@@ -42,6 +42,13 @@ done
 # часов. Не вписывать обратно.
 PAYLOAD="
 index.html
+games.html
+stories.html
+site.css
+site.js
+phrases.js
+fonts
+game-design
 en
 404.html
 503.html

@@ -16,3 +16,8 @@ test('new selected games lead the unified catalogue', () => {
  const fixture=['technomagic','black-ice','afterflow-prism','acid-uno','pythonio','pulse-arena','sdvig-21','glubina','perelom'].map(id=>({id}));
  assert.deepEqual(selectProjects(fixture,'games').map(p=>p.id),['black-ice','afterflow-prism','acid-uno','pythonio','pulse-arena','sdvig-21','technomagic','glubina']);
 });
+
+test('Тетколор возвращён на витрину сразу после Неон Линий (решение Сергея 02.10.2026)', () => {
+  const fixture = ['tetcolor', 'neon-lines', 'puzzle-quest', 'coin-flip', 'naotmash'].map(id => ({ id }));
+  assert.deepEqual(selectProjects(fixture, 'games').map(p => p.id), ['neon-lines', 'tetcolor', 'puzzle-quest']);
+});
