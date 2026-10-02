@@ -80,7 +80,13 @@
   "tagline": "Собирай строки и столбцы с суммой 21; находи цепочки ради большего счёта.",
   "preview": "sdvig-21.png",
   "monogram": null,
-  "pending": true
+  "links": [
+   {
+    "type": "play",
+    "label": "Играть",
+    "url": "/sdvig/"
+   }
+  ]
  },
  {
   "id": "glubina",
@@ -90,5 +96,25 @@
   "preview": null,
   "monogram": "↓∞",
   "pending": true
+ },
+ {
+  "id": "echo-null",
+  "title": "ECHO//NULL",
+  "kicker": "Игра · idle",
+  "tagline": "Idle-игра про оператора, запертого внутри узла 7F: раскачиваешь узел, делишь питание и по кускам узнаёшь, что это за машина",
+  "preview": null,
+  "shots": [
+   {
+    "file": "game-echo-null.jpg",
+    "alt": "Экран ECHO//NULL: узел 7F и панели оператора"
+   }
+  ],
+  "links": [
+   {
+    "type": "play",
+    "label": "Играть",
+    "url": "/echo-null/"
+   }
+  ]
  }
 ]
