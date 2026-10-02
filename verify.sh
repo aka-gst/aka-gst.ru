@@ -321,11 +321,14 @@ echo "== ничего не притягивает экран =="
 # глушил ошибку, и единственная защита от порчи была слепой и выглядела
 # зелёной. Поэтому у каждого файла есть примета, которая обязана в нём
 # быть; нет приметы — меряем не то, и это FAIL, а не ok.
-for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js; do
+for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js /site.css /site.js; do
   case "$f" in
     # У site.css приметой взят scroll-padding-top — он тут не случайно:
     # мы его намеренно оставили, и заодно он стережёт сам себя.
     */site.css) primeta='scroll-padding-top' ;;
+    # Корневые /site.css и /site.js — новая главная (02.10.2026): там 02.10 нашли html{scroll-behavior:smooth},
+    # которого сторож не видел, потому что смотрел только /assets/.
+    /site.js)   primeta='sitePhrases' ;;
     */read.css) primeta='.bgrid' ;;
     */app.js)   primeta='data-track-to' ;;
     */read.js)  primeta='book-toggle' ;;
