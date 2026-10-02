@@ -39,3 +39,4 @@ a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:po
 .phrase-text{white-space:nowrap;text-overflow:ellipsis;max-height:none}
 @media(min-width:651px){.phrase-text{max-width:560px}}
 .stories-hero{grid-template-columns:1fr}.book-shelf{order:-1}.book{max-width:240px}
+.tagline-lead{margin:0 0 6px;font-weight:600;color:var(--text,#f2f4f5)}

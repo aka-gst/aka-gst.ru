@@ -17,7 +17,7 @@ const КЛАССЫ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'w
 
 // С 02.10.2026 главная разнесена на три страницы (работа, игры, рассказы):
 // подписи карточек — в feature-copy и project-copy.
-const КОНТЕЙНЕРЫ = ['work-gateway-copy', 'work-dharma-copy', 'feature-copy', 'project-copy'];
+const КОНТЕЙНЕРЫ = ['work-gateway-copy', 'work-dharma-copy', 'feature-copy', 'project-copy', 'tagline-lead'];
 
 // Меряем ТЕКСТ, который видит человек: содержимое элемента без тегов.
 // Первая версия этой меры искала только элементы БЕЗ вложенных тегов и
