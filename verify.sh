@@ -248,7 +248,7 @@ OWNER_HIDDEN="coin maketchik put naotmash perelom stihii claw psy-admin"
 # позеленеть, ничего не стережёт: к ней привыкают и её отключают.
 # Служебное в счёт не идёт — assets, api, счётчик и страницы ошибок.
 SERVER_DIRS=$(ssh -o ConnectTimeout=20 bonita 'ls -1 /opt/zakriva/caddy/site' 2>/dev/null \
-  | grep -vE '^(assets|404\.html|503\.html|index\.html|favicon|og\.png|robots|sitemap|game-menu|player-name|tour\.js|data)' || true)
+  | grep -vE '^(assets|fonts|404\.html|503\.html|index\.html|favicon|og\.png|robots|sitemap|game-menu|player-name|tour\.js|data)' || true)
 if [ -z "$SERVER_DIRS" ]; then
   say_bad "список папок сервера пуст — сверить достижимость не с чем"
 else

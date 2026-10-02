@@ -30,6 +30,8 @@ const esc = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replac
 for (const [file, urlPath] of Object.entries(pages)) {
   let html = readFileSync(path.join(src, file), 'utf8');
   html = html.replaceAll('../../', './').replace(/(<a\b[^>]*?\shref=")https:\/\/aka-gst\.ru\//g, '$1/');
+  // На бою пути от корня: сторожа verify.sh (ассеты, сироты) видят только href="/…".
+  html = html.replace(/(\s(?:src|href|poster)=")\.\//g, '$1/');
   if (html.includes('../../')) throw new Error(`${file}: остался путь ../../`);
   const title = html.match(/<title>([^<]*)<\/title>/)?.[1];
   const description = html.match(/<meta name="description" content="([^"]*)"/)?.[1];
