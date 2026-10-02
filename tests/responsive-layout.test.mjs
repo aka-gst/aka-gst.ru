@@ -348,7 +348,20 @@ test('боковое оглавление явно разделяет три с�
   assert.match(правилоЗаголовка, /border-bottom:\s*1px solid var\(--rule\)/);
   assert.match(css, /\.reader-side-group:nth-child\(2\)\s*\{[^}]*--group-accent:\s*var\(--accent-read-alt\)/);
   assert.match(css, /\.reader-side-group:nth-child\(3\)\s*\{[^}]*--group-accent:\s*var\(--accent-read-third\)/);
-  assert.match(css, /--accent-read:\s*#ff72b8/, 'отдельная читалка должна быть в палитре раздела рассказов');
+  // С 02.10.2026 «палитра раздела рассказов» — это раздел «Рассказы» новой
+  // главной (правка Сергея №14: «в том же странном цвете, не в духе нашего
+  // нового сайта»). Акцент берётся из .page-stories в site.css, корешки — из
+  // акцентов её разделов; прежней ночной палитры в читалке быть не должно.
+  const siteCss = site('site.css');
+  assert.match(css, /\.reader\s*\{[^}]*--accent-read:\s*var\(--accent\)/, 'акцент читалки — акцент раздела «Рассказы» новой главной');
+  assert.match(page, /<body class="reader page-stories">/, 'страница рассказа должна быть в разделе «Рассказы» новой главной');
+  assert.match(siteCss, /\.page-stories\{--accent:#[0-9a-f]{6}\}/);
+  for (const корешок of css.match(/--accent-read-(?:alt|third):\s*#[0-9a-f]{6}/g).slice(0, 2)) {
+    assert.ok(siteCss.includes(корешок.split(/:\s*/)[1]), `${корешок}: корешок не из палитры новой главной`);
+  }
+  for (const старый of ['#ff72b8', '#a77bff', '#70e0b1', '#0b0911', '#15101d', '#f0ebf3', '#352c46', '#aaa3b3']) {
+    assert.ok(!css.toLowerCase().includes(старый), `в читалке осталась старая ночная палитра: ${старый}`);
+  }
   assert.match(css, /html\[data-ground="paper"\] \.reader\s*\{[^}]*--accent-read-alt:\s*#6842a4[^}]*--accent-read-third:\s*#1f7658/s,
     'у трёх корешков должны оставаться контрастные варианты на бумажном фоне');
 

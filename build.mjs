@@ -1637,28 +1637,21 @@ const readerHead = (title, description, canonical) => `
     <link rel="canonical" href="${esc(canonical)}">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
-    <style>${анимТокены}</style>
-    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
+    ${ШАПКА_ГОЛОВА}
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
     <script defer src="/assets/afterimage-scroll.js?v=${assetVersion('assets/afterimage-scroll.js')}"></script>
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>`;
 
 // Шапка сайта на страницах рассказов. Владелец: «почему рассказы не в стиле
 // сайта сделаны, хотя бы хэдер» — и он прав: без неё раздел читался как
-// чужой сайт. Переключатель здесь — ссылки, а не кнопки: панелей на этой
-// странице нет, переключать нечего, а увести на главную нужно.
+// чужой сайт. С 02.10.2026 это шапка новой главной (правка Сергея №14: «когда
+// читаешь — в том же странном цвете, не в духе нашего нового сайта»). Своей
+// копии шапки здесь нет: её и стили новой главной вставляет последним шагом
+// tools/shapka-rasskazov.mjs — ровно те, что в собранной stories.html, иначе
+// правка шапки на главной не доезжала бы до рассказов (правило 27).
+const ШАПКА_ГОЛОВА = '<!-- SHAPKA-RASSKAZOV:HEAD -->';
 const readerTopbar = `
-      <header class="topbar">
-        ${brand('stories')}
-        <div class="track-switch" role="group" aria-label="Разделы сайта">
-          <a href="/#work">${trackIcon('work')}<span>${esc(site.tracks.work.label)}</span></a>
-          <a href="/#games">${trackIcon('games')}<span>${esc(site.tracks.play.label)}</span></a>
-        </div>
-        <a class="topbar-link topbar-link--here" href="/rasskazy/" aria-current="page">Рассказы</a>
-        <nav class="socials" aria-label="Профили">
-${socialLinks('reader')}
-        </nav>
-      </header>`;
+    <!-- SHAPKA-RASSKAZOV:HEADER -->`;
 
 // Оглавление на больших экранах стоит сбоку, а на узких входит в общий поток.
 // Сборники сворачиваются, поэтому мобильный первый экран не занят всеми
@@ -1750,7 +1743,7 @@ const storiesIndex = `<!doctype html>
     `${site.url}/rasskazy/`
   )}
   </head>
-  <body class="reader">
+  <body class="reader page-stories">
 ${readerTopbar}
     <header class="reader-top">
       <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
@@ -1808,7 +1801,7 @@ ${readerTopbar}
       <div class="bgrid">
 ${сборникиПоказ
   .map(
-    (c, ci) => `      <div class="book" id="book-${esc(c.id)}">
+    (c, ci) => `      <div class="sbornik" id="book-${esc(c.id)}">
         <article class="bcard">
           ${
             c.cover
@@ -1910,7 +1903,7 @@ for (const [i, st] of storyList.entries()) {
     `${site.url}/rasskazy/${st.slug}/`
   )}
   </head>
-  <body class="reader">
+  <body class="reader page-stories">
     <div class="reader-progress" aria-hidden="true"><i></i></div>
 ${readerTopbar}
     <header class="reader-top">
@@ -2219,3 +2212,6 @@ console.log(
 // Новая главная (решение Сергея 02.10.2026): три страницы кандидата из
 // design-preview/site кладутся в корень поверх старой главной. Откат — убрать строку.
 await import('./tools/novaya-glavnaya.mjs');
+// Страницы рассказов получают шапку и стили новой главной из только что
+// собранной stories.html — после неё, иначе взяли бы вчерашнюю.
+await import('./tools/shapka-rasskazov.mjs');

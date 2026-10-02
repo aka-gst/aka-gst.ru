@@ -81,7 +81,10 @@
     наверх.hidden = !(длинныйТекст && scrollY >= высота);
   };
   наверх.addEventListener('click', () => {
-    scrollTo(0, 0); // мгновенно: плавности нет вообще отовсюду
+    // Мгновенно: плавности нет вообще отовсюду. Явно, потому что /site.css
+    // новой главной ставит плавную прокрутку на весь html, и голый
+    // scrollTo(0, 0) стал бы плавным.
+    scrollTo({ top: 0, left: 0, behavior: 'instant' });
     // При reduced motion браузер прыгает сразу; не ждём следующего scroll,
     // чтобы круг не висел на верхнем экране лишний кадр.
     requestAnimationFrame(обновитьНаверх);
@@ -144,7 +147,7 @@
 // Прямые адреса рассказов живут по-прежнему — разворот их дополняет, а не
 // заменяет. У развёрнутого есть ссылка «открыть отдельно».
 (() => {
-  const сборники = [...document.querySelectorAll('.reader-main .book')];
+  const сборники = [...document.querySelectorAll('.reader-main .sbornik')];
   if (сборники.length < 2) return;
 
   const тела = new Map();
