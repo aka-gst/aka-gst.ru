@@ -5,14 +5,19 @@ import {
   AUTOFIRE_INTERVAL,
   COLLAPSE_DURATION,
   CRATE_LAYOUT,
+  CONDITION_LAYOUT,
+  FUNCTION_LAYOUT,
   INTERACTION_RADIUS,
   MANUAL_CRATES_REQUIRED,
   MACHINE,
   MAX_DT,
+  NIGHT_QUEUE_LAYOUT,
   PALLET,
   PLAYER_SPEED,
+  CRATE_PAY,
   PROLOGUE_TIMEOUT,
   RED_CRATE_FAILURE_DURATION,
+  SECOND_SHIFT_LAYOUT,
   THREAT_LAYOUT,
   THREATS_TO_COLLAPSE,
   WAKE_REVEAL_DURATION,
@@ -57,12 +62,19 @@ const DEFAULT_STATE = Object.freeze({
     lastDropDelivered: false,
     incomeAt: -100,
     incomeSource: null,
+    autoTarget: 6,
+    looseButtonTried: false,
   }),
   arm: Object.freeze({ awake: false, blocked: false, chip: 'missing', queue: [], active: null, failure: null, wakeRevealRemaining: 0 }),
   otherMind: Object.freeze({ phase: 'sleeping', line: '' }),
+  learning: Object.freeze({ chapter: 1, printUnlocked: false, forUnlocked: false, ifUnlocked: false, listUnlocked: false, whileUnlocked: false, funcUnlocked: false, dictUnlocked: false, reliabilityUnlocked: false, asyncUnlocked: false, aiUnlocked: false, llmUnlocked: false, botUnlocked: false, queueTrace: [], functionTrace: [] }),
 });
 
 const RESTORED_OTHER_MIND_LINE = 'Я слышу машину. Теперь научи меня понимать её.';
+const MACHINE_TERMINAL = Object.freeze({ x: MACHINE.x, y: MACHINE.y + 175 });
+const LOOSE_START_BUTTON = Object.freeze({ x: MACHINE.x + 145, y: MACHINE.y + 200 });
+const CHIP_FLOOR = Object.freeze({ x: 850, y: 535 });
+const CHIP_SOCKET = Object.freeze({ x: MACHINE.x, y: MACHINE.y + 286 });
 
 function cloneEnemies(enemies = THREAT_LAYOUT) {
   return enemies.map((enemy) => ({ ...enemy, alive: enemy.alive ?? true }));
@@ -99,6 +111,7 @@ export function createGameState(overrides = {}) {
       failure: overrides.arm?.failure ? { ...overrides.arm.failure } : null,
     },
     otherMind: mergePart(DEFAULT_STATE.otherMind, overrides.otherMind),
+    learning: mergePart(DEFAULT_STATE.learning, overrides.learning),
   };
 }
 
@@ -115,11 +128,11 @@ export function createCheckpointState(checkpoint = 'start') {
   if (checkpoint === 'chip') {
     return createGameState({
       scene: 'chip', checkpoint, powers,
-      player: { x: 1010, y: 580 },
-      arm: { chip: 'fallen' },
+      player: { x: 1140, y: 720 },
+      arm: { chip: 'held' },
       warehouse: {
         manualDelivered: 3,
-        wage: 360,
+        wage: 3 * CRATE_PAY,
         crates: CRATE_LAYOUT.map((crate) => (
           ['box-01', 'box-02', 'box-03'].includes(crate.id)
             ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y }
@@ -129,20 +142,20 @@ export function createCheckpointState(checkpoint = 'start') {
     });
   }
   if (checkpoint === 'machine') {
-    return createGameState({
+    return startChipAutomation(createGameState({
       scene: 'machine', checkpoint, powers,
       player: { x: 1120, y: 580 },
       arm: { chip: 'installed' },
       warehouse: {
         manualDelivered: 3,
-        wage: 360,
+        wage: 3 * CRATE_PAY,
         crates: CRATE_LAYOUT.map((crate) => (
           ['box-01', 'box-02', 'box-03'].includes(crate.id)
             ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y }
             : crate
         )),
       },
-    });
+    }));
   }
   if (checkpoint === 'red-crate' || checkpoint === 'reward') {
     return createGameState({
@@ -150,18 +163,234 @@ export function createCheckpointState(checkpoint = 'start') {
       checkpoint,
       powers,
       player: { x: 800, y: 580 },
-      arm: { awake: true, blocked: true },
+      arm: { awake: true, blocked: checkpoint === 'red-crate', chip: 'installed', startSource: checkpoint === 'reward' ? 'chip' : null },
       otherMind: { phase: 'awake', line: RESTORED_OTHER_MIND_LINE },
       warehouse: {
         manualDelivered: 3,
         autoDelivered: 6,
-        wage: 1080,
+        wage: 9 * CRATE_PAY,
         freeTime: 24,
         crates: CRATE_LAYOUT.map((crate) => {
-          if (crate.id === 'red-01') return { ...crate, status: 'blocked', x: 720, y: 575 };
+          if (crate.id === 'red-01') return { ...crate, status: checkpoint === 'red-crate' ? 'blocked' : 'hidden', x: 720, y: 575 };
           return { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y };
         }),
       },
+    });
+  }
+  if (checkpoint === 'shift2') {
+    return createGameState({
+      scene: 'machine', checkpoint, powers,
+      player: { x: MACHINE.x - 95, y: MACHINE.y + 215 },
+      arm: { chip: 'installed', awake: false, startSource: 'command' },
+      otherMind: { phase: 'awake', line: RESTORED_OTHER_MIND_LINE },
+      learning: { chapter: 2 },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: 0,
+        autoTarget: 6,
+        wage: 9 * CRATE_PAY,
+        freeTime: 24,
+        crates: SECOND_SHIFT_LAYOUT,
+      },
+    });
+  }
+  if (checkpoint === 'red2') {
+    return createGameState({
+      scene: 'red-crate', checkpoint, powers,
+      player: { x: 790, y: 590 },
+      arm: { chip: 'installed', awake: true, blocked: true, startSource: 'command', failure: { progress: 1, phase: 'freeze' } },
+      otherMind: { phase: 'awake', line: RESTORED_OTHER_MIND_LINE },
+      learning: { chapter: 2, printUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: 6,
+        autoTarget: 6,
+        wage: 15 * CRATE_PAY,
+        freeTime: 48,
+        crates: SECOND_SHIFT_LAYOUT.map((crate) => (
+          crate.kind === 'red'
+            ? { ...crate, status: 'blocked', x: 720, y: 575 }
+            : { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y }
+        )),
+      },
+    });
+  }
+  if (checkpoint === 'condition') {
+    return createGameState({
+      scene: 'condition', checkpoint, powers,
+      player: { x: MACHINE.x - 95, y: MACHINE.y + 215 },
+      arm: { chip: 'installed', awake: true, blocked: true, startSource: 'condition' },
+      otherMind: { phase: 'awake', line: RESTORED_OTHER_MIND_LINE },
+      learning: { chapter: 2, printUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: 0,
+        autoTarget: 3,
+        wage: 15 * CRATE_PAY,
+        freeTime: 48,
+        crates: CONDITION_LAYOUT,
+      },
+    });
+  }
+  if (checkpoint === 'reward2') {
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'condition' },
+      otherMind: { phase: 'awake', line: RESTORED_OTHER_MIND_LINE },
+      learning: { chapter: 2, printUnlocked: true, forUnlocked: true, ifUnlocked: true, botUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: 3,
+        autoTarget: 3,
+        wage: 18 * CRATE_PAY,
+        freeTime: 60,
+        crates: CONDITION_LAYOUT.map((crate) => (
+          crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate
+        )),
+      },
+    });
+  }
+  if (checkpoint === 'shift3' || checkpoint === 'queue') {
+    return createGameState({
+      scene: 'queue', checkpoint: 'queue', powers,
+      player: { x: MACHINE.x - 95, y: MACHINE.y + 215 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'queue' },
+      otherMind: { phase: 'awake', line: 'Очередь живая. Я не знаю, сколько ящиков придёт дальше.' },
+      learning: { chapter: 3, printUnlocked: true, forUnlocked: true, ifUnlocked: true, botUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: 0,
+        autoTarget: NIGHT_QUEUE_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        wage: 18 * CRATE_PAY,
+        freeTime: 60,
+        crates: NIGHT_QUEUE_LAYOUT,
+      },
+    });
+  }
+  if (checkpoint === 'reward3') {
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'queue' },
+      otherMind: { phase: 'awake', line: 'Пока очередь жива — я продолжаю. Когда она пуста — останавливаюсь.' },
+      learning: { chapter: 3, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, botUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: NIGHT_QUEUE_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        autoTarget: NIGHT_QUEUE_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        wage: 22 * CRATE_PAY,
+        freeTime: 76,
+        crates: NIGHT_QUEUE_LAYOUT.map((crate) => (
+          crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate
+        )),
+      },
+    });
+  }
+  if (checkpoint === 'function') {
+    return createGameState({
+      scene: 'function', checkpoint, powers,
+      player: { x: MACHINE.x - 95, y: MACHINE.y + 215 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'function' },
+      otherMind: { phase: 'awake', line: 'Две линии. Одно правило. Не копируй меня — дай мне имя.' },
+      learning: { chapter: 4, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, botUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: 0,
+        autoTarget: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        wage: 22 * CRATE_PAY,
+        freeTime: 76,
+        crates: FUNCTION_LAYOUT,
+      },
+    });
+  }
+  if (checkpoint === 'reward4') {
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'function' },
+      otherMind: { phase: 'awake', line: 'route(batch) — один навык, который я могу применить где угодно.' },
+      learning: { chapter: 4, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, funcUnlocked: true, botUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        autoTarget: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        wage: 26 * CRATE_PAY,
+        freeTime: 92,
+        crates: FUNCTION_LAYOUT.map((crate) => (
+          crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate
+        )),
+      },
+    });
+  }
+  if (checkpoint === 'friends' || checkpoint === 'reward5') {
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'function' },
+      otherMind: { phase: 'awake', line: checkpoint === 'reward5' ? 'Шесть событий. Один указатель. Три устойчивых приёма.' : 'Входные события уже пришли. Я подержу указатель — выбирай приём.' },
+      learning: { chapter: 5, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, funcUnlocked: true, botUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        autoTarget: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        wage: 26 * CRATE_PAY,
+        freeTime: 92,
+        crates: FUNCTION_LAYOUT.map((crate) => (
+          crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate
+        )),
+      },
+    });
+  }
+  if (checkpoint === 'vika' || checkpoint === 'reward6') {
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'function' },
+      otherMind: { phase: 'awake', line: checkpoint === 'reward6' ? 'Один и тот же вход. Другое решение — потому что память уже изменилась.' : 'Вход повторяется. Я покажу, что изменилось не снаружи, а внутри состояния.' },
+      learning: { chapter: 6, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, funcUnlocked: true, dictUnlocked: checkpoint === 'reward6', botUnlocked: true },
+      warehouse: {
+        manualDelivered: 3,
+        autoDelivered: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        autoTarget: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length,
+        wage: 26 * CRATE_PAY,
+        freeTime: 92,
+        crates: FUNCTION_LAYOUT.map((crate) => (
+          crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate
+        )),
+      },
+    });
+  }
+  if (checkpoint === 'virus' || checkpoint === 'reward7') {
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'function' },
+      otherMind: { phase: 'awake', line: checkpoint === 'reward7' ? 'Сбой больше не стирает процесс: тест воспроизводит, except восстанавливает, log оставляет след.' : 'Не бей ошибку. Сначала пойми, какое предположение сломалось.' },
+      learning: { chapter: 7, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, funcUnlocked: true, dictUnlocked: true, reliabilityUnlocked: checkpoint === 'reward7', botUnlocked: true },
+      warehouse: { manualDelivered: 3, autoDelivered: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length, autoTarget: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length, wage: 26 * CRATE_PAY, freeTime: 92, crates: FUNCTION_LAYOUT.map((crate) => (crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate)) },
+    });
+  }
+  if (checkpoint === 'foundry' || checkpoint === 'reward8') {
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'function' },
+      otherMind: { phase: 'awake', line: checkpoint === 'reward8' ? 'Queue держит поток. Два worker-а делят работу. Lock защищает общую память.' : 'Теперь не ускоряй один шаг вслепую. Смотри, где копится поток.' },
+      learning: { chapter: 8, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, funcUnlocked: true, dictUnlocked: true, reliabilityUnlocked: true, asyncUnlocked: checkpoint === 'reward8', botUnlocked: true },
+      warehouse: { manualDelivered: 3, autoDelivered: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length, autoTarget: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length, wage: 26 * CRATE_PAY, freeTime: 92, crates: FUNCTION_LAYOUT.map((crate) => (crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate)) },
+    });
+  }
+  if (['campus', 'ai-lab', 'reward9', 'llm-lab', 'reward10'].includes(checkpoint)) {
+    const aiUnlocked = ['reward9', 'llm-lab', 'reward10'].includes(checkpoint);
+    const llmUnlocked = checkpoint === 'reward10';
+    return createGameState({
+      scene: 'reward', checkpoint, powers,
+      player: { x: 800, y: 580 },
+      arm: { chip: 'installed', awake: true, blocked: false, startSource: 'function' },
+      otherMind: { phase: 'awake', line: llmUnlocked ? 'Модель — только один модуль. Контекст, инструменты и evals делают из неё систему.' : (aiUnlocked ? 'Поведение модели изменилось не от магии, а от данных, reward и проверки.' : 'Кампания закончилась. Теперь выбирай, какую систему строить дальше.') },
+      learning: { chapter: llmUnlocked ? 10 : (aiUnlocked ? 9 : 8), printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, funcUnlocked: true, dictUnlocked: true, reliabilityUnlocked: true, asyncUnlocked: true, aiUnlocked, llmUnlocked, botUnlocked: true },
+      warehouse: { manualDelivered: 3, autoDelivered: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length, autoTarget: FUNCTION_LAYOUT.filter((crate) => crate.kind === 'normal').length, wage: 26 * CRATE_PAY, freeTime: 92, crates: FUNCTION_LAYOUT.map((crate) => (crate.kind === 'normal' ? { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y } : crate)) },
     });
   }
   return createGameState();
@@ -227,6 +456,21 @@ export function getArmTransferPhase(progress = 0) {
   if (value < .24) return 'pickup';
   if (value < .84) return 'carry';
   return 'release';
+}
+
+function startChipAutomation(state) {
+  return {
+    ...state,
+    scene: 'automation', sceneTime: 0, checkpoint: 'machine',
+    arm: {
+      ...state.arm, chip: 'installed', startSource: 'chip', awake: true,
+      blocked: false, active: null, failure: null,
+      wakeRevealRemaining: WAKE_REVEAL_DURATION,
+      queue: state.warehouse.crates
+        .filter((crate) => crate.kind === 'normal' && crate.status === 'queued')
+        .map((crate) => ({ type: 'arm.move', boxId: crate.id, targetId: PALLET.id })),
+    },
+  };
 }
 
 export function getArmFailurePhase(progress = 0) {
@@ -358,7 +602,7 @@ export function applyGameAction(state, action) {
           manualDelivered,
           introComplete: manualDelivered === MANUAL_CRATES_REQUIRED ? false : state.warehouse.introComplete,
           bossEntrance: manualDelivered === MANUAL_CRATES_REQUIRED,
-          wage: state.warehouse.wage + (delivered ? 120 : 0),
+          wage: state.warehouse.wage + (delivered ? CRATE_PAY : 0),
           incomeAt: delivered ? state.elapsed : state.warehouse.incomeAt,
           incomeSource: delivered ? 'manual' : state.warehouse.incomeSource,
           lastDropAt: state.elapsed,
@@ -384,23 +628,32 @@ export function applyGameAction(state, action) {
         arm: { ...state.arm, awake: true, blocked: false },
       };
     }
-    case 'insert-python-chip': {
+    case 'pick-python-chip': {
       if (state.scene !== 'chip' || state.arm.chip !== 'fallen') return state;
+      return { ...state, arm: { ...state.arm, chip: 'held' } };
+    }
+    case 'insert-python-chip': {
+      if (state.scene !== 'chip' || state.arm.chip !== 'held') return state;
       return {
         ...state,
         sceneTime: 0,
         arm: { ...state.arm, chip: 'inserting' },
       };
     }
+    case 'press-loose-button': {
+      if (state.scene !== 'machine' || state.checkpoint !== 'shift2' || state.warehouse.looseButtonTried) return state;
+      return { ...state, warehouse: { ...state.warehouse, looseButtonTried: true } };
+    }
     case 'first-command-accepted': {
       if (state.scene !== 'machine') return state;
+      if (state.checkpoint === 'shift2' && !state.warehouse.looseButtonTried) return state;
       const queue = state.warehouse.crates
         .filter((crate) => crate.kind === 'normal' && crate.status === 'queued')
         .map((crate) => ({ type: 'arm.move', boxId: crate.id, targetId: PALLET.id }));
       return {
         ...state,
         scene: 'automation',
-        checkpoint: 'machine',
+        checkpoint: state.checkpoint === 'shift2' ? 'shift2' : 'machine',
         arm: {
           ...state.arm,
           awake: true,
@@ -409,7 +662,126 @@ export function applyGameAction(state, action) {
           queue,
           wakeRevealRemaining: WAKE_REVEAL_DURATION,
         },
+        learning: { ...state.learning, chapter: Math.max(2, state.learning.chapter), printUnlocked: true },
       };
+    }
+    case 'start-second-shift': {
+      if (state.scene !== 'reward') return state;
+      return createCheckpointState('shift2');
+    }
+    case 'condition-command-accepted': {
+      if (state.scene !== 'condition' || !Array.isArray(action.events) || !action.events.length) return state;
+      return {
+        ...state,
+        scene: 'automation',
+        sceneTime: 0,
+        checkpoint: 'condition',
+        arm: {
+          ...state.arm,
+          awake: true,
+          blocked: false,
+          active: null,
+          failure: null,
+          startSource: 'condition',
+          queue: action.events.map((event) => ({ ...event })),
+          wakeRevealRemaining: .9,
+        },
+        learning: { ...state.learning, chapter: 2, printUnlocked: true, forUnlocked: true, ifUnlocked: true },
+      };
+    }
+    case 'start-third-shift': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'reward2') return state;
+      return createCheckpointState('queue');
+    }
+    case 'queue-command-accepted': {
+      if (state.scene !== 'queue' || !Array.isArray(action.events) || !action.events.length) return state;
+      return {
+        ...state,
+        scene: 'automation',
+        sceneTime: 0,
+        checkpoint: 'queue',
+        arm: {
+          ...state.arm,
+          awake: true,
+          blocked: false,
+          active: null,
+          failure: null,
+          startSource: 'queue',
+          queue: action.events.map((event) => ({ ...event })),
+          wakeRevealRemaining: .65,
+        },
+        learning: { ...state.learning, chapter: 3, listUnlocked: true, whileUnlocked: true, queueTrace: Array.isArray(action.trace) ? action.trace.map((entry) => ({ ...entry })) : [] },
+      };
+    }
+    case 'start-fourth-shift': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'reward3') return state;
+      return createCheckpointState('function');
+    }
+    case 'function-command-accepted': {
+      if (state.scene !== 'function' || !Array.isArray(action.events) || !action.events.length) return state;
+      return {
+        ...state,
+        scene: 'automation',
+        sceneTime: 0,
+        checkpoint: 'function',
+        arm: {
+          ...state.arm, awake: true, blocked: false, active: null, failure: null,
+          startSource: 'function', queue: action.events.map((event) => ({ ...event })), wakeRevealRemaining: .65,
+        },
+        learning: { ...state.learning, chapter: 4, funcUnlocked: true, functionTrace: Array.isArray(action.trace) ? action.trace.map((entry) => ({ ...entry })) : [] },
+      };
+    }
+    case 'start-friends-defense': {
+      if (state.scene !== 'reward' || !['reward4', 'friends'].includes(state.checkpoint)) return state;
+      return { ...state, checkpoint: 'friends', learning: { ...state.learning, chapter: 5 } };
+    }
+    case 'friends-defense-complete': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'friends') return state;
+      return { ...state, checkpoint: 'reward5', learning: { ...state.learning, chapter: 5 } };
+    }
+    case 'start-vika-memory': {
+      if (state.scene !== 'reward' || !['reward5', 'vika'].includes(state.checkpoint)) return state;
+      return { ...state, checkpoint: 'vika', learning: { ...state.learning, chapter: 6 } };
+    }
+    case 'vika-memory-complete': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'vika') return state;
+      return { ...state, checkpoint: 'reward6', learning: { ...state.learning, chapter: 6, dictUnlocked: true } };
+    }
+    case 'start-virus-finale': {
+      if (state.scene !== 'reward' || !['reward6', 'virus'].includes(state.checkpoint)) return state;
+      return { ...state, checkpoint: 'virus', learning: { ...state.learning, chapter: 7 } };
+    }
+    case 'virus-finale-complete': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'virus') return state;
+      return { ...state, checkpoint: 'reward7', learning: { ...state.learning, chapter: 7, reliabilityUnlocked: true } };
+    }
+    case 'start-automation-foundry': {
+      if (state.scene !== 'reward' || !['reward7', 'foundry'].includes(state.checkpoint)) return state;
+      return { ...state, checkpoint: 'foundry', learning: { ...state.learning, chapter: 8 } };
+    }
+    case 'automation-foundry-complete': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'foundry') return state;
+      return { ...state, checkpoint: 'reward8', learning: { ...state.learning, chapter: 8, asyncUnlocked: true } };
+    }
+    case 'open-campus': {
+      if (state.scene !== 'reward' || !['reward8', 'campus', 'reward9', 'reward10'].includes(state.checkpoint)) return state;
+      return { ...state, checkpoint: 'campus', learning: { ...state.learning, chapter: Math.max(8, state.learning.chapter) } };
+    }
+    case 'start-ai-lab': {
+      if (state.scene !== 'reward' || !['reward8', 'campus', 'ai-lab'].includes(state.checkpoint)) return state;
+      return { ...state, checkpoint: 'ai-lab', learning: { ...state.learning, chapter: 9 } };
+    }
+    case 'ai-lab-complete': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'ai-lab') return state;
+      return { ...state, checkpoint: 'reward9', learning: { ...state.learning, chapter: 9, aiUnlocked: true } };
+    }
+    case 'start-llm-workshop': {
+      if (state.scene !== 'reward' || !['reward8', 'campus', 'reward9', 'llm-lab'].includes(state.checkpoint)) return state;
+      return { ...state, checkpoint: 'llm-lab', learning: { ...state.learning, chapter: 10, aiUnlocked: state.learning.aiUnlocked || state.checkpoint === 'reward9' } };
+    }
+    case 'llm-workshop-complete': {
+      if (state.scene !== 'reward' || state.checkpoint !== 'llm-lab') return state;
+      return { ...state, checkpoint: 'reward10', learning: { ...state.learning, chapter: 10, aiUnlocked: true, llmUnlocked: true } };
     }
     case 'other-mind-waking': {
       if (!state.arm.awake || !['sleeping', 'waking'].includes(state.otherMind.phase)) return state;
@@ -451,22 +823,27 @@ export function applyGameAction(state, action) {
     case 'arm-transfer-finished': {
       if (state.scene !== 'automation' || state.arm.active?.boxId !== action.boxId) return state;
       const autoDelivered = state.warehouse.autoDelivered + 1;
-      const finished = autoDelivered >= 6;
+      const finished = autoDelivered >= (state.warehouse.autoTarget ?? 6);
+      const episodeFinished = finished && state.arm.startSource === 'chip';
+      const conditionFinished = finished && state.arm.startSource === 'condition';
+      const queueFinished = finished && state.arm.startSource === 'queue';
+      const functionFinished = finished && state.arm.startSource === 'function';
+      const anyReward = episodeFinished || conditionFinished || queueFinished || functionFinished;
       return {
         ...state,
-        scene: state.scene,
-        sceneTime: state.sceneTime,
-        checkpoint: state.checkpoint,
+        scene: anyReward ? 'reward' : state.scene,
+        sceneTime: anyReward ? 0 : state.sceneTime,
+        checkpoint: functionFinished ? 'reward4' : (queueFinished ? 'reward3' : (conditionFinished ? 'reward2' : (episodeFinished ? 'reward' : state.checkpoint))),
         warehouse: {
           ...state.warehouse,
           autoDelivered,
-          wage: state.warehouse.wage + 120,
+          wage: state.warehouse.wage + CRATE_PAY,
           incomeAt: state.elapsed,
           incomeSource: 'robot',
           freeTime: state.warehouse.freeTime + 4,
           crates: state.warehouse.crates.map((crate) => {
             if (crate.id === action.boxId) return { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y, deliveredAt: state.elapsed };
-            if (finished && crate.id === 'red-01') return { ...crate, status: 'scan', x: 720, y: 575 };
+            if (finished && !anyReward && crate.kind === 'red') return { ...crate, status: 'scan', x: 720, y: 575 };
             return crate;
           }),
         },
@@ -474,21 +851,29 @@ export function applyGameAction(state, action) {
           ...state.arm,
           active: null,
           queue: finished ? [] : state.arm.queue,
-          failure: finished ? { progress: 0, phase: 'reach' } : state.arm.failure,
+          failure: finished && !anyReward ? { progress: 0, phase: 'reach' } : state.arm.failure,
           blocked: false,
         },
+        learning: functionFinished
+          ? { ...state.learning, chapter: 4, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, funcUnlocked: true, botUnlocked: true, functionTrace: state.learning.functionTrace ?? [] }
+          : queueFinished
+          ? { ...state.learning, chapter: 3, printUnlocked: true, forUnlocked: true, ifUnlocked: true, listUnlocked: true, whileUnlocked: true, botUnlocked: true, queueTrace: state.learning.queueTrace ?? [] }
+          : conditionFinished
+            ? { ...state.learning, chapter: 2, printUnlocked: true, forUnlocked: true, ifUnlocked: true, botUnlocked: true }
+            : state.learning,
       };
     }
     case 'arm-failure-finished': {
       if (state.scene !== 'automation' || !state.arm.failure) return state;
+      const redId = state.warehouse.crates.find((crate) => crate.kind === 'red')?.id;
       return {
         ...state,
         scene: 'red-crate',
         sceneTime: 0,
-        checkpoint: 'red-crate',
+        checkpoint: state.arm.startSource === 'command' ? 'red2' : 'red-crate',
         warehouse: {
           ...state.warehouse,
-          crates: updateCrate(state, 'red-01', (crate) => ({ ...crate, status: 'blocked' })),
+          crates: redId ? updateCrate(state, redId, (crate) => ({ ...crate, status: 'blocked' })) : state.warehouse.crates,
         },
         arm: {
           ...state.arm,
@@ -501,6 +886,7 @@ export function applyGameAction(state, action) {
     }
     case 'inspect-red-crate': {
       if (state.scene !== 'red-crate') return state;
+      if (state.arm.startSource === 'command') return createCheckpointState('condition');
       return { ...state, scene: 'reward', sceneTime: 0, checkpoint: 'reward' };
     }
     default:
@@ -510,23 +896,47 @@ export function applyGameAction(state, action) {
 
 export function getNearbyAction(state) {
   if (state.scene === 'chip') {
-    return state.arm.chip === 'fallen'
-      ? { type: 'insert-python-chip', label: 'ВСТАВИТЬ ЧИП PYTHON' }
-      : null;
+    if (state.arm.chip === 'fallen' && distance(state.player, CHIP_FLOOR) <= INTERACTION_RADIUS + 20) {
+      return { type: 'pick-python-chip', label: 'ПОДНЯТЬ ЧИП' };
+    }
+    if (state.arm.chip === 'held' && distance(state.player, CHIP_SOCKET) <= INTERACTION_RADIUS + 55) {
+      return { type: 'insert-python-chip', label: 'ВСТАВИТЬ ЧИП В РАЗЪЁМ' };
+    }
+    return null;
   }
   if (state.scene === 'red-crate') {
-    const red = state.warehouse.crates.find((crate) => crate.id === 'red-01');
+    const red = state.warehouse.crates.find((crate) => crate.kind === 'red' && ['blocked', 'scan', 'queued'].includes(crate.status));
     return red && distance(state.player, red) <= INTERACTION_RADIUS + 25
       ? { type: 'inspect-red-crate', label: 'ПРОВЕРИТЬ ЯЩИК' }
       : null;
   }
   if (state.scene === 'machine') {
-    return distance(state.player, MACHINE) <= INTERACTION_RADIUS + 45
+    if (state.checkpoint === 'shift2' && !state.warehouse.looseButtonTried) {
+      return distance(state.player, LOOSE_START_BUTTON) <= INTERACTION_RADIUS + 25
+        ? { type: 'press-loose-button', label: 'НАЖАТЬ СНЯТУЮ КНОПКУ' }
+        : null;
+    }
+    return distance(state.player, MACHINE_TERMINAL) <= INTERACTION_RADIUS + 45
       ? { type: 'open-machine', label: 'ОТКРЫТЬ ТЕРМИНАЛ' }
       : null;
   }
+  if (state.scene === 'condition') {
+    return distance(state.player, MACHINE_TERMINAL) <= INTERACTION_RADIUS + 70
+      ? { type: 'open-machine', label: 'СОБРАТЬ ПРАВИЛО IF' }
+      : null;
+  }
+  if (state.scene === 'queue') {
+    return distance(state.player, MACHINE_TERMINAL) <= INTERACTION_RADIUS + 70
+      ? { type: 'open-machine', label: 'НАУЧИТЬ Q-BOT ОЧЕРЕДИ' }
+      : null;
+  }
+  if (state.scene === 'function') {
+    return distance(state.player, MACHINE_TERMINAL) <= INTERACTION_RADIUS + 70
+      ? { type: 'open-machine', label: 'СОБРАТЬ МОДУЛЬ ROUTE()' }
+      : null;
+  }
   if (state.scene === 'automation') {
-    return !state.arm.active && !state.arm.failure && state.arm.queue.length === 0 && distance(state.player, MACHINE) <= INTERACTION_RADIUS + 45
+    return !state.arm.active && !state.arm.failure && state.arm.queue.length === 0 && distance(state.player, MACHINE_TERMINAL) <= INTERACTION_RADIUS + 45
       ? { type: 'open-machine', label: 'ОТКРЫТЬ КОНСОЛЬ' }
       : null;
   }
@@ -534,7 +944,7 @@ export function getNearbyAction(state) {
   if (!state.warehouse.introComplete) return null;
   if (state.player.carrying) {
     if (distance(state.player, PALLET) <= INTERACTION_RADIUS + 35) {
-      return { type: 'drop-crate', target: PALLET.id, label: 'НА ЛЕНТУ · +$120' };
+      return { type: 'drop-crate', target: PALLET.id, label: `НА ПАЛЕТУ · +${CRATE_PAY} ₽` };
     }
     return null;
   }
@@ -657,14 +1067,7 @@ export function stepGame(state, input = {}, rawDt, options = {}) {
   }
 
   if (next.scene === 'chip' && next.arm.chip === 'inserting' && next.sceneTime >= CHIP_INSERT_DURATION) {
-    next = {
-      ...next,
-      scene: 'machine',
-      sceneTime: 0,
-      checkpoint: 'machine',
-      player: { ...next.player, x: MACHINE.x, y: MACHINE.y + 220 },
-      arm: { ...next.arm, chip: 'installed' },
-    };
+    next = startChipAutomation(next);
   }
 
   if (next.scene === 'automation' && next.arm.awake) {

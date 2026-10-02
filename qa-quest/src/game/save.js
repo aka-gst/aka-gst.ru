@@ -6,7 +6,7 @@ export function loadCheckpoint(storage = globalThis.localStorage) {
   try {
     const parsed = JSON.parse(storage?.getItem(STORAGE_KEY));
     if (
-      parsed?.version === GAME_VERSION
+      [1, GAME_VERSION].includes(parsed?.version)
       && CHECKPOINTS.includes(parsed.checkpoint)
     ) {
       return { checkpoint: parsed.checkpoint };

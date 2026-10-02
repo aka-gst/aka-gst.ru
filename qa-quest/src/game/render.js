@@ -6,10 +6,12 @@ import {
   WAKE_REVEAL_DURATION,
   WAREHOUSE_INTRO_DURATION,
   WORLD,
+  CRATE_PAY,
 } from './config.js?v=novice-1';
 import { getArmTransferPhase } from './model.js?v=novice-1';
 import { getSceneCameraTarget, getViewportTransform } from './viewport.js?v=2';
 import { getChipShowcasePhase } from './showcase-chip.js?v=1';
+import { CHIP_SOCKET, DOOR_SLAM_AT, getBossBeat, getChipPose } from './chip-scene.js';
 
 const prologueImage = new Image();
 prologueImage.src = 'art/night2-hero.jpg';
@@ -139,9 +141,142 @@ function drawCrate(ctx, crate, stack = 0) {
   ctx.globalAlpha = 1;
 }
 
+
+function drawProgramTraceWorld(ctx, state) {
+  const visible = state.scene === 'condition' || state.scene === 'queue' || state.scene === 'function'
+    || (state.scene === 'automation' && ['condition', 'queue', 'function'].includes(state.arm.startSource));
+  if (!visible) return;
+  const crates = state.warehouse.crates.filter((crate) => crate.status !== 'hidden');
+  if (!crates.length) return;
+  const functionMode = state.scene === 'function' || state.arm.startSource === 'function';
+  const trace = functionMode
+    ? (Array.isArray(state.learning?.functionTrace) ? state.learning.functionTrace : [])
+    : (Array.isArray(state.learning?.queueTrace) ? state.learning.queueTrace : []);
+  const traceIndex = trace.length ? Math.min(trace.length - 1, Math.max(0, Math.floor(state.sceneTime / .7))) : -1;
+  const traceEntry = traceIndex >= 0 ? trace[traceIndex] : null;
+  const activeId = traceEntry?.boxId ?? state.arm.active?.boxId ?? null;
+  const queueMode = state.scene === 'queue' || state.arm.startSource === 'queue';
+  const x0 = 78;
+  const y0 = 240;
+  const cell = 58;
+  const gap = 8;
+
+  ctx.save();
+  ctx.fillStyle = '#061019dd';
+  ctx.strokeStyle = functionMode ? '#72f0bc' : (queueMode ? '#899cff' : '#64e9ff');
+  ctx.lineWidth = 2;
+  ctx.fillRect(x0 - 22, y0 - 78, Math.max(470, crates.length * (cell + gap) + 44), 154);
+  ctx.strokeRect(x0 - 22, y0 - 78, Math.max(470, crates.length * (cell + gap) + 44), 154);
+  ctx.fillStyle = functionMode ? '#a8ffd9' : (queueMode ? '#aeb9ff' : '#92f5ff');
+  ctx.font = '900 13px ui-monospace, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(functionMode ? 'PYTHON · DEF route(batch) · CALL A / B' : (queueMode ? 'PYTHON · queue = [ ... ] · WHILE' : 'PYTHON · boxes = [ ... ] · FOR'), x0, y0 - 48);
+
+  crates.forEach((crate, index) => {
+    const x = x0 + index * (cell + gap);
+    const done = crate.status === 'pallet';
+    const active = crate.id === activeId;
+    ctx.globalAlpha = done ? .25 : 1;
+    ctx.fillStyle = crate.kind === 'red' ? '#551820' : '#172638';
+    ctx.strokeStyle = active ? '#ffc857' : (crate.kind === 'red' ? '#ff7580' : '#52687f');
+    ctx.lineWidth = active ? 5 : 2;
+    ctx.fillRect(x, y0 - 16, cell, 44);
+    ctx.strokeRect(x, y0 - 16, cell, 44);
+    ctx.fillStyle = crate.kind === 'red' ? '#ffd1d5' : '#dce8f0';
+    ctx.font = '900 12px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(crate.kind === 'red' ? 'КРАСН.' : (functionMode ? `${crate.line ?? '?'}${index}` : String(index)), x + cell / 2, y0 + 11);
+    ctx.fillStyle = '#71869a';
+    ctx.font = '700 9px ui-monospace, monospace';
+    ctx.fillText(`[${index}]`, x + cell / 2, y0 + 43);
+    if (active) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#ffc857';
+      ctx.beginPath();
+      ctx.moveTo(x + cell / 2, y0 - 42);
+      ctx.lineTo(x + cell / 2 - 9, y0 - 28);
+      ctx.lineTo(x + cell / 2 + 9, y0 - 28);
+      ctx.closePath();
+      ctx.fill();
+      ctx.font = '900 10px ui-monospace, monospace';
+      ctx.fillText('box', x + cell / 2, y0 - 50);
+    }
+  });
+  ctx.globalAlpha = 1;
+  if (traceEntry) {
+    ctx.textAlign = 'left';
+    ctx.font = '900 12px ui-monospace, monospace';
+    ctx.fillStyle = traceEntry.decision === 'move' ? '#6dffaf' : '#ff7c86';
+    ctx.fillText(
+      `${functionMode ? `LINE ${traceEntry.line} · ` : ''}${traceEntry.decision === 'move' ? 'IF → TRUE → ARM.MOVE' : 'IF → FALSE → ОСТАВИТЬ'}`,
+      x0,
+      y0 + 68,
+    );
+  }
+  ctx.restore();
+}
+
 // "Спокойный" из Аниматеки: cubic-bezier(0.4, 0, 0.2, 1).
 // Он помечен там как кривая для перемещений в обе стороны, поэтому обратный
 // путь героя — та же траектория, а не телепортация или новая анимация.
+
+function drawFunctionModule(ctx, state, now) {
+  const visible = state.scene === 'function'
+    || (state.scene === 'automation' && state.arm.startSource === 'function')
+    || state.checkpoint === 'reward4';
+  if (!visible) return;
+
+  const x = 650;
+  const y = 505;
+  const w = 250;
+  const h = 112;
+  const pulse = .55 + Math.sin(now / 180) * .18;
+  const active = state.scene === 'automation' && state.arm.startSource === 'function';
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Один физический «картридж поведения». От него идут две связи к двум
+  // независимым линиям — ровно та же метафора, что у route(line_a/b).
+  ctx.strokeStyle = active ? '#b8ffe0' : '#72f0bc';
+  ctx.lineWidth = active ? 7 : 4;
+  ctx.globalAlpha = active ? .95 : .58 + pulse * .25;
+  ctx.beginPath();
+  ctx.moveTo(x, y + 40); ctx.bezierCurveTo(510, y + 20, 455, 448, 350, 448);
+  ctx.moveTo(x, y + 72); ctx.bezierCurveTo(510, y + 92, 455, 623, 350, 623);
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;
+  ctx.shadowColor = '#72f0bc';
+  ctx.shadowBlur = active ? 30 : 13 + pulse * 8;
+  ctx.fillStyle = '#0b2119';
+  ctx.strokeStyle = '#72f0bc';
+  ctx.lineWidth = 4;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeRect(x, y, w, h);
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = '#8dffd0';
+  ctx.font = '900 22px ui-monospace, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('DEF ROUTE()', x + 18, y + 34);
+  ctx.fillStyle = '#d7ffec';
+  ctx.font = '800 13px ui-monospace, monospace';
+  ctx.fillText('1 МОДУЛЬ → 2 ЛИНИИ', x + 18, y + 62);
+  ctx.fillStyle = '#81bfa5';
+  ctx.font = '700 11px ui-monospace, monospace';
+  ctx.fillText('batch входит сюда', x + 18, y + 88);
+
+  ctx.fillStyle = active ? '#eafff4' : '#72f0bc';
+  for (const cy of [y + 40, y + 72]) {
+    ctx.beginPath();
+    ctx.arc(x - 2, cy, active ? 8 : 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function calmMotion(progress) {
   const t = Math.max(0, Math.min(1, progress));
   let low = 0;
@@ -298,9 +433,10 @@ function drawPrologue(ctx, state, now) {
 }
 
 function drawTerminal(ctx, state, now) {
-  const online = ['machine', 'automation', 'red-crate', 'reward'].includes(state.scene);
-  const foreshadow = state.scene === 'warehouse' && state.warehouse.manualDelivered >= 2;
+  const online = ['machine', 'automation', 'red-crate', 'condition', 'queue', 'function', 'reward'].includes(state.scene);
+  const foreshadow = false;
   const buttonAwake = state.arm.awake;
+  const buttonMissing = state.learning?.chapter >= 2;
   ctx.save();
   ctx.strokeStyle = buttonAwake ? '#64e9ff' : (foreshadow ? '#ffc857' : '#35404d');
   ctx.globalAlpha = buttonAwake ? .9 : .55;
@@ -324,42 +460,71 @@ function drawTerminal(ctx, state, now) {
   ctx.fillRect(MACHINE.x - 54, MACHINE.y - 25, online ? 78 : 32, 7);
   ctx.fillRect(MACHINE.x - 54, MACHINE.y - 7, online ? 48 : 22, 7);
   ctx.shadowBlur = 0;
+  if (state.scene === 'warehouse' && state.checkpoint === 'start') {
+    const learned = Math.max(0, Math.min(3, state.warehouse.manualDelivered || 0));
+    ctx.font = '800 8px ui-monospace, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = learned >= 3 ? '#ffc857' : '#748695';
+    ctx.fillText(learned >= 3 ? 'PATTERN READY' : 'LEARNING PATH', MACHINE.x - 54, MACHINE.y + 15);
+    for (let i = 0; i < 3; i += 1) {
+      const x = MACHINE.x + 10 + i * 20;
+      const filled = i < learned;
+      ctx.fillStyle = filled ? (learned >= 3 ? '#ffc857' : '#64e9ff') : '#24303c';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = filled ? 10 : 0;
+      ctx.beginPath(); ctx.arc(x, MACHINE.y + 12, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
   ctx.fillStyle = '#101721';
   ctx.fillRect(MACHINE.x - 18, MACHINE.y + 62, 36, 112);
   ctx.fillRect(MACHINE.x - 62, MACHINE.y + 170, 124, 22);
   const buttonX = MACHINE.x + 155;
   const buttonY = MACHINE.y + 205;
   ctx.fillStyle = '#141b25';
-  ctx.strokeStyle = buttonAwake ? '#64e9ff' : '#59616b';
+  ctx.strokeStyle = buttonMissing ? '#9d675e' : (buttonAwake ? '#64e9ff' : '#59616b');
   ctx.lineWidth = 5;
   ctx.fillRect(buttonX - 42, buttonY - 30, 84, 60);
   ctx.strokeRect(buttonX - 42, buttonY - 30, 84, 60);
-  ctx.fillStyle = buttonAwake ? '#64e9ff' : '#4c3032';
-  ctx.shadowColor = ctx.fillStyle;
-  ctx.shadowBlur = buttonAwake ? 25 : 3;
-  ctx.beginPath(); ctx.arc(buttonX, buttonY, 17, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = buttonAwake ? '#b9f6ff' : '#79828c';
-  ctx.font = '700 10px ui-monospace, monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(buttonAwake ? 'ПИТАНИЕ' : 'НЕТ ПИТАНИЯ', buttonX, buttonY + 47);
+  if (buttonMissing) {
+    // Chapter two: the physical shortcut is gone. The player must replace it with code.
+    ctx.fillStyle = '#080b10';
+    ctx.beginPath(); ctx.arc(buttonX, buttonY, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#d36f60';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(buttonX - 9, buttonY + 2); ctx.quadraticCurveTo(buttonX - 23, buttonY + 32, buttonX - 15, buttonY + 45); ctx.stroke();
+    ctx.strokeStyle = '#64e9ff';
+    ctx.beginPath(); ctx.moveTo(buttonX + 8, buttonY - 1); ctx.quadraticCurveTo(buttonX + 24, buttonY + 30, buttonX + 17, buttonY + 45); ctx.stroke();
+    ctx.fillStyle = '#ffc0ac';
+    ctx.font = '800 9px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('КНОПКА СНЯТА', buttonX, buttonY + 60);
+  } else {
+    ctx.fillStyle = buttonAwake ? '#64e9ff' : '#4c3032';
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = buttonAwake ? 25 : 3;
+    ctx.beginPath(); ctx.arc(buttonX, buttonY, 17, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = buttonAwake ? '#b9f6ff' : '#79828c';
+    ctx.font = '700 10px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(buttonAwake ? 'ПИТАНИЕ' : 'НЕТ ПИТАНИЯ', buttonX, buttonY + 47);
+  }
   ctx.restore();
 }
 
 function drawPoster(ctx, state, now) {
   const bossExit = state.scene === 'warehouse' && state.warehouse.bossEntrance;
-  const fallen = state.scene !== 'warehouse' || bossExit;
+  const fallen = state.scene !== 'warehouse' || (bossExit && state.sceneTime >= DOOR_SLAM_AT);
   const progress = bossExit
-    ? Math.min(1, Math.max(0, (state.sceneTime - 3.7) / .9))
-    : (fallen ? Math.min(1, state.sceneTime / .9) : 0);
-  const warning = !fallen && state.warehouse.manualDelivered >= 2;
-  const tremble = warning ? Math.sin(now / 42) * 3 : 0;
-  const x = (bossExit ? 900 + progress * 70 : 1180 - progress * 60) + tremble;
+    ? getBossBeat(state.sceneTime).fall
+    : (fallen ? 1 : 0);
+  const x = 1180 - progress * 410;
   const y = 215 + progress * 495;
   ctx.save();
   if (state.scene === 'automation') ctx.globalAlpha = state.arm.wakeRevealRemaining > 0 ? .18 : .06;
   ctx.translate(x, y);
-  ctx.rotate(-.03 + progress * 1.1 + (warning ? Math.sin(now / 55) * .015 : 0));
+  ctx.rotate(-.03 + progress * .08);
   ctx.fillStyle = '#e9e3d5';
   ctx.shadowColor = '#000';
   ctx.shadowBlur = 18;
@@ -378,7 +543,8 @@ function drawPoster(ctx, state, now) {
     ctx.fillText('приказ № 07', 0, 51);
   } else {
     ctx.font = '900 23px ui-monospace, monospace';
-    ctx.fillText('print("wake")', 0, -25);
+    ctx.font = '900 19px ui-monospace, monospace';
+    ctx.fillText('ЧИП → В РАЗЪЁМ', 0, -25);
     ctx.strokeStyle = '#111820';
     ctx.lineWidth = 7;
     ctx.beginPath();
@@ -413,12 +579,12 @@ function drawConveyor(ctx, state) {
   ctx.beginPath(); ctx.moveTo(PALLET.x - 65, PALLET.y - 48); ctx.lineTo(WORLD.width, PALLET.y - 48);
   ctx.moveTo(PALLET.x - 65, PALLET.y + 90); ctx.lineTo(WORLD.width, PALLET.y + 90); ctx.stroke();
   ctx.fillStyle = '#72ffac'; ctx.font = '800 21px ui-monospace, monospace';
-  ctx.fillText('ОТГРУЗКА → +$120', PALLET.x - 65, PALLET.y + 130);
+  ctx.fillText(`ОТГРУЗКА → +${CRATE_PAY} ₽`, PALLET.x - 65, PALLET.y + 130);
 }
 
 function drawArm(ctx, state, now, { wakeProgress = 0 } = {}) {
   const awake = state.arm.awake;
-  const watch = state.warehouse.manualDelivered * .14;
+  const watch = 0;
   const wakeRevealProgress = awake
     ? Math.max(0, Math.min(1, 1 - state.arm.wakeRevealRemaining / WAKE_REVEAL_DURATION))
     : 0;
@@ -437,14 +603,6 @@ function drawArm(ctx, state, now, { wakeProgress = 0 } = {}) {
   let crateX = null;
   let crateY = null;
   let failurePulse = 0;
-  const trying = !awake && state.scene === 'warehouse' && state.warehouse.introComplete;
-  if (trying) {
-    const phase = (state.elapsed % 4.5) / 4.5;
-    const reach = phase < .58 ? Math.sin(phase / .58 * Math.PI / 2) : Math.max(0, 1 - (phase - .68) / .32);
-    endX -= reach * 345;
-    endY += reach * 165;
-    if (phase > .58 && phase < .72) { endX += Math.sin(now / 22) * 14; endY += Math.cos(now / 31) * 8; }
-  }
   if (failure) {
     const red = state.warehouse.crates.find((crate) => crate.id === 'red-01');
     const p = Math.max(0, Math.min(1, failure.progress));
@@ -515,12 +673,23 @@ function drawArm(ctx, state, now, { wakeProgress = 0 } = {}) {
   }
   const baseX = MACHINE.x;
   const baseY = MACHINE.y + 220;
-  const moving = active || failure || trying;
+  const moving = active || failure;
   const elbowX = moving ? (baseX + endX) / 2 : MACHINE.x - 25 - gesture * 30;
   const elbowY = moving ? Math.min(baseY, endY) - 150 : MACHINE.y - 70 - gesture * 18;
   ctx.save();
   ctx.fillStyle = '#283444';
   ctx.fillRect(baseX - 70, baseY + 30, 140, 72);
+  ctx.fillStyle = '#03080c';
+  ctx.fillRect(CHIP_SOCKET.x - 47, CHIP_SOCKET.y - 26, 94, 52);
+  ctx.strokeStyle = state.arm.chip === 'installed' ? '#64e9ff' : '#d3b777';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(CHIP_SOCKET.x - 47, CHIP_SOCKET.y - 26, 94, 52);
+  ctx.fillStyle = '#d3b777';
+  for (let i = -2; i <= 2; i++) ctx.fillRect(CHIP_SOCKET.x + i * 14 - 3, CHIP_SOCKET.y - 20, 6, 8);
+  if (state.arm.chip !== 'installed') {
+    ctx.font = '700 11px ui-monospace, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('НЕТ ЧИПА', CHIP_SOCKET.x, CHIP_SOCKET.y + 14);
+  }
   ctx.strokeStyle = awake ? '#718398' : '#59687a';
   ctx.lineWidth = 42;
   ctx.lineCap = 'round';
@@ -541,7 +710,7 @@ function drawArm(ctx, state, now, { wakeProgress = 0 } = {}) {
       ctx.beginPath(); ctx.arc(x, y, 7 + strength * 9, 0, Math.PI * 2); ctx.fill();
     });
   }
-  ctx.fillStyle = awake ? '#64e9ff' : (state.warehouse.manualDelivered ? '#ffc857' : '#4c3032');
+  ctx.fillStyle = awake ? '#64e9ff' : '#4c3032';
   ctx.shadowColor = ctx.fillStyle;
   ctx.shadowBlur = 18;
   ctx.beginPath(); ctx.arc(endX, endY, 12, 0, Math.PI * 2); ctx.fill();
@@ -573,10 +742,6 @@ function drawArm(ctx, state, now, { wakeProgress = 0 } = {}) {
     ctx.strokeRect(crateX - 18, crateY - 18, 36, 36);
   }
   ctx.restore();
-  if (trying && state.elapsed % 4.5 > 2.6 && state.elapsed % 4.5 < 3.35) {
-    ctx.save(); ctx.font = '800 18px ui-monospace, monospace'; ctx.fillStyle = '#ffb35c'; ctx.textAlign = 'center';
-    ctx.fillText('ПОЧТИ… НЕТ СИГНАЛА', endX, endY - 55); ctx.restore();
-  }
 }
 
 function drawFirstActionGuide(ctx, state, now, guide) {
@@ -629,12 +794,11 @@ function drawDropFeedback(ctx, state) {
   ctx.restore();
 }
 
-function drawWarehouseIntro(ctx, state) {
+function drawWarehouseIntro(ctx, state, { reducedMotion = false } = {}) {
   if (state.warehouse.introComplete || !state.warehouse.bossEntrance) return;
   const time = Math.min(WAREHOUSE_INTRO_DURATION, state.sceneTime);
-  const eye = Math.max(0, Math.min(1, time / .9));
-  const bossProgress = Math.max(0, Math.min(1, (time - .65) / .75));
-  const bossX = 870 - bossProgress * 155;
+  const beat = getBossBeat(time);
+  const bossX = reducedMotion ? 715 : beat.x;
   const bossY = 575;
 
   ctx.save();
@@ -643,7 +807,7 @@ function drawWarehouseIntro(ctx, state) {
   ctx.strokeStyle = '#59687a';
   ctx.lineWidth = 8;
   ctx.strokeRect(810, 330, 155, 355);
-  if (time < 3.85) {
+  if (beat.bossVisible) {
     ctx.save();
     ctx.translate(bossX, bossY);
     ctx.fillStyle = '#111820';
@@ -657,20 +821,25 @@ function drawWarehouseIntro(ctx, state) {
     ctx.restore();
   }
 
-  if (time >= 1.15 && time < 3.75) {
-    const secondLine = time >= 2.75;
-    const label = secondLine ? 'РАБОТАЙ БЫСТРЕЕ.' : 'ОПЯТЬ ОТКЛЮЧИЛСЯ?';
-    ctx.font = `900 ${secondLine ? 35 : 27}px ui-monospace, monospace`;
+  // The door closes across the opening after the boss has walked through it.
+  const closed = reducedMotion ? (time >= DOOR_SLAM_AT ? 1 : 0) : 1 - beat.doorOpen;
+  ctx.fillStyle = '#485260';
+  ctx.fillRect(810, 330, 155 * closed, 355);
+  if (closed > .8) { ctx.fillStyle = '#d3b777'; ctx.fillRect(934, 505, 14, 8); }
+
+  if (beat.speaking) {
+    const label = 'МЕДЛЕННО. РАБОТАЙ БЫСТРЕЕ.';
+    ctx.font = '900 24px ui-monospace, monospace';
     ctx.textAlign = 'center';
     const width = ctx.measureText(label).width + 54;
-    ctx.fillStyle = secondLine ? '#ffc857' : '#e9e3d5';
+    ctx.fillStyle = '#ffc857';
     ctx.fillRect(800 - width / 2, 310, width, 68);
     ctx.fillStyle = '#080b11';
     ctx.fillText(label, 800, 355);
   }
 
-  if (time >= 3.65) {
-    const slam = Math.min(1, (time - 3.65) / .18);
+  if (time >= DOOR_SLAM_AT && time < DOOR_SLAM_AT + .65) {
+    const slam = Math.min(1, (time - DOOR_SLAM_AT) / .65);
     ctx.globalAlpha = 1 - slam * .7;
     ctx.fillStyle = '#ffc857';
     ctx.font = '900 30px ui-monospace, monospace';
@@ -679,33 +848,21 @@ function drawWarehouseIntro(ctx, state) {
     ctx.globalAlpha = 1;
   }
 
-  const lidHeight = (1 - eye) * WORLD.height * .5;
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, WORLD.width, lidHeight);
-  ctx.fillRect(0, WORLD.height - lidHeight, WORLD.width, lidHeight);
   ctx.restore();
 }
 
-function drawPythonChip(ctx, state, now) {
+function drawPythonChip(ctx, state, now, { reducedMotion = false } = {}) {
   const bossExit = state.scene === 'warehouse' && state.warehouse.bossEntrance;
-  if (!bossExit && !['chip', 'machine', 'automation', 'red-crate', 'reward'].includes(state.scene)) return;
+  if (bossExit && state.sceneTime < DOOR_SLAM_AT) return;
+  if (!bossExit && !['chip', 'machine', 'automation', 'red-crate', 'condition', 'queue', 'function', 'reward'].includes(state.scene)) return;
   const chip = bossExit ? 'falling' : state.arm.chip;
   if (chip === 'missing') return;
-  const fallenX = 850;
-  const fallenY = 535;
-  const progress = bossExit
-    ? Math.min(1, Math.max(0, (state.sceneTime - 3.7) / .9))
-    : (chip === 'inserting' ? Math.min(1, state.sceneTime / 1.05) : (chip === 'installed' ? 1 : 0));
-  const x = bossExit
-    ? 780 + (fallenX - 780) * progress
-    : fallenX + (MACHINE.x - 35 - fallenX) * progress;
-  const y = bossExit
-    ? 380 + (fallenY - 380) * progress + Math.sin(progress * Math.PI) * 65
-    : fallenY + (MACHINE.y + 62 - fallenY) * progress - Math.sin(progress * Math.PI) * 105;
-  const pulse = .75 + Math.sin(now / 110) * .25;
+  const { x, y, rotation, scale } = getChipPose(state, reducedMotion);
+  const pulse = .75;
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(-.12 + progress * .6);
+  ctx.rotate(rotation);
+  ctx.scale(scale, scale);
   ctx.shadowColor = '#64e9ff';
   ctx.shadowBlur = 17 + pulse * 16;
   ctx.fillStyle = '#133b48';
@@ -725,7 +882,7 @@ function drawPythonChip(ctx, state, now) {
   if (chip === 'fallen') {
     ctx.fillStyle = '#ffc857';
     ctx.font = '800 13px ui-monospace, monospace';
-    ctx.fillText('НАЖМИ ЧИП', 0, 57);
+    ctx.fillText('ПОДОЙДИ · E', 0, 57);
   }
   ctx.restore();
 }
@@ -750,7 +907,7 @@ function drawWakeReveal(ctx, state) {
   ctx.fillText(line, titleX, 205);
   ctx.font = '700 16px ui-monospace, monospace';
   ctx.fillStyle = '#e9e3d5';
-  ctx.fillText('print("wake")  →  первое слово машины', titleX, 242);
+  ctx.fillText(state.arm.startSource === 'chip' ? 'ЧИП ЗАКРЕПЛЁН → РУКА РАБОТАЕТ ЗА ТЕБЯ' : 'print("wake")  →  первое слово машины', titleX, 242);
   ctx.restore();
 }
 
@@ -836,6 +993,241 @@ function drawMachinePrompt(ctx, state) {
   ctx.restore();
 }
 
+
+function fpProject(player, yaw, object) {
+  const dx = object.x - player.x;
+  const dy = object.y - player.y;
+  const sin = Math.sin(yaw);
+  const cos = Math.cos(yaw);
+  const forward = dx * sin + dy * (-cos);
+  const right = dx * cos + dy * sin;
+  if (forward <= 58) return null;
+  const fov = Math.PI * 70 / 180;
+  const focal = WORLD.width / (2 * Math.tan(fov / 2));
+  const x = WORLD.width / 2 + (right / forward) * focal;
+  const horizon = WORLD.height * .46;
+  const scale = focal / forward;
+  const baseY = horizon + 82 * scale;
+  return { x, baseY, scale, forward, angle: Math.atan2(right, forward) };
+}
+
+function fpBox(ctx, p, crate) {
+  const size = Math.max(20, Math.min(180, 58 * p.scale));
+  const x = p.x - size / 2;
+  const y = p.baseY - size;
+  ctx.fillStyle = crate.kind === 'red' ? '#a62f39' : '#936038';
+  ctx.strokeStyle = crate.kind === 'red' ? '#ff6873' : '#d3a05b';
+  ctx.lineWidth = Math.max(2, 2.5 * Math.min(2.4, p.scale));
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeRect(x, y, size, size);
+  ctx.strokeStyle = crate.kind === 'red' ? '#721b22' : '#67411f';
+  ctx.beginPath();
+  ctx.moveTo(x + size * .12, y + size * .12); ctx.lineTo(x + size * .88, y + size * .88);
+  ctx.moveTo(x + size * .88, y + size * .12); ctx.lineTo(x + size * .12, y + size * .88);
+  ctx.stroke();
+  if (p.scale > .72) {
+    ctx.fillStyle = '#f6e6c9';
+    ctx.font = `900 ${Math.max(10, Math.min(18, 10 * p.scale))}px ui-monospace, monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText(crate.kind === 'red' ? 'КРАСНЫЙ' : 'ГРУЗ', p.x, y + size * .56);
+  }
+}
+
+function fpPallet(ctx, p) {
+  const w = Math.max(72, Math.min(370, 180 * p.scale));
+  const h = Math.max(12, Math.min(62, 26 * p.scale));
+  ctx.fillStyle = '#6f604a';
+  ctx.strokeStyle = '#b9a277';
+  ctx.lineWidth = Math.max(2, 3 * Math.min(2.2, p.scale));
+  ctx.fillRect(p.x - w / 2, p.baseY - h, w, h);
+  ctx.strokeRect(p.x - w / 2, p.baseY - h, w, h);
+  ctx.fillStyle = '#d0b46f';
+  for (let i = -2; i <= 2; i += 1) ctx.fillRect(p.x + i * w * .18 - 4, p.baseY - h, 8, h);
+}
+
+function fpMachine(ctx, p, state, now) {
+  const s = Math.max(.28, Math.min(2.25, p.scale));
+  const baseW = 135 * s;
+  const baseH = 105 * s;
+  const x = p.x;
+  const y = p.baseY;
+  ctx.fillStyle = '#1a2530';
+  ctx.strokeStyle = state.arm.awake ? '#64e9ff' : '#65717c';
+  ctx.lineWidth = Math.max(2, 4 * s);
+  ctx.fillRect(x - baseW / 2, y - baseH, baseW, baseH);
+  ctx.strokeRect(x - baseW / 2, y - baseH, baseW, baseH);
+
+  // Compact local arm animation. The joints never stretch across the room.
+  const activity = state.arm.active ? Math.sin(Math.min(1, state.arm.active.progress) * Math.PI) : 0;
+  const idle = state.arm.awake ? Math.sin(now / 800) * .07 : 0;
+  const shoulder = { x, y: y - baseH };
+  const elbow = { x: x - (38 + activity * 12) * s, y: y - (174 - activity * 22) * s };
+  const hand = { x: x + (26 + activity * 44) * s, y: y - (228 - activity * 12) * s };
+  ctx.strokeStyle = state.arm.awake ? '#7f91a0' : '#5c656c';
+  ctx.lineWidth = Math.max(9, 24 * s);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(shoulder.x, shoulder.y);
+  ctx.lineTo(elbow.x + idle * 30 * s, elbow.y);
+  ctx.lineTo(hand.x, hand.y);
+  ctx.stroke();
+  ctx.fillStyle = state.arm.awake ? '#64e9ff' : '#873b42';
+  for (const joint of [shoulder, elbow, hand]) {
+    ctx.beginPath(); ctx.arc(joint.x, joint.y, Math.max(5, 12 * s), 0, Math.PI * 2); ctx.fill();
+  }
+
+  const panelW = 104 * s;
+  const panelH = 64 * s;
+  ctx.fillStyle = '#07131a';
+  ctx.strokeStyle = '#4c6b79';
+  ctx.fillRect(x - panelW / 2, y - baseH * .72, panelW, panelH);
+  ctx.strokeRect(x - panelW / 2, y - baseH * .72, panelW, panelH);
+  ctx.fillStyle = state.arm.awake ? '#72f0bc' : '#c65d64';
+  ctx.beginPath(); ctx.arc(x, y - baseH * .46, Math.max(3, 6 * s), 0, Math.PI * 2); ctx.fill();
+  if (state.arm.chip !== 'installed' && s > .55) {
+    ctx.fillStyle = '#d7b66e';
+    ctx.font = `900 ${Math.max(9, 10 * s)}px ui-monospace, monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('РАЗЪЁМ РУКИ 07', x, y - 14 * s);
+  }
+}
+
+function fpLooseButton(ctx, p, tried = false) {
+  const s = Math.max(.35, Math.min(2.1, p.scale));
+  ctx.save();
+  ctx.translate(p.x, p.baseY - 6 * s);
+  ctx.rotate(-.18);
+  ctx.fillStyle = '#2d3336';
+  ctx.strokeStyle = '#788185';
+  ctx.lineWidth = Math.max(2, 3 * s);
+  ctx.fillRect(-30 * s, -14 * s, 60 * s, 28 * s);
+  ctx.strokeRect(-30 * s, -14 * s, 60 * s, 28 * s);
+  ctx.fillStyle = tried ? '#315342' : '#42b76a';
+  ctx.beginPath(); ctx.arc(0, -2 * s, 11 * s, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function drawWarehouseFirstPerson(ctx, state, now, options = {}) {
+  const yaw = Number.isFinite(options.cameraYaw) ? options.cameraYaw : 0;
+  const horizon = WORLD.height * .46;
+  const ceiling = ctx.createLinearGradient(0, 0, 0, horizon);
+  ceiling.addColorStop(0, '#05070a'); ceiling.addColorStop(1, '#121921');
+  ctx.fillStyle = ceiling; ctx.fillRect(0, 0, WORLD.width, horizon);
+  const floor = ctx.createLinearGradient(0, horizon, 0, WORLD.height);
+  floor.addColorStop(0, '#1b2329'); floor.addColorStop(1, '#06080a');
+  ctx.fillStyle = floor; ctx.fillRect(0, horizon, WORLD.width, WORLD.height - horizon);
+
+  // Warehouse wall ribs + floor perspective. They anchor the camera without a top-down minimap.
+  ctx.strokeStyle = '#394650'; ctx.lineWidth = 2; ctx.globalAlpha = .32;
+  for (let i = -9; i <= 9; i += 1) {
+    const x = WORLD.width / 2 + i * 115;
+    ctx.beginPath(); ctx.moveTo(WORLD.width / 2, horizon); ctx.lineTo(x, WORLD.height); ctx.stroke();
+  }
+  for (let i = 1; i <= 11; i += 1) {
+    const t = i / 11; const y = horizon + (WORLD.height - horizon) * t * t;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD.width, y); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#0c1116'; ctx.fillRect(0, horizon - 72, WORLD.width, 72);
+  ctx.fillStyle = '#28323a';
+  for (let x = 30; x < WORLD.width; x += 175) ctx.fillRect(x, horizon - 70, 9, 70);
+
+  const looseButton = { x: MACHINE.x + 145, y: MACHINE.y + 200 };
+  const machinePoint = { x: MACHINE.x, y: MACHINE.y + 175 };
+  const objects = [];
+  const add = (kind, obj, payload = obj) => {
+    const p = fpProject(state.player, yaw, obj);
+    if (p && p.x > -260 && p.x < WORLD.width + 260 && p.forward < 1750) objects.push({ kind, obj: payload, p });
+  };
+  for (const crate of state.warehouse.crates) {
+    if (['hidden','carried','arm'].includes(crate.status)) continue;
+    if (crate.status === 'pallet') continue;
+    add('crate', crate);
+  }
+  add('pallet', PALLET);
+  add('machine', machinePoint, machinePoint);
+  if (['shift2','red2','condition'].includes(state.checkpoint) || (state.scene === 'machine' && state.learning.chapter >= 2)) add('button', looseButton, looseButton);
+  objects.sort((a, b) => b.p.forward - a.p.forward);
+  for (const item of objects) {
+    if (item.kind === 'crate') fpBox(ctx, item.p, item.obj);
+    else if (item.kind === 'pallet') fpPallet(ctx, item.p);
+    else if (item.kind === 'machine') fpMachine(ctx, item.p, state, now);
+    else if (item.kind === 'button') fpLooseButton(ctx, item.p, Boolean(state.warehouse.looseButtonTried));
+  }
+
+  // During automation the old top-down renderer used to stretch the manipulator
+  // all the way across the warehouse. In first person the arm stays compact:
+  // the line feeds the active box to its local pickup point and the box visibly
+  // travels the short last leg to the pallet. This makes the money tick readable
+  // as a physical consequence instead of a HUD-only event.
+  if (state.scene === 'automation' && state.arm.active) {
+    const crate = state.warehouse.crates.find((item) => item.id === state.arm.active.boxId);
+    if (crate) {
+      const t = Math.max(0, Math.min(1, state.arm.active.progress ?? 0));
+      const eased = t * t * (3 - 2 * t);
+      const pickup = { x: MACHINE.x - 78, y: MACHINE.y + 205 };
+      const carried = {
+        x: pickup.x + (PALLET.x - pickup.x) * eased,
+        y: pickup.y + (PALLET.y - pickup.y) * eased,
+      };
+      const projected = fpProject(state.player, yaw, carried);
+      if (projected) {
+        projected.baseY -= Math.sin(Math.PI * t) * Math.max(12, 36 * projected.scale);
+        fpBox(ctx, projected, crate);
+      }
+    }
+  }
+
+  if (state.scene === 'chip' && state.arm.chip === 'held') {
+    ctx.save();
+    ctx.translate(WORLD.width - 150, WORLD.height - 110);
+    ctx.rotate(-.08);
+    ctx.shadowColor = '#64e9ff'; ctx.shadowBlur = 24;
+    ctx.fillStyle = '#12343d'; ctx.strokeStyle = '#72f2ff'; ctx.lineWidth = 4;
+    ctx.fillRect(-70, -42, 140, 84); ctx.strokeRect(-70, -42, 140, 84);
+    ctx.shadowBlur = 0; ctx.fillStyle = '#e6fbff'; ctx.textAlign = 'center'; ctx.font = '900 25px ui-monospace, monospace';
+    ctx.fillText('PY · РУКА 07', 0, 8);
+    ctx.restore();
+  }
+
+  if (state.player.carrying) {
+    const carried = state.warehouse.crates.find((crate) => crate.id === state.player.carrying) ?? { kind: 'normal' };
+    const p = { x: WORLD.width / 2, baseY: WORLD.height + 85, scale: 2.15 };
+    fpBox(ctx, p, carried);
+  }
+
+  // Show the consequence in the world after the terminal closes. The player should
+  // never have to remember what vanished from a side panel: the exact signal stays
+  // on screen while the arm starts moving.
+  if (state.arm.awake && state.arm.wakeRevealRemaining > 0) {
+    const fromChip = state.arm.startSource === 'chip';
+    const w = 620;
+    const h = 104;
+    const x = (WORLD.width - w) / 2;
+    const y = 118;
+    ctx.save();
+    ctx.fillStyle = 'rgba(5, 12, 16, .88)';
+    ctx.strokeStyle = fromChip ? '#ffc857' : '#64e9ff';
+    ctx.lineWidth = 3;
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = fromChip ? '#ffc857' : '#64e9ff';
+    ctx.font = '900 18px ui-monospace, monospace';
+    ctx.fillText(fromChip ? 'СЕРВИСНЫЙ ЧИП ПРИНЯТ' : 'КОМАНДА ПРИНЯТА', WORLD.width / 2, y + 31);
+    ctx.fillStyle = '#f0eee7';
+    ctx.font = '800 24px ui-monospace, monospace';
+    ctx.fillText(fromChip ? 'ЧИП  →  РУКА 07 · РАБОТАЕТ' : 'print("wake")  →  РУКА 07 · РАБОТАЕТ', WORLD.width / 2, y + 69);
+    ctx.fillStyle = '#aeb9bf';
+    ctx.font = '700 13px ui-monospace, monospace';
+    ctx.fillText('СМОТРИ НА РУКУ: СИГНАЛ ИЗМЕНИЛ МИР', WORLD.width / 2, y + 91);
+    ctx.restore();
+  }
+
+  // Crosshair is a DOM overlay so it stays perfectly centered at every aspect ratio.
+
+}
+
 function drawWarehouse(ctx, state, now, options = {}) {
   const gradient = ctx.createLinearGradient(0, 0, 0, WORLD.height);
   gradient.addColorStop(0, '#101722');
@@ -850,9 +1242,22 @@ function drawWarehouse(ctx, state, now, options = {}) {
   for (let x = 30; x < WORLD.width; x += 180) ctx.fillRect(x, 40, 120, 105);
 
   drawConveyor(ctx, state);
+  drawProgramTraceWorld(ctx, state);
+  drawFunctionModule(ctx, state, now);
+  if (state.scene === 'function' || state.arm.startSource === 'function') {
+    ctx.save();
+    ctx.font = '900 16px ui-monospace, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#72f0bc';
+    ctx.fillText('ЛИНИЯ А', 55, 435);
+    ctx.fillText('ЛИНИЯ Б', 55, 610);
+    ctx.strokeStyle = '#72f0bc66';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(55, 448); ctx.lineTo(350, 448); ctx.moveTo(55, 623); ctx.lineTo(350, 623); ctx.stroke();
+    ctx.restore();
+  }
   drawTerminal(ctx, state, now);
-  drawWarehouseIntro(ctx, state);
-  drawPythonChip(ctx, state, now);
+  drawWarehouseIntro(ctx, state, options);
   drawOtherMind(ctx, state, now, options);
 
   for (const crate of state.warehouse.crates) {
@@ -865,6 +1270,7 @@ function drawWarehouse(ctx, state, now, options = {}) {
     } else drawCrate(ctx, crate);
   }
   drawArm(ctx, state, now, options);
+  drawPythonChip(ctx, state, now, options);
   drawDropFeedback(ctx, state);
   if (options.manualShowcase) drawManualShowcase(ctx, now, options.reducedMotion);
   else drawWorker(ctx, state);
@@ -1042,6 +1448,13 @@ export function renderGame(ctx, state, viewport, now, options = {}) {
     ctx.translate((viewport.width - WORLD.width * scale) / 2, (viewport.height - WORLD.height * scale) / 2);
     ctx.scale(scale, scale);
     drawChipShowcase(ctx, now, options.reducedMotion, options.showcaseStartedAt ?? now);
+  } else if (options.firstPersonWarehouse) {
+    // First-person uses a cover transform so the warehouse always fills the monitor.
+    // No black side gutters for wide desktop viewports.
+    const scale = Math.max(viewport.width / WORLD.width, viewport.height / WORLD.height);
+    ctx.translate((viewport.width - WORLD.width * scale) / 2, (viewport.height - WORLD.height * scale) / 2);
+    ctx.scale(scale, scale);
+    drawWarehouseFirstPerson(ctx, state, now, options);
   } else {
     viewportTransform(ctx, viewport, state);
     if (state.scene === 'prologue') drawPrologue(ctx, state, now);

@@ -6,8 +6,11 @@ export function getSceneCameraTarget(state) {
   }
   // На телефоне герой остаётся у палеты справа, а чип упал левее.
   // Пока игрок видит и выбирает чип, не возвращаем камеру к герою.
-  if (state.scene === 'chip' && state.arm?.chip === 'fallen') {
+  if (state.scene === 'chip' && ['fallen', 'inserting'].includes(state.arm?.chip)) {
     return { x: 850, y: state.player.y };
+  }
+  if (state.scene === 'automation' && state.arm?.startSource === 'chip' && state.arm.wakeRevealRemaining > 0) {
+    return { x: MACHINE.x, y: state.player.y };
   }
   if (state.scene !== 'automation' || !state.arm?.failure) return state.player;
 
