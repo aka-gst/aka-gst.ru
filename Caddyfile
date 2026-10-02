@@ -446,16 +446,16 @@ aka-gst.ru, www.aka-gst.ru {
     }
   }
 
-  # Тестовый Орион (сессия Лапки, 02.10.2026, по слову владельца): отдельный
-  # контейнер orion2-booking — TEST-специалисты на TEST-календарях Google, своя
-  # база, события с меткой TEST. Закрыт от поиска; ссылки с витрины нет
-  # намеренно — это стенд для проверок, а не страница для людей.
-  # Админка — /orion_2/admin без слеша: её пути относительные.
+  # Тестовый Орион (сессия Лапки, 02.10.2026, по слову владельца): второй сайт
+  # Ориона — контейнер orion2-site (лицо, статьи, админка сайта); запись идёт
+  # дальше в orion2-booking по внутренней сети (TEST-календари Google, своя база,
+  # события с меткой TEST). Закрыт от поиска; ссылки с витрины нет намеренно —
+  # это стенд для проверок. Админка — /orion_2/admin без слеша.
   redir /orion_2 /orion_2/ 308
   redir /orion_2/admin/ /orion_2/admin 308
   handle_path /orion_2/* {
     header X-Robots-Tag "noindex, nofollow, noarchive"
-    reverse_proxy orion2-booking:4180 {
+    reverse_proxy orion2-site:4280 {
       header_up Host {host}
       header_up X-Forwarded-Proto {scheme}
     }
