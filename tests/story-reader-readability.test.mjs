@@ -14,6 +14,7 @@
 // Отрицательные контроли — в отчёте сдачи: каждая проверка ломалась руками.
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import test from 'node:test';
@@ -52,8 +53,27 @@ const ЗАМЕР = `(async () => {
     верхОглавления: document.querySelector('.reader-side').getBoundingClientRect().top + scrollY,
     левоОглавления: document.querySelector('.reader-side').getBoundingClientRect().left,
     левоТекста: art.getBoundingClientRect().left,
+    полосаСборника: art.querySelector('.story-cover--book img')?.getBoundingClientRect().height ?? null,
   };
 })()`;
+
+// «← Все рассказы» и «Оглавление» ведут в раздел «Рассказы» новой главной, на
+// сборник этого рассказа (решение Рота 02.10.2026). Якорь обязан быть в stories.html.
+test('со страницы рассказа «все рассказы» ведут на его сборник в /stories.html', () => {
+  const book = JSON.parse(readFileSync(new URL('../data/stories.json', import.meta.url), 'utf8'));
+  const рассказы = readFileSync(new URL('../stories.html', import.meta.url), 'utf8');
+  let страниц = 0;
+  for (const c of book.сборники) {
+    assert.match(рассказы, new RegExp(`<section class="collection" id="${c.id}"`), `в stories.html нет секции #${c.id}`);
+    for (const st of c.stories) {
+      const page = readFileSync(new URL(`../rasskazy/${st.slug}/index.html`, import.meta.url), 'utf8');
+      const ссылки = [...page.matchAll(/<a (?:class="site-home" )?href="([^"]*)">(?:← Все рассказы|Оглавление)<\/a>/g)].map((m) => m[1]);
+      assert.deepEqual(ссылки, [`/stories.html#${c.id}`, `/stories.html#${c.id}`], `${st.slug}: ссылки к оглавлению ${JSON.stringify(ссылки)}`);
+      страниц += 1;
+    }
+  }
+  assert.equal(страниц, 23);
+});
 
 test('страница рассказа читается на телефоне и ноутбуке в стиле новой главной', { timeout: 120_000 }, async () => {
   const server = createServer(async (req, res) => {
@@ -94,6 +114,9 @@ test('страница рассказа читается на телефоне �
         assert.ok(м.кегль >= 17, `${где}: кегль ${м.кегль} px`);
         assert.ok(м.картинки.length >= 1 && м.картинки.every(Boolean), `${где}: картинки рассказа не загрузились ${JSON.stringify(м.картинки)}`);
         assert.ok(м.строки.length >= 10, `${где}: мерить нечего — полных строк ${м.строки.length}`);
+        // Рассказ без своей обложки показывает обложку сборника полосой, а не квадратом во всю ширину.
+        if (slug === 's') assert.equal(Math.round(м.полосаСборника), w < 641 ? 160 : 220, `${где}: обложка сборника не полосой, а ${Math.round(м.полосаСборника)} px`);
+        else assert.equal(м.полосаСборника, null, `${где}: у рассказа своя обложка, полосы сборника быть не должно`);
         if (w === 1440) {
           const медиана = м.строки[м.строки.length >> 1];
           const вМере = м.строки.filter((n) => n >= 60 && n <= 75).length / м.строки.length;

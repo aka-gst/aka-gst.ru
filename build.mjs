@@ -1892,6 +1892,12 @@ ${book.напечатано.кадры
 mkdirSync(join(root, 'rasskazy'), { recursive: true });
 writeFileSync(join(root, 'rasskazy', 'index.html'), storiesIndex);
 
+// «Все рассказы» со страницы рассказа — раздел «Рассказы» новой главной, сразу
+// на его сборнике (решение Рота 02.10.2026 при приёмке правки №14). Якорь —
+// id сборника из stories.json: им же build-content.mjs подписывает секции
+// stories.html, и tests/story-reader-readability сверяет, что он там есть.
+const кОглавлению = (st) => `/stories.html#${st.book.id}`;
+
 for (const [i, st] of storyList.entries()) {
   const prev = storyList[i - 1];
   const next = storyList[i + 1];
@@ -1907,7 +1913,7 @@ for (const [i, st] of storyList.entries()) {
     <div class="reader-progress" aria-hidden="true"><i></i></div>
 ${readerTopbar}
     <header class="reader-top">
-      <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
+      <a class="site-home" href="${esc(кОглавлению(st))}">← Все рассказы</a>${readerBar}
     </header>
     <main id="main" class="reader-main reader-main--wide">
 ${readerSide(st.slug)}
@@ -1937,7 +1943,7 @@ ${readerSide(st.slug)}
       </p>
       <nav class="story-nav">
         ${prev ? `<a href="/rasskazy/${esc(prev.slug)}/">← ${esc(prev.title)}</a>` : '<span></span>'}
-        <a href="/rasskazy/">Оглавление</a>
+        <a href="${esc(кОглавлению(st))}">Оглавление</a>
         ${next ? `<a href="/rasskazy/${esc(next.slug)}/">${esc(next.title)} →</a>` : '<span></span>'}
       </nav>
       </div>
