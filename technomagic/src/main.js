@@ -23,7 +23,7 @@ import { pulse } from './pulse.js';
 import { createTrace, traceEvent, traceKey, traceDelivery } from './trace.js';
 import { createEpisodeShowcase, createShowcase, withSeed } from './showcase.js';
 import { loadArt } from './art.js';
-import { operationResult } from './operation.js';
+import { operationResult, operationGrade } from './operation.js';
 import { physicalHint } from './observations.js';
 
 const $ = (id) => document.getElementById(id);
@@ -459,13 +459,14 @@ function clearScreen() {
 
   if (world.operation) {
     const facts = operationResult(world);
+    const grade = operationGrade(facts);
     const hostage = facts.hostage === 'rescued' ? 'СПАСЁН'
       : facts.hostage === 'dead' ? 'ПОГИБ' : 'ОСТАВЛЕН';
     showVeil({
       tone: 'clear',
-      kicker: 'ОПЕРАЦИЯ ЗАВЕРШЕНА',
-      title: 'ЯДРО У ТЕБЯ',
-      text: 'Мир запомнил не способ, а последствия.',
+      kicker: `ОПЕРАЦИЯ ЗАВЕРШЕНА · РАНГ ${grade.rank}`,
+      title: grade.title,
+      text: 'Мир запомнил не способ, а последствия. Лучший результат — забрать ядро, вывести человека и не превращать объект в кладбище.',
       stats: `<span>ЗАЛОЖНИК: ${hostage}</span>`
         + `<span>МИРНЫЕ: ЖИВЫ ${facts.civiliansAlive} · ПОГИБЛИ ${facts.civiliansDead}</span>`
         + `<span>ОХРАНА: ДЕЙСТВУЕТ ${facts.guardsActive} · БЕЗ СОЗНАНИЯ ${facts.guardsUnconscious} · ПОГИБЛА ${facts.guardsDead}</span>`
@@ -983,9 +984,10 @@ function updateHud(force) {
     ui.operationHud.hidden = false;
     ui.operationGoal.textContent = world.operation.coreTaken
       ? 'ВЕРНУТЬСЯ К ВЫХОДУ' : 'УКРАСТЬ ЯДРО';
-    ui.operationOptional.textContent = world.hostage?.rescued
-      ? 'ЗАЛОЖНИК: СПАСЁН' : world.hostage?.alive
-        ? 'ЗАЛОЖНИК: НЕОБЯЗАТЕЛЬНО' : 'ЗАЛОЖНИК: ПОГИБ';
+    ui.operationOptional.textContent = !world.hostage?.alive
+      ? 'ЗАЛОЖНИК: ПОГИБ' : world.hostage.rescued
+        ? 'ЗАЛОЖНИК: СПАСЁН' : world.hostage.released
+          ? 'ЗАЛОЖНИК: ДОВЕДИ ДО ВЫХОДА' : 'ЗАЛОЖНИК: ОТКЛЮЧИ ПИТАНИЕ';
     ui.operationLesson.hidden = world.operation.waterLesson;
     ui.operationLesson.textContent = world.operation.candleLesson
       ? 'ЛУЖА ПРОВОДИТ РАЗРЯД ПО ВСЕМ, КТО С НЕЙ СОЕДИНЁН'
@@ -1616,7 +1618,14 @@ window.technomagic = {
       world: made.world,
       step: (dt) => withSeed((seed + Math.round(made.state().секунд * 1000)) >>> 0,
         () => made.step(dt)),
-      render: () => withSeed(seed, () => made.render()),
+      /*
+       * Сид отрисовки свой на каждый кадр сцены, а не один на все: при
+       * общем сиде искры и дуги замирали — каждый кадр рисовал ту же
+       * «случайность», и остаточное электричество стояло как картинка.
+       * Детерминизм не теряется: номер кадра при повторном прогоне тот же.
+       */
+      render: () => withSeed((seed + Math.round(made.state().секунд * 60)) >>> 0,
+        () => made.render()),
       state: () => made.state(),
       stop() {
         shooting = null;
@@ -1702,3 +1711,18 @@ callScreen();
 ui.mute.dataset.off = audio.isMuted() ? '1' : '0';
 ui.mute.textContent = audio.isMuted() ? 'ЗВУК ВЫКЛ' : 'ЗВУК ВКЛ';
 requestAnimationFrame(frame);
+
+/*
+ * СЪЁМОЧНЫЙ АДРЕС: ?scena — сцена витрины стартует сама, без рук.
+ * Снимающему не нужно знать пульт: открыл адрес — идёт бой для петли
+ * (подход → заряд → разряд → остаточное электричество, ~4.5 с).
+ * Сама глушит звук: съёмочный адрес обязан молчать без отдельного
+ * параметра (снимающий всё равно дублирует это ключом браузера).
+ * Проверка, что режим включился, — не «страница открылась», а признак
+ * в состоянии: у window.technomagic.scena() есть поле «этап».
+ */
+if (/(^|[?&#])(scena|сцена)([=&#]|$)/i.test(`${location.search}${location.hash}`)) {
+  audio.setMuted(true);
+  const съёмка = window.technomagic.showcase({ width: 960, height: 540 });
+  window.technomagic.scena = () => съёмка.state();
+}

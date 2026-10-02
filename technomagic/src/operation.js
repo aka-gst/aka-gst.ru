@@ -168,6 +168,29 @@ export function updateOperation(world, dt = 0) {
   }
 }
 
+
+export function operationGrade(facts) {
+  if (!facts || !facts.core) return { rank: 'D', title: 'ЗАДАЧА НЕ ЗАКРЫТА' };
+
+  const cleanCivilians = facts.civiliansDead === 0;
+  const nonLethal = facts.guardsDead === 0;
+  const rescued = facts.hostage === 'rescued';
+
+  if (rescued && cleanCivilians && nonLethal && facts.alerts <= 1) {
+    return { rank: 'S', title: 'ТИХАЯ РАБОТА' };
+  }
+  if (rescued && cleanCivilians && nonLethal) {
+    return { rank: 'A', title: 'ВСЕ ВЕРНУЛИСЬ' };
+  }
+  if (rescued && cleanCivilians && facts.guardsDead <= 2) {
+    return { rank: 'B', title: 'ЯДРО И ЧЕЛОВЕК' };
+  }
+  if (cleanCivilians) {
+    return { rank: 'C', title: 'ЗАДАЧА ВЫПОЛНЕНА' };
+  }
+  return { rank: 'D', title: 'ЦЕНА СЛИШКОМ ВЫСОКА' };
+}
+
 export function operationResult(world) {
   if (!world.operation) return null;
   const guards = world.enemies;

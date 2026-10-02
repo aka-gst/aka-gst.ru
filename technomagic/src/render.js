@@ -647,6 +647,51 @@ export function createRenderer(canvas) {
     g.restore();
   }
 
+  /*
+   * Остаточное электричество на воде (просьба Сергея): после того как
+   * фронт разряда прошёл, лужа ещё пару секунд дышит слабым светом и
+   * изредка выбрасывает короткие искры. Рисуется заметно тише drawCharge:
+   * это память о разряде, а не сам разряд — иначе двух событий не отличить.
+   */
+  function drawResidual(g, world, range) {
+    const rez = world.residual;
+    if (!rez) return;
+
+    const fade = rez.life / rez.max;
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+
+    for (let ty = range.y0; ty <= range.y1; ty += 1) {
+      for (let tx = range.x0; tx <= range.x1; tx += 1) {
+        const i = ty * world.w + tx;
+        if (!rez.tiles.has(i)) continue;
+
+        const px = tx * TILE_SIZE;
+        const py = ty * TILE_SIZE;
+
+        /* Дыхание, а не ровный свет: у каждой клетки своя фаза, иначе всё
+           поле мигает как одна лампа. */
+        const puls = 0.5 + 0.5 * Math.sin(world.time * 7 + i * 1.7);
+        g.fillStyle = `rgba(150,235,255,${((0.04 + 0.08 * puls) * fade).toFixed(3)})`;
+        g.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+
+        if (Math.random() < 0.05 * fade) {
+          const sx = px + Math.random() * TILE_SIZE;
+          const sy = py + Math.random() * TILE_SIZE;
+          g.strokeStyle = `rgba(220,250,255,${(0.35 + 0.45 * fade).toFixed(3)})`;
+          g.lineWidth = 1.2;
+          g.beginPath();
+          g.moveTo(sx, sy);
+          g.lineTo(sx + (Math.random() - 0.5) * 9, sy + (Math.random() - 0.5) * 9);
+          g.lineTo(sx + (Math.random() - 0.5) * 14, sy + (Math.random() - 0.5) * 14);
+          g.stroke();
+        }
+      }
+    }
+
+    g.restore();
+  }
+
   function drawGround(g, world, range) {
     if (!world.ground) return;
 
@@ -797,6 +842,22 @@ export function createRenderer(canvas) {
      потому что посох и ирокез выходят за пределы фигуры. */
   const MAGE_SIZE = 46;
 
+  /*
+   * Игрок крупнее MAGE_SIZE (найдено 23–25.09: непрозрачная часть кадра
+   * mage-player-idle.png занимает 7–9% площади 128×128, то есть при
+   * MAGE_SIZE силуэт на экране — около 13×25 px, меньше диаметра вечно
+   * горящего кольца под ногами (BODY+8 = 17, то есть 34px). Фигура
+   * тонет в кольце и превращается в один нечитаемый кружок, похожий на
+   * кружок заложника (диаметр их силуэта около 24px). PLAYER_SIZE=90 даёт
+   * фигуре высоту около 49px — заметно выше кольца (34px) и вдвое шире
+   * заложника, силуэт торчит из кольца, а не тонет в нём, и по высоте
+   * близок к предметам обстановки (бочка, кристалл — 48px), то есть не
+   * выглядит игрушечным на их фоне. Врагов и заложника это не касается: у
+   * них своих файлов спрайтов ещё нет, mage() рисует их процедурно и
+   * MAGE_SIZE не читает.
+   */
+  const PLAYER_SIZE = 90;
+
   function mage(g, o) {
     const { x, y } = o;
     const palette = o.palette;
@@ -881,7 +942,20 @@ export function createRenderer(canvas) {
 
     const sheet = sheetFor(o);
     if (sheet) {
-      drawDirFrame(g, sheet, o.angle, Math.floor((o.phase || 0) * 2), x, y, MAGE_SIZE);
+      const size = o.size || MAGE_SIZE;
+
+      /*
+       * Тёмный контур по силуэту (не заливка, а тень по альфе картинки):
+       * тёмно-зелёный плащ на тёмно-зелёной траве иначе почти не отличить
+       * по контрасту (найдено 25.09, замер травы и робы — оба в районе
+       * 30–60 по каждому каналу). Тень читает только непрозрачные пиксели
+       * кадра, поэтому контур повторяет силуэт, а не рамку кадра.
+       */
+      g.save();
+      g.shadowColor = 'rgba(4,10,7,0.9)';
+      g.shadowBlur = Math.max(2, size * 0.05);
+      drawDirFrame(g, sheet, o.angle, Math.floor((o.phase || 0) * 2), x, y, size);
+      g.restore();
 
       const heat = (o.charging ? 1 : 0) + (o.cast || 0);
       if (heat > 0.05 && o.glow) {
@@ -1090,6 +1164,12 @@ export function createRenderer(canvas) {
         x: corpse.x + jitter, y: corpse.y, angle: corpse.angle,
         palette: ROBES.dead, sheet: 'corpse', phase: 0, corpse: true,
       });
+
+      /* Тело после разряда потрескивает — остаточное электричество носят
+         не только живые. Чем свежее удар, тем чаще дуги. */
+      if ((corpse.zap || 0) > 0 && Math.random() < 0.2 + corpse.zap * 0.35) {
+        arcs(g, corpse);
+      }
     }
   }
 
@@ -1342,6 +1422,7 @@ export function createRenderer(canvas) {
       x: player.x, y: player.y, angle: player.angle,
       palette: ROBES.player,
       sheet: 'player',
+      size: PLAYER_SIZE,
       moving: Math.hypot(player.vx, player.vy) > 12,
       phase: player.step * 0.35,
       cast: player.windup > 0 ? 1 : (player.cooldown > 0 ? player.cooldown * 3 : 0),
@@ -1961,6 +2042,7 @@ const DARKNESS = false;
     drawFloor(ctx, world, theme, range);
     drawGround(ctx, world, range);
     drawCharge(ctx, world, range);
+    drawResidual(ctx, world, range);
     drawDanger(ctx, world);
     drawDecals(ctx, world);
     drawCorpses(ctx, world);
