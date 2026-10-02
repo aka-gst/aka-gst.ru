@@ -21,7 +21,7 @@ execFileSync(process.execPath, [path.join(src, 'build-content.mjs')], { stdio: '
 const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
 // Растровые значки берём у старой главной: build.mjs только что собрал её и
 // поставил версию по содержимому (?v=…), тест favicon требует их на каждой странице.
-const oldIndex = readFileSync(path.join(root, 'index.html'), 'utf8');
+const oldIndex = globalThis.__starayaGlavnaya ?? readFileSync(path.join(root, 'index.html'), 'utf8');
 const icons = [...oldIndex.matchAll(/<link rel="(?:icon|apple-touch-icon)"[^>]*>/g)].map(m => m[0]).filter(l => !l.includes('favicon.svg'));
 if (!icons.some(l => l.includes('favicon-32.png'))) throw new Error('в собранной главной нет favicon-32.png — значки взять неоткуда');
 const pages = { 'index.html': '/', 'games.html': '/games.html', 'stories.html': '/stories.html' };
