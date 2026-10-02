@@ -316,6 +316,16 @@ html[data-ground="paper"] .reader-side-group { --group-summary: rgba(27, 30, 28,
   box-shadow: inset 2px 0 0 var(--group-accent);
 }
 
+/* На узком экране оглавление встаёт ПОСЛЕ рассказа. Раньше оно шло первым,
+   и на телефоне 375 первая строка текста стояла на 1146-й точке при экране
+   в 812: человек открывал рассказ и видел список ссылок. После текста оно
+   отвечает на тот вопрос, который у читателя и появляется, — что дальше. */
+@media (max-width: 1179px) {
+  .reader-main--wide { display: flex; flex-direction: column; }
+  .reader-main--wide .reader-col { order: 1; }
+  .reader-main--wide .reader-side { order: 2; margin: 40px 0 0; }
+}
+
 @media (min-width: 1180px) {
   /* Ширина растёт вместе с экраном, а не стоит на 1060. Сергей сказал дважды:
      «всё ещё всё жмётся к левому краю» — на широком мониторе колонка занимала
