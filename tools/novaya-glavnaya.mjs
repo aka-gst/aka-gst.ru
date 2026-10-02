@@ -72,9 +72,12 @@ if (!gdHtml.includes('/pulse/script.js')) {
   gdHtml = gdHtml.replace('</head>', `<script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>\n</head>`);
   writeFileSync(gd, gdHtml);
 }
+const owned = new Set(readFileSync(path.join(root, 'tools', 'novaya-glavnaya-assets.txt'), 'utf8').split('\n').filter(Boolean));
 for (const a of readdirSync(path.join(src, 'assets'))) {
   const from = path.join(src, 'assets', a), to = path.join(root, 'assets', a);
-  if (existsSync(to) && !readFileSync(to).equals(readFileSync(from))) throw new Error(`assets/${a}: в корне лежит другой файл с тем же именем`);
+  // Свои картинки новой главной (список tools/novaya-glavnaya-assets.txt) обновляются свободно;
+  // чужой файл с тем же именем в assets/ — стоп, чтобы не затереть картинку старых страниц.
+  if (existsSync(to) && !owned.has(a) && !readFileSync(to).equals(readFileSync(from))) throw new Error(`assets/${a}: в корне лежит другой файл с тем же именем`);
   cpSync(from, to);
 }
 console.log('Новая главная: index.html, games.html, stories.html в корне');

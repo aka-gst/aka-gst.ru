@@ -620,6 +620,11 @@
       ],
       "links": [
         {
+          "type": "site",
+          "label": "Открыть звонки",
+          "url": "https://meet.aka-gst.ru/"
+        },
+        {
           "type": "repo",
           "label": "Исходный код",
           "url": "https://github.com/aka-gst/voki-toki"

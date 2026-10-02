@@ -36,11 +36,20 @@
         <p class="hero-note">Я присоединился в мае 2018 и работал как game / systems / narrative designer, а по факту также закрывал часть production и PM-функций.</p>
       </div>
 
-      <a class="hero-visual reveal" href="https://youtu.be/b7SGNR0p0sQ" target="_blank" rel="noreferrer" aria-label="Открыть тизер VitalSchool на YouTube">
+      <div class="hero-visual reveal" id="teaser" role="button" tabindex="0" aria-label="Смотреть тизер VitalSchool здесь">
         <img src="https://img.youtube.com/vi/b7SGNR0p0sQ/hqdefault.jpg" alt="Кадр из тизера VitalSchool" loading="eager" onerror="this.src='assets/teaser.jpg'" />
         <span class="play">▶</span>
-        <span class="visual-caption"><b>Тизер VitalSchool</b><small>открывается на YouTube ↗</small></span>
-      </a>
+        <span class="visual-caption"><b>Тизер VitalSchool</b><small>смотреть здесь</small></span>
+      </div>
+      <script>
+      // Тизер играет прямо на странице (просьба Сергея 02.10.2026), а не уводит на YouTube.
+      // Плеер грузится только по нажатию — до этого страница не тянет YouTube.
+      (function(){var t=document.getElementById("teaser");if(!t)return;function play(){if(t.dataset.on)return;t.dataset.on="1";
+        var f=document.createElement("iframe");f.src="https://www.youtube-nocookie.com/embed/b7SGNR0p0sQ?autoplay=1&rel=0&playsinline=1";
+        f.title="Тизер VitalSchool";f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";f.allowFullscreen=true;
+        f.style.cssText="position:absolute;inset:0;width:100%;height:100%;border:0";t.appendChild(f);}
+        t.addEventListener("click",play);t.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();play();}});})();
+      </script>
 
       <div class="facts reveal" aria-label="Ключевые факты">
         <div><strong>100+</strong><span>квестов и учебных задач</span></div>
@@ -76,8 +85,8 @@
       </div>
 
       <div class="overview-media reveal">
-        <a class="dashboard" href="https://gamedev.ru/files/images/site_tmp01.jpg" target="_blank" rel="noreferrer">
-          <img src="https://gamedev.ru/files/images/site_tmp01.jpg" alt="Концепт личного кабинета VitalSchool с картой знаний" loading="lazy" />
+        <a class="dashboard" href="assets/kabinet-concept.jpg" target="_blank" rel="noreferrer">
+          <img src="assets/kabinet-concept.jpg" alt="Концепт личного кабинета VitalSchool с картой знаний" loading="lazy" />
           <span class="visual-caption"><b>Личный кабинет ученика</b><small>знания и прогресс как часть игрового профиля</small></span>
         </a>
         <a class="overview-video" href="https://youtu.be/wLLRgLrFBHY" target="_blank" rel="noreferrer" aria-label="Открыть видео образовательного бафа на YouTube">
@@ -133,19 +142,19 @@
 
       <div class="mobile-grid compact-mobile">
         <article class="mobile-card reveal">
-          <img src="https://gamedev.ru/files/images/141609_1569409670_01.jpg" alt="VS Bubbles" loading="lazy" onerror="this.src='assets/vs-bubbles.jpg'">
+          <img src="assets/vs-bubbles-forum.jpg" alt="VS Bubbles" loading="lazy" onerror="this.src='assets/vs-bubbles.jpg'">
           <div><p class="tag">25.09.2019</p><h3>VS Bubbles</h3><p>Таблица умножения и связь умножения с делением через механику пузырей.</p><a href="https://gamedev.ru/projects/forum/?id=247101" target="_blank" rel="noreferrer">Релиз ↗</a></div>
         </article>
         <article class="mobile-card reveal">
-          <img src="https://gamedev.ru/files/images/142886_1575384998_01_1.jpg" alt="VS Paddle" loading="lazy">
+          <img src="assets/vs-paddle.jpg" alt="VS Paddle" loading="lazy">
           <div><p class="tag">29.11.2019</p><h3>VS Paddle</h3><p>Сравнение целых чисел и дробей через свайпы и «греблю».</p><a href="https://gamedev.ru/projects/forum/?id=248568" target="_blank" rel="noreferrer">Релиз ↗</a></div>
         </article>
         <article class="mobile-card reveal">
-          <img src="https://gamedev.ru/files/images/143299_1576869786_01.jpg" alt="Odd VS Even" loading="lazy">
+          <img src="assets/odd-vs-even.jpg" alt="Odd VS Even" loading="lazy">
           <div><p class="tag">20.12.2019</p><h3>Odd VS Even</h3><p>Чётные и нечётные числа: один палец — нечётное, два — чётное.</p><a href="https://gamedev.ru/projects/forum/?id=248962" target="_blank" rel="noreferrer">Релиз ↗</a></div>
         </article>
         <article class="mobile-card reveal">
-          <img src="https://gamedev.ru/files/images/143455_1577474575_001.jpg" alt="VS Hops" loading="lazy">
+          <img src="assets/vs-hops.jpg" alt="VS Hops" loading="lazy">
           <div><p class="tag">27.12.2019</p><h3>VS Hops</h3><p>Счёт до 100 через прыжки на скакалке и ритм действий.</p><a href="https://gamedev.ru/projects/forum/?id=249100" target="_blank" rel="noreferrer">Релиз ↗</a></div>
         </article>
       </div>
