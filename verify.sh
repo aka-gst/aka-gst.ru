@@ -182,8 +182,10 @@ echo "         выкладываются своими сессиями, сод�
 
 echo
 echo "== содержимое, а не только код ответа =="
-for needle in 'og:image' '66 автотестов' 'data-panel="play"' 'class="social"' \
-              'class="shot"' 'assets/shots/allure-gateway.png'; do
+# С 02.10.2026 главная — новая (три страницы: работа, игры, рассказы). Приметы —
+# то, что видит человек: муха главной карточкой, фраза Сергея на QueQuest, счётчик.
+for needle in 'og:image' 'Муха · Project Brain' 'assets/muha-flybox.jpg' 'class="social' \
+              'Таскаешь ящики за бабки' '/pulse/script.js'; do
   if printf '%s' "$page" | grep -q "$needle"; then say_ok "на странице есть $needle"
   else say_bad "на странице НЕТ $needle"; fi
 done
@@ -231,6 +233,15 @@ echo "== на всё, что лежит на сервере, можно попа
 # Показ, а не публикация: ссылку Сергей отправляет сам, индексации нет.
 PRIVATE_TEST_DIRS="leela zoo psy-admin-v2 way torgash-gnjeev4lb7 katerina flow"
 #
+# OWNER_HIDDEN добавлен 2 октября 2026: при переходе на новую главную Сергей
+# вслух решил вернуть на неё из пропавших только Тетколор. Деревня (coin),
+# Макетчик, Путь, Наотмашь, ПЕРЕЛОМ, Битва Стихий (stihii), NEON CLAW (claw)
+# и карточка Psy Admin (psy-admin — живая страница виджета Ориона) убраны с
+# главной его решением, а сами страницы остаются работать по прямому адресу.
+# Правило 30д это допускает именно при названном решении. Списком, а не
+# выключением: новая сирота по-прежнему краснеет.
+OWNER_HIDDEN="coin maketchik put naotmash perelom stihii claw psy-admin"
+#
 # У проверки ЕСТЬ ОБА ИСХОДА, и это записано здесь, чтобы следующий не
 # переоткрывал: красный получен переименованием ссылки на claw (проверка
 # назвала claw), зелёный — на нетронутом сайте. Проверка, которая не может
@@ -245,10 +256,13 @@ else
   # Берём и точные ссылки, и вложенные: на практикум ведут /praktikum/llm/
   # и /praktikum/testirovanie/, а самой /praktikum/ в разметке нет.
   # shellcheck disable=SC2086
-  LINKED=$(curl -s $RETRY "$BASE/" | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
+  # Витрина — три страницы: ссылки собираются со всех, иначе все игры (они на
+  # /games.html) объявились бы сиротами.
+  LINKED=$(for p in "" games.html stories.html; do curl -s $RETRY "$BASE/$p"; done | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
   ORPHANS=""
   for d in $SERVER_DIRS; do
     printf '%s\n' "$PRIVATE_TEST_DIRS" | tr ' ' '\n' | grep -qx "$d" && continue
+    printf '%s\n' "$OWNER_HIDDEN" | tr ' ' '\n' | grep -qx "$d" && continue
     printf '%s\n' "$LINKED" | grep -qx "$d" && continue
     # Старый адрес, ведущий на новый, — не сирота, а дверь, оставленная для
     # тех, у кого он в закладках. Сиротой считается только то, что отвечает

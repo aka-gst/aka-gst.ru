@@ -14,6 +14,7 @@ const replace = (file, key, html) => {
  writeFileSync(filename,source.replace(new RegExp(`${start}[\\s\\S]*?${end}`),`${start}\n${html}\n${end}`));
 };
 const projects = [...read('projects.json').projects,...JSON.parse(readFileSync(path.join(here,'catalog-additions.json'),'utf8'))];
+const fraza=readFileSync(path.join(root,'data','fraza-quequest.txt'),'utf8').trim();
 const site=read('site.json'), stories=read('stories.json'), phraseSource=read('frazy.json').frazy;
 const phrases=['Это роли, а не задачи.','Когнитивный экзоскелет.','У жалобы есть число. Найди его.','Проверено поломкой.','Починили механизмом, а не обещанием.','Оно сильное, потому что честное.'];
 for(const phrase of phrases) if(!phraseSource.includes(phrase)) throw Error(`Missing exact phrase: ${phrase}`);
@@ -31,10 +32,11 @@ const card=(p,section)=>{
  const link=p.links?.find(l=>['play','demo','site','course','report'].includes(l.type))||p.links?.[0];
  const href=url(link?.url);
  const title=p.id==='puzzle-quest'?'Матч Квест':p.title;
- const description=q&&!isGame?'Сначала работа руками, затем автоматизация: Python появляется, когда он нужен игроку.':p.tagline;
+ // Фраза Сергея на QueQuest — посимвольно из data/fraza-quequest.txt (правило 35а; её трижды подменяли).
+ const description=q?fraza:p.tagline;
  const label=p.pending?'Запуск после проверки':q&&isGame?'Демо курса ↗':isGame?'Играть ↗':'Открыть ↗';
  const tag=p.pending?'article':'a';
- return `<${tag} class="project-card ${p.pending?'is-pending':''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${href?.startsWith('http')?'target="_blank" rel="noopener"':''}><div class="project-image">${media}</div><div class="project-copy"><small>${esc(p.kicker)}</small><h3>${esc(title)}</h3><p>${esc(description)}</p><span class="card-action">${label}</span></div></${tag}>`;
+ return `<${tag} class="project-card ${p.pending?'is-pending':''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${href?.startsWith('http')?'target="_blank" rel="noopener"':''}><div class="project-image">${media}</div><div class="project-copy"><small>${esc(p.kicker)}</small><h3>${esc(title)}</h3><p class="tagline">${esc(String(description??'').replace(/(?<!\.)\.$/,''))}</p><span class="card-action">${label}</span></div></${tag}>`;
 };
 const work=selectProjects(projects,'work');
 replace('index.html','WORK',work.filter(p=>!['local-agent-gateway','dharma-ai'].includes(p.id)).map(p=>card(p,'work')).join('\n'));

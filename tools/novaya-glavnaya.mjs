@@ -19,6 +19,11 @@ const src = path.join(root, 'design-preview', 'site');
 execFileSync(process.execPath, [path.join(src, 'build-content.mjs')], { stdio: 'inherit' });
 
 const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+// Растровые значки берём у старой главной: build.mjs только что собрал её и
+// поставил версию по содержимому (?v=…), тест favicon требует их на каждой странице.
+const oldIndex = readFileSync(path.join(root, 'index.html'), 'utf8');
+const icons = [...oldIndex.matchAll(/<link rel="(?:icon|apple-touch-icon)"[^>]*>/g)].map(m => m[0]).filter(l => !l.includes('favicon.svg'));
+if (!icons.some(l => l.includes('favicon-32.png'))) throw new Error('в собранной главной нет favicon-32.png — значки взять неоткуда');
 const pages = { 'index.html': '/', 'games.html': '/games.html', 'stories.html': '/stories.html' };
 const esc = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
@@ -45,6 +50,7 @@ for (const [file, urlPath] of Object.entries(pages)) {
     `<meta name="twitter:card" content="summary_large_image">`,
     `<meta name="twitter:image" content="https://aka-gst.ru/og.png">`,
     `<script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>`,
+    ...icons,
   ].join('\n');
   if ((html.match(/<\/head>/g) || []).length !== 1) throw new Error(`${file}: </head> должен быть ровно один`);
   html = html.replace('</head>', `${head}\n</head>`);
@@ -53,6 +59,14 @@ for (const [file, urlPath] of Object.entries(pages)) {
 
 for (const f of ['site.css', 'site.js', 'phrases.js']) cpSync(path.join(src, f), path.join(root, f));
 for (const d of ['fonts', 'game-design']) cpSync(path.join(src, d), path.join(root, d), { recursive: true });
+// Страница геймдизайна тоже выкладывается — счётчик и на ней (правило 30).
+const gd = path.join(root, 'game-design', 'index.html');
+let gdHtml = readFileSync(gd, 'utf8');
+if (!gdHtml.includes('/pulse/script.js')) {
+  if ((gdHtml.match(/<\/head>/g) || []).length !== 1) throw new Error('game-design: </head> должен быть ровно один');
+  gdHtml = gdHtml.replace('</head>', `<script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>\n</head>`);
+  writeFileSync(gd, gdHtml);
+}
 for (const a of readdirSync(path.join(src, 'assets'))) {
   const from = path.join(src, 'assets', a), to = path.join(root, 'assets', a);
   if (existsSync(to) && !readFileSync(to).equals(readFileSync(from))) throw new Error(`assets/${a}: в корне лежит другой файл с тем же именем`);

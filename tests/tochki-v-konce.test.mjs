@@ -15,7 +15,9 @@ import test from 'node:test';
 const КЛАССЫ = ['gcard-text', 'card-text', 'tagline', 'work-duet-note', 'work-path-thesis',
   'gw-case', 'gw-note', 'mast-stamp', 'kicker', 'job-role', 'shot-caption'];
 
-const КОНТЕЙНЕРЫ = ['work-gateway-copy', 'work-dharma-copy'];
+// С 02.10.2026 главная разнесена на три страницы (работа, игры, рассказы):
+// подписи карточек — в feature-copy и project-copy.
+const КОНТЕЙНЕРЫ = ['work-gateway-copy', 'work-dharma-copy', 'feature-copy', 'project-copy'];
 
 // Меряем ТЕКСТ, который видит человек: содержимое элемента без тегов.
 // Первая версия этой меры искала только элементы БЕЗ вложенных тегов и
@@ -40,7 +42,8 @@ const строки = (html) => {
 };
 
 test('в конце коротких строк карточек нет точки', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = ['index.html', 'games.html', 'stories.html']
+    .map((f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8')).join('\n');
   const все = строки(html);
   // Положительный контроль: без него тест зелен на пустоте — не нашли ни
   // одной строки и радостно отчитались, что точек нет.
@@ -49,7 +52,7 @@ test('в конце коротких строк карточек нет точк
   assert.deepEqual(сТочкой, [], `строки с точкой в конце: ${сТочкой.join(' | ')}`);
 
   // Отрицательный контроль: та же мера обязана краснеть на подсаженной точке.
-  const подсажено = строки(html.replace(/(<p class="work-path-thesis">[^<]*)</, '$1.<'));
+  const подсажено = строки(html.replace(/(<p class="tagline">[^<]*)</, '$1.<'));
   assert.ok(подсажено.some((с) => с.endsWith('.')), 'мера не видит точку даже когда её поставили — она слепая');
 });
 
