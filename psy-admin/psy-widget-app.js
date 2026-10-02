@@ -9,9 +9,12 @@ const eventsApiUrl = new URL("./booking/api/events", import.meta.url).href;
 // Обезличенный счётчик сервера записи: только имя события и короткий ключ
 // страницы — ни текста вопроса, ни контактов, ни адреса. Молча глохнет:
 // сломать виджет на сайте центра он не вправе.
+// Проверочный заход: адрес страницы с ?proverka — событие помечено и в сводку центра не идёт.
+const isProverka = (() => { try { return new URLSearchParams(location.search).has("proverka"); } catch { return false; } })();
 function track(event, page) {
   try {
-    fetch(eventsApiUrl, { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify(page ? { event, page } : { event }) }).catch(() => {});
+    const body = { event, ...(page ? { page } : {}), ...(isProverka ? { proverka: 1 } : {}) };
+    fetch(eventsApiUrl, { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).catch(() => {});
   } catch {}
 }
 const pageKey = () => {

@@ -27,6 +27,10 @@ export function auditRelease({ release, widget, contract, css }) {
   if (!widget.includes(`widget-contract.js?v=${release}`)) errors.push("метка ассетов не совпадает с виджетом");
   if (!widget.includes(`widget.css?v=${release}`)) errors.push("метка CSS не совпадает с виджетом");
   if (!contract?.includes(`router.js?v=${release}`)) errors.push("метка router не совпадает с контрактом");
+  // Роутер подключают и виджет, и контракт: разные метки — два экземпляра модуля в браузере.
+  for (const match of widget.matchAll(/router\.js\?v=(psy-widget-\d{8}-\d+)/g)) {
+    if (match[1] !== release) errors.push("метка router в виджете не совпадает с контрактом");
+  }
   if (!widget.includes('<label for="psy-widget-evaluation-select">Частые вопросы</label>')) {
     errors.push("нет единственного списка «Частые вопросы»");
   }
@@ -55,6 +59,21 @@ export function auditPageReleases({ release, pages }) {
     }
   }
   return errors;
+}
+
+// С 29.09 виджет — два файла: загрузчик psy-widget.js (его подключают страницы)
+// и модуль psy-widget-app.js (разметка, контракт, CSS). Метка загрузчика у
+// страниц своя, метка модуля — в импорте внутри загрузчика: её и сверяем с боем.
+export function extractAppRelease(loader, label) {
+  const match = loader.match(/psy-widget-app\.js\?v=(psy-widget-\d{8}-\d+)/);
+  if (!match) throw new Error(`${label}: загрузчик не подключает psy-widget-app.js с меткой`);
+  return match[1];
+}
+
+export function auditLoader({ loader, appRelease }) {
+  const imports = [...loader.matchAll(/psy-widget-app\.js\?v=(psy-widget-\d{8}-\d+)/g)].map((m) => m[1]);
+  if (imports.length !== 1) return [`загрузчик подключает psy-widget-app.js ${imports.length} раз(а)`];
+  return imports[0] === appRelease ? [] : ["метка модуля в загрузчике не совпадает с кандидатом"];
 }
 
 export function extractRelease(source, label) {
@@ -88,6 +107,12 @@ async function fetchLiveRelease(base) {
   return extractRelease(await fetchTextWithRetry(url), "бой");
 }
 
+async function fetchLiveAppRelease(base) {
+  const url = new URL("/psy-admin/psy-widget.js", base);
+  url.searchParams.set("psy_admin_release_guard", Date.now().toString());
+  return extractAppRelease(await fetchTextWithRetry(url), "бой");
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const index = args.indexOf("--live-base");
@@ -104,28 +129,37 @@ async function main() {
     "schedule/index.html",
     "services/index.html",
   ];
-  const [widget, css, contract, ...pageSources] = await Promise.all([
+  const [loader, app, css, contract, ...pageSources] = await Promise.all([
     readFile(resolve(psyAdminDirectory, "psy-widget.js"), "utf8"),
+    readFile(resolve(psyAdminDirectory, "psy-widget-app.js"), "utf8"),
     readFile(resolve(psyAdminDirectory, "widget.css"), "utf8"),
     readFile(resolve(psyAdminDirectory, "widget-contract.js"), "utf8"),
     ...pagePaths.map((path) => readFile(resolve(psyAdminDirectory, path), "utf8")),
   ]);
-  const release = extractRelease(widget, "кандидат");
+  const widget = `${loader}\n${app}`;
+  const release = extractRelease(app, "кандидат");          // метка контракта, CSS и роутера внутри модуля
+  const appRelease = extractAppRelease(loader, "кандидат"); // метка модуля в загрузчике
+  const pages = pagePaths.map((path, index) => ({ path, source: pageSources[index] }));
+  const pageRelease = extractRelease(pages[0].source, pages[0].path); // метка загрузчика у страниц
   const errors = [
+    ...auditLoader({ loader, appRelease }),
     ...auditRelease({ release, widget, contract, css }),
-    ...auditPageReleases({ release, pages: pagePaths.map((path, index) => ({ path, source: pageSources[index] })) }),
+    ...auditPageReleases({ release: pageRelease, pages }),
   ];
   if (errors.length) throw new Error(errors.join("; "));
 
   if (liveBase) {
-    const liveRelease = await fetchLiveRelease(liveBase);
-    if (compareReleaseVersions(release, liveRelease) < 0) {
-      throw new Error(`кандидат ${release} старее боя ${liveRelease}: выкладка отменена`);
+    const [livePage, liveApp] = await Promise.all([fetchLiveRelease(liveBase), fetchLiveAppRelease(liveBase)]);
+    if (compareReleaseVersions(pageRelease, livePage) < 0) {
+      throw new Error(`страницы ${pageRelease} старее боя ${livePage}: выкладка отменена`);
     }
-    console.log(`psy-admin release guard: кандидат ${release}; бой ${liveRelease}; понижения версии нет`);
+    if (compareReleaseVersions(appRelease, liveApp) < 0) {
+      throw new Error(`модуль ${appRelease} старее боя ${liveApp}: выкладка отменена`);
+    }
+    console.log(`psy-admin release guard: модуль ${appRelease} (бой ${liveApp}), страницы ${pageRelease} (бой ${livePage}), ресурсы ${release}; понижения версии нет`);
     return;
   }
-  console.log(`psy-admin release guard: кандидат ${release}; локальная структура верна`);
+  console.log(`psy-admin release guard: модуль ${appRelease}, страницы ${pageRelease}, ресурсы ${release}; локальная структура верна`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
