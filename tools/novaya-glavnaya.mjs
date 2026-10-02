@@ -32,6 +32,9 @@ for (const [file, urlPath] of Object.entries(pages)) {
   html = html.replaceAll('../../', './').replace(/(<a\b[^>]*?\shref=")https:\/\/aka-gst\.ru\//g, '$1/');
   // На бою пути от корня: сторожа verify.sh (ассеты, сироты) видят только href="/…".
   html = html.replace(/(\s(?:src|href|poster)=")\.\//g, '$1/');
+  // Сайт с сентября на растровом значке (tests/favicon.test.mjs запрещает /favicon.svg) —
+  // SVG-строку кандидата убираем, растровые вставляются ниже вместе со счётчиком.
+  html = html.replace(/<link rel="icon" href="\/favicon\.svg"[^>]*>\s*/g, '');
   if (html.includes('../../')) throw new Error(`${file}: остался путь ../../`);
   const title = html.match(/<title>([^<]*)<\/title>/)?.[1];
   const description = html.match(/<meta name="description" content="([^"]*)"/)?.[1];
