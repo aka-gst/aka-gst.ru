@@ -1,10 +1,14 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { selectProjects } from './content-policy.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
 const read = name => JSON.parse(readFileSync(path.join(root, 'data', name), 'utf8'));
+// Постеры отдаются с кэшем на год (immutable): без метки версии замена файла под тем же
+// именем не доходит до вернувшихся посетителей. Метка — хеш содержимого (03.10.2026).
+const shotVer = file => { try { return createHash('sha256').update(readFileSync(path.join(root, 'assets', 'shots', file))).digest('hex').slice(0, 10); } catch { console.warn(`[build-content] нет постера assets/shots/${file}`); return 'net'; } };
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const url = value => value?.startsWith('/') ? `https://aka-gst.ru${value}` : value;
 const replace = (file, key, html) => {
@@ -36,7 +40,7 @@ for(const [file,section] of [['index.html','work'],['games.html','games'],['stor
 }
 const card=(p,section)=>{
  const q=p.id==='qa-quest', shot=p.shots?.[0], isGame=section==='games';
- const src=q&&!isGame?'./assets/quequest-warehouse-current.png':p.preview?`./assets/${p.preview}`:shot?`../../assets/shots/${shot.file}`:null;
+ const src=q&&!isGame?'./assets/quequest-warehouse-current.png':p.preview?`./assets/${p.preview}`:shot?`../../assets/shots/${shot.file}?v=${shotVer(shot.file)}`:null;
  const media=src?`<img src="${esc(src)}" alt="${esc(q&&!isGame?'Новая первая смена QueQuest':shot?.alt||`Экран ${p.title}`)}" loading="lazy">`:`<span class="project-symbol" aria-hidden="true">${esc(p.monogram||'↔')}</span><span class="image-label">${p.pending?'Проект в разработке':'Свой сервер'}</span>`;
  const link=p.links?.find(l=>['play','demo','site','course','report'].includes(l.type))||p.links?.[0];
  const href=url(link?.url);
