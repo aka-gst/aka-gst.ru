@@ -59,4 +59,13 @@ const games=selectProjects(projects,'games');
 replace('games.html','GAMES',games.map(p=>card(p,'games')).join('\n'));
 replace('stories.html','BOOKS',stories['сборники'].map(c=>`<a class="book" href="#${esc(c.id)}" aria-label="Сборник «${esc(c.title)}»"><img src="../../assets/covers/${esc(c.cover)}" alt="Обложка ${esc(c.title)}"><span>${esc(c.title)}</span></a>`).join('\n'));
 replace('stories.html','STORIES',stories['сборники'].map(c=>`<section class="collection" id="${esc(c.id)}"><div class="collection-heading"><span>${esc(c.year)} · ${c.stories.length} историй</span><h3>${esc(c.title)}</h3></div><div class="collection-links">${c.stories.map((s,i)=>`<a href="https://aka-gst.ru/rasskazy/${encodeURIComponent(s.slug)}/"><span>${String(i+1).padStart(2,'0')}</span><strong>${esc(s.title)}</strong><span aria-hidden="true">↗</span></a>`).join('')}</div></section>`).join('\n'));
+// Все адреса постеров и петель на страницах — с меткой содержимого, включая статичные
+// места шаблона (hero ACID UNO на «Играх»): файлы отдаются с кэшем на год (immutable).
+// Существующую метку пересчитываем, а не оставляем — иначе она застынет на старом файле.
+const assetVer = (dir, file) => { try { return createHash('sha256').update(readFileSync(path.join(root, 'assets', dir, file))).digest('hex').slice(0, 10); } catch { console.warn(`[build-content] нет файла assets/${dir}/${file}`); return 'net'; } };
+for (const page of ['index.html', 'games.html', 'stories.html']) {
+  const f = path.join(here, page), src = readFileSync(f, 'utf8');
+  const out = src.replace(/(\.\.\/\.\.\/assets\/(shots|clips)\/)([\w.-]+\.(?:jpg|jpeg|png|webp|mp4|webm))(\?v=(?:[0-9a-f]{10}|net))?/g, (m, pre, dir, file) => `${pre}${file}?v=${assetVer(dir, file)}`);
+  if (out !== src) writeFileSync(f, out);
+}
 console.log(`Generated ${work.length} work entries, ${games.length} games, 3 collections, ${phrases.length} phrases.`);
