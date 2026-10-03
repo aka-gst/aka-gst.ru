@@ -36,7 +36,7 @@ const icons={github:'<path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-
 for(const [file,section] of [['index.html','work'],['games.html','games'],['stories.html','stories']]){
  const nav=[['index.html','Работа','work'],['games.html','Игры','games'],['stories.html','Рассказы','stories']].map(([f,label,s])=>`<a href="./${f}?v=20261001-6" ${s===section?'aria-current="page"':''}>${label}</a>`).join('');
  const social=[['github','GitHub','https://github.com/aka-gst'],['x','Twitter / X','https://x.com/aka_gst'],['telegram','Telegram','https://t.me/gostinka27']].map(([icon,label,href])=>`<a class="social" href="${href}" target="_blank" rel="noopener" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[icon]}</svg></a>`).join('');
- replace(file,'HEADER',`<header class="site-header"><div class="header-inner site-width"><a class="brand" href="./index.html?v=20261001-6" aria-label="aka-gst — главная"><img src="../../assets/mark-${section==='games'?'games':section}.svg" alt="" width="32" height="32">aka<span>-</span>gst</a><div class="phrase" aria-label="Фразы из рабочих заметок"><span class="phrase-label">ИИ:</span><span class="phrase-text" id="phrase-text" tabindex="0" aria-describedby="phrase-pop">Проверено поломкой.</span><span class="phrase-pop" id="phrase-pop" role="tooltip" hidden></span></div><nav class="main-nav" aria-label="Разделы сайта">${nav}</nav><div class="social-links"><a class="social language" href="https://aka-gst.ru/en/" aria-label="English version">EN</a>${social}</div><a class="pill header-contact" href="https://t.me/gostinka27" target="_blank" rel="noopener">Обсудить проект ↗</a></div></header>`);
+ replace(file,'HEADER',`<header class="site-header"><div class="header-inner site-width"><a class="brand" href="./index.html?v=20261001-6" aria-label="aka-gst — главная"><img src="../../assets/mark-${section==='games'?'games':section}.svg" alt="" width="32" height="32">aka<span>-</span>gst</a><div class="phrase" aria-label="Фразы из рабочих заметок"><span class="phrase-label">ИИ:</span><span class="phrase-text" id="phrase-text" tabindex="0" aria-describedby="phrase-pop">Проверено поломкой.</span><span class="phrase-kursor" aria-hidden="true"></span><span class="phrase-pop" id="phrase-pop" role="tooltip" hidden></span></div><nav class="main-nav" aria-label="Разделы сайта">${nav}</nav><div class="social-links"><a class="social language" href="https://aka-gst.ru/en/" aria-label="English version">EN</a>${social}</div><a class="pill header-contact" href="https://t.me/gostinka27" target="_blank" rel="noopener">Обсудить проект ↗</a></div></header>`);
 }
 // kind: 'wide' — большая карточка во всю ширину (картинка 3/4, текст сбоку; Сергей 03.10: «картинки 3 четвертых»),
 // 'compact' — карточка без снимка на «Работе» (свой сервер, в разработке): маленькая, чтобы не стоять пустой рамкой.
@@ -58,9 +58,12 @@ const card=(p,section,kind='')=>{
  return `<${tag} class="project-card ${p.pending?'is-pending':''}${k?` is-${k}`:''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${href?.startsWith('http')?'target="_blank" rel="noopener"':''}><div class="project-image">${media}</div><div class="project-copy"><small>${esc(p.kicker)}</small><h3>${esc(title)}</h3>${q&&!isGame?`<p class="tagline-lead">${esc(strokaQ)}</p>`:''}<p class="tagline">${esc(String(description??'').replace(/(?<!\.)\.$/,''))}</p>${extra}<span class="card-action">${label}</span></div></${tag}>`;
 };
 const work=selectProjects(projects,'work');
-// QueQuest и Psy AI Admin — большими карточками (Сергей 03.10: «про QueQuest, Psy Admin… картинки 3 четвертых»).
-const shirokie=['qa-quest','psy-ai-admin'];
-replace('index.html','WORK',work.filter(p=>!['local-agent-gateway','dharma-ai'].includes(p.id)).map(p=>card(p,'work',shirokie.includes(p.id)?'wide':'')).join('\n'));
+// Размеры карточек — слово Сергея 03.10 06:25 (после утренних «3/4»): «всё крупное уменьшить»:
+// QueQuest вдвое меньше, «сайт на картинку» (Psy AI Admin) меньше — обе в полширины рядом;
+// BEATDANCER, ФотоДата, практикумы — мелкие, как Воки-Токи/AiRouter/AshenNote (is-compact).
+const shirokie=[];
+const melkie=['beatdancer','photo-meta-editor','praktikum-testing','ai-agent-service-lab'];
+replace('index.html','WORK',work.filter(p=>!['local-agent-gateway','dharma-ai'].includes(p.id)).map(p=>card(p,'work',shirokie.includes(p.id)?'wide':melkie.includes(p.id)?'compact':'')).join('\n'));
 replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`<article class="resume-item"><span>${esc(i.period)}</span><div><h3>${esc(i.org)}</h3><p>${esc(i.role)}</p>${i.org.includes('Инди-студия')?'<a class="pill" href="./game-design/">Кейс VitalSchool · геймдизайн ↗</a>':''}</div></article>`).join('\n'));
 replace('index.html','SKILLS',site.profile.skills.map(g=>`<div class="skill-group"><h4>${esc(g.group)}</h4><p>${g.items.map(esc).join(' · ')}</p></div>`).join('\n'));
 const games=selectProjects(projects,'games');

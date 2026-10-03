@@ -120,3 +120,45 @@ a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:po
 .visually-hidden{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 .stories-hero{padding-top:28px}
 .section-head>span a{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+
+/* Правки Сергея 03.10.2026 06:25 — «всё крупное уменьшить» (после утренних «3/4»; его позднее слово главнее).
+   Муха и ANIGMA — два блока в один экран, рядом, картинка сверху; QueQuest и Psy AI Admin — в полширины;
+   BEATDANCER, ФотоДата, практикумы — мелкие (is-compact), как Воки-Токи/AiRouter/AshenNote. */
+@media(min-width:951px){
+.page-work .featured-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.page-work .feature,.page-work .feature:nth-child(even){display:flex;flex-direction:column;grid-template-columns:none}
+.page-work .feature-image,.page-work .feature:nth-child(even) .feature-image{order:0;border-right:0;border-left:0;border-bottom:1px solid var(--line);aspect-ratio:16/9;min-height:0}
+.page-work .feature-image img{aspect-ratio:auto;height:100%}
+.page-work .feature-copy{padding:20px 22px;justify-content:flex-start}
+.page-work .feature-copy h2{font-size:26px;margin-bottom:8px}
+.page-work .feature-copy>p:not(.eyebrow){font-size:14px;line-height:1.5}
+.page-work .feature-links{flex-direction:row;flex-wrap:wrap;align-items:center;margin-top:14px}
+.page-work .feature-links .pill{font-size:13px;min-height:40px;padding:7px 14px}
+}
+.page-work .project-card.is-compact .project-image img{height:100%}
+@media(min-width:951px){.page-work .project-card.is-compact .project-image{height:132px}}
+@media(max-width:650px){
+.page-work .project-grid .project-card.is-compact{grid-column:span 3}
+.page-work .project-card.is-compact .project-image{height:96px}
+.page-work .is-compact .project-copy{padding:10px 12px;gap:4px}
+.page-work .is-compact .project-copy h3{font-size:15px}
+.page-work .is-compact .project-copy p{font-size:11px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.page-work .is-compact .card-action{font-size:11px;padding-top:6px;min-height:0}
+.page-work .is-compact .project-symbol{font-size:26px}
+}
+
+/* Шапка — как на прошлой версии сайта (assets/app.js, assets/site.css до 02.10): фраза набирается по букве,
+   зелёный курсор справа виден только пока строка набирается или стирается, фраза висит 22 с, глитч редкий и
+   короткий, трёх видов (расщепление каналов, срез полосой, дрожание). Сергей 03.10 06:25: «меняются слишком
+   быстро… вернуть как на прошлом сайте». */
+.phrase-text{white-space:pre}
+.phrase-kursor{flex:none;width:.55em;height:1.1em;background:var(--accent);opacity:0;transition:opacity 120ms linear}
+.phrase[data-nabor] .phrase-kursor{opacity:.75;animation:term-migat 2.1s steps(1,end) infinite}
+@keyframes term-migat{0%,49%{opacity:.75}50%,100%{opacity:0}}
+.phrase[data-glitch="1"] .phrase-text{animation:term-glitch-kanaly 260ms steps(1,end) 1}
+.phrase[data-glitch="2"] .phrase-text{animation:term-glitch-srez 300ms steps(1,end) 1}
+.phrase[data-glitch="3"] .phrase-text{animation:term-glitch-drozh 220ms steps(1,end) 1}
+@keyframes term-glitch-kanaly{0%{text-shadow:none;clip-path:none;transform:none}15%{text-shadow:1.6px 0 rgba(255,42,86,.85),-1.6px 0 rgba(60,235,255,.75);clip-path:inset(18% 0 42% 0);transform:translateX(-.6px)}35%{text-shadow:-1.4px 0 rgba(255,42,86,.8),1.4px 0 rgba(60,235,255,.7);clip-path:inset(52% 0 12% 0);transform:translateX(.8px)}55%{text-shadow:1.2px 0 rgba(255,42,86,.7),-1.2px 0 rgba(60,235,255,.6);clip-path:none;transform:none}75%{text-shadow:-.8px 0 rgba(255,42,86,.5),.8px 0 rgba(60,235,255,.45);clip-path:inset(0 0 68% 0)}100%{text-shadow:none;clip-path:none;transform:none}}
+@keyframes term-glitch-srez{0%{clip-path:none;transform:none}20%{clip-path:inset(0 0 55% 0);transform:translateX(2px)}40%{clip-path:inset(45% 0 0 0);transform:translateX(-2px)}60%{clip-path:inset(30% 0 30% 0);transform:translateX(1px);color:var(--accent)}80%{clip-path:inset(0 40% 0 0);transform:none}100%{clip-path:none;transform:none}}
+@keyframes term-glitch-drozh{0%{transform:none;opacity:1}20%{transform:translate(-1px,.5px);opacity:.7}40%{transform:translate(1px,-.5px);opacity:1}60%{transform:translate(-.5px,0);opacity:.6;text-shadow:1px 0 rgba(60,235,255,.6)}80%{transform:translate(.5px,.5px);opacity:1}100%{transform:none;opacity:1;text-shadow:none}}
+@media(prefers-reduced-motion:reduce){.phrase[data-nabor] .phrase-kursor{animation:none;opacity:.45}.phrase[data-glitch] .phrase-text{animation:none}}

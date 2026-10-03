@@ -37,21 +37,83 @@
   const phraseNode = document.getElementById('phrase-text');
   const phrases = Array.isArray(window.sitePhrases) ? window.sitePhrases : [];
   if (phraseNode && phrases.length) {
-    let index = Math.floor(Math.random() * phrases.length);
-    // Кнопки паузы нет (Сергей 03.10: «убери, нахуй она не нужна»). Длинная фраза обрезается
-    // многоточием — целиком её показывает своё окошко: сразу при наведении, по касанию на телефоне,
-    // по фокусу с клавиатуры. Системный title не годится: он появляется через секунду и выглядит чужим.
+    // Как на прошлой версии сайта (assets/app.js до 02.10): фраза набирается по букве (45 мс на символ),
+    // висит 22 с, стирается справа налево, пауза на пустоте — и следующая, случайная, не та же.
+    // «(с)» печатается вместе с фразой (шутка Сергея про патентованные фразы ИИ).
+    // Зелёный курсор справа виден только пока строка набирается или стирается — «бесит постоянно
+    // моргающая штука». Глитч редкий (каждые 4,5–8 с), короткий, одного из трёх видов.
+    // Сергей 03.10 06:25: твиты «меняются слишком быстро… вернуть как на прошлом сайте».
+    // Кнопки паузы нет (Сергей 03.10: «убери»). Длинная фраза обрезается многоточием — целиком её
+    // показывает своё окошко: при наведении, по касанию на телефоне, по фокусу с клавиатуры.
+    const полоса = phraseNode.closest('.phrase') || phraseNode.parentElement;
     const pop = document.getElementById('phrase-pop');
+    const БУКВА = 45, СТЁРКА = 22, ДЕРЖИМ = 22000, ПУСТО = 900, ЗНАЧОК = ' (с)';
+    const ГЛИТЧ_НЕ_ЧАЩЕ = 4500;
+    let index = Math.floor(Math.random() * phrases.length);
+    const следующая = () => {
+      if (phrases.length < 2) return index;
+      let к = index;
+      while (к === index) к = Math.floor(Math.random() * phrases.length);
+      return к;
+    };
     let open = false;
-    let timer;
-    let glitchTimer;
+    let печать = null;
+    let ждём = null;
+    // Стартуем сразу, как прошлая версия: страница, открытая в фоновой вкладке, иначе ждёт события
+    // видимости, которого у части окон (встроенные панели) не бывает — и строка остаётся пустой.
+    let живо = true;
+    let глитч = null;
     const cut = () => phraseNode.scrollWidth > phraseNode.clientWidth + 1;
+    const показать = (строка, к) => {
+      const всё = строка + ЗНАЧОК;
+      const text = всё.slice(0, Math.max(0, Math.min(к, всё.length)));
+      phraseNode.textContent = text;
+      phraseNode.dataset.text = text;
+    };
+    const шаг = (строка, от, до, скорость) => new Promise((готово) => {
+      let к = от;
+      полоса.dataset.nabor = '1';
+      печать = setInterval(() => {
+        к += от < до ? 1 : -1;
+        показать(строка, к);
+        if (к === до || !живо) { clearInterval(печать); печать = null; delete полоса.dataset.nabor; готово(); }
+      }, скорость);
+    });
+    const пауза = (мс) => new Promise((г) => { ждём = setTimeout(г, мс); });
+    const круг = async () => {
+      while (живо) {
+        const строка = phrases[index];
+        const всё = строка.length + ЗНАЧОК.length;
+        if (reducedMotion.matches) {
+          показать(строка, всё);
+          await пауза(ДЕРЖИМ);
+        } else {
+          await шаг(строка, 0, всё, БУКВА);
+          if (!живо) break;
+          await пауза(ДЕРЖИМ);
+          while (open && живо) await пауза(400); // пока окно с полной фразой открыто, она не меняется
+          if (!живо) break;
+          await шаг(строка, всё, 0, СТЁРКА);
+          await пауза(ПУСТО);
+        }
+        if (!живо) break;
+        index = следующая();
+      }
+    };
+    const глитчить = () => {
+      if (reducedMotion.matches || !phraseNode.textContent || полоса.dataset.glitch) return;
+      полоса.dataset.glitch = String(1 + Math.floor(Math.random() * 3));
+      setTimeout(() => delete полоса.dataset.glitch, 320);
+    };
+    const завестиГлитч = () => {
+      if (глитч) clearInterval(глитч);
+      глитч = reducedMotion.matches ? null : setInterval(глитчить, ГЛИТЧ_НЕ_ЧАЩЕ + Math.random() * 3500);
+    };
     const hidePop = () => {
       if (!pop || !open) return;
       open = false;
       pop.classList.remove('is-open');
       pop.hidden = true;
-      schedule();
     };
     const showPop = () => {
       if (!pop || !cut()) return false;
@@ -59,26 +121,7 @@
       pop.hidden = false;
       pop.classList.add('is-open');
       open = true;
-      clearTimeout(timer); // пока окно открыто, фраза под ним не меняется
       return true;
-    };
-    const show = () => {
-      const text = `${phrases[index]} (с)`;
-      phraseNode.textContent = text;
-      phraseNode.dataset.text = text;
-    };
-    const schedule = () => {
-      clearTimeout(timer);
-      clearTimeout(glitchTimer);
-      phraseNode.classList.remove('is-glitching');
-      if (open || reducedMotion.matches || document.hidden) return;
-      timer = setTimeout(() => {
-        index = (index + 1) % phrases.length;
-        show();
-        phraseNode.classList.add('is-glitching');
-        glitchTimer = setTimeout(() => phraseNode.classList.remove('is-glitching'), 320);
-        timer = setTimeout(schedule, 320);
-      }, 10000);
     };
     if (pop) {
       phraseNode.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') showPop(); });
@@ -96,10 +139,20 @@
       });
       addEventListener('scroll', hidePop, { passive: true });
     }
-    reducedMotion.addEventListener('change', schedule);
-    document.addEventListener('visibilitychange', schedule);
-    show();
-    schedule();
+    // Вкладку убрали — цикл останавливаем: печатать в невидимую страницу значит жечь батарею.
+    // Вернулись — начинаем с чистой фразы.
+    document.addEventListener('visibilitychange', () => {
+      живо = !document.hidden;
+      clearInterval(печать); печать = null;
+      clearTimeout(ждём);
+      delete полоса.dataset.nabor;
+      if (глитч) { clearInterval(глитч); глитч = null; }
+      if (живо) { показать(phrases[index], 0); круг(); завестиГлитч(); }
+    });
+    reducedMotion.addEventListener('change', завестиГлитч);
+    показать(phrases[index], 0);
+    круг();
+    завестиГлитч();
   }
 
   if (!reducedMotion.matches && 'IntersectionObserver' in window) {
