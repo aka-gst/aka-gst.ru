@@ -87,6 +87,10 @@ function nearestDanger(world, body) {
     if (distance < best) { best = distance; danger = { x, y }; }
   }
   for (const noise of world.noises || []) {
+    /* Житель «Башни» от твоих шагов не шарахается (слой «г»): к нему
+       подходят поговорить. Шаги — не преступление, как и для стражи
+       (world.js, emitNoise). Огонь и грохот — по-прежнему. */
+    if (body.resident && noise.source === 'step') continue;
     const distance = Math.hypot(body.x - noise.x, body.y - noise.y);
     if (distance < best) { best = distance; danger = noise; }
   }
@@ -96,6 +100,9 @@ function nearestDanger(world, body) {
 function fleeCivilians(world, dt) {
   for (const body of world.civilians) {
     if (!body.alive || body.downed > 0) continue;
+    /* Свидетель «Башни», бегущий доносить, не шарахается от шума: его
+       ведёт src/vospriyatie/svideteli.js. */
+    if (body.witness && body.witness.state === 'run') continue;
     const danger = nearestDanger(world, body);
     if (!danger) { body.vx = 0; body.vy = 0; continue; }
 

@@ -23,6 +23,10 @@ import { BODY } from './world.js';
 import { colourOf, CHARGE_STEP, spellOf } from './magic.js';
 import { GROUND, FIRE_CATCH, groundAt, conducts } from './field.js';
 import { art, tinted, drawAuto, drawDirFrame, neighbourMask } from './art.js';
+import { hintPointer, worldToScreen } from './ukazatel.js';
+import { dangerZone } from './opasnost.js';
+import { lightPools, POOL_CORE, sightRegion, coneTint, guardMark, COIN_NOISE, RING_TIME } from './vidimost.js';
+import { speechMarks } from './zhiteli-vid.js';
 
 const HALF = TILE_SIZE / 2;
 
@@ -184,6 +188,78 @@ export function createRenderer(canvas) {
     return art(`${family}-${((tx * 5 + ty * 11) % count) + 1}`);
   }
 
+  /*
+   * РОВ, ПРОПАСТЬ И МОСТЫ ЧЕРЕЗ РОВ (с 03.10, «Лестница»)
+   * -------------------------------------------------------
+   * Рисуются как пол, а не как предмет: по мосту ходят, на нём лежат
+   * тела и поверх него ложится вещество — значит, всё это обязано быть
+   * нарисовано ПОСЛЕ него. Картинок нет: фигуры и цвет, по которым
+   * четыре состояния рва отличаются с первого взгляда — тёмная вода,
+   * бледный лёд, бурая грязь, серый камень. Пропасть — почти чёрная, с
+   * лиловой кромкой: глубину видно, дна нет.
+   *
+   * Проверено только кодом: в браузере этот слой не смотрели.
+   */
+  function drawMoatFloor(g, world, tile, px, py, tx, ty) {
+    if (tile === TILE.DEEP) {
+      g.fillStyle = '#0b2a3d';
+      g.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+      const wave = Math.sin(world.time * 1.6 + tx * 0.9 + ty * 0.7);
+      g.strokeStyle = `rgba(95,214,255,${0.18 + wave * 0.08})`;
+      g.lineWidth = 1.2;
+      g.beginPath();
+      g.moveTo(px + 4, py + 11 + wave * 2);
+      g.lineTo(px + 16, py + 9 + wave * 2);
+      g.moveTo(px + 14, py + 23 - wave * 2);
+      g.lineTo(px + 28, py + 21 - wave * 2);
+      g.stroke();
+      return true;
+    }
+    if (tile === TILE.PIT) {
+      g.fillStyle = '#030206';
+      g.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+      g.strokeStyle = 'rgba(140,90,200,0.22)';
+      g.lineWidth = 1;
+      g.strokeRect(px + 0.5, py + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+      return true;
+    }
+    if (tile === TILE.FROZEN) {
+      g.fillStyle = '#163c52';
+      g.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+      g.fillStyle = 'rgba(190,240,255,0.78)';
+      g.fillRect(px + 1, py + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+      g.strokeStyle = 'rgba(255,255,255,0.55)';
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(px + 5, py + 7);
+      g.lineTo(px + 15, py + 17);
+      g.lineTo(px + 27, py + 13);
+      g.stroke();
+      return true;
+    }
+    if (tile === TILE.MIRE) {
+      g.fillStyle = '#4e4024';
+      g.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+      g.fillStyle = '#8d7a4a';
+      g.beginPath();
+      g.arc(px + 10, py + 12, 5, 0, 6.29);
+      g.arc(px + 22, py + 21, 4, 0, 6.29);
+      g.fill();
+      return true;
+    }
+    if (tile === TILE.STONE) {
+      g.fillStyle = '#3a3238';
+      g.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+      g.fillStyle = '#5a4e52';
+      g.fillRect(px + 4, py + 5, 9, 7);
+      g.fillRect(px + 17, py + 15, 10, 9);
+      g.fillStyle = 'rgba(255,106,42,0.18)';
+      g.fillRect(px + 13, py + 11, 5, 3);
+      return true;
+    }
+    return false;
+  }
+
   function drawFloor(g, world, theme, range) {
     for (let ty = range.y0; ty <= range.y1; ty += 1) {
       for (let tx = range.x0; tx <= range.x1; tx += 1) {
@@ -192,6 +268,7 @@ export function createRenderer(canvas) {
 
         const px = tx * TILE_SIZE;
         const py = ty * TILE_SIZE;
+        if (tile >= TILE.DEEP && drawMoatFloor(g, world, tile, px, py, tx, ty)) continue;
         const plate = floorSprite(tile, tx, ty);
 
         if (plate) {
@@ -250,7 +327,7 @@ export function createRenderer(canvas) {
              появлялась бы кайма, которой там нечему быть. */
           drawAuto(g, sheet, neighbourMask(world, tx, ty, wallAt, true),
             px, py, TILE_SIZE);
-          if (hasLamp(tx, ty)) drawLamp(g, theme, px, py);
+          if (hasLamp(tx, ty) && !world.lights) drawLamp(g, theme, px, py);
           continue;
         }
 
@@ -280,8 +357,47 @@ export function createRenderer(canvas) {
         g.stroke();
         g.globalAlpha = 1;
 
-        if (hasLamp(tx, ty)) drawLamp(g, theme, px, py);
+        if (hasLamp(tx, ty) && !world.lights) drawLamp(g, theme, px, py);
       }
+    }
+  }
+
+  /*
+   * Фонари на оградах выше — украшение старых этажей: светят, но правила
+   * за ними нет. На этаже с настоящим светом (world.lights, «Башня») они
+   * не рисуются вовсе — фонарь, который горит, а никого не освещает,
+   * врал бы о правиле. Вместо них — лампы самого этажа (svet.js) в трёх
+   * состояниях: горит, погашена водой, разбита молнией.
+   */
+  function drawWorldLamps(g, world) {
+    if (!world.lights) return;
+    for (const lamp of world.lights) {
+      const on = !lamp.broken && lamp.out <= 0;
+      g.save();
+      g.translate(lamp.x, lamp.y);
+      if (on) {
+        g.globalCompositeOperation = 'lighter';
+        g.fillStyle = 'rgba(255,214,140,0.35)';
+        g.beginPath(); g.arc(0, 0, 11, 0, 6.29); g.fill();
+        g.globalCompositeOperation = 'source-over';
+        g.fillStyle = '#fff1c9';
+        g.beginPath(); g.arc(0, 0, 4.2, 0, 6.29); g.fill();
+      } else {
+        g.fillStyle = '#2a2f38';
+        g.strokeStyle = lamp.broken ? '#9aa3ad' : '#4de1ff';
+        g.lineWidth = 1.4;
+        g.beginPath(); g.arc(0, 0, 4.2, 0, 6.29); g.fill(); g.stroke();
+        if (lamp.broken) {
+          /* Осколки — три чёрточки врозь: разбита, а не погашена. */
+          g.beginPath();
+          for (const a of [0.6, 2.4, 4.3]) {
+            g.moveTo(Math.cos(a) * 6, Math.sin(a) * 6);
+            g.lineTo(Math.cos(a) * 9.5, Math.sin(a) * 9.5);
+          }
+          g.stroke();
+        }
+      }
+      g.restore();
     }
   }
 
@@ -316,11 +432,33 @@ export function createRenderer(canvas) {
       const i = ty * world.w + tx;
       const tile = world.tiles[i];
       if (tile === TILE.FLOOR || tile === TILE.WALL || tile === TILE.RUG) continue;
+      /* Ров, пропасть и мосты уже нарисованы полом (drawMoatFloor). */
+      if (tile === TILE.DEEP || tile === TILE.PIT || tile === TILE.FROZEN
+        || tile === TILE.MIRE || tile === TILE.STONE) continue;
 
       const px = tx * TILE_SIZE;
       const py = ty * TILE_SIZE;
       const cx = px + HALF;
       const cy = py + HALF;
+
+      if (tile === TILE.DRIFT) {
+        /* Куча сажи: тёмный холм с серым гребнем. Не камень — края
+           рыхлые, и это должно читаться как «сдует», а не «разобьёт». */
+        g.fillStyle = '#26232c';
+        g.beginPath();
+        g.ellipse(cx, cy + 4, 14, 10, 0, 0, 6.29);
+        g.fill();
+        g.fillStyle = '#4a4652';
+        g.beginPath();
+        g.ellipse(cx - 2, cy, 9, 6, -0.3, 0, 6.29);
+        g.fill();
+        g.fillStyle = 'rgba(160,155,170,0.35)';
+        g.beginPath();
+        g.arc(cx + 6, cy - 3, 2.2, 0, 6.29);
+        g.arc(cx - 7, cy + 1, 1.6, 0, 6.29);
+        g.fill();
+        continue;
+      }
 
       /*
        * Предмет с картинкой рисуется картинкой и крупнее клетки: бочка,
@@ -1173,6 +1311,59 @@ export function createRenderer(canvas) {
     }
   }
 
+  /*
+   * КОНУСЫ ДОЗОРА — только на этаже с дозором (world.trevoga, «Башня»).
+   * Наказание, которого не видно, читается как случайность (навык
+   * «скрытность»): страж МГС видит конусом в 55° на 7 клеток, и если
+   * конуса не нарисовать, пар у стока и обход прохода превращаются в
+   * угадайку.
+   *
+   * С 03.10 (слой «б», свет) закрашено не «куда страж смотрит», а «где
+   * стоящего ВИДНО»: каждую точку спрашивают у canSee МГС с освещённостью
+   * этой точки — той же функции, которой смотрит ai.js (vidimost.js,
+   * sightRegion). Во тьме это клетка у носа, в пятне лампы — семь, сзади
+   * на клетку «чует спиной». Тонкий пунктир — конус полной дальности
+   * (coneShape МГС): куда страж смотрит и докуда увидит, если там светло.
+   * До 03.10 конус рисовался полной дальностью и ночью врал.
+   *
+   * Цвет — настроение стража: спокоен — бледный, идёт на шум — жёлтый,
+   * обыск — лиловый, гонится — красный (vidimost.js, CONE_TINT).
+   */
+  function drawSightCones(g, world, near) {
+    if (!world.trevoga) return;
+    for (const enemy of world.enemies) {
+      if (!enemy.alive || enemy.downed > 0) continue;
+      if (near && Math.hypot(enemy.x - near.x, enemy.y - near.y) > near.r + 280) continue;
+      const tint = coneTint(enemy.state);
+      const calm = enemy.state === 'idle';
+      const region = sightRegion(world, enemy);
+
+      /* Пунктир полной дальности. */
+      g.save();
+      g.beginPath();
+      g.moveTo(enemy.x, enemy.y);
+      for (const p of region.outline) g.lineTo(enemy.x + Math.cos(p.a) * p.d, enemy.y + Math.sin(p.a) * p.d);
+      g.closePath();
+      g.setLineDash([4, 5]);
+      g.strokeStyle = `rgba(${tint},${calm ? 0.2 : 0.45})`;
+      g.lineWidth = 1;
+      g.stroke();
+      g.setLineDash([]);
+
+      /* Где видно — заливкой. */
+      g.beginPath();
+      for (const s of region.spans) {
+        g.moveTo(enemy.x + Math.cos(s.a0) * s.d0, enemy.y + Math.sin(s.a0) * s.d0);
+        g.arc(enemy.x, enemy.y, s.d1, s.a0, s.a1);
+        g.arc(enemy.x, enemy.y, s.d0, s.a1, s.a0, true);
+        g.closePath();
+      }
+      g.fillStyle = `rgba(${tint},${calm ? 0.2 : 0.3})`;
+      g.fill();
+      g.restore();
+    }
+  }
+
   function drawEnemies(g, world) {
     for (const enemy of world.enemies) {
       if (!enemy.alive) continue;
@@ -1418,8 +1609,12 @@ export function createRenderer(canvas) {
     stateMark(g, world, player);
     if ((player.zap || 0) > 0) arcs(g, player);
 
+    /* Сбит с ног толчком стража (слой «б», tolchok.js): маг качается,
+       пока не вернётся управление. Звёзды над головой — drawAlertMarks. */
+    const reel = (player.stun || 0) > 0 ? Math.sin(world.time * 38) * 2.5 : 0;
+
     mage(g, {
-      x: player.x, y: player.y, angle: player.angle,
+      x: player.x + reel, y: player.y, angle: player.angle + reel * 0.08,
       palette: ROBES.player,
       sheet: 'player',
       size: PLAYER_SIZE,
@@ -1489,57 +1684,8 @@ export function createRenderer(canvas) {
  * вспышка бьёт вокруг себя и накрывает своего всегда, а огонь достаёт
  * дальше места попадания — солома вокруг займётся сама.
  */
-  function dangerZone(world) {
-    const player = world.player;
-    if (!player.stack || !player.stack.length) return null;
-
-    const spell = spellOf(player.stack);
-    if (!spell || !spell.form) return null;
-
-    const reach = spell.substance.traits.reach || 1;
-    const burns = Boolean(spell.substance.traits.burn);
-
-    /* Вспышка бьёт от себя — центр всегда на игроке. */
-    if (spell.form.kind === 'nova') {
-      return {
-        x: player.x, y: player.y,
-        r: (spell.form.radius || 104) * reach,
-        colour: spell.substance.colour, burns, self: true,
-      };
-    }
-
-    /* Остальное прилетает туда, куда смотрит прицел. Точку берём по
-       захваченной цели, а без неё — по лучу, как летел бы снаряд. */
-    const aim = world.locked
-      ? { x: world.locked.x, y: world.locked.y }
-      : rayEnd(world, player.x, player.y, player.angle, 320 * reach);
-
-    const r = TILE_SIZE * 0.9 * reach * (burns ? 1.7 : 1);
-    return {
-      x: aim.x, y: aim.y, r,
-      colour: spell.substance.colour, burns,
-      self: Math.hypot(aim.x - player.x, aim.y - player.y) < r + BODY,
-    };
-  }
-
-  /* Докуда долетит: шагаем тем же шагом, что и снаряд. */
-  function rayEnd(world, x, y, angle, limit) {
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-    for (let t = 6; t < limit; t += 6) {
-      const nx = x + dx * t;
-      const ny = y + dy * t;
-      const tile = world.tiles[tileRangeIndex(world, nx, ny)];
-      if (tile === TILE.WALL) return { x: x + dx * (t - 6), y: y + dy * (t - 6) };
-    }
-    return { x: x + dx * limit, y: y + dy * limit };
-  }
-
-  function tileRangeIndex(world, x, y) {
-    const tx = Math.max(0, Math.min(world.w - 1, (x / TILE_SIZE) | 0));
-    const ty = Math.max(0, Math.min(world.h - 1, (y / TILE_SIZE) | 0));
-    return ty * world.w + tx;
-  }
+  /* dangerZone (с rayEnd) с 03.10 живёт в src/opasnost.js: тот же круг
+     рисует и изометрия, а формула должна быть одна на оба вида. */
 
   function drawDanger(g, world) {
     const zone = dangerZone(world);
@@ -1841,8 +1987,9 @@ export function createRenderer(canvas) {
       && Math.abs(y - camY) < halfH + pad;
     const add = (x, y, r, colour, power) => lights.push({ x, y, r, colour, power });
 
-    /* Фонари на оградах — единственный неподвижный свет в кадре. */
-    for (let ty = 0; ty < world.h; ty += 1) {
+    /* Фонари на оградах — единственный неподвижный свет в кадре. На этаже
+       с настоящим светом их нет (см. drawWorldLamps): там светит svet.js. */
+    for (let ty = 0; ty < (world.lights ? 0 : world.h); ty += 1) {
       for (let tx = 0; tx < world.w; tx += 1) {
         if (world.tiles[ty * world.w + tx] !== TILE.WALL || !hasLamp(tx, ty)) continue;
         const x = tx * TILE_SIZE + HALF;
@@ -1977,6 +2124,371 @@ const DARKNESS = false;
   }
 
   /*
+   * НОЧЬ «БАШНИ» (слой «б», 03.10)
+   * -------------------------------------------------------
+   * Общее затемнение выше выключено, и правильно: тьма ради настроения
+   * отнимала игру. Здесь другая тьма — правило. На этаже с настоящим
+   * светом (world.lights) ночь — `ambient` 0, и страж во тьме видит на
+   * клетку, а на свету на семь. Если этого не показать, пятно лампы
+   * остаётся невидимой ловушкой.
+   *
+   * Поэтому покров ложится не в чёрное, а в полутьму (NIGHT_VEIL): поле
+   * читается, предметы видны, — а пятна прожигаются в нём ровно той
+   * формой, которую считает свет МГС (vidimost.js, lightPools: лучи
+   * lightShape, укороченные о стены), и ровно той яркостью: полная до
+   * POOL_CORE радиуса, дальше к нулю, как contribution в light.js.
+   */
+  const NIGHT_VEIL = 'rgba(2,5,14,0.6)';
+  const POOL_COLOUR = { lamp: '#ffd9a0', fire: '#ff7a2a', candle: '#ffb347' };
+
+  function poolPath(g, pool) {
+    g.beginPath();
+    pool.rays.forEach((ray, i) => {
+      const x = pool.x + Math.cos(ray.a) * ray.d;
+      const y = pool.y + Math.sin(ray.a) * ray.d;
+      if (i) g.lineTo(x, y); else g.moveTo(x, y);
+    });
+    g.closePath();
+  }
+
+  function drawNight(world, theme, camX, camY, zoom, shakeX, shakeY, halfW, halfH) {
+    const lw = Math.max(1, Math.round(canvas.width * LIGHT_SCALE));
+    const lh = Math.max(1, Math.round(canvas.height * LIGHT_SCALE));
+    if (lightLayer.width !== lw || lightLayer.height !== lh) {
+      lightLayer.width = lw;
+      lightLayer.height = lh;
+    }
+    const pools = lightPools(world, { x: camX, y: camY, r: Math.hypot(halfW, halfH) });
+
+    const g = lightCtx;
+    const scale = dpr * LIGHT_SCALE;
+    g.setTransform(scale, 0, 0, scale, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    g.clearRect(0, 0, viewW, viewH);
+    g.fillStyle = NIGHT_VEIL;
+    g.fillRect(0, 0, viewW, viewH);
+
+    g.save();
+    g.translate(viewW / 2, viewH / 2);
+    g.scale(zoom, zoom);
+    g.translate(-camX + shakeX, -camY + shakeY);
+    g.globalCompositeOperation = 'destination-out';
+    for (const pool of pools) {
+      g.save();
+      poolPath(g, pool);
+      g.clip();
+      const grad = g.createRadialGradient(pool.x, pool.y, 0, pool.x, pool.y, pool.r);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(POOL_CORE, 'rgba(0,0,0,1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = grad;
+      g.fillRect(pool.x - pool.r, pool.y - pool.r, pool.r * 2, pool.r * 2);
+      g.restore();
+    }
+    g.restore();
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(lightLayer, 0, 0, canvas.width, canvas.height);
+
+    /* Цвет пятна — тёплый у лампы, оранжевый у огня, — и кромка: где
+       кончается свет, видно и там, где пол сам светлый. */
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.save();
+    ctx.translate(viewW / 2, viewH / 2);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-camX + shakeX, -camY + shakeY);
+    for (const pool of pools) {
+      const colour = POOL_COLOUR[pool.kind] || POOL_COLOUR.lamp;
+      ctx.save();
+      poolPath(ctx, pool);
+      ctx.clip();
+      ctx.globalCompositeOperation = 'lighter';
+      const grad = ctx.createRadialGradient(pool.x, pool.y, 0, pool.x, pool.y, pool.r);
+      grad.addColorStop(0, hexToRgba(colour, 0.2));
+      grad.addColorStop(POOL_CORE, hexToRgba(colour, 0.14));
+      grad.addColorStop(1, hexToRgba(colour, 0));
+      ctx.fillStyle = grad;
+      ctx.fillRect(pool.x - pool.r, pool.y - pool.r, pool.r * 2, pool.r * 2);
+      ctx.restore();
+      if (pool.kind === 'lamp') {
+        ctx.save();
+        poolPath(ctx, pool);
+        ctx.setLineDash([3, 6]);
+        ctx.strokeStyle = hexToRgba(colour, 0.32);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+
+    drawLightColour(world, theme, camX, camY, zoom, shakeX, shakeY, halfW, halfH);
+  }
+
+  /*
+   * МОНЕТА (слой «б», moneta.js). Монеты бывают только на этаже со светом
+   * («Башня»), поэтому рисуются поверх ночи — блеск металла и звон видно
+   * и во тьме, а для того монету и бросают.
+   *   летит   — серебряный кружок со следом;
+   *   лежит   — кружок, блестит раз в секунду (её можно подобрать);
+   *   звон    — кольцо от места падения до края слышимости МГС (5.4
+   *             клетки) за RING_TIME: кто внутри, тот услышал;
+   *   «куда?» — кнопка взведена: пунктир до места падения (шаги moneta.js,
+   *             не прямая до пальца) и бледный круг — докуда услышат.
+   */
+  function drawCoins(g, world) {
+    if (!world.coins) return;
+    g.save();
+    const aim = world.coinAim;
+    if (aim && world.player.alive) {
+      g.setLineDash([5, 5]);
+      g.strokeStyle = 'rgba(207,216,220,0.7)';
+      g.lineWidth = 1.5;
+      g.beginPath();
+      g.moveTo(world.player.x, world.player.y);
+      g.lineTo(aim.x, aim.y);
+      g.stroke();
+      g.beginPath();
+      g.arc(aim.x, aim.y, 9, 0, 6.29);
+      g.stroke();
+      g.setLineDash([2, 7]);
+      g.strokeStyle = 'rgba(207,216,220,0.35)';
+      g.beginPath();
+      g.arc(aim.x, aim.y, COIN_NOISE, 0, 6.29);
+      g.stroke();
+      g.setLineDash([]);
+    }
+    for (const coin of world.coins) {
+      if (!coin.landed) {
+        const speed = Math.hypot(coin.vx, coin.vy) || 1;
+        g.strokeStyle = 'rgba(207,216,220,0.45)';
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(coin.x, coin.y);
+        g.lineTo(coin.x - (coin.vx / speed) * 14, coin.y - (coin.vy / speed) * 14);
+        g.stroke();
+      }
+      const glint = coin.landed ? 0.55 + 0.45 * Math.max(0, Math.sin(world.time * 6.3 + coin.x)) : 1;
+      g.fillStyle = `rgba(232,238,240,${glint})`;
+      g.beginPath();
+      g.arc(coin.x, coin.y, coin.landed ? 3.2 : 3.8, 0, 6.29);
+      g.fill();
+      if (coin.landed && coin.t < RING_TIME) {
+        const k = coin.t / RING_TIME;
+        g.strokeStyle = `rgba(232,238,240,${0.85 * (1 - k)})`;
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.arc(coin.x, coin.y, Math.max(4, COIN_NOISE * k), 0, 6.29);
+        g.stroke();
+        g.strokeStyle = `rgba(232,238,240,${0.25 * (1 - k)})`;
+        g.lineWidth = 1;
+        g.beginPath();
+        g.arc(coin.x, coin.y, COIN_NOISE, 0, 6.29);
+        g.stroke();
+      }
+    }
+    g.restore();
+  }
+
+  /*
+   * ОБЫСК (слой «в», ai.js `search`): донесли или нашли пропажу — двое
+   * идут на место и прочёсывают его. Место — лиловым пунктиром тем же
+   * цветом, что взгляд обыскивающих, и словом: игрок видит, куда ушли
+   * стражи и какой пост открыт.
+   */
+  function drawSearchSpots(g, world) {
+    if (!world.trevoga) return;
+    const spots = [];
+    for (const e of world.enemies) {
+      if (!e.alive || e.downed > 0 || e.state !== 'search' || !e.searchPoint) continue;
+      if (spots.some((s) => Math.hypot(s.x - e.searchPoint.x, s.y - e.searchPoint.y) < 8)) continue;
+      spots.push(e.searchPoint);
+    }
+    const tint = coneTint('search');
+    for (const s of spots) {
+      const beat = 0.6 + 0.4 * Math.sin(world.time * 4);
+      g.save();
+      g.setLineDash([6, 5]);
+      g.lineDashOffset = -world.time * 20;
+      g.strokeStyle = `rgba(${tint},${0.45 + 0.35 * beat})`;
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(s.x, s.y, TILE_SIZE * 1.4, 0, 6.29);
+      g.stroke();
+      g.setLineDash([]);
+      g.font = '800 9px ui-monospace, Menlo, monospace';
+      g.textAlign = 'center';
+      g.lineWidth = 3;
+      g.strokeStyle = 'rgba(6,8,14,.85)';
+      g.strokeText('ОБЫСК', s.x, s.y - TILE_SIZE * 1.4 - 5);
+      g.fillStyle = `rgb(${tint})`;
+      g.fillText('ОБЫСК', s.x, s.y - TILE_SIZE * 1.4 - 5);
+      g.restore();
+    }
+  }
+
+  /*
+   * МЕТКИ НАД ГОЛОВАМИ (слои «б»/«в»), поверх ночи:
+   *   страж    «?» — идёт на шум или обыскивает, «!» — гонится (цвет —
+   *            его взгляда, vidimost.js guardMark/coneTint);
+   *   житель   «!» и пульсирующее кольцо — увидел преступление и бежит
+   *            доносить (svideteli.js, witness.state === 'run'): его ещё
+   *            можно перехватить;
+   *   ты       звёзды над головой и качка — сбит с ног толчком стража
+   *            (tolchok.js, player.stun): управление вернётся само.
+   * Размер шрифта — в точках экрана, а не мира: метка читается при любом
+   * приближении.
+   */
+  function drawAlertMarks(g, world, zoom) {
+    const mark = (text, x, y, colour, size = 15) => {
+      g.save();
+      g.font = `900 ${size / zoom}px ui-monospace, Menlo, monospace`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.lineWidth = 4 / zoom;
+      g.strokeStyle = 'rgba(6,8,14,.9)';
+      g.strokeText(text, x, y);
+      g.fillStyle = colour;
+      g.fillText(text, x, y);
+      g.restore();
+    };
+    if (world.trevoga) {
+      for (const e of world.enemies) {
+        const m = guardMark(e);
+        if (m) mark(m, e.x, e.y - BODY - 14, `rgb(${coneTint(e.state)})`);
+      }
+    }
+    for (const civ of world.civilians || []) {
+      if (!civ.alive || !civ.witness || civ.witness.state !== 'run') continue;
+      const beat = 0.5 + 0.5 * Math.sin(world.time * 9);
+      g.save();
+      g.strokeStyle = `rgba(255,140,60,${0.4 + 0.5 * beat})`;
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(civ.x, civ.y, BODY + 8 + beat * 3, 0, 6.29);
+      g.stroke();
+      g.restore();
+      mark('!', civ.x, civ.y - BODY - 14, '#ff8c3c', 17);
+    }
+    const p = world.player;
+    if (p.alive && (p.stun || 0) > 0) {
+      for (let i = 0; i < 3; i += 1) {
+        const a = world.time * 7 + (i * Math.PI * 2) / 3;
+        mark('✦', p.x + Math.cos(a) * 11, p.y - BODY - 10 + Math.sin(a) * 4, '#ffe14d', 14);
+      }
+    }
+  }
+
+  /*
+   * ЖИТЕЛИ (слой «г»), поверх ночи — их надо найти и в темноте:
+   *   «…» в облачке над головой — житель станет говорить (zhiteli-vid.js,
+   *        speechMarks: не видел преступления, не уговорён, нет розыска
+   *        и тревоги); ярче и выше — он в дальности разговора, кнопка
+   *        ГОВОРИТЬ горит; «»» — с ним сейчас разговор;
+   *   подпись под героем «ГОВОРИТЬ (F) · КУЗНЕЦ» (world.talkPrompt — её
+   *        кладёт main.js, тот же текст на телефоне без клавиши);
+   *   молот кузнеца, пока лежит (world.zhiteli.hammer) — цель «Молота».
+   * Размер — в точках экрана, как у «?» и «!» стражи.
+   */
+  function drawTalkMarks(g, world, zoom) {
+    const zh = world.zhiteli;
+    if (!zh) return;
+    const hammer = zh.hammer;
+    if (hammer && !hammer.taken) {
+      g.save();
+      g.translate(hammer.x, hammer.y + 4);
+      g.rotate(-0.55);
+      g.fillStyle = '#7a5532';
+      g.fillRect(-1.6, -3, 3.2, 15);
+      g.fillStyle = '#c9d2d6';
+      g.strokeStyle = 'rgba(6,8,14,.9)';
+      g.lineWidth = 1.2;
+      g.fillRect(-6.5, -7.5, 13, 6);
+      g.strokeRect(-6.5, -7.5, 13, 6);
+      g.restore();
+    }
+
+    for (const m of speechMarks(world, world.talkNear || null)) {
+      const bob = m.mode === 'near' ? Math.sin(world.time * 5) * 1.5 : 0;
+      const w = (m.mode === 'idle' ? 22 : 27) / zoom;
+      const h = (m.mode === 'idle' ? 13 : 16) / zoom;
+      const x = m.x;
+      const y = m.y - BODY - 19 + bob / zoom - (m.mode === 'idle' ? 0 : 2 / zoom);
+      g.save();
+      g.globalAlpha = m.mode === 'idle' ? 0.82 : 1;
+      g.fillStyle = m.mode === 'talk' ? '#ffe9a8' : '#f2e6c9';
+      g.strokeStyle = 'rgba(6,8,14,.92)';
+      g.lineWidth = 2 / zoom;
+      if (m.mode !== 'idle') { g.shadowColor = '#f2e6c9'; g.shadowBlur = 10; }
+      g.beginPath();
+      g.roundRect(x - w / 2, y - h / 2, w, h, 4 / zoom);
+      g.moveTo(x - 3 / zoom, y + h / 2);
+      g.lineTo(x, y + h / 2 + 4 / zoom);
+      g.lineTo(x + 3 / zoom, y + h / 2);
+      g.fill();
+      g.stroke();
+      g.shadowBlur = 0;
+      g.fillStyle = '#16120c';
+      g.font = `900 ${(m.mode === 'idle' ? 11 : 13) / zoom}px ui-monospace, Menlo, monospace`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(m.mode === 'talk' ? '»' : '…', x, y - (m.mode === 'talk' ? 0 : 2 / zoom));
+      g.restore();
+    }
+
+    const prompt = world.talkPrompt;
+    const p = world.player;
+    if (prompt && p.alive) {
+      g.save();
+      g.font = `900 ${12 / zoom}px ui-monospace, Menlo, monospace`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      const y = p.y + BODY + 18 / zoom + 6;
+      const tw = g.measureText(prompt.text).width + 14 / zoom;
+      g.fillStyle = 'rgba(7,11,13,.86)';
+      g.fillRect(p.x - tw / 2, y - 9 / zoom, tw, 18 / zoom);
+      g.strokeStyle = '#f2e6c9';
+      g.lineWidth = 1 / zoom;
+      g.strokeRect(p.x - tw / 2, y - 9 / zoom, tw, 18 / zoom);
+      g.fillStyle = '#f2e6c9';
+      g.fillText(prompt.text, p.x, y);
+      g.restore();
+    }
+  }
+
+  /*
+   * Поверх ночи — то, что игрок обязан видеть и в темноте: где его увидят
+   * (взгляд стражи). Это разметка, а не свет: под покровом её бы не было.
+   */
+  function drawOverNight(world, camX, camY, zoom, shakeX, shakeY, halfW, halfH) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.save();
+    ctx.translate(viewW / 2, viewH / 2);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-camX + shakeX, -camY + shakeY);
+    drawSightCones(ctx, world, { x: camX, y: camY, r: Math.hypot(halfW, halfH) });
+    drawSearchSpots(ctx, world);
+    drawCoins(ctx, world);
+    drawAlertMarks(ctx, world, zoom);
+    drawTalkMarks(ctx, world, zoom);
+
+    /* Кольцо героя — и во тьме: найти себя в кадре — первая задача, а
+       под покровом свой маг сливается с полом. Кольцо — не свет: по нему
+       не судят, видно ли тебя, для этого прибор в HUD. */
+    const p = world.player;
+    if (p.alive) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(157,249,255,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, BODY + 8, 0, 6.29);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  /*
    * Проход цветом. Тьма показывает, где светло; этот проход — каким оно
    * светится. Без него огонь и разряд освещают одинаково белым, и цвет
    * стихии, главный язык игры, пропадает.
@@ -2049,6 +2561,9 @@ const DARKNESS = false;
     drawProps(ctx, world, theme, range);
     drawOperationProps(ctx, world);
     drawOperationActors(ctx, world);
+    /* Ночью взгляд стражи рисуется поверх тьмы (drawOverNight): это
+       разметка, а не свет, и под покровом её не было бы видно. */
+    if (!world.lights) drawSightCones(ctx, world);
     drawEnemies(ctx, world);
     drawMatching(ctx, world, range);
     drawLock(ctx, world);
@@ -2059,11 +2574,17 @@ const DARKNESS = false;
     drawPops(ctx, world);
     drawParticles(ctx, world);
     drawWalls(ctx, world, theme, range);
+    drawWorldLamps(ctx, world);
     drawClouds(ctx, world);
 
     ctx.restore();
 
-    drawLights(world, theme, camX, camY, zoom * punch, shakeX, shakeY, halfW, halfH);
+    if (world.lights) {
+      drawNight(world, theme, camX, camY, zoom * punch, shakeX, shakeY, halfW, halfH);
+      drawOverNight(world, camX, camY, zoom * punch, shakeX, shakeY, halfW, halfH);
+    } else {
+      drawLights(world, theme, camX, camY, zoom * punch, shakeX, shakeY, halfW, halfH);
+    }
 
     if (world.fx.flash > 0.01) {
       ctx.fillStyle = `rgba(120,255,214,${world.fx.flash * 0.2})`;
@@ -2071,8 +2592,142 @@ const DARKNESS = false;
     }
 
     vignette(ctx, theme);
+    drawHintPointer(world, camX, camY, zoom * punch);
+    drawQuestPin(world, camX, camY, zoom * punch);
 
     return { zoom, camX, camY };
+  }
+
+  /*
+   * УКАЗАТЕЛЬ ПОДСКАЗКИ
+   * =======================================================
+   * Приёмка 03.10, пункт 1: на телефоне подсказка говорила «сожги
+   * ворота», а ворота были за краем кадра. Подсказка ступени лежит в мире
+   * (world.hint, src/lestnica.js) вместе с клеткой цели; здесь она
+   * становится точкой на экране — где, решает src/ukazatel.js (там же и
+   * проверки), отрисовка только рисует:
+   *
+   *   цель в кадре   — мягко дышащее кольцо на клетке цели;
+   *   цель за кадром — стрелка у края, на луче от игрока к цели, острием
+   *                    к ней, и не под кнопками (их прямоугольники отдаёт
+   *                    main.js через setAvoid).
+   *
+   * Рисуется последней, поверх ночи и виньетки: указатель, который
+   * темнеет вместе с миром, на телефоне при дневном свете не виден.
+   */
+  let avoidRects = [];
+  function setAvoid(rects) { avoidRects = rects || []; }
+  /* Где легла стрелка подсказки ступени в этом кадре: стрелка задания
+     (drawQuestPin) обходит её, как кнопку, — иначе две ложились одна на
+     другую (кадр 03.10, молот и лампа сторожки в одной стороне). */
+  let hintArrow = null;
+
+  function drawHintPointer(world, camX, camY, zoom) {
+    hintArrow = null;
+    const hint = world.hint;
+    if (!hint || !hint.target || world.state !== 'play') return;
+    const view = { w: viewW, h: viewH };
+    const cam = { camX, camY, zoom };
+    const at = hintPointer(view, worldToScreen(hint.target, cam, view), {
+      anchor: worldToScreen(world.player, cam, view),
+      avoid: avoidRects,
+    });
+    if (!at.onScreen) hintArrow = { x: at.x - 22, y: at.y - 22, w: 44, h: 44 };
+    const breath = 0.5 + 0.5 * Math.sin(world.time * 4.2);
+
+    ctx.save();
+    if (at.onScreen) {
+      const r = (TILE_SIZE * 0.72 + breath * 5) * zoom;
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = `rgba(255,225,77,${0.12 + 0.16 * breath})`;
+      ctx.beginPath();
+      ctx.arc(at.x, at.y, r + 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = `rgba(255,225,77,${0.55 + 0.35 * breath})`;
+      ctx.beginPath();
+      ctx.arc(at.x, at.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      const size = 13 + breath * 3;
+      ctx.translate(at.x, at.y);
+      ctx.rotate(at.angle);
+      ctx.beginPath();
+      ctx.moveTo(size, 0);
+      ctx.lineTo(-size * 0.7, -size * 0.78);
+      ctx.lineTo(-size * 0.3, 0);
+      ctx.lineTo(-size * 0.7, size * 0.78);
+      ctx.closePath();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(5,11,12,0.92)';
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255,225,77,${0.75 + 0.25 * breath})`;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /*
+   * ЦЕЛЬ ВЕДОМОГО ЗАДАНИЯ (слой «г»): молот, клетка, кузнец, ядро —
+   * world.questPin, его кладёт main.js по журналу (zhiteli-vid.js,
+   * questTarget). Та же геометрия, что у подсказки ступени (ukazatel.js:
+   * кольцо в кадре, стрелка у края за кадром, не под кнопками), но свой
+   * цвет — бирюза — и подпись словом: две стрелки разного цвета без
+   * подписи читались бы как одна непонятная.
+   */
+  function drawQuestPin(world, camX, camY, zoom) {
+    const pin = world.questPin;
+    if (!pin || world.state !== 'play') return;
+    const view = { w: viewW, h: viewH };
+    const cam = { camX, camY, zoom };
+    const at = hintPointer(view, worldToScreen(pin, cam, view), {
+      anchor: worldToScreen(world.player, cam, view),
+      avoid: hintArrow ? [...avoidRects, hintArrow] : avoidRects,
+    });
+    const breath = 0.5 + 0.5 * Math.sin(world.time * 3.4);
+    ctx.save();
+    ctx.font = '900 11px ui-monospace, Menlo, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    let lx = at.x;
+    let ly = at.y;
+    if (at.onScreen) {
+      const r = (TILE_SIZE * 0.62 + breath * 4) * zoom;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = `rgba(127,252,255,${0.55 + 0.35 * breath})`;
+      ctx.beginPath();
+      ctx.arc(at.x, at.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ly = at.y - r - 10;
+    } else {
+      const size = 12 + breath * 3;
+      ctx.save();
+      ctx.translate(at.x, at.y);
+      ctx.rotate(at.angle);
+      ctx.beginPath();
+      ctx.moveTo(size, 0);
+      ctx.lineTo(-size * 0.7, -size * 0.78);
+      ctx.lineTo(-size * 0.3, 0);
+      ctx.lineTo(-size * 0.7, size * 0.78);
+      ctx.closePath();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(5,11,12,0.92)';
+      ctx.stroke();
+      ctx.fillStyle = `rgba(127,252,255,${0.75 + 0.25 * breath})`;
+      ctx.fill();
+      ctx.restore();
+      /* Подпись — внутрь кадра от стрелки, чтобы не уйти за край. */
+      lx = at.x - Math.cos(at.angle) * 30;
+      ly = at.y - Math.sin(at.angle) * 22;
+    }
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(5,11,12,0.92)';
+    ctx.strokeText(pin.label, lx, ly);
+    ctx.fillStyle = '#7ffcff';
+    ctx.fillText(pin.label, lx, ly);
+    ctx.restore();
   }
 
   function vignette(g, theme) {
@@ -2095,5 +2750,5 @@ const DARKNESS = false;
     };
   }
 
-  return { resize, draw, invalidate, toWorld };
+  return { resize, draw, invalidate, toWorld, setAvoid };
 }

@@ -15,7 +15,7 @@
   <title>ТЕХНОМАГИЯ</title>
 
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=6">
 
   <!--
     Счётчик посещений, тот же, что на всех страницах сайта. Путь обязан
@@ -70,18 +70,35 @@
     <b id="form" class="form" hidden></b>
   </div>
 
+  <!-- Слой «б»: насколько тебя видно. Только на этаже с ночью и лампами
+       («Башня»). Слово — порог света МГС (В ТЕНИ / ПОЛУМРАК / НА СВЕТУ),
+       число — на скольких клетках страж, глядящий прямо на тебя, увидит
+       тебя сейчас (src/vidimost.js, lightLevel). Рядом с очередью рук, а
+       на телефоне стоя — между рядом стихий и нижними кнопками. -->
+  <div class="hud-slot hud-vidno" id="vidno" data-level="ten" hidden>
+    <span class="hud-label">ТЫ</span>
+    <b id="vidnoWord">В ТЕНИ</b>
+    <i id="vidnoCells">ВИДЯТ С 1 КЛ</i>
+  </div>
+
 </header>
 
 <div id="operationHud" class="operation-hud" hidden>
   <b id="operationGoal">УКРАСТЬ ЯДРО</b>
   <span id="operationOptional">ЗАЛОЖНИК: ОТКЛЮЧИ ПИТАНИЕ</span>
   <span id="operationLesson">ЗАЖГИ СВЕЧУ. ТОЧНОЕ ПОПАДАНИЕ НЕ ЗАДЕНЕТ ДЕРЕВО</span>
+  <!-- Прибор видимости на телефоне: строкой под «РУКИ», а не в HUD внизу —
+       там он третьей строкой поднимал счёт под кнопку КНИГА. -->
+  <span id="operationVidno" class="op-vidno" data-level="ten" hidden></span>
 </div>
 
 <div id="physicalObservation" class="physical-observation" hidden></div>
 
 <button type="button" id="mute" class="mute" data-off="0">ЗВУК ВКЛ</button>
 <button type="button" id="tomeOpen" class="mute mute-second">КНИГА · B</button>
+<!-- Журнал заданий (слой «г»): того же вида и размера, что КНИГА, — по
+     классу mute-second, место — mute-third. Только на этаже с жителями. -->
+<button type="button" id="questOpen" class="mute mute-second mute-third" hidden>ЗАДАНИЯ<span class="key-hint"> · L</span></button>
 
 <div id="toast" class="toast" hidden></div>
 
@@ -102,7 +119,34 @@
   <button type="button" id="btn-wind" class="daemon-key" data-element="wind"></button>
   <button type="button" id="btn-earth" class="daemon-key" data-element="earth"></button>
   <button type="button" id="btn-bolt" class="daemon-key" data-element="bolt"></button>
+  <!-- Слой «б»: монета МГС (src/vospriyatie/moneta.js). Не стихия, а
+       бросок звона — поэтому серебряная и последней в ряду; размер — как
+       у ряда (свод, п.13). Нажал — «КУДА?»: тап по полю, отпущенный
+       правый стик или второе нажатие бросают. E — сразу, под мышь или по
+       прицелу. Видна только на этаже с монетами («Башня»). -->
+  <button type="button" id="btn-coin" class="daemon-key" data-element="coin" hidden></button>
+  <!-- Слой «г»: говорить с жителем (src/zhiteli.js). В ряду всегда, пока
+       на этаже есть жители, — тусклая, когда рядом никого, горит, когда
+       житель в дальности разговора; при открытой полосе — «УЙТИ».
+       Всегда на месте, а не «появляется»: ряд, который перестраивается
+       под пальцем, когда подходишь к жителю, сдвинул бы ОГОНЬ под ветер.
+       Клавиша F. -->
+  <button type="button" id="btn-talk" class="daemon-key" data-element="talk" hidden></button>
 </div>
+
+<!-- Полоса разговора (слой «г»). Мир при ней не стоит — как в Ultima
+     Online: стража смотрит, огонь горит. Строка жителя и до трёх ответов
+     кнопками одного размера (свод, п.13), не меньше 44 точек; 1 2 3 —
+     ответ с клавиатуры, F или «УЙТИ» — уйти. Отошёл дальше трёх с
+     половиной клеток — разговор обрывается сам (zhiteli.js). -->
+<section id="talk" class="talk" hidden aria-live="polite">
+  <header class="talk-head">
+    <b id="talkName"></b>
+    <span id="talkWait" hidden></span>
+  </header>
+  <p id="talkLine"></p>
+  <div id="talkChoices" class="talk-choices"></div>
+</section>
 
 <!-- Находка объявляется крупно и посреди экрана. Новое заклинание —
      единственное событие в игре, которое стоит того, чтобы отвлечь: всё
@@ -111,6 +155,23 @@
   <span id="foundKicker" class="found-kicker">НАЙДЕНО</span>
   <b id="foundName"></b>
   <i id="foundNote"></i>
+</div>
+
+<!-- Камера изометрии (src/view3d/igra.js). Видна только в объёмном виде
+     («Лестница» или ?vid=iso); в плоском остаётся спрятанной. Одна кнопка
+     КАМЕРА (не меньше 44 точек), по нажатию раскрывает пять: поворот,
+     ближе/дальше, стандартный вид — одного размера (свод, п.13 и 29б).
+     Свёрнута с начала: пять квадратов в углу первым делом читались
+     отладочной панелью (приёмка Глаз 03.10). Клавиши те же на компьютере:
+     [ ] или , . — поворот, − = и колесо — ближе/дальше, 0 — стандартный
+     ракурс и общий план. -->
+<button type="button" id="camToggle" class="camtoggle" aria-controls="camctl" aria-expanded="false" hidden>КАМЕРА</button>
+<div id="camctl" class="camctl" aria-label="Камера" hidden>
+  <button type="button" data-cam="left" aria-label="Повернуть камеру влево" title="Повернуть на 90° · [ или ,">⟲</button>
+  <button type="button" data-cam="right" aria-label="Повернуть камеру вправо" title="Повернуть на 90° · ] или .">⟳</button>
+  <button type="button" data-cam="in" aria-label="Ближе" title="Ближе · = или колесо">+</button>
+  <button type="button" data-cam="out" aria-label="Дальше" title="Дальше · − или колесо">−</button>
+  <button type="button" data-cam="home" aria-label="Стандартный вид" title="Стандартный ракурс и общий план · 0">0</button>
 </div>
 
 <div id="ghostMove" class="ghost" hidden><i></i></div>
@@ -175,6 +236,12 @@
       <button type="button" id="tomeClose" class="tome-close">ЗАКРЫТЬ</button>
     </header>
 
+    <!-- Счёт попытки. На телефоне стоя в объёмном виде строки счёта в
+         полке нет (приёмка Глаз 03.10: полка 224 точки, ВЫРЕЗАНО и ВРЕМЯ
+         лежали под КНИГОЙ) — они здесь. Где HUD со счётом виден, строка
+         спрятана стилями. -->
+    <p id="tomeStats" class="tome-stats"></p>
+
     <p class="tome-hint">
       Состав решает вещество, порядок — форму. Что выпустил хоть раз, то и записано.
     </p>
@@ -191,9 +258,30 @@
 </section>
 
 
+<!-- Журнал заданий (слой «г», src/zadaniya.js). Как книга: слоем поверх,
+     игра на это время стоит. Показаны только взятые задания — что
+     житель ещё не предлагал, тут не светится; у взятого — следующий шаг
+     одной строкой (то, что житель уже сказал) и кнопка ВЕСТИ: стрелка у
+     края экрана поведёт к цели задания. -->
+<section id="zhurnal" class="tome zhurnal" hidden>
+  <div class="tome-card">
+
+    <header class="tome-head">
+      <span class="veil-kicker">ЗАДАНИЯ</span>
+      <b id="zhurnalCount"></b>
+      <button type="button" id="zhurnalClose" class="tome-close">ЗАКРЫТЬ · L</button>
+    </header>
+
+    <ul id="zhurnalList" class="zhurnal-list"></ul>
+    <p id="zhurnalMore" class="tome-hint" hidden></p>
+
+  </div>
+</section>
+
+
 <a class="game-home-menu" href="https://aka-gst.ru/#games">НА САЙТ</a>
 
-<script type="module" src="src/main.js?v=3"></script>
+<script type="module" src="src/main.js?v=6"></script>
 
 </body>
 </html>

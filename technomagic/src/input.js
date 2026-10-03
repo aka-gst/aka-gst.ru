@@ -15,7 +15,7 @@
  */
 
 const DEAD_ZONE = 12;
-const STICK_RANGE = 46;
+export const STICK_RANGE = 46;
 
 /*
  * У мыши есть срок годности. На ноутбуке курсор один раз задели ладонью —
@@ -201,16 +201,22 @@ export function createInput(surface) {
     if (!element) return;
 
     /* Имя кнопки прямо переводится в имя нажатия — новые кнопки не требуют
-       правок в этом месте. */
+       правок в этом месте.
+
+       Стихии на экране шлют свои коды, а не цифры (до слоя «г» были
+       Digit1–5). Цифры при открытой полосе разговора — номера ответов
+       (src/zhiteli-vid.js, keyRoute), и палец на кнопке ОГОНЬ выбирал бы
+       первый ответ вместо огня. Набор у этих кодов тот же — main.js,
+       CHARGE_KEYS. */
     const CODE = {
       attack: 'Fire',
       pickup: 'Pickup',
       throw: 'Throw',
-      fire: 'Digit1',
-      water: 'Digit2',
-      wind: 'Digit3',
-      earth: 'Digit4',
-      bolt: 'Digit5',
+      fire: 'ElemFire',
+      water: 'ElemWater',
+      wind: 'ElemWind',
+      earth: 'ElemEarth',
+      bolt: 'ElemBolt',
     };
 
     const press = (event) => {
