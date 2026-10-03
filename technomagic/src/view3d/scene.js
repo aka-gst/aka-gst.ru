@@ -862,6 +862,20 @@ export function createLiveScene(renderer) {
         const n = figureFor(obj, kind, element);
         /* Щуп замера (igra.js, probe): щит без хозяина не рисуется. */
         if (n.shield) for (const s of n.shield) s.visible = !(options.hide && options.hide.has('shields'));
+        /* Пока у подсказки есть цель (options.calm, igra.js), обод и
+           умбон щита не светятся и темнее на 40%: цвет щита читается
+           («этим не бей»), но ярче всех в кадре — цель подсказки, а не
+           щиты (приёмка Глаз 03.10, второй заход: в зале жёлтый щит был
+           ярче стрелки вдвое). */
+        if (n.shield) {
+          const [, rim, boss] = n.shield;
+          if (!rim.lit) { rim.lit = rim.material.color.slice(); boss.lit = boss.material.color.slice(); }
+          const k = options.calm ? 0.6 : 1;
+          rim.material.color = rim.lit.map((c) => c * k);
+          boss.material.color = boss.lit.map((c) => c * k);
+          rim.material.emissive = options.calm ? 0.15 : 1.5;
+          boss.material.emissive = options.calm ? 0.2 : 1.6;
+        }
         n.position = [obj.x / T, 0, obj.y / T];
         lay(n, obj.angle || 0, (obj.downed || 0) > 0);
         /* Щуп замера: фигура героя не рисуется, кольцо и тень остаются. */
@@ -894,7 +908,7 @@ export function createLiveScene(renderer) {
 
       spellLayer(world, root, lights, particles, soft, time);
       changeLayer(options.changes || [], root, lights, particles, soft);
-      hintLayer(world, root, time);
+      if (!(options.hide && options.hide.has('hint'))) hintLayer(world, root, time, lights);
       if (options.cursor) cursorLayer(options.cursor, root, time);
 
       return { lights, particles: new Float32Array(particles), soft: new Float32Array(soft) };
@@ -1146,19 +1160,51 @@ export function hintCell(world) {
   return null;
 }
 
-function hintLayer(world, root, time) {
+/*
+ * Цель подсказки в кадре — один акцент на весь кадр (приёмка Глаз 03.10,
+ * второй заход: в зале 79 ярких пятен, и стрелка была одним из них).
+ * Всё ставится на ВЕРХ клетки цели, а не на пол: ворота, щиток, стена —
+ * высокие клетки, и кольцо на полу внутри них не видно, а стрелка на
+ * высоте 1.5 торчала из ворот двумя жёлтыми точками. Над верхом — луч
+ * света до 2.6 клетки: из-за стены цель видна по нему, когда её саму
+ * закрывает кладка. Кольцо и луч дышат (пульс 2.2 раза в секунду), на
+ * цель падает тёплый свет. Тем же жёлтым — только стрелка у края
+ * (igra.js, drawOverlay), когда цель за кадром.
+ */
+function hintTop(world, cell) {
+  const t = tileAt(world, Math.floor(cell.x), Math.floor(cell.z));
+  if (isTall(t)) return WALL_H;
+  if (t === TILE.PANEL) return 1.25;
+  return levelOf(t);
+}
+
+function hintLayer(world, root, time, lights = null) {
   const cell = hintCell(world);
   if (!cell) return;
-  const bob = 0.12 * Math.sin(time * 3);
-  const arrow = new Node('cone', { color: [1, 0.85, 0.35], emissive: 1.4, unlit: 1 });
-  arrow.position = [cell.x, 1.5 + bob, cell.z];
-  arrow.scale = [0.16, 0.34, 0.16];
+  const top = hintTop(world, cell);
+  const beat = 0.5 + 0.5 * Math.sin(time * 2.2 * Math.PI);
+  const bob = 0.1 * Math.sin(time * 3);
+  const gold = [1, 0.85, 0.35];
+  const arrow = new Node('cone', { color: gold, emissive: 1.8, unlit: 1 });
+  arrow.position = [cell.x, top + 0.8 + bob, cell.z];
+  arrow.scale = [0.22, 0.44, 0.22];
   arrow.rotation = [Math.PI, 0, 0];
   root.add(arrow);
-  const ring = new Node('ring', { color: [1, 0.85, 0.35], emissive: 1, alpha: 0.6 + 0.2 * Math.sin(time * 3), additive: true, unlit: 1 });
-  ring.position = [cell.x, 0.05, cell.z];
-  ring.scale = [0.45, 1, 0.45];
+  const ring = new Node('ring', { color: gold, emissive: 1.4, alpha: 0.7 + 0.3 * beat, additive: true, unlit: 1 });
+  ring.position = [cell.x, top + 0.05, cell.z];
+  const r = 0.5 + 0.12 * beat;
+  ring.scale = [r, 1, r];
   root.add(ring);
+  const pool = new Node('disc', { color: gold, emissive: 1, alpha: 0.18 + 0.14 * beat, additive: true, unlit: 1 });
+  pool.position = [cell.x, top + 0.04, cell.z];
+  pool.scale = [0.72, 1, 0.72];
+  root.add(pool);
+  const beam = new Node('cylinder', { color: gold, emissive: 1.2, alpha: 0.22 + 0.16 * beat, additive: true, unlit: 1 });
+  const height = Math.max(0.6, 2.6 - top);
+  beam.position = [cell.x, top + height / 2, cell.z];
+  beam.scale = [0.07, height, 0.07];
+  root.add(beam);
+  if (lights) lights.push({ pos: [cell.x, top + 0.6, cell.z], color: gold, power: 0.9 + 0.4 * beat, range: 2.4 });
 }
 
 /* Клетка под указателем: рамка на полу — палец и мышь видят, куда целят. */

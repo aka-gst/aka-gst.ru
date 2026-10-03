@@ -390,6 +390,15 @@ function byTouch() {
 }
 
 /*
+ * Ряд стихий в изометрии на пальце (style.css, «ПОЛКА СТИХИЙ НА ТЕЛЕФОНЕ»):
+ * над подписью — крупный знак, подписи короче. Решает правило CSS
+ * (pointer: coarse) и объёмный вид; плоский вид и компьютер — прежние.
+ */
+function compactRow() {
+  return document.body.classList.contains('vid-iso') && matchMedia('(pointer: coarse)').matches;
+}
+
+/*
  * Что этаж даёт прямо сейчас. С 03.10 стихии выдаются и посреди этажа
  * («Лестница»), поэтому спрашивать надо мир, а не уровень: уровень
  * помнит только то, что было дано на старте.
@@ -967,8 +976,15 @@ function syncCoinButton() {
    * так и остаётся «нажатой» (поймано прогоном на 390×844).
    */
   if (!ui.coin.firstElementChild) ui.coin.innerHTML = `<b>${COIN_KEY}</b><i></i>`;
+  /* Палец в изометрии: число монет — крупным знаком над подписью
+     (style.css, data-glyph), подпись — одним словом, иначе в 11 точках она
+     не влезает в кнопку 49 точек (приёмка Глаз 03.10, второй заход). */
+  const compact = compactRow();
+  const shown = compact && !coinArmed ? 'МОНЕТА' : label;
   const text = ui.coin.lastElementChild;
-  if (text.textContent !== label) text.textContent = label;
+  if (text.textContent !== shown) text.textContent = shown;
+  const glyph = `×${world.coinsLeft}`;
+  if (ui.coin.dataset.glyph !== glyph) ui.coin.dataset.glyph = glyph;
   ui.coin.dataset.armed = coinArmed ? '1' : '0';
   ui.coin.dataset.empty = world.coinsLeft > 0 ? '0' : '1';
 }
@@ -1003,9 +1019,14 @@ function syncTalk() {
   /* Текст кнопки меняется, а разметка — нет: палец, начавший касание на
      подписи, иначе терял бы touchend (как у монеты, syncCoinButton). */
   if (!ui.talkBtn.firstElementChild) ui.talkBtn.innerHTML = `<b>${TALK_KEY}</b><i></i>`;
-  const label = view ? 'УЙТИ' : 'ГОВОРИТЬ';
+  /* Палец в изометрии: «ГОВОРИТЬ» в 11 точках шире кнопки 49 точек —
+     подпись «ГОВОР.», над ней знак «…» (как облачко над жителем), в
+     разговоре — «»» (style.css, data-glyph; приёмка Глаз 03.10). */
+  const label = view ? 'УЙТИ' : compactRow() ? 'ГОВОР.' : 'ГОВОРИТЬ';
   const text = ui.talkBtn.lastElementChild;
   if (text.textContent !== label) text.textContent = label;
+  const glyph = view ? '»' : '…';
+  if (ui.talkBtn.dataset.glyph !== glyph) ui.talkBtn.dataset.glyph = glyph;
   const nearFlag = view || near ? '1' : '0';
   if (ui.talkBtn.dataset.near !== nearFlag) ui.talkBtn.dataset.near = nearFlag;
   const armed = view ? '1' : '0';

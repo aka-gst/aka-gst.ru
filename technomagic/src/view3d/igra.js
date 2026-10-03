@@ -53,7 +53,7 @@ import { dangerZone } from '../opasnost.js';
 import { lightPools, poolLit, POOL_CORE, sightRegion, coneTint, guardMark, COIN_NOISE, RING_TIME } from '../vidimost.js';
 import { Renderer, Node, Builder, Geo, STRIDE, SURF } from './engine.js';
 import { bakeLevel, bakeGround, createLiveScene, levelOf } from './scene.js';
-import { createCamera, worldToScreen, zoomScale, groundAxes } from './camera.js';
+import { createCamera, worldToScreen, zoomScale, groundAxes, INTRO, GLANCE, GLANCE_LENGTH, glanceCurve } from './camera.js';
 import { keysToWorld, stickToWorld, screenAngleToWorld, pickWorld, isoViewRadius, cellHeight } from './vvod.js';
 import * as M from './math.js';
 
@@ -74,6 +74,19 @@ const WEAKNESS_COLOURS = { burn: '#ff5a1f', wet: '#4de1ff', freeze: '#9fe8ff', c
 const WEAPON_REACH = { bat: 38 };
 
 const glow = (colour, alpha, emissive = 1.2) => ({ color: M.rgb(colour), emissive, alpha, additive: true, unlit: 1 });
+
+/*
+ * ОДИН АКЦЕНТ НА КАДР (приёмка Глаз 03.10, второй заход). Пока у
+ * подсказки есть цель, ярче всего в кадре — она: на цели луч, кольцо и
+ * свет (scene.js, hintLayer), за кадром — крупная стрелка у края со
+ * свечением (drawOverlay). Украшения, которые с ней спорили, на это
+ * время приглушены: обод и умбон щитов (scene.js), кольцо стойкости
+ * («этим не бей») и белое кольцо крепкого под стражами (gameLayer).
+ * Вспышка «заблокировал» (e.blocked) не приглушается — это ответ на
+ * действие игрока. ACCENT.on = false — поломка для проверок: прежние
+ * яркости, замер «цель подсказки — главный акцент» обязан покраснеть.
+ */
+export const ACCENT = { on: true, rings: 0.4, arrow: 24 };
 
 export function createIsoRenderer(surface, options = {}) {
   const doc = surface.ownerDocument;
@@ -180,7 +193,9 @@ export function createIsoRenderer(surface, options = {}) {
 
   function draw(world) {
     const t0 = performance.now();
-    const dt = Math.min(0.05, Math.max(0, (t0 - lastDraw) / 1000));
+    /* Часы отрисовки остановлены щупом замера — стоит и камера (доводка,
+       первый кадр, взгляд на цель): кадры замера совпадают. */
+    const dt = probe.clock !== null ? 0 : Math.min(0.05, Math.max(0, (t0 - lastDraw) / 1000));
     stats.gaps.push(t0 - lastDraw);
     lastDraw = t0;
     if (size.cssW < 1 || size.cssH < 1) return lastView();
@@ -196,7 +211,7 @@ export function createIsoRenderer(surface, options = {}) {
     noteChanges(world);
 
     const p = world.player;
-    const spec = camera.update([p.x / T, p.y / T], dt, vp, snapNext, framing(world, vp));
+    const spec = camera.update([p.x / T, p.y / T], dt, vp, snapNext, framing(world, vp, dt));
     snapNext = false;
     gl.cut = { ...spec.cut };
     gl.setStatic('ground', bakeGround(world), { transparent: true });
@@ -210,7 +225,7 @@ export function createIsoRenderer(surface, options = {}) {
         cursor = { tx: hit.tx, ty: hit.ty, level: levelOf(world.tiles[hit.ty * world.w + hit.tx]) };
       }
     }
-    const frame = live.update(world, baked, time, { changes: ages, cursor, hide: probe.hide });
+    const frame = live.update(world, baked, time, { changes: ages, cursor, hide: probe.hide, calm: calmNow(world) });
     nightFor(world);
     gameLayer(world, gl.scene, spec, time, frame.lights);
     if (probe.voidMask) {
@@ -242,11 +257,90 @@ export function createIsoRenderer(surface, options = {}) {
    *     226 при высоте 390 — между ними герой помещается только посередине;
    *   компьютер — 0.35: шапка до 122, тост с 594 при высоте 800.
    */
-  const framing = (world, vp) => {
+  const framing = (world, vp, dt) => {
     const portrait = vp.cssHeight > vp.cssWidth * 1.15;
     const vertical = portrait ? 0.55 : vp.cssHeight < 560 ? 0 : 0.35;
-    return { w: world.w, h: world.h, keepUp: vertical, keepDown: vertical };
+    return { w: world.w, h: world.h, keepUp: vertical, keepDown: vertical, intro: introFor(world, dt), glance: glanceFor(world, dt) };
   };
+
+  /*
+   * ПЕРВЫЙ КАДР (приёмка Глаз 03.10, второй заход; геометрия — camera.js,
+   * introFrame). Попытка началась, подсказка с целью пришла — кадр держит
+   * героя и цель вместе (вес 1). Отпускает первый шаг (герой отошёл от
+   * точки старта на полклетки), INTRO.hold секунд по часам этажа, уход
+   * подсказки, конец партии или кнопка камеры (кроме «0»); потом вес
+   * плавно уходит к нулю за INTRO.ease секунд — к обычному слежению.
+   * Скачок героя больше двух клеток за кадр — постановка или перезапуск,
+   * не шаг: кадр сразу обычный.
+   */
+  const intro = { world: null, home: null, last: null, since: null, target: null, k: 0, out: false, cancel: false };
+  function introFor(world, dt) {
+    const p = world.player;
+    if (world !== intro.world) {
+      Object.assign(intro, { world, home: [p.x, p.y], last: [p.x, p.y], since: null, target: null, k: 0, out: false, cancel: false });
+    }
+    const hint = world.hint;
+    if (!intro.out) {
+      if (intro.since === null && hint && hint.target && world.state === 'play') {
+        intro.since = world.time;
+        intro.target = [hint.target.x / T, hint.target.y / T];
+        intro.k = 1;
+      }
+      const moved = Math.hypot(p.x - intro.home[0], p.y - intro.home[1]) > 0.5 * T;
+      const late = intro.since !== null && world.time - intro.since > INTRO.hold;
+      const gone = intro.since !== null && (!hint || !hint.target || world.state !== 'play');
+      if (moved || late || gone || intro.cancel) intro.out = true;
+    }
+    if (Math.hypot(p.x - intro.last[0], p.y - intro.last[1]) > 2 * T) intro.k = 0;
+    intro.last = [p.x, p.y];
+    if (intro.out) intro.k = Math.max(0, intro.k - dt / INTRO.ease);
+    if (!(intro.k > 0) || !intro.target) return null;
+    const k = intro.k * intro.k * (3 - 2 * intro.k);
+    return { target: intro.target, k, avoid: avoidRects };
+  }
+
+  /*
+   * ВЗГЛЯД НА ЦЕЛЬ (приёмка Глаз 03.10, второй заход; кривая и кадр —
+   * camera.js, glanceCurve и glanceFrame). Только для ступеней из
+   * GLANCE_STEPS — сейчас это «ТРИ РУКИ. ЩИТОК ПОЛЯ ЗА ПРОПАСТЬЮ»: щиток в
+   * двадцати шести клетках от зала, и одной стрелки у края мало, чтобы
+   * понять, где он. Раз на ступень за попытку и только если цели в кадре
+   * нет. Мир не стоит; любое новое нажатие (клавиша, касание, щелчок —
+   * слушатели ниже) прерывает взгляд: кадр возвращается за GLANCE.ease.
+   * Удержание клавиши, начатое до взгляда, его не прерывает — иначе
+   * идущий в зал игрок не увидел бы его вовсе.
+   */
+  const GLANCE_STEPS = new Set(['stack3']);
+  const glance = { world: null, seen: new Set(), t: null, target: null, cut: null };
+  function glanceFor(world, dt) {
+    if (world !== glance.world) Object.assign(glance, { world, seen: new Set(), t: null, target: null, cut: null });
+    const hint = world.hint;
+    if (hint && hint.target && GLANCE_STEPS.has(hint.step) && !glance.seen.has(hint.step) && world.state === 'play') {
+      glance.seen.add(hint.step);
+      const s = lastSpec ? worldToScreen(lastSpec, [hint.target.x / T, 0, hint.target.y / T]) : null;
+      const inside = s && s.x >= 0 && s.y >= 0 && s.x <= size.cssW && s.y <= size.cssH;
+      if (!inside) Object.assign(glance, { t: 0, target: [hint.target.x / T, hint.target.y / T], cut: null });
+    }
+    if (glance.t === null) return null;
+    glance.t += dt;
+    let g = glanceCurve(glance.t);
+    if (glance.cut) {
+      glance.cut.t += dt;
+      g = Math.min(g, glance.cut.g * Math.max(0, 1 - glance.cut.t / GLANCE.ease));
+    }
+    if (glance.t >= GLANCE_LENGTH || g <= 0 && glance.t > 0.05) {
+      glance.t = null;
+      return null;
+    }
+    return { target: glance.target, g, avoid: avoidRects };
+  }
+  const skipGlance = (event) => {
+    if (event && event.repeat) return;
+    if (glance.t !== null && !glance.cut) glance.cut = { g: glanceCurve(glance.t), t: 0 };
+  };
+  doc.addEventListener('keydown', skipGlance, true);
+  doc.addEventListener('pointerdown', skipGlance, true);
+  doc.addEventListener('touchstart', skipGlance, { capture: true, passive: true });
 
   /*
    * Что отдаётся main.js. zoom — точек экрана на точку мира у
@@ -316,6 +410,9 @@ export function createIsoRenderer(surface, options = {}) {
 
   /* ---------------- игровые метки в объёме ---------------- */
 
+  /* Подсказка с целью в партии — украшения приглушены (ACCENT выше). */
+  const calmNow = (world) => ACCENT.on && Boolean(world.hint && world.hint.target) && world.state === 'play';
+
   function gameLayer(world, root, spec, time, lights) {
     const add = (geo, material, position, scale = [1, 1, 1], rotation = null) => {
       const n = new Node(geo, material);
@@ -326,6 +423,7 @@ export function createIsoRenderer(surface, options = {}) {
       return n;
     };
     const flatRing = (x, z, r, colour, alpha, geo = 'thinring', y = 0.045) => add(geo, glow(colour, alpha), [x, y, z], [r, 1, r]);
+    const dim = calmNow(world) ? ACCENT.rings : 1;
     const player = world.player;
     const right = groundAxes(spec.yaw).right;
 
@@ -470,14 +568,15 @@ export function createIsoRenderer(surface, options = {}) {
       if (!e.alive) continue;
       const x = e.x / T, z = e.y / T;
       stateMark(e);
-      /* Стихия врага — кольцом: «этим цветом не бей». */
+      /* Стихия врага — кольцом: «этим цветом не бей». Пока у подсказки
+         есть цель — вполсилы (ACCENT выше), вспышка блока — всегда полная. */
       if (e.resist) {
         const pulse = 0.45 + Math.sin(time * 6 + (e.home ? e.home.x : 0)) * 0.2;
-        flatRing(x, z, (BODY + 9) / T, colourOf(e.resist), e.blocked > 0 ? 1 : pulse + 0.2, 'ring', 0.05);
+        flatRing(x, z, (BODY + 9) / T, colourOf(e.resist), e.blocked > 0 ? 1 : (pulse + 0.2) * dim, 'ring', 0.05);
       }
       /* Крепкий — тонкое белое; надломленный — розовое. */
-      if ((e.hp || 1) > 1 || e.tough) flatRing(x, z, (BODY + 3) / T, '#d9e2ea', 0.6);
-      else if (e.wasTough) flatRing(x, z, (BODY + 3) / T, '#ffb0b8', 0.55);
+      if ((e.hp || 1) > 1 || e.tough) flatRing(x, z, (BODY + 3) / T, '#d9e2ea', 0.6 * dim);
+      else if (e.wasTough) flatRing(x, z, (BODY + 3) / T, '#ffb0b8', 0.55 * dim);
       if (e.hitFlash > 0) add('sphere', glow('#ffffff', Math.min(1, e.hitFlash * 3), 1.5), [x, 0.55, z], [0.38, 0.5, 0.38]);
       /* Замах: линия туда, куда прилетит, и кольцо, стягивающееся к телу. */
       if ((e.windup || 0) > 0.02) {
@@ -723,10 +822,18 @@ export function createIsoRenderer(surface, options = {}) {
       /* Запас от кнопок — с половину стрелки: ukazatel.js сторожит остриё,
          а тело стрелки (±16 точек) на кадре 844×390 ложилось на кнопку
          ОГНЯ краем. */
-      pointer = hintPointer({ w: W, h: H }, target, { anchor, avoid: avoidRects, pad: 24 });
-      if (!pointer.onScreen) {
+      /* Стрелка с 03.10 (второй заход) крупнее — не меньше ACCENT.arrow
+         точек и не меньше 0.55 клетки на экране (на компьютере клетка
+         крупнее, и лампа рядом крупнее), — сплошная, светлее и со
+         свечением: за кадром она и есть акцент кадра. Дышит размером и
+         свечением, а не прозрачностью — прозрачная она темнела до 170 из
+         255 и проигрывала белому огню ламп. Запас от кнопок — по её телу
+         (±0.78 размера). */
+      const big = ACCENT.on ? Math.max(ACCENT.arrow, 0.55 * (spec.pxPerUnit || 0)) : 13;
+      pointer = hintPointer({ w: W, h: H }, target, { anchor, avoid: avoidRects, pad: Math.max(24, Math.round(big * 0.9 + 10)) });
+      if (!pointer.onScreen && !probe.hide.has('hint')) {
         const breath = 0.5 + 0.5 * Math.sin(world.time * 4.2);
-        const sizePx = 13 + breath * 3;
+        const sizePx = ACCENT.on ? big * (0.92 + 0.16 * breath) : big + breath * 3;
         g.save();
         g.translate(pointer.x, pointer.y);
         g.rotate(pointer.angle);
@@ -739,7 +846,11 @@ export function createIsoRenderer(surface, options = {}) {
         g.lineWidth = 3;
         g.strokeStyle = 'rgba(5,11,12,0.92)';
         g.stroke();
-        g.fillStyle = `rgba(255,225,77,${0.75 + 0.25 * breath})`;
+        if (ACCENT.on) {
+          g.shadowColor = 'rgba(255,225,77,0.9)';
+          g.shadowBlur = 10 + breath * 10;
+          g.fillStyle = '#ffe96e';
+        } else g.fillStyle = `rgba(255,225,77,${0.75 + 0.25 * breath})`;
         g.fill();
         g.restore();
       }
@@ -848,6 +959,10 @@ export function createIsoRenderer(surface, options = {}) {
   /* ---------------- камера: клавиши, колесо, кнопки ---------------- */
 
   function cameraAct(act) {
+    /* Кнопка камеры — тоже ввод: первый кадр и взгляд на цель уступают
+       руке игрока («0» — стандартный вид, первый кадр и есть он). */
+    if (act !== 'home') intro.cancel = true;
+    skipGlance();
     if (act === 'left') camera.rotate(-1);
     else if (act === 'right') camera.rotate(1);
     else if (act === 'in') camera.zoomBy(0.25);
@@ -921,6 +1036,9 @@ export function createIsoRenderer(surface, options = {}) {
     get pointer() { return pointer; },
     /* Стрелка ведомого задания (слой «г») — как pointer, для проверок. */
     get questPin() { return questPin; },
+    /* Первый кадр и взгляд на цель — для замеров (вес, фаза). */
+    get intro() { return { k: intro.k, out: intro.out, since: intro.since, target: intro.target }; },
+    get glance() { return { t: glance.t, g: glance.t === null ? 0 : glanceCurve(glance.t), cut: Boolean(glance.cut), target: glance.target, seen: [...glance.seen] }; },
     /* Точка мира (точки мира, высота в клетках) → экран, CSS-пиксели от угла холста. */
     project(x, y, h = 0) { return lastSpec ? worldToScreen(lastSpec, [x / T, h, y / T]) : null; },
     pick(x, y) { return lastSpec && bakedFor ? pickWorld(lastSpec, bakedFor, x, y) : null; },

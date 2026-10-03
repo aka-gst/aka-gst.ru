@@ -185,10 +185,36 @@ export function createCamera(modeName, options = {}) {
         tz = M.lerp(tz, punchFocus[1], punchK * PUNCH.pull);
       }
       /* Карта, а не пустота за ней (bounds — размер этажа в клетках). */
+      let introK = 0, introZoom = state.zoom;
       if (bounds && mode.ortho) {
         const z0 = M.clamp(state.zoom + punchK * PUNCH.zoom, ZOOM_MIN, ZOOM_MAX + 0.15);
         const ppu = zoomScale(viewport, z0, mode);
         [tx, tz] = frameFocus([tx, tz], hero, state.yaw, mode.pitch, viewport.cssWidth / ppu / 2, viewport.cssHeight / ppu / 2, bounds);
+        /*
+         * Первый кадр (bounds.intro, igra.js): герой и цель подсказки
+         * вместе. Вес k — от igra.js: 1, пока игрок не сдвинулся, к нулю за
+         * INTRO.ease после первого шага. Смесь точки взгляда и плана, а не
+         * переключение: иначе потолок отставания (clampLag) рванул бы кадр.
+         */
+        const intro = bounds.intro;
+        if (INTRO.on && intro && intro.k > 0 && intro.target) {
+          const f = introFrame({ hero, target: intro.target, yaw: state.yaw, pitch: mode.pitch, viewport, mode, zoom: state.zoom, bounds, avoid: intro.avoid });
+          introK = M.clamp(intro.k, 0, 1);
+          introZoom = f.zoom;
+          tx = M.lerp(tx, f.focus[0], introK);
+          tz = M.lerp(tz, f.focus[1], introK);
+        }
+        /*
+         * Взгляд на цель (bounds.glance, igra.js): короткий проезд к цели
+         * подсказки и обратно, вес g — кривая glanceCurve. Кадр сдвигается
+         * ровно настолько, чтобы цель легла внутрь с запасом.
+         */
+        const glance = bounds.glance;
+        if (glance && glance.g > 0 && glance.target) {
+          const f = glanceFrame({ from: [tx, tz], target: glance.target, yaw: state.yaw, pitch: mode.pitch, viewport, mode, zoom: M.lerp(state.zoom, introZoom, introK), avoid: glance.avoid });
+          tx = M.lerp(tx, f[0], glance.g);
+          tz = M.lerp(tz, f[1], glance.g);
+        }
       }
       const target = [tx, 0.55, tz];
       if (!state.focus || snap) state.focus = target.slice();
@@ -196,7 +222,7 @@ export function createCamera(modeName, options = {}) {
         for (let i = 0; i < 3; i += 1) state.focus[i] = M.damp(state.focus[i], target[i], 9, dt);
         state.focus = clampLag(state.focus, target, 1.2);
       }
-      const zoom = M.clamp(state.zoom + punchK * PUNCH.zoom, ZOOM_MIN, ZOOM_MAX + 0.15);
+      const zoom = M.clamp(M.lerp(state.zoom, introZoom, introK) + punchK * PUNCH.zoom, ZOOM_MIN, ZOOM_MAX + 0.15);
       const pitch = mode.pitch;
       const dir = [Math.sin(state.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(state.yaw) * Math.cos(pitch)];
       const aspect = viewport.width / viewport.height;
@@ -288,6 +314,190 @@ export function frameFocus(target, hero, yaw, pitch, halfW, halfH, bounds, keep 
   cx += right[0] * sr + up[0] * su;
   cz += right[1] * sr + up[1] * su;
   return [cx - up[0] * lift, cz - up[1] * lift];
+}
+
+/* ---------------------------------------------------------
+   ПЕРВЫЙ КАДР: ГЕРОЙ И ЦЕЛЬ ПОДСКАЗКИ ВМЕСТЕ
+   ---------------------------------------------------------
+   Приёмка Глаз 03.10, второй заход: на старте «Башни» телефон стоя видел
+   мага в левой нижней четверти, справа — плоские крыши стен, а ворота —
+   цель первой подсказки — были за кадром: на них показывала только
+   жёлтая стрелка у края. Ракурс не трогается (стандартный UO по
+   умолчанию — решение Сергея), место старта тоже. Первый кадр ставится
+   так, чтобы в нём были и герой (ступни и голова), и цель, с запасом от
+   краёв и мимо кнопок (avoid — прямоугольники кнопок в точках холста).
+   Если вдвоём они при текущем плане не помещаются, план отъезжает шагами
+   INTRO.step, но не дальше INTRO.minZoom; не помещаются и так — кадр
+   сдвигается к цели, насколько позволяет обычное правило «герой в
+   средней части» (frameFocus): виден хотя бы край двора в сторону цели.
+   Сколько держать и как отпускать — igra.js (первый шаг или INTRO.hold
+   секунд, затем INTRO.ease секунд плавно к обычному слежению).
+
+   Считается в осях экрана: c — точка пола в середине кадра; точка мира p
+   на высоте y ложится на экран в
+     x = W/2 + ((p − c)·right)·ppu
+     y = H/2 − (((p − c)·up)·sin(наклона) + y·cos(наклона))·ppu,
+   то есть для каждой точки допустимые c — отрезок по каждой оси, и всё
+   решение — пересечение отрезков. Формула сверяется с worldToScreen в
+   pilot-vid/test-kamera.mjs, раздел 8.
+
+   INTRO.on = false — поломка для проверок: первый кадр прежний (обычное
+   слежение), замер «ворота в кадре» обязан покраснеть.
+   --------------------------------------------------------- */
+
+export const INTRO = { on: true, hold: 6, ease: 0.9, minZoom: ZOOM_MIN, step: 0.025, margin: 34, wide: 0.1, heroTop: 1.6, pad: 8 };
+
+/* Отрезок допустимых c по одной оси для набора точек; null — пусто. */
+function span(list) {
+  let lo = -Infinity, hi = Infinity;
+  for (const [a, b] of list) { lo = Math.max(lo, a); hi = Math.min(hi, b); }
+  return lo <= hi ? [lo, hi] : null;
+}
+
+/*
+ * Герою — три пояса по очереди, и каждый пробуется на всех планах от
+ * текущего до INTRO.minZoom, прежде чем взять следующий:
+ *   keep — обычное правило (frameFocus: 0.55 половины кадра вбок, по
+ *          высоте — доли bounds.keepUp/keepDown). Где цель и так влезает
+ *          (компьютер, телефон боком), первый кадр совпадает с обычным;
+ *   wide — не ближе INTRO.wide ширины к краю;
+ *   edge — не ближе INTRO.margin точек.
+ * Так план отъезжает, только если иначе герой прижат к краю, и герой
+ * прижимается к краю, только если иначе цель не влезает вовсе.
+ */
+export function introFrame({ hero, target, yaw, pitch, viewport, mode = MODES.uo, zoom = 0, bounds = null, avoid = [] }) {
+  const W = viewport.cssWidth, H = viewport.cssHeight;
+  const right = [Math.cos(yaw), -Math.sin(yaw)];
+  const up = [-Math.sin(yaw), -Math.cos(yaw)];
+  const s = Math.max(0.2, Math.sin(pitch)), co = Math.cos(pitch);
+  const lift = 0.55 / Math.max(0.2, Math.tan(pitch));
+  const dot = (p, a) => p[0] * a[0] + p[1] * a[1];
+  const toFocus = (cr, cu) => [right[0] * cr + up[0] * cu - up[0] * lift, right[1] * cr + up[1] * cu - up[1] * lift];
+  const m = INTRO.margin;
+  const keepUp = bounds && Number.isFinite(bounds.keepUp) ? bounds.keepUp : 0.55;
+  const keepDown = bounds && Number.isFinite(bounds.keepDown) ? bounds.keepDown : 0.55;
+  const hr = dot(hero, right), hu = dot(hero, up);
+  const goal = { r: dot(target, right), u: dot(target, up), y: 0, box: [m, W - m, m, H - m] };
+  const tiers = {
+    keep: [W / 2 - 0.55 * W / 2, W / 2 + 0.55 * W / 2, H / 2 - keepUp * H / 2, H / 2 + keepDown * H / 2],
+    wide: [INTRO.wide * W, (1 - INTRO.wide) * W, m, H - m],
+    edge: [m, W - m, m, H - m],
+  };
+  /* Допустимые c по осям для точки p в прямоугольнике экрана box. */
+  const rangeR = (p, ppu) => [p.r - (p.box[1] - W / 2) / ppu, p.r - (p.box[0] - W / 2) / ppu];
+  const rangeU = (p, ppu) => [p.u - ((H / 2 - p.box[2]) / ppu - p.y * co) / s, p.u - ((H / 2 - p.box[3]) / ppu - p.y * co) / s];
+  const screenOf = (p, cr, cu, ppu) => ({ x: W / 2 + (p.r - cr) * ppu, y: H / 2 - ((p.u - cu) * s + p.y * co) * ppu });
+  /* Середина, которую выбрала бы карта: между героем и целью, кадр в
+     пределах этажа (та же развёртка прямоугольника кадра, что frameFocus). */
+  const mid = [(hero[0] + target[0]) / 2, (hero[1] + target[1]) / 2];
+  const preferred = (ppu) => {
+    if (!bounds) return [dot(mid, right), dot(mid, up)];
+    const f = frameFocus([mid[0] - up[0] * lift, mid[1] - up[1] * lift], mid, yaw, pitch, W / ppu / 2, H / ppu / 2, { w: bounds.w, h: bounds.h }, 1);
+    return [dot(f, right) + 0, dot(f, up) + lift];
+  };
+  const floor = Math.min(zoom, INTRO.minZoom);
+  const zooms = [];
+  for (let z = zoom; z > floor + 1e-9; z -= INTRO.step) zooms.push(z);
+  zooms.push(floor);
+
+  for (const tier of ['keep', 'wide', 'edge']) {
+    const box = tiers[tier];
+    /* Ступни — в поясе героя, голова — не выше края кадра с запасом. */
+    const pts = [
+      { r: hr, u: hu, y: 0, box },
+      { r: hr, u: hu, y: INTRO.heroTop, box: [box[0], box[1], m, H - m] },
+      goal,
+    ];
+    const hits = (cr, cu, ppu) => pts.some((p) => {
+      const q = screenOf(p, cr, cu, ppu);
+      return avoid.some((a) => q.x >= a.x - INTRO.pad && q.x <= a.x + a.w + INTRO.pad && q.y >= a.y - INTRO.pad && q.y <= a.y + a.h + INTRO.pad);
+    });
+    for (const z of zooms) {
+      const ppu = zoomScale(viewport, z, mode);
+      const sr = span(pts.map((p) => rangeR(p, ppu)));
+      const su = span(pts.map((p) => rangeU(p, ppu)));
+      if (!sr || !su) continue;
+      const [pr, pu] = preferred(ppu);
+      const cr = M.clamp(pr, sr[0], sr[1]), cu = M.clamp(pu, su[0], su[1]);
+      if (!hits(cr, cu, ppu)) return { focus: toFocus(cr, cu), zoom: z, fits: true, tier };
+      /* Под кнопкой — ближайшее к выбранному место без кнопок. */
+      let best = null;
+      for (let i = 0; i <= 8; i += 1) for (let j = 0; j <= 8; j += 1) {
+        const r = M.lerp(sr[0], sr[1], i / 8), u = M.lerp(su[0], su[1], j / 8);
+        if (hits(r, u, ppu)) continue;
+        const d = Math.hypot((r - cr) * ppu, (u - cu) * ppu * s);
+        if (!best || d < best.d) best = { r, u, d };
+      }
+      if (best) return { focus: toFocus(best.r, best.u), zoom: z, fits: true, tier };
+    }
+  }
+  /* Не помещаются: план прежний, кадр сдвинут к цели по обычному правилу. */
+  const ppu = zoomScale(viewport, zoom, mode);
+  const toward = [mid[0] - up[0] * lift, mid[1] - up[1] * lift];
+  const focus = bounds ? frameFocus(toward, hero, yaw, pitch, W / ppu / 2, H / ppu / 2, bounds) : toward;
+  return { focus, zoom, fits: false, tier: null };
+}
+
+/* ---------------------------------------------------------
+   ВЗГЛЯД НА ЦЕЛЬ И ОБРАТНО
+   ---------------------------------------------------------
+   Приёмка Глаз 03.10, второй заход: в зале подсказка «ЩИТОК ПОЛЯ ЗА
+   ПРОПАСТЬЮ», а щиток — за краем кадра, и где он, говорит только
+   стрелка. Когда такая подсказка приходит, камера коротко проезжает
+   туда, где щиток виден, и возвращается (igra.js: какие ступени, когда
+   и чем прерывается — любым вводом). Кадр сдвигается от обычного ровно
+   настолько, чтобы цель легла внутрь с запасом GLANCE.margin долей
+   половины кадра, — не дальше нужного. Длина — GLANCE.out + hold + back,
+   не больше полутора секунд (проверка — test-kamera.mjs, раздел 9).
+   --------------------------------------------------------- */
+
+export const GLANCE = { out: 0.4, hold: 0.65, back: 0.4, margin: 0.5, ease: 0.25, pad: 14, lift: 1.2 };
+export const GLANCE_LENGTH = GLANCE.out + GLANCE.hold + GLANCE.back;
+
+export function glanceCurve(t) {
+  if (t <= 0 || t >= GLANCE_LENGTH) return 0;
+  if (t < GLANCE.out) return easeInOut(t / GLANCE.out);
+  if (t < GLANCE.out + GLANCE.hold) return 1;
+  return 1 - easeInOut((t - GLANCE.out - GLANCE.hold) / GLANCE.back);
+}
+
+/*
+ * Точка взгляда, при которой цель (её верх с лучом — GLANCE.lift клетки
+ * над полом) лежит в средней части кадра (доля GLANCE.margin половины) и
+ * не под кнопками, тостом и объявлением (avoid, точки холста). Из всех
+ * таких мест — ближайшее к тому, куда цель легла бы при самом коротком
+ * сдвиге: камера едет не дальше нужного.
+ */
+export function glanceFrame({ from, target, yaw, pitch, viewport, mode = MODES.uo, zoom = 0, avoid = [] }) {
+  const W = viewport.cssWidth, H = viewport.cssHeight;
+  const ppu = zoomScale(viewport, zoom, mode);
+  const s = Math.max(0.2, Math.sin(pitch)), co = Math.cos(pitch);
+  const right = [Math.cos(yaw), -Math.sin(yaw)];
+  const up = [-Math.sin(yaw), -Math.cos(yaw)];
+  const lift = 0.55 / Math.max(0.2, Math.tan(pitch));
+  const dot = (p, a) => p[0] * a[0] + p[1] * a[1];
+  const c = [from[0] + up[0] * lift, from[1] + up[1] * lift];
+  const tr = dot(target, right), tu = dot(target, up);
+  /* Где цель на экране при точке пола c (cr, cu). */
+  const at = (cr, cu) => ({ x: W / 2 + (tr - cr) * ppu, y: H / 2 - ((tu - cu) * s + GLANCE.lift * co) * ppu });
+  const cOf = (q) => [tr - (q.x - W / 2) / ppu, tu - ((H / 2 - q.y) / ppu - GLANCE.lift * co) / s];
+  const k = 1 - GLANCE.margin;
+  const now = at(dot(c, right), dot(c, up));
+  const q0 = { x: M.clamp(now.x, W / 2 - k * W / 2, W / 2 + k * W / 2), y: M.clamp(now.y, H / 2 - k * H / 2, H / 2 + k * H / 2) };
+  const blocked = (q) => avoid.some((a) => q.x >= a.x - GLANCE.pad && q.x <= a.x + a.w + GLANCE.pad && q.y >= a.y - GLANCE.pad && q.y <= a.y + a.h + GLANCE.pad);
+  let q = q0;
+  if (blocked(q0)) {
+    let best = null;
+    for (let i = 0; i <= 10; i += 1) for (let j = 0; j <= 10; j += 1) {
+      const cand = { x: M.lerp(0.15 * W, 0.85 * W, i / 10), y: M.lerp(0.15 * H, 0.85 * H, j / 10) };
+      if (blocked(cand)) continue;
+      const d = Math.hypot(cand.x - q0.x, cand.y - q0.y);
+      if (!best || d < best.d) best = { q: cand, d };
+    }
+    if (best) q = best.q;
+  }
+  const [cr, cu] = cOf(q);
+  return [right[0] * cr + up[0] * cu - up[0] * lift, right[1] * cr + up[1] * cu - up[1] * lift];
 }
 
 /* ---------------------------------------------------------

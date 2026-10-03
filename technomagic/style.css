@@ -1753,3 +1753,66 @@ body.is-shooting .camtoggle { display: none !important; }
      body.is-talking .toast): то же место, что без объёмного вида. */
   body.vid-iso.is-talking .toast { bottom: calc(var(--talk-top, 0px) + 8px); }
 }
+
+/* =========================================================
+   ПОЛКА СТИХИЙ НА ТЕЛЕФОНЕ (изометрия; приёмка Глаз 03.10, второй заход)
+   =========================================================
+   Было: семь кнопок 49×46 на 390 точках, подписи 8 точек, недоступные —
+   прозрачностью .3 (серое на чёрном у края читаемости). Стало: над
+   подписью крупный знак — клавиша стихии (← ↑ → ↓ ⇧ — те же знаки, что в
+   словах подсказки: «ДОСТАНЕТ ⇧⇧⇧»), у монеты — сколько их, у разговора —
+   «…» (облачко над жителем) и «»» в разговоре; подпись 11 точек одним
+   словом («ГОВОР.» и «МОНЕТА» — иначе не влезают, main.js compactRow).
+   Открытая стихия — подпись её цветом; недоступная — без прозрачности,
+   тусклой рамкой и серой подписью с контрастом не меньше 3:1 (#6c7974 на
+   #0a0f10 — 4.2:1 по формуле WCAG). Размеры кнопок прежние — семь одного
+   размера, не меньше 44 (свод, п.13). Только пальцем и только в объёмном
+   виде: плоский вид и компьютер — как были. */
+@media (pointer: coarse) {
+  body.vid-iso .daemon-key {
+    gap: 1px;
+    padding: 4px 0;
+    align-content: center;
+  }
+  body.vid-iso .daemon-key b {
+    display: block;
+    font: 900 17px/1 var(--mono);
+  }
+  body.vid-iso .daemon-key[data-element="coin"] b,
+  body.vid-iso .daemon-key[data-element="talk"] b { display: none; }
+  body.vid-iso .daemon-key[data-element="coin"]::before,
+  body.vid-iso .daemon-key[data-element="talk"]::before {
+    content: attr(data-glyph);
+    font: 900 15px/1.1 var(--mono);
+    color: inherit;
+  }
+  body.vid-iso .daemon-key i,
+  body.vid-iso .daemons[data-talk="1"] .daemon-key i {
+    font: 800 11px/1 var(--mono);
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  /* Цвет — отдельным правилом с меньшей силой: серый недоступных ниже
+     обязан его перебить. */
+  body.vid-iso .daemon-key i { color: inherit; }
+  /* Цвет кнопки стихии задан в main.js прямо в разметке (style.color) —
+     поэтому серый ставится знаку и подписи, а не кнопке. */
+  body.vid-iso .daemon-key[data-locked="1"],
+  body.vid-iso .daemon-key[data-empty="1"] {
+    opacity: 1;
+    filter: none;
+    border-color: #2c3533;
+  }
+  body.vid-iso .daemon-key[data-locked="1"] b,
+  body.vid-iso .daemon-key[data-locked="1"] i,
+  body.vid-iso .daemon-key[data-empty="1"] i,
+  body.vid-iso .daemon-key[data-empty="1"]::before { color: #6c7974; }
+  body.vid-iso .daemon-key[data-element="talk"][data-near="0"] {
+    opacity: 1;
+    border-color: #3d3a32;
+  }
+  body.vid-iso .daemon-key[data-element="talk"][data-near="0"] i,
+  body.vid-iso .daemon-key[data-element="talk"][data-near="0"]::before { color: #7d786a; }
+  /* Нажатая стихия — тёмная подпись на её цвете (правило выше по файлу). */
+  body.vid-iso .daemon-key[data-active="1"] i { color: #050b0c; }
+}
