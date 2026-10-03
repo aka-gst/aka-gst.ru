@@ -8,7 +8,7 @@ test('selected games stay visible, excluded and unknown projects stay out', () =
 });
 test('Gateway and Dharma lead work; QueQuest remains a game', () => {
   const fixture = [{id:'local-agent-gateway'}, {id:'qa-quest'}, {id:'dharma-ai'}, {id:'psy-ai-admin'}, {id:'buddhist-diary-bot'}];
-  assert.deepEqual(selectProjects(fixture, 'work').map(p => p.id), ['local-agent-gateway', 'dharma-ai', 'qa-quest']);
+  assert.deepEqual(selectProjects(fixture, 'work').map(p => p.id), ['local-agent-gateway', 'dharma-ai', 'qa-quest', 'psy-ai-admin']);
   assert.deepEqual(selectProjects(fixture, 'games').map(p => p.id), ['qa-quest']);
 });
 

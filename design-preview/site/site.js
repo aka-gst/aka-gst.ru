@@ -1,121 +1,69 @@
 (() => {
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
-
-  for (const frame of document.querySelectorAll('.animation-frame')) {
-    const video = frame.querySelector('video');
-    const toggle = frame.querySelector('.animation-toggle');
-    if (!video || !toggle) continue;
+  // A muted inline loop, with a still poster when motion is reduced.
+  for (const video of document.querySelectorAll('.animation-frame video')) {
+    let inView = true;
     const sync = () => {
-      toggle.setAttribute('aria-pressed', String(!video.paused));
-      toggle.textContent = video.paused ? 'Запустить анимацию' : 'Остановить анимацию';
+      if (document.hidden || reducedMotion.matches || !inView) video.pause();
+      else video.play().catch(() => {});
     };
-    toggle.addEventListener('click', async () => {
-      if (!video.paused) video.pause();
-      else {
-        try { await video.play(); }
-        catch { toggle.textContent = 'Повторить запуск'; return; }
-      }
+    document.addEventListener('visibilitychange', sync);
+    reducedMotion.addEventListener('change', sync);
+    if ('IntersectionObserver' in window) new IntersectionObserver(entries => {
+      inView = entries[0].isIntersecting;
       sync();
-    });
-    video.addEventListener('play', sync);
-    video.addEventListener('pause', sync);
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) video.pause();
-    });
-    reducedMotion.addEventListener('change', () => {
-      if (reducedMotion.matches) video.pause();
-    });
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(entries => {
-        if (!entries[0].isIntersecting) video.pause();
-      }).observe(frame);
-    }
+    }).observe(video);
     sync();
   }
 
-  const phraseNode = document.getElementById('phrase-text');
+  const text = document.getElementById('phrase-text');
+  const phrase = text?.closest('.phrase');
   const phrases = Array.isArray(window.sitePhrases) ? window.sitePhrases : [];
-  if (phraseNode && phrases.length) {
-    let index = Math.floor(Math.random() * phrases.length);
-    const toggle = document.querySelector('.phrase-toggle');
-    let paused = false;
-    let timer;
-    let glitchTimer;
-    const show = () => {
-      const text = `${phrases[index]} (с)`;
-      phraseNode.textContent = text;
-      phraseNode.dataset.text = text;
+  if (!text || !phrase || !phrases.length) return;
+  let index = Math.floor(Math.random() * phrases.length);
+  let timer, glitchTimer, glitchEnd;
+  let generation = 0;
+  const clear = () => {
+    generation++;
+    clearTimeout(timer); clearTimeout(glitchTimer); clearTimeout(glitchEnd);
+    delete phrase.dataset.typing; delete phrase.dataset.glitch;
+  };
+  const nextIndex = () => {
+    if (phrases.length < 2) return index;
+    return (index + 1 + Math.floor(Math.random() * (phrases.length - 1))) % phrases.length;
+  };
+  const run = () => {
+    clear();
+    if (document.hidden) return;
+    const token = generation;
+    if (reducedMotion.matches) { text.textContent = phrases[index]; return; }
+    const step = (characters, target, speed, done) => {
+      if (token !== generation) return;
+      phrase.dataset.typing = '1';
+      text.textContent = phrases[index].slice(0, characters);
+      if (characters === target) {
+        delete phrase.dataset.typing;
+        done();
+      } else timer = setTimeout(() => step(characters + (characters < target ? 1 : -1), target, speed, done), speed);
     };
-    const schedule = () => {
-      clearTimeout(timer);
-      clearTimeout(glitchTimer);
-      phraseNode.classList.remove('is-glitching');
-      if (paused || reducedMotion.matches || document.hidden) return;
-      timer = setTimeout(() => {
-        index = (index + 1) % phrases.length;
-        show();
-        phraseNode.classList.add('is-glitching');
-        glitchTimer = setTimeout(() => phraseNode.classList.remove('is-glitching'), 320);
-        timer = setTimeout(schedule, 320);
-      }, 10000);
-    };
-    toggle?.addEventListener('click', () => {
-      paused = !paused;
-      toggle.setAttribute('aria-pressed', String(paused));
-      toggle.setAttribute('aria-label', paused ? 'Продолжить ленту фраз' : 'Остановить ленту фраз');
-      toggle.textContent = paused ? '▶' : 'Ⅱ';
-      schedule();
+    const type = () => step(0, phrases[index].length, 45, () => {
+      timer = setTimeout(() => step(phrases[index].length, 0, 22, () => {
+        timer = setTimeout(() => { index = nextIndex(); type(); }, 900);
+      }), 22000);
     });
-    reducedMotion.addEventListener('change', schedule);
-    document.addEventListener('visibilitychange', schedule);
-    show();
-    schedule();
-  }
-
-  if (!reducedMotion.matches && 'IntersectionObserver' in window) {
-    document.documentElement.classList.add('js-motion');
-    const reveal = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        entry.target.classList.add('is-visible');
-        reveal.unobserve(entry.target);
-      }
-    }, { threshold: 0.06, rootMargin: '0px 0px -25px 0px' });
-    document.querySelectorAll('[data-reveal]').forEach((element) => reveal.observe(element));
-    reducedMotion.addEventListener('change', () => {
-      if (reducedMotion.matches) {
-        reveal.disconnect();
-        document.documentElement.classList.remove('js-motion');
-      }
-    }, { once: true });
-  }
-
-  for (const card of document.querySelectorAll('[data-video-preview]')) {
-    const video = card.querySelector('video');
-    if (!video) continue;
-    const stop = () => {
-      card.classList.remove('is-previewing');
-      video.pause();
-      video.currentTime = 0;
+    const glitch = () => {
+      glitchTimer = setTimeout(() => {
+        if (token !== generation) return;
+        if (text.textContent) {
+          phrase.dataset.glitch = '1';
+          glitchEnd = setTimeout(() => delete phrase.dataset.glitch, 260);
+        }
+        glitch();
+      }, 4500 + Math.random() * 3500);
     };
-    const start = async () => {
-      if (!finePointer.matches || reducedMotion.matches) return;
-      try {
-        await video.play();
-        if (card.matches(':hover')) card.classList.add('is-previewing');
-        else stop();
-      } catch {
-        stop();
-      }
-    };
-    card.addEventListener('pointerenter', start);
-    card.addEventListener('pointerleave', stop);
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) stop();
-    });
-    reducedMotion.addEventListener('change', () => {
-      if (reducedMotion.matches) stop();
-    });
-  }
+    type(); glitch();
+  };
+  document.addEventListener('visibilitychange', run);
+  reducedMotion.addEventListener('change', run);
+  run();
 })();
