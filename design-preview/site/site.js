@@ -38,21 +38,40 @@
   const phrases = Array.isArray(window.sitePhrases) ? window.sitePhrases : [];
   if (phraseNode && phrases.length) {
     let index = Math.floor(Math.random() * phrases.length);
-    const toggle = document.querySelector('.phrase-toggle');
-    let paused = false;
+    // Кнопки паузы нет (Сергей 03.10: «убери, нахуй она не нужна»). Длинная фраза обрезается
+    // многоточием — целиком её показывает своё окошко: сразу при наведении, по касанию на телефоне,
+    // по фокусу с клавиатуры. Системный title не годится: он появляется через секунду и выглядит чужим.
+    const pop = document.getElementById('phrase-pop');
+    let open = false;
     let timer;
     let glitchTimer;
+    const cut = () => phraseNode.scrollWidth > phraseNode.clientWidth + 1;
+    const hidePop = () => {
+      if (!pop || !open) return;
+      open = false;
+      pop.classList.remove('is-open');
+      pop.hidden = true;
+      schedule();
+    };
+    const showPop = () => {
+      if (!pop || !cut()) return false;
+      pop.textContent = phraseNode.textContent;
+      pop.hidden = false;
+      pop.classList.add('is-open');
+      open = true;
+      clearTimeout(timer); // пока окно открыто, фраза под ним не меняется
+      return true;
+    };
     const show = () => {
       const text = `${phrases[index]} (с)`;
       phraseNode.textContent = text;
       phraseNode.dataset.text = text;
-      phraseNode.title = text; // длинная фраза в шапке обрезается многоточием — полный текст при наведении
     };
     const schedule = () => {
       clearTimeout(timer);
       clearTimeout(glitchTimer);
       phraseNode.classList.remove('is-glitching');
-      if (paused || reducedMotion.matches || document.hidden) return;
+      if (open || reducedMotion.matches || document.hidden) return;
       timer = setTimeout(() => {
         index = (index + 1) % phrases.length;
         show();
@@ -61,13 +80,22 @@
         timer = setTimeout(schedule, 320);
       }, 10000);
     };
-    toggle?.addEventListener('click', () => {
-      paused = !paused;
-      toggle.setAttribute('aria-pressed', String(paused));
-      toggle.setAttribute('aria-label', paused ? 'Продолжить ленту фраз' : 'Остановить ленту фраз');
-      toggle.textContent = paused ? '▶' : 'Ⅱ';
-      schedule();
-    });
+    if (pop) {
+      phraseNode.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') showPop(); });
+      phraseNode.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hidePop(); });
+      // Касание: открыть/закрыть. Мышь окно уже открыла наведением — её щелчок окно не трогает.
+      let lastPointer = '';
+      phraseNode.addEventListener('pointerdown', (e) => { lastPointer = e.pointerType; });
+      phraseNode.addEventListener('click', () => { if (lastPointer === 'mouse') return; if (open) hidePop(); else showPop(); });
+      // Фокус с клавиатуры (Tab) — показать; фокус от касания тут не считается, иначе щелчок сразу закрыл бы окно.
+      phraseNode.addEventListener('focus', () => { if (phraseNode.matches(':focus-visible')) showPop(); });
+      phraseNode.addEventListener('blur', hidePop);
+      phraseNode.addEventListener('keydown', (e) => { if (e.key === 'Escape') hidePop(); });
+      document.addEventListener('pointerdown', (e) => {
+        if (open && e.target !== phraseNode && !pop.contains(e.target)) hidePop();
+      });
+      addEventListener('scroll', hidePop, { passive: true });
+    }
     reducedMotion.addEventListener('change', schedule);
     document.addEventListener('visibilitychange', schedule);
     show();

@@ -40,3 +40,83 @@ a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:po
 @media(min-width:651px){.phrase-text{max-width:560px}}
 .stories-hero{grid-template-columns:1fr}.book-shelf{order:-1}.book{max-width:240px}
 .tagline-lead{margin:0 0 6px;font-weight:600;color:var(--text,#f2f4f5)}
+
+/* Правки Сергея 03.10.2026 */
+/* Шапка: кнопки паузы нет; фраза отодвинута от логотипа; длинная показывается целиком своим окном */
+.phrase{position:relative}
+@media(min-width:951px){.phrase{margin-left:clamp(28px,3.2vw,52px)}}
+.phrase-text{cursor:default;border-radius:4px}
+.phrase-text:focus-visible{outline-offset:3px}
+.phrase-pop{position:absolute;top:calc(100% + 10px);left:0;z-index:30;width:max-content;max-width:min(460px,calc(100vw - 32px));padding:12px 15px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:12px;background:#15181a;color:var(--text);font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:normal;text-wrap:pretty;box-shadow:0 18px 40px rgba(0,0,0,.6),0 0 0 4px color-mix(in srgb,var(--accent) 9%,transparent);pointer-events:none;animation:phrase-pop-in .08s ease-out}
+.phrase-pop::before{content:"";position:absolute;top:-6px;left:30px;width:10px;height:10px;background:#15181a;border-left:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-top:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));transform:rotate(45deg)}
+@keyframes phrase-pop-in{from{opacity:0;transform:translateY(-4px)}}
+
+/* Работа: картинка занимает три четверти карточки (Сергей: «картинка должна занимать три четверти блока»).
+   Главные (Муха, ANIGMA) и большие проекты (QueQuest, Psy AI Admin) — картинка 3/4 ширины, текст сбоку;
+   остальные — по две в ряд, картинка 16:10 сверху и короткий текст под ней; без снимка — маленькие, по три. */
+.page-work .featured-grid{grid-template-columns:1fr;gap:24px}
+.page-work .feature-image,.page-work .project-card .project-image{height:auto;aspect-ratio:16/10}
+.page-work .feature-image img,.page-work .project-card .project-image img{height:100%}
+.page-work .feature-copy>p:not(.eyebrow){min-height:0;max-width:62ch;font-size:15px;line-height:1.55}
+.page-work .feature-copy>p+p{margin-top:10px}
+.page-work .feature-copy h2{margin-bottom:12px}
+.feature-role,.card-role{font-size:13px!important;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:14px}
+.feature-role span,.card-role span{display:block;margin-bottom:4px;font:10px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.page-work .feature-links{flex-wrap:wrap;gap:10px 14px}
+
+.page-work .project-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:22px}
+.page-work .project-grid .project-card{grid-column:span 3}
+.page-work .project-grid .project-card.is-wide{grid-column:1/-1}
+.page-work .project-grid .project-card.is-compact{grid-column:span 2}
+.page-work .project-card.is-compact .project-image{aspect-ratio:auto;height:148px}
+.page-work .project-card:not(.is-wide):not(.is-compact) .project-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:18px;row-gap:2px;align-items:center;padding:16px 20px 18px}
+.page-work .project-card:not(.is-wide):not(.is-compact) .project-copy>small,.page-work .project-card:not(.is-wide):not(.is-compact) .project-copy>h3{grid-column:1}
+.page-work .project-card:not(.is-wide):not(.is-compact) .project-copy>p{grid-column:1/-1;margin-top:8px;font-size:14px}
+.page-work .project-card:not(.is-compact) .card-action{grid-column:2;grid-row:1/span 2;align-self:center;display:inline-flex;align-items:center;margin:0;padding:8px 15px;min-height:0;border:1px solid var(--line);border-radius:999px;white-space:nowrap;transition:border-color .2s,background .2s}
+.page-work .project-card:not(.is-pending):hover .card-action{border-color:var(--accent);background:#171a1c}
+.page-work .is-wide .project-copy{padding:28px 26px;gap:10px;justify-content:center}
+.page-work .is-wide .project-copy h3{font-size:clamp(26px,2.2vw,32px)}
+.page-work .is-wide .project-copy .tagline,.page-work .is-wide .project-copy .tagline-lead{font-size:15px;line-height:1.55}
+.page-work .is-wide .project-copy .card-more{font-size:14px;line-height:1.55}
+.page-work .project-card.is-wide .card-action{align-self:flex-start;margin-top:10px}
+.page-work .is-wide .project-image{border-bottom:0}
+
+@media(min-width:951px){
+.page-work .feature,.page-work .project-grid .project-card.is-wide{display:grid;grid-template-columns:minmax(0,3fr) minmax(300px,1fr);align-items:stretch}
+.page-work .feature-image,.page-work .is-wide .project-image{aspect-ratio:auto;min-height:0}
+.page-work .feature-image img,.page-work .is-wide .project-image img{aspect-ratio:16/10;height:100%}
+.page-work .feature:nth-child(even) .feature-image,.page-work .is-wide+.is-wide .project-image{order:2}
+.page-work .feature:nth-child(even),.page-work .project-grid .project-card.is-wide+.is-wide{grid-template-columns:minmax(300px,1fr) minmax(0,3fr)}
+.page-work .feature-image,.page-work .is-wide .project-image{border-right:1px solid var(--line)}
+.page-work .feature:nth-child(even) .feature-image,.page-work .is-wide+.is-wide .project-image{border-right:0;border-left:1px solid var(--line)}
+.page-work .feature-copy{display:flex;flex-direction:column;justify-content:center;padding:28px 26px}
+.page-work .feature-links{flex-direction:column;align-items:stretch;margin-top:20px}
+.page-work .feature-links .pill{justify-content:center}
+.page-work .feature-links .text-link{justify-content:center}
+}
+
+@media(max-width:950px){
+.page-work .project-grid{gap:16px}
+.page-work .project-grid .project-card{grid-column:1/-1}
+.page-work .project-grid .project-card.is-compact{grid-column:span 2}
+.page-work .feature-image,.page-work .is-wide .project-image{border-bottom:1px solid var(--line)}
+}
+
+@media(max-width:650px){
+.page-work .featured-grid{gap:16px}
+.page-work .project-grid{gap:14px}
+.page-work .project-grid .project-card.is-compact{grid-column:1/-1}
+.page-work .project-card:not(.is-wide):not(.is-compact) .project-image{aspect-ratio:4/3}
+.page-work .project-card.is-compact .project-image{height:92px}
+.page-work .project-card:not(.is-wide):not(.is-compact) .project-copy{padding:13px 14px 15px;column-gap:12px}
+.page-work .project-card:not(.is-wide):not(.is-compact) .project-copy>p{font-size:13px;margin-top:6px}
+.page-work .project-card:not(.is-compact) .card-action{padding:7px 12px}
+.page-work .is-wide .project-copy{padding:18px}
+.page-work .is-wide .project-copy .card-more{display:none}
+.page-work .feature-copy>p:not(.eyebrow){font-size:14px}
+}
+
+/* Рассказы: без «Миров между строками» — сразу три сборника, цифры и списки (Сергей 03.10) */
+.visually-hidden{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.stories-hero{padding-top:28px}
+.section-head>span a{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
