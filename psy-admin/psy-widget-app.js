@@ -1,6 +1,6 @@
 import { appendVoiceInputResult, configureSpeechUtterance, createHandoffPayload, createVoiceInputSession, createWidgetState, finishVoiceInputSession, nextConversationContext, normalizeAssistantResult, preparedQuestionCases, reduceWidgetState, routeWidgetQuestion, sanitizeSpokenText, shouldKeepVerifiedAnswer, widgetPresentation } from "./widget-contract.js?v=psy-widget-20260913-26";
 import { resolveWidgetPublicUrl } from "./router.js?v=psy-widget-20260913-26";
-import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20260913-26";
+import { resolveVoiceClip } from "./voice-bank.js?v=psy-widget-20261003-2";
 
 const bookingApiUrl = new URL("./booking/api/requests", import.meta.url).href;
 const assistantApiUrl = new URL("./booking/api/ask", import.meta.url).href;
@@ -493,7 +493,8 @@ async function ask(question, askedByVoice = false) {
     const response = await fetch(assistantApiUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question: value }),
+      // ?proverka в адресе страницы — вопрос помечен проверочным и в сводку центра не идёт.
+      body: JSON.stringify(isProverka ? { question: value, proverka: 1 } : { question: value }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Помощник временно недоступен.");
