@@ -74,6 +74,10 @@ const assetVer = (dir, file) => { try { return createHash('sha256').update(readF
 for (const page of ['index.html', 'games.html', 'stories.html']) {
   const f = path.join(here, page), src = readFileSync(f, 'utf8');
   const out = src.replace(/(\.\.\/\.\.\/assets\/(shots|clips)\/)([\w.-]+\.(?:jpg|jpeg|png|webp|mp4|webm))(\?v=(?:[0-9a-f]{10}|net))?/g, (m, pre, dir, file) => `${pre}${file}?v=${assetVer(dir, file)}`);
-  if (out !== src) writeFileSync(f, out);
+  // Свои картинки новой главной (./assets/ — муха, QueQuest, заглушки игр) отдаются с тем же кэшем на год:
+  // без метки замена кадра под тем же именем (QueQuest и Psy Admin переснимают Глаза, 03.10) не дойдёт до вернувшихся.
+  const ownVer = file => { try { return createHash('sha256').update(readFileSync(path.join(here, 'assets', file))).digest('hex').slice(0, 10); } catch { console.warn(`[build-content] нет файла design-preview/site/assets/${file}`); return 'net'; } };
+  const out2 = out.replace(/((?:src|poster)=")(\.\/assets\/)([\w.-]+\.(?:jpg|jpeg|png|webp|mp4|webm))(\?v=(?:[0-9a-f]{10}|net))?/g, (m, attr, pre, file) => `${attr}${pre}${file}?v=${ownVer(file)}`);
+  if (out2 !== src) writeFileSync(f, out2);
 }
 console.log(`Generated ${work.length} work entries, ${games.length} games, 3 collections, ${phrases.length} phrases.`);
