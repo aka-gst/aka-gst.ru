@@ -270,3 +270,48 @@
 .desk__choice div { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
 .desk__choice button { min-height: 52px; padding: 6px 10px; border: 1px solid var(--q-line); border-radius: 8px; background: #121a1e; color: var(--q-text); font: 800 15px system-ui, sans-serif; cursor: pointer; }
 .desk__choice button[aria-pressed="true"] { border-color: var(--q-gold); background: #2a200b; color: var(--q-gold); }
+
+/* ------------------------------------------------ 18.2 · §16 reflexes, §17 seams */
+/* The clock next to the day badge: long-press (or F5) is the save reflex. */
+.game-clock { pointer-events: auto; display: inline-block; vertical-align: top; margin-left: 6px; padding: 4px 9px; min-height: 30px; border: 1px solid #ffffff2e; border-radius: 4px; background: #000a; color: #dfe6e3; font: 800 15px ui-monospace, monospace; letter-spacing: .06em; cursor: default; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.game-clock[data-pressing="true"] { border-color: var(--q-cyan); color: var(--q-cyan); box-shadow: 0 0 0 2px #64e9ff33; }
+.game-clock[data-saved="true"] { border-color: #4fae74; color: #b8f5cd; }
+.game-clock[data-hint="true"] { animation: clockHint 1.4s ease-in-out 3; }
+@keyframes clockHint { 0%, 100% { box-shadow: none; } 50% { border-color: var(--q-cyan); color: var(--q-cyan); box-shadow: 0 0 14px #64e9ff66; } }
+.first-shift__hud .game-clock { margin-left: 8px; }
+.hud .game-clock { margin-left: 8px; }
+
+.reflex-toast { position: absolute; z-index: 210; right: 24px; top: 128px; display: grid; gap: 4px; width: max-content; max-width: min(400px, calc(100% - 32px)); padding: 10px 16px 12px; border: 1px solid #64e9ff66; border-left: 3px solid var(--q-cyan); border-radius: 10px; background: #071114ee; box-shadow: 0 18px 60px #000c; color: var(--q-text); text-align: left; pointer-events: none; animation: reflexIn .32s ease-out; }
+.reflex-toast[hidden] { display: none !important; }
+.reflex-toast small { color: var(--q-cyan); font: 800 13px ui-monospace, monospace; letter-spacing: .1em; }
+.reflex-toast b { font: italic 700 17px/1.35 system-ui, sans-serif; }
+.reflex-toast span { color: #b9c6c3; font: 600 14px/1.35 system-ui, sans-serif; }
+.reflex-toast span:empty { display: none; }
+.reflex-toast code { justify-self: start; padding: 2px 8px; border-radius: 4px; background: #000; color: var(--q-cyan); font: 700 14px ui-monospace, monospace; }
+.reflex-toast[data-kind="saved"] { border-color: #4fae7499; }
+.reflex-toast[data-kind="saved"] small { color: #8fe0ad; }
+@keyframes reflexIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+
+/* §17: an old line heard again means more -- the code under it flickers once. */
+.meaning-seam { position: absolute; z-index: 205; left: 50%; top: 64px; transform: translateX(-50%); max-width: calc(100% - 32px); display: grid; gap: 2px; padding: 6px 12px; border-left: 2px solid var(--q-cyan); background: #02090bcc; text-align: left; pointer-events: none; animation: seamFlicker 2.8s steps(1, end) forwards; }
+.meaning-seam[hidden] { display: none !important; }
+.meaning-seam small { color: #6fb0c3; font: 800 13px ui-monospace, monospace; letter-spacing: .08em; }
+.meaning-seam code { color: var(--q-cyan); font: 700 16px ui-monospace, monospace; text-shadow: 0 0 10px #64e9ff88; white-space: pre; }
+@keyframes seamFlicker { 0% { opacity: 0; } 6% { opacity: .9; } 9% { opacity: .2; } 13% { opacity: 1; } 16% { opacity: .5; } 20% { opacity: 1; } 82% { opacity: 1; } 86% { opacity: .3; } 90% { opacity: .8; } 100% { opacity: 0; } }
+
+/* The fight's bar: 1 · 2 · 3 · БАМ. */
+.first-shift__beats { display: flex; justify-content: center; gap: 8px; margin: 8px 0 10px; padding: 0; list-style: none; }
+.first-shift__beats li { min-width: 46px; padding: 4px 8px; border: 1px solid #ffffff26; border-radius: 6px; color: #8a9491; font: 800 15px ui-monospace, monospace; }
+.first-shift__beats li:last-child { color: #ffb27a; border-color: #ff8a5244; }
+.first-shift__beats li[data-on="true"] { border-color: var(--q-gold); color: var(--q-gold); background: #21190b; }
+.first-shift__beats li:last-child[data-on="true"] { border-color: #8fe0ad; color: #b8f5cd; background: #143322; }
+@media (prefers-reduced-motion: reduce) { .meaning-seam { animation: none; } .reflex-toast { animation: none; } .game-clock[data-hint="true"] { animation: none; border-color: var(--q-cyan); } }
+@media (max-width: 760px), (max-height: 500px) {
+  .reflex-toast { top: 52px; right: 12px; max-width: min(340px, calc(100% - 24px)); padding: 8px 12px; }
+  .reflex-toast b { font-size: 15px; }
+  .meaning-seam { top: 52px; }
+  .first-shift__fight { bottom: 3%; padding: 8px 12px; width: min(420px, calc(100% - 24px)); }
+  .first-shift__beats { margin: 4px 0 6px; gap: 6px; }
+  .first-shift__beats li { min-width: 38px; padding: 2px 6px; }
+  .meaning-seam code { font-size: 14px; white-space: pre-wrap; }
+}

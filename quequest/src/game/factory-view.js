@@ -71,7 +71,9 @@ const CYAN = rgb(110, 240, 255);
 const RED = rgb(232, 60, 44);
 const REACH_SPEED = 3.2;
 
-export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reducedMotion = false, getEngineLevel = () => 4, storage = globalThis.localStorage } = {}) {
+// 18.2: slip(event) -> a §16 gamer line ({ me, who, reply }) to say instead
+// of the usual chatter for this event, or null (the host keeps one per scene).
+export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reducedMotion = false, getEngineLevel = () => 4, storage = globalThis.localStorage, slip = () => null } = {}) {
   const core = createEngineCore({ reducedMotion });
   let forcedLevel = null; let level = null; let moment = null;
   const map = buildFactoryMap();
@@ -137,7 +139,36 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
   let lastWage = null; let lastScene = null; let lastFailure = null; let lastChip = null; let lastDelivered = null;
 
   const present = () => new Set(['welder', 'fitter', 'electrician', 'lunch', 'radio']);
+  // 18.2 (§16): the hero says one gamer thing, somebody answers, puzzled.
+  let pairTimer = 0;
+  function pair(g, now) {
+    speech = { who: 'me', name: 'ТЫ', text: g.me, until: now + 2600 };
+    onSound('chatter');
+    clearTimeout(pairTimer);
+    pairTimer = setTimeout(() => {
+      const t = performance.now();
+      speech = { who: g.who, name: SPEAKERS[g.who] ?? g.who, text: g.reply, until: t + 2800 };
+      onSound('chatter');
+    }, 2700);
+    return { who: 'me', text: g.me, event: 'slip' };
+  }
+  // The person (or the boss's radio on his desk) right in front of you, for
+  // E · ПОГОВОРИТЬ. yaw is the view from main.js.
+  const DESK = { x: 7.55, z: 10.5 };
+  function personInFront(yaw) {
+    const sin = Math.sin(yaw), cos = Math.cos(yaw);
+    let best = null;
+    for (const [id, at] of [['lunch', WORKER_SPOTS.lunch], ['desk', DESK]]) {
+      const dx = at.x - body.x, dz = at.z - body.z; const dist = Math.hypot(dx, dz);
+      const fwd = dx * sin - dz * cos; const side = dx * cos + dz * sin;
+      if (fwd <= 0.1 || dist > 2.3 || Math.abs(Math.atan2(side, fwd)) > 0.42) continue;
+      if (!best || dist < best.dist) best = { id, dist };
+    }
+    return best?.id ?? null;
+  }
   function comment(event, now, force = false) {
+    const g = slip(event);
+    if (g) return pair(g, now);
     const line = chatter.say(event, now / 1000, { present: present(), force });
     if (!line) return null;
     speech = { ...line, until: now + 2400 + line.text.length * 50 };
@@ -436,6 +467,16 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
       return speech;
     },
     comment(event) { return comment(event, performance.now(), true); },
+    // 18.2: a gamer slip right now ({ me, who, reply }), and talking to
+    // someone in front of you with a line from gamer-reflex.js meaning layers.
+    pair(g) { return g ? pair(g, performance.now()) : null; },
+    personInFront,
+    talk(who, text) {
+      const now = performance.now();
+      speech = { who, name: SPEAKERS[who] ?? who, text, until: now + 2800 + text.length * 50 };
+      onSound('chatter');
+      return speech;
+    },
     debug(patch = {}) {
       if (patch.pitch !== undefined) pitch = clampPitch(patch.pitch);
       if (patch.rtx) core.rtx(patch.rtx);

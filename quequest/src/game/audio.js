@@ -43,6 +43,16 @@ export const SOUND_RECIPES = Object.freeze({
   boot: Object.freeze({ frequency: 220, end: 880, duration: .45, gain: .05, type: 'triangle' }),
   boing: Object.freeze({ frequency: 140, end: 420, duration: .2, gain: .05, type: 'sine' }),
   upgrade: Object.freeze({ frequency: 262, end: 1046, duration: .8, gain: .12, type: 'sawtooth' }),
+  // 18.2 · §16 reflexes and §17 seams: small, each its own. `next` plays a
+  // second note right after (the two-tone "saved" chime, a peek and a ding).
+  'reflex-save': Object.freeze({ frequency: 660, end: 700, duration: .08, gain: .05, type: 'square', next: 'reflex-save-2' }),
+  'reflex-save-2': Object.freeze({ frequency: 990, end: 1040, duration: .16, gain: .045, type: 'square' }),
+  'reflex-peek': Object.freeze({ frequency: 240, end: 420, duration: .16, gain: .035, type: 'triangle', next: 'reflex-peek-2' }),
+  'reflex-peek-2': Object.freeze({ frequency: 1480, end: 1760, duration: .24, gain: .04, type: 'sine' }),
+  'reflex-pattern': Object.freeze({ frequency: 196, end: 392, duration: .2, gain: .045, type: 'triangle', next: 'reflex-pattern-2' }),
+  'reflex-pattern-2': Object.freeze({ frequency: 392, end: 784, duration: .22, gain: .04, type: 'triangle' }),
+  beat: Object.freeze({ frequency: 880, end: 840, duration: .045, gain: .022, type: 'triangle' }),
+  seam: Object.freeze({ frequency: 1600, end: 2400, duration: .26, gain: .022, type: 'sine' }),
 });
 
 export const AMBIENT_RECIPES = Object.freeze({
@@ -113,6 +123,7 @@ export function createAudioBus({ search, hash } = {}) {
     envelope.connect(master);
     oscillator.start(started);
     oscillator.stop(started + recipe.duration + .02);
+    if (recipe.next) setTimeout(() => { play(recipe.next); }, Math.round(recipe.duration * 900));
     return true;
   }
 

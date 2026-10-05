@@ -55,6 +55,9 @@ export const SPOTS = Object.freeze({
   door: { x: 13, z: 15.5 },
   // Where the boss walks when he leaves; the chip falls out at the first point.
   bossExit: [{ x: 10.6, z: 12.1 }, { x: 13, z: 13.3 }, { x: 13, z: 14.6 }, { x: 13, z: 16.6 }],
+  // 18.2 (§16 «заглянуть за ящик»): a lone crate by his way out (in sight
+  // of his desk, no pillar in between); the chip clinks down behind it.
+  loneCrate: { x: 10.0, z: 12.9 },
 });
 
 // facing is a world yaw (0 = north, PI/2 = east): who looks at what. The
