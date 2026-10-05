@@ -9,8 +9,8 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <meta property="og:title" content="QueQuest — сначала таскаешь ящики, потом их таскает твой код">
   <meta property="og:image" content="brand/og-1200x630.png">
-  <link rel="stylesheet" href="styles.css?v=game-181">
-  <link rel="stylesheet" href="src/game/v18.css?v=181">
+  <link rel="stylesheet" href="styles.css?v=game-182">
+  <link rel="stylesheet" href="src/game/v18.css?v=182">
   <!-- Счётчик /pulse (правило 30): события уже шлёт src/analytics.js, не хватало самого тега. Заходы с ?test не считаются. -->
   <script>
     if(!new URLSearchParams(location.search).has('test')){
@@ -32,12 +32,12 @@
     <section id="firstShift" class="first-shift" hidden aria-labelledby="firstShiftTitle">
       <canvas id="firstShiftCanvas" class="first-shift__canvas" tabindex="0" aria-label="Первая смена от первого лица"></canvas>
       <div class="first-shift__hud">
-        <div><small class="day-badge">ДЕНЬ 1 · СКЛАД 07</small><h2 id="firstShiftTitle">Не твой участок.</h2><p id="firstShiftStatus">Начальник ждёт перед линией.</p></div>
+        <div><small class="day-badge">ДЕНЬ 1 · СКЛАД 07</small><button class="game-clock" type="button" data-clock aria-label="Часы · 11:00">11:00</button><h2 id="firstShiftTitle">Не твой участок.</h2><p id="firstShiftStatus">Начальник ждёт перед линией.</p></div>
         <strong id="firstShiftPay">0 ₽</strong>
       </div>
       <div id="firstShiftPrompt" class="first-shift__prompt" data-hot="false">WASD · ИДТИ · МЫШЬ · СМОТРЕТЬ · ПРОБЕЛ · ПРЫЖОК</div>
       <section id="firstShiftDialogue" class="first-shift__dialogue"><canvas id="firstShiftFace" class="face" width="64" height="64" aria-hidden="true"></canvas><small id="firstShiftSpeaker">НАЧАЛЬНИК</small><p id="firstShiftLine"></p><div id="firstShiftChoices" class="first-shift__choices" hidden><button id="firstShiftBossTalk" type="button">ПОГОВОРИТЬ</button><button id="firstShiftBossFight" type="button">ПОДРАТЬСЯ</button></div><button id="firstShiftBossNext" type="button">ПОНЯЛ</button></section>
-      <div id="firstShiftFight" class="first-shift__fight" hidden><small>ТОЛКАЕМСЯ · ПРОБЕЛ / E — ТОЛЬКО НА ВСПЫШКЕ</small><div class="first-shift__fight-track"><i id="firstShiftFightMeter"></i></div></div>
+      <div id="firstShiftFight" class="first-shift__fight" hidden><small>ТОЛКАЙ СРАЗУ ПОСЛЕ «БАМ» · ПРОБЕЛ / E</small><ol id="firstShiftBeats" class="first-shift__beats" aria-hidden="true"><li>1</li><li>2</li><li>3</li><li>БАМ</li></ol><div class="first-shift__fight-track"><i id="firstShiftFightMeter"></i></div></div>
       <p class="first-shift__control">Клик по миру — обзор мышью (вверх/вниз тоже) · R / F — глянуть вверх/вниз · ПРОБЕЛ — прыжок · E — действие · Esc отпускает курсор</p>
     </section>
 
@@ -50,6 +50,9 @@
       <p id="skillRecorderCopy">Машина пока не понимает твой маршрут.</p>
     </section>
     <aside id="adaptiveCoach" class="adaptive-coach" hidden aria-live="polite"><small>НЕ ПОДСКАЗКА К ОТВЕТУ · ОРИЕНТИР</small><b id="adaptiveCoachTitle"></b><p id="adaptiveCoachText"></p></aside>
+    <!-- 18.2 · §16 reflexes and §17 meaning seams: small, top centre, never block play. -->
+    <aside id="reflexToast" class="reflex-toast" role="status" aria-live="polite" hidden><small id="reflexKicker">РЕФЛЕКС</small><b id="reflexThought"></b><span id="reflexMore"></span><code id="reflexCode" hidden></code></aside>
+    <div id="meaningSeam" class="meaning-seam" aria-hidden="true" hidden><small>ШОВ · СТАРЫЕ СЛОВА</small><code id="meaningSeamCode"></code></div>
     <section id="storyBeat" class="story-beat" hidden aria-live="polite">
       <canvas id="storyFace" class="face face--story" width="64" height="64" hidden aria-hidden="true"></canvas>
       <p id="storySpeaker" class="ending__eyebrow"></p><h2 id="storyTitle"></h2><p id="storyLine"></p>
@@ -58,11 +61,11 @@
 
     <header class="game-brand" aria-label="QueQuest">
       <span class="game-brand__sigil">Q<span>_</span></span>
-      <span class="game-brand__text">QUEQUEST<small data-build-label>СБОРКА 18.1</small></span>
+      <span class="game-brand__text">QUEQUEST<small data-build-label>СБОРКА 18.2</small></span>
     </header>
 
     <section id="gameHud" class="hud" aria-live="polite">
-      <p class="hud__eyebrow" id="chapterText">СМЕНА 1 · СКЛАД 07</p>
+      <p class="hud__eyebrow" id="chapterText">СМЕНА 1 · СКЛАД 07</p><button class="game-clock" type="button" data-clock aria-label="Часы">09:00</button>
       <h1 id="missionText">Сегодня ты — вместо Васи.</h1>
       <p id="gameMessage">WASD · ИДТИ · МЫШЬ · СМОТРЕТЬ · E · ДЕЙСТВИЕ · ПРОБЕЛ · ПРЫЖОК</p>
       <div class="hud__progress" aria-hidden="true"><i id="missionProgress"></i></div>
@@ -383,7 +386,7 @@
 
 
     <section id="questGuild" class="quest-guild" hidden aria-labelledby="guildTitle">
-      <header class="guild-head"><div><p class="ending__eyebrow" data-build="МИРЫ ПРОФЕССИЙ">QUEQUEST 18.1 · МИРЫ ПРОФЕССИЙ</p><h2 id="guildTitle">ГИЛЬДИЯ КВЕСТОВ</h2><p>Не проходи курс по порядку. Выбери профессию, которая выглядит весело, возьми работу и прокачай именно её. Реальные инженерные истории становятся синтетическими разрешёнными квестами — сначала игра, потом узнавание реального мира.</p></div><div class="guild-head__actions"><button id="guildWorldsOpen" type="button">▶ ВОЙТИ В ПРОФЕССИЮ</button><button id="guildClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></div></header>
+      <header class="guild-head"><div><p class="ending__eyebrow" data-build="МИРЫ ПРОФЕССИЙ">QUEQUEST 18.2 · МИРЫ ПРОФЕССИЙ</p><h2 id="guildTitle">ГИЛЬДИЯ КВЕСТОВ</h2><p>Не проходи курс по порядку. Выбери профессию, которая выглядит весело, возьми работу и прокачай именно её. Реальные инженерные истории становятся синтетическими разрешёнными квестами — сначала игра, потом узнавание реального мира.</p></div><div class="guild-head__actions"><button id="guildWorldsOpen" type="button">▶ ВОЙТИ В ПРОФЕССИЮ</button><button id="guildClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></div></header>
       <div class="guild-meta"><span id="guildProgress">0/10 ИСТОРИЙ · 0 ЗАКАЗОВ · 0/2 RAID</span><strong id="guildWallet">0 CR</strong><em>CR — плата за полезный результат, не XP за урок.</em></div>
       <div class="guild-layout">
         <aside class="guild-sidebar">
@@ -406,7 +409,7 @@
     </section>
 
     <section id="careerWorlds" class="career-worlds" hidden aria-labelledby="careerTitle">
-      <header class="career-head"><div><p class="ending__eyebrow" data-build="ОДИН МИР · СЕМЬ ПРОФЕССИЙ">QUEQUEST 18.1 · ОДИН МИР · СЕМЬ ПРОФЕССИЙ</p><h2 id="careerTitle">ПРОФЕССИИ</h2><p>Каждая профессия — своя игра. Закрытые можно смотреть как демо; чтобы войти, сделай на складе то, что написано на кнопке.</p></div><button id="careerClose" class="icon-button" type="button" aria-label="Вернуться в гильдию квестов">×</button></header>
+      <header class="career-head"><div><p class="ending__eyebrow" data-build="ОДИН МИР · СЕМЬ ПРОФЕССИЙ">QUEQUEST 18.2 · ОДИН МИР · СЕМЬ ПРОФЕССИЙ</p><h2 id="careerTitle">ПРОФЕССИИ</h2><p>Каждая профессия — своя игра. Закрытые можно смотреть как демо; чтобы войти, сделай на складе то, что написано на кнопке.</p></div><button id="careerClose" class="icon-button" type="button" aria-label="Вернуться в гильдию квестов">×</button></header>
       <section id="careerRealmList" class="career-realm-list"><div class="career-foundation"><small>ЧТО ТЫ УЖЕ УМЕЕШЬ</small><strong>СООБЩИТЬ → ВЫБРАТЬ → ПОВТОРИТЬ → СОБРАТЬ НАВЫК</strong><p>Технические имена Python раскрываются внутри задач, после того как смысл уже понятен.</p></div><div class="career-select"><div id="careerRealmGrid" class="career-realm-grid" role="listbox" aria-label="Профессии"></div><article id="careerShowcase" class="career-showcase"><canvas id="careerPreview" class="career-preview" width="320" height="180" aria-label="Живой кусок игры выбранной профессии"></canvas><div class="career-pitch"><small id="careerPickSub"></small><h3 id="careerPickTitle"></h3><p id="careerPickFantasy" class="career-pitch__fantasy"></p><div class="career-pitch__cols"><div><b>ТЫ БУДЕШЬ</b><ul id="careerPickVerbs"></ul></div><div><b>В ЖИЗНИ ЭТО</b><p id="careerPickLife"></p><p id="careerPickDeep" class="career-pitch__deep"></p></div></div><button id="careerEnter" class="run-code" type="button">ВОЙТИ →</button><p class="career-pitch__keys">↑ ↓ — выбрать · Enter — войти · Esc — назад</p></div></article></div></section>
       <section id="careerStage" class="career-stage" hidden>
         <button id="careerBack" type="button">← ВЫБОР ПРОФЕССИИ</button><button id="careerSurface" class="career-surface" type="button" hidden>↑ ВЫНЫРНУТЬ К КОМПЬЮТЕРУ · Esc</button><div class="career-stage__head"><small id="careerRealmSubtitle"></small><h3 id="careerRealmTitle">—</h3><p id="careerRealmPrompt"></p></div>
@@ -427,7 +430,7 @@
     </section>
 
     <section id="factoryNexus" class="factory-nexus" hidden aria-labelledby="nexusTitle">
-      <header class="nexus-head"><div><p class="ending__eyebrow" data-build="ПОСТОЯННАЯ ФАБРИКА">QUEQUEST 18.1 · ПОСТОЯННАЯ ФАБРИКА</p><h2 id="nexusTitle">FACTORY NEXUS</h2><p>Не новый учебник, а место, куда возвращаются все навыки. Авария создаёт желание → исследование даёт новую машину → blueprint проверяет идею → Q-Bot учится на твоей обратной связи.</p></div><button id="nexusClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <header class="nexus-head"><div><p class="ending__eyebrow" data-build="ПОСТОЯННАЯ ФАБРИКА">QUEQUEST 18.2 · ПОСТОЯННАЯ ФАБРИКА</p><h2 id="nexusTitle">FACTORY NEXUS</h2><p>Не новый учебник, а место, куда возвращаются все навыки. Авария создаёт желание → исследование даёт новую машину → blueprint проверяет идею → Q-Bot учится на твоей обратной связи.</p></div><button id="nexusClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
       <div class="nexus-meta"><span id="nexusProgress">0/6 АРОК · 0 ∞ СМЕН</span><span>RESEARCH <b id="nexusResearchPoints">4 ЯЧ.</b></span><span>BLUEPRINT <b id="nexusModuleCount">2 УЗЛА</b></span></div>
       <div class="nexus-layout">
         <aside class="nexus-missions"><small>АВАРИЙНЫЕ АРКИ</small><div id="nexusMissionTabs" class="nexus-mission-tabs"></div><article id="nexusMissionStory"><small id="nexusMissionChapter"></small><h3 id="nexusMissionTitle"></h3><p id="nexusMissionBrief"></p><em id="nexusMissionHint"></em></article><article id="nexusTrialStory" hidden><small id="nexusTrialSeed">FACTORY SHIFT #001</small><h3>Неизвестная смена</h3><p id="nexusTrialFaults">—</p><em>RESOURCE CAPACITY: <b id="nexusTrialCapacity">—</b>. Здесь уже нет одного authored ответа: собери минимальную архитектуру под наблюдаемые отказы.</em></article></aside>
@@ -455,7 +458,7 @@
     </section>
 
     <section id="opsDesk" class="ops-desk" hidden aria-labelledby="deskTitle">
-      <header class="ops-desk__head"><div><p class="ending__eyebrow" data-build="РАБОЧИЙ СТОЛ РАССЛЕДОВАНИЙ">QUEQUEST 18.1 · РАБОЧИЙ СТОЛ РАССЛЕДОВАНИЙ</p><h2 id="deskTitle">OPS DESK</h2><p>Не угадывай команду. Собери факты из сообщений, журналов, trace-карты и документов — затем объясни, что произошло. Всё синтетическое и локальное: никаких реальных сетей и атак.</p></div><button id="deskClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <header class="ops-desk__head"><div><p class="ending__eyebrow" data-build="РАБОЧИЙ СТОЛ РАССЛЕДОВАНИЙ">QUEQUEST 18.2 · РАБОЧИЙ СТОЛ РАССЛЕДОВАНИЙ</p><h2 id="deskTitle">OPS DESK</h2><p>Не угадывай команду. Собери факты из сообщений, журналов, trace-карты и документов — затем объясни, что произошло. Всё синтетическое и локальное: никаких реальных сетей и атак.</p></div><button id="deskClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
       <div class="ops-desk__meta"><span id="deskProgress">0/5 CASES</span><span id="deskObjective">0/3 EVIDENCE · ДИАГНОЗ — · ДЕЙСТВИЕ —</span></div>
       <div class="ops-desktop">
         <aside class="ops-launcher" aria-label="Приложения рабочего стола">
@@ -515,7 +518,7 @@
 
 
     <section id="automationCommons" class="automation-commons" hidden aria-labelledby="commonsHeading">
-      <header class="commons-head"><div><p class="ending__eyebrow" data-build="BUILD ONCE → LET IT LIVE">QUEQUEST 18.1 · BUILD ONCE → LET IT LIVE</p><h2 id="commonsHeading">AUTOMATION COMMONS</h2><p>Ты уже умеешь чинить знакомые проблемы. Теперь перестань чинить их руками: собери правило один раз, сохрани как blueprint и дай ему прожить следующий день вместо тебя.</p></div><button id="commonsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <header class="commons-head"><div><p class="ending__eyebrow" data-build="BUILD ONCE → LET IT LIVE">QUEQUEST 18.2 · BUILD ONCE → LET IT LIVE</p><h2 id="commonsHeading">AUTOMATION COMMONS</h2><p>Ты уже умеешь чинить знакомые проблемы. Теперь перестань чинить их руками: собери правило один раз, сохрани как blueprint и дай ему прожить следующий день вместо тебя.</p></div><button id="commonsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
       <div class="commons-meta"><span id="commonsProgress">0/4 АВТОМАТА · 0 ∞ ДНЕЙ</span><div><small>ПОКРЫТИЕ</small><b id="commonsCoverage">0%</b></div><div><small>СЛОЖНОСТЬ</small><b id="commonsComplexity">0</b></div><div><small>ЭФФЕКТИВНОСТЬ</small><b id="commonsEfficiency">0</b></div><button id="commonsDayOpen" type="button"><img src="assets/ui/kenney-game-icons/signal3.png" alt="" aria-hidden="true">∞ CITY AUTOPILOT</button><button id="commonsCodeOpen" type="button">⚡ ЗАБРАТЬ УПРАВЛЕНИЕ КОДОМ</button></div>
       <div class="commons-layout">
         <aside class="commons-briefing">
@@ -540,7 +543,7 @@
 
 
     <section id="cityOperations" class="city-operations" hidden aria-labelledby="opsReleaseHeading">
-      <header class="release-head"><div><p class="ending__eyebrow" data-build="YOUR CODE HAS A LIFE AFTER DEPLOY">QUEQUEST 18.1 · YOUR CODE HAS A LIFE AFTER DEPLOY</p><h2 id="opsReleaseHeading">RELEASE WEEK</h2><p>Вчера ты построил автомат. Сегодня на него уже рассчитывают люди. Мир меняется — твой код должен переживать новые данные, нагрузку и слишком смелые предложения Q-Bot.</p></div><button id="opsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <header class="release-head"><div><p class="ending__eyebrow" data-build="YOUR CODE HAS A LIFE AFTER DEPLOY">QUEQUEST 18.2 · YOUR CODE HAS A LIFE AFTER DEPLOY</p><h2 id="opsReleaseHeading">RELEASE WEEK</h2><p>Вчера ты построил автомат. Сегодня на него уже рассчитывают люди. Мир меняется — твой код должен переживать новые данные, нагрузку и слишком смелые предложения Q-Bot.</p></div><button id="opsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
       <div class="release-meta"><span id="opsProgress">0/5 РЕЛИЗОВ · 0 ∞ СМЕН</span><button id="opsRunOpen" type="button">∞ RELEASE RUN</button><button id="opsCodeOpen" type="button">⚡ НАПИСАТЬ RELEASE GUARD</button></div>
       <p id="opsRunLabel" class="release-shift-label" hidden></p>
       <div id="opsStoryPanel" class="release-layout">
@@ -563,7 +566,7 @@
     </section>
 
     <section id="cityChronicle" class="city-chronicle" hidden aria-labelledby="chronicleHeading">
-      <header class="chronicle-head"><div><p class="ending__eyebrow" data-build="THE CITY REMEMBERS">QUEQUEST 18.1 · THE CITY REMEMBERS</p><h2 id="chronicleHeading">CITY CHRONICLE</h2><p>Ты уже умеешь выпускать изменения. Теперь научись жить с их историей: старые двери, забытые причины, редкие клиенты и уроки Q-Bot возвращаются позже — уже в другом мире.</p></div><button id="chronicleClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <header class="chronicle-head"><div><p class="ending__eyebrow" data-build="THE CITY REMEMBERS">QUEQUEST 18.2 · THE CITY REMEMBERS</p><h2 id="chronicleHeading">CITY CHRONICLE</h2><p>Ты уже умеешь выпускать изменения. Теперь научись жить с их историей: старые двери, забытые причины, редкие клиенты и уроки Q-Bot возвращаются позже — уже в другом мире.</p></div><button id="chronicleClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
       <div class="chronicle-meta"><span id="chronicleProgress">0/5 ИСТОРИЙ · 0 ∞ WINDOWS</span><button id="chronicleWindowOpen" type="button">∞ MAINTENANCE WINDOW</button><button id="chronicleCodeOpen" type="button">⚡ НАПИСАТЬ MIGRATION POLICY</button></div>
       <p id="chronicleWindowLabel" class="chronicle-window-label" hidden></p>
       <div id="chronicleStory" class="chronicle-layout">
@@ -581,7 +584,7 @@
     </section>
 
     <section id="cityWeave" class="city-weave" hidden aria-labelledby="weaveHeading">
-      <header class="weave-head"><div><p class="ending__eyebrow" data-build="THE CITY LIVES ON YOUR CODE">QUEQUEST 18.1 · THE CITY LIVES ON YOUR CODE</p><h2 id="weaveHeading">CITY WEAVE</h2><p>Город уже живёт на твоих автоматах. Теперь решения меняют не только latency и drops: они меняют доверие, доступность, устойчивость и то, сколько власти ты отдаёшь Q-Bot.</p></div><button id="weaveClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <header class="weave-head"><div><p class="ending__eyebrow" data-build="THE CITY LIVES ON YOUR CODE">QUEQUEST 18.2 · THE CITY LIVES ON YOUR CODE</p><h2 id="weaveHeading">CITY WEAVE</h2><p>Город уже живёт на твоих автоматах. Теперь решения меняют не только latency и drops: они меняют доверие, доступность, устойчивость и то, сколько власти ты отдаёшь Q-Bot.</p></div><button id="weaveClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
       <div class="weave-meta"><span id="weaveProgress">0/5 СМЕН · 0 ∞ СЕЗОНОВ</span><button id="weaveSeasonOpen" type="button">∞ CITY SEASON</button><button id="weaveCodeOpen" type="button">⚡ НАПИСАТЬ CITY GOVERNOR</button></div>
       <p id="weaveSeasonLabel" class="weave-season-label" hidden></p>
       <div id="weaveStory" class="weave-layout">
@@ -610,7 +613,7 @@
     </section>
 
     <section id="cityThreads" class="city-threads" hidden aria-labelledby="threadsHeading">
-      <header class="threads-head"><div><p class="ending__eyebrow" data-build="THE CITY REMEMBERS YOU">QUEQUEST 18.1 · THE CITY REMEMBERS YOU</p><h2 id="threadsHeading">CITY THREADS</h2><p>Теперь город живёт не пять минут, а много смен. Люди возвращаются, новые районы растут на твоих автоматах, старые компромиссы становятся сегодняшними условиями, а Q-Bot учится работать рядом с тобой.</p></div><button id="threadsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <header class="threads-head"><div><p class="ending__eyebrow" data-build="THE CITY REMEMBERS YOU">QUEQUEST 18.2 · THE CITY REMEMBERS YOU</p><h2 id="threadsHeading">CITY THREADS</h2><p>Теперь город живёт не пять минут, а много смен. Люди возвращаются, новые районы растут на твоих автоматах, старые компромиссы становятся сегодняшними условиями, а Q-Bot учится работать рядом с тобой.</p></div><button id="threadsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
       <div class="threads-meta"><span id="threadsProgress">0/10 СМЕН · 0 ∞ ЦИКЛОВ</span><button id="threadsCycleOpen" type="button">∞ CITY CYCLE</button><button id="threadsCodeOpen" type="button">⚡ НАПИСАТЬ ORCHESTRATOR</button></div>
       <p id="threadsCycleLabel" class="threads-cycle-label" hidden></p>
       <div id="threadsStory" class="threads-layout">
@@ -909,6 +912,6 @@
     </section>
   </main>
 
-  <script type="module" src="src/game/main.js?v=game-181"></script>
+  <script type="module" src="src/game/main.js?v=game-182"></script>
 </body>
 </html>

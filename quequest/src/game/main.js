@@ -28,7 +28,7 @@ import { createCityThreads } from './city-threads.js?v=threads-1';
 import { createQuestGuild } from './quest-guild.js?v=guild-1';
 import { CAREER_REALMS, createCareerWorlds, foundationStatus, characterSheet, heldRealmDay, nextRealmDay } from './career-worlds.js?v=career-10';
 import { deviceFromQuery } from './vr-devices.js';
-import { createFpWorld } from './fp-world.js?v=fp-world-6';
+import { createFpWorld } from './fp-world.js?v=fp-world-7';
 import { createPythonioBridge, markPythonioOrder } from './pythonio-bridge.js';
 import { createBlackIceBridge } from './blackice-bridge.js';
 import { markLabyrinthFloor, labyrinthCleared, LABYRINTH_FLOORS } from './labyrinth.js';
@@ -37,7 +37,8 @@ import { markLockReward } from './locks/rewards.js';
 import { engineProgress, eraFromProgress, engineStatus, buyUpgrade, levelFromProgress } from './engine-eras.js';
 import { levelFromQuery } from './engine-ladder.js';
 import { getCampusRank } from './campus-profile.js?v=campus-profile-7';
-import { createFirstShift } from './first-shift.js?v=first-shift-18';
+import { createFirstShift } from './first-shift.js?v=first-shift-182';
+import { REFLEXES, gamerLine, hearMeaning, knowledgeFrom, homeChanges, saveSnapshot, saveReport, saveWords, loadRecord, saveRecord, mark } from './gamer-reflex.js';
 import { createHourDesk, ruleSentence } from './hour-desk.js';
 import { showSeam, confirmInPage } from './hour-ui.js';
 import { skillTree as buildSkillTree, questLog as buildQuestLog, questPin } from './progress-map.js';
@@ -168,7 +169,7 @@ const audio = createAudioBus();
 // 17.0: the warehouse chapters in the same Doom-style hall as Shift 1, with
 // look up/down, jumping onto things, and people who comment.
 const forcedEngineLevel = levelFromQuery(location.search);
-const factoryView = createFactoryView({ onSound: name => audio.play(name), onFlag: (name) => setFlag(name), reducedMotion: prefersReducedMotion, getEngineLevel: () => engineLevelNow() });
+const factoryView = createFactoryView({ onSound: name => audio.play(name), onFlag: (name) => setFlag(name), reducedMotion: prefersReducedMotion, getEngineLevel: () => engineLevelNow(), slip: (event) => hallSlip(event) });
 const lookKeys = new Set();
 window.addEventListener('keydown', (event) => {
   if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) return;
@@ -180,7 +181,11 @@ onReleaseKeys(() => lookKeys.clear());
 const firstShift = createFirstShift(document.querySelector('#firstShift'), {
   onFlag: (name) => setFlag(name),
   onSound: name => audio.play(name),
+  // 18.2 (§16): the hand remembered something; one gamer slip per scene.
+  onReflex: (id) => reflexFired(id),
+  gamerLine: (scene) => takeSlip(scene),
   onComplete: ({ delivered = 3, extra = 0, player = null } = {}) => {
+    remember('quests', 'quest1');
     state = createCheckpointState('chip');
     state = { ...state, warehouse: { ...state.warehouse, wage: Math.max(state.warehouse.wage, (delivered + extra) * CRATE_PAY) } };
     lastScene = state.scene;
@@ -661,6 +666,12 @@ const fpWorld = createFpWorld(fpWorldRoot, {
     return r;
   },
   getMuted: () => audio.muted(),
+  // 18.2 (§17): Витя's phrase in the layer you can hear now, the seam under
+  // it, and the one thing at home that is different after the first quest.
+  meaning: (id) => hear(id),
+  onSeam: (code) => showMeaningSeam(code),
+  homeChanges: () => homeChanges(reflexRecord, { checkpoint: state.checkpoint }).map((c) => ({ ...c, noticed: Boolean(reflexRecord.homeSeen[c.id]) })),
+  onHomeNoticed: (id) => remember('homeSeen', id),
   onArFix: (id, reward) => {
     const pay = Math.max(0, Number(reward) || 0);
     if (pay) {
@@ -739,6 +750,136 @@ document.querySelector('#guildWorldsOpen').addEventListener('click', () => { car
 const FLAGS_KEY = 'quequest.flags.v1';
 function loadFlags() { try { return JSON.parse(localStorage.getItem(FLAGS_KEY) || '{}') || {}; } catch { return {}; } }
 function setFlag(name) { const f = loadFlags(); if (f[name]) return; f[name] = true; try { localStorage.setItem(FLAGS_KEY, JSON.stringify(f)); } catch { /* private mode */ } }
+
+// ---------------------------------------------------------------- 18.2
+// §16: the hero is a gamer who forgot he is one -- reflexes (save, look
+// behind the crate, the boss's pattern) and one gamer slip per scene. §17:
+// old phrases mean more once you know `if`; home changes after a quest.
+// All of it is one small record in localStorage (gamer-reflex.js).
+let reflexRecord = loadRecord(localStorage);
+const slipScenes = new Set();
+function remember(bucket, id, value = true) {
+  const r = mark(reflexRecord, bucket, id, value);
+  reflexRecord = r.record;
+  saveRecord(localStorage, reflexRecord);
+  return r.first;
+}
+function takeSlip(scene) {
+  const line = gamerLine(scene, reflexRecord, slipScenes);
+  if (!line) return null;
+  slipScenes.add(scene);
+  remember('lines', line.id);
+  // «Где тут сохраниться?» -- the clock blinks once, softly: a hint, not a tutorial.
+  if (line.id === 'where-save') setTimeout(() => {
+    if (reflexRecord.reflexes.save) return;
+    for (const c of document.querySelectorAll('[data-clock]')) { c.dataset.hint = 'true'; setTimeout(() => { c.dataset.hint = 'false'; }, 4200); }
+  }, 5600);
+  return line;
+}
+function hallSlip(event) {
+  const scene = { 'jump-spam': 'hall-jump', 'task-fail': 'hall-fail' }[event];
+  return scene ? takeSlip(scene) : null;
+}
+function knowsNow() { return knowledgeFrom({ learning: state.learning, record: reflexRecord }); }
+// Hear a phrase in the layer the player can hear now; remembers the layer.
+function hear(id) {
+  const r = hearMeaning(id, knowsNow(), reflexRecord);
+  if (!r.line) return null;
+  reflexRecord = r.record;
+  saveRecord(localStorage, reflexRecord);
+  return r.line;
+}
+const reflexToast = document.querySelector('#reflexToast');
+let reflexToastTimer = 0;
+function showReflexToast({ kind = 'reflex', kicker = 'РЕФЛЕКС', thought = '', more = '', code = '' } = {}, ms = 4600) {
+  if (!reflexToast) return;
+  reflexToast.dataset.kind = kind;
+  reflexToast.querySelector('#reflexKicker').textContent = kicker;
+  reflexToast.querySelector('#reflexThought').textContent = thought;
+  reflexToast.querySelector('#reflexMore').textContent = more;
+  const c = reflexToast.querySelector('#reflexCode');
+  c.textContent = code; c.hidden = !code;
+  reflexToast.hidden = false;
+  reflexToast.getAnimations?.().forEach((a) => { a.cancel(); a.play(); });
+  clearTimeout(reflexToastTimer);
+  reflexToastTimer = setTimeout(() => { reflexToast.hidden = true; }, prefersReducedMotion ? ms + 1500 : ms);
+}
+const meaningSeam = document.querySelector('#meaningSeam');
+let meaningSeamTimer = 0;
+function showMeaningSeam(code) {
+  if (!meaningSeam || !code) return;
+  meaningSeam.querySelector('#meaningSeamCode').textContent = code;
+  meaningSeam.hidden = true; void meaningSeam.offsetWidth; meaningSeam.hidden = false;
+  audio.play('seam');
+  clearTimeout(meaningSeamTimer);
+  meaningSeamTimer = setTimeout(() => { meaningSeam.hidden = true; }, 2900);
+}
+// A reflex from the first shift: the hand did it (the thought is said in the
+// world); the toast names what it means, in words (§13: ТЫК → слова → код).
+function reflexFired(id) {
+  const first = remember('reflexes', id);
+  const R = REFLEXES[id];
+  if (!R || !first) return;
+  showReflexToast({ kicker: R.kicker, thought: id === 'pattern' ? R.hint : R.words, more: id === 'pattern' ? R.words : '' }, 5200);
+}
+// F5 / a long press on the clock. The first time it is a reflex and it opens
+// saving; after that it saves and shows what was kept: words until you write
+// code, then the same as a line of Python.
+function saveReflex() {
+  if (!started) return;
+  const first = remember('reflexes', 'save');
+  if (state.checkpoint !== 'start') persistence.save(state);
+  const snap = saveSnapshot(state);
+  audio.play(REFLEXES.save.sound);
+  if (first) {
+    showReflexToast({ kicker: REFLEXES.save.kicker, thought: REFLEXES.save.thought, more: `${REFLEXES.save.unlock} Сохранено в этом браузере: ${saveWords(snap)}.` }, 6200);
+  } else {
+    const rep = saveReport(snap);
+    showReflexToast({ kind: 'saved', kicker: 'СОХРАНЕНО · В ЭТОМ БРАУЗЕРЕ', thought: rep.mode === 'code' ? 'Записал, что сейчас есть:' : rep.text, code: rep.mode === 'code' ? rep.text : '' }, 4200);
+  }
+  for (const c of document.querySelectorAll('[data-clock]')) { c.dataset.saved = 'true'; setTimeout(() => { c.dataset.saved = 'false'; }, 900); }
+  telemetry.mark(first ? 'reflex-save' : 'save');
+}
+window.addEventListener('keydown', (event) => {
+  if (event.code !== 'F5' || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  if (!started) return; // before the game starts F5 still reloads the page
+  event.preventDefault();
+  if (!event.repeat) saveReflex();
+}, { capture: true });
+// Phones: hold the clock (~0.6 s).
+for (const clock of document.querySelectorAll('[data-clock]')) {
+  let timer = 0;
+  const cancel = () => { clearTimeout(timer); clock.dataset.pressing = 'false'; };
+  clock.addEventListener('pointerdown', (ev) => { ev.preventDefault(); clock.dataset.pressing = 'true'; clearTimeout(timer); timer = setTimeout(() => { clock.dataset.pressing = 'false'; saveReflex(); }, 600); });
+  for (const type of ['pointerup', 'pointercancel', 'pointerleave']) clock.addEventListener(type, cancel);
+  clock.addEventListener('contextmenu', (ev) => ev.preventDefault());
+}
+// The in-game time on the main HUD clock, by scene.
+function clockText() {
+  const w = state.warehouse;
+  if (state.scene === 'forlesson') return '18:40';
+  if (state.scene === 'queue') return '23:10';
+  if (state.scene === 'function') return '09:30';
+  if (state.scene === 'condition') return '11:00';
+  if (state.scene === 'machine') return w.day2 === 'button' ? '08:05' : '08:40';
+  return state.checkpoint === 'chip' || state.scene === 'chip' ? '11:20' : '09:00';
+}
+// §17 in the hall: E on the loader, or on the boss's radio on his desk.
+function hallTalkTarget() {
+  if (!firstPersonScene()) return null;
+  const who = factoryView.personInFront(warehouseYaw);
+  if (who === 'desk' && state.warehouse.button === 'mounted') return null;
+  return who;
+}
+const HALL_TALK_LABEL = { lunch: 'ГРУЗЧИК · ПОГОВОРИТЬ', desk: 'РАЦИЯ НАЧАЛЬНИКА · ВЫЗВАТЬ' };
+function talkInHall(who) {
+  const line = hear(who === 'lunch' ? 'loader.bread' : 'boss.button');
+  if (!line) return null;
+  if (who === 'desk') audio.play('ui-click');
+  factoryView.talk(line.who, line.text);
+  if (line.seam) setTimeout(() => showMeaningSeam(line.seam), 900);
+  return line;
+}
 function progressInput() {
   return {
     learning: state.learning, warehouse: state.warehouse, checkpoint: state.checkpoint, flags: loadFlags(),
@@ -970,6 +1111,8 @@ function hourBeat() {
   beatsSeen.add(key);
   if (state.scene === 'machine' && w.day2 === 'button') {
     factoryView.comment('day2-morning');
+    // §16: the tutorial look of it all (one slip for this scene).
+    setTimeout(() => { if (state.scene === 'machine' && !storyActive) factoryView.pair(takeSlip('day2-morning')); }, 5200);
   } else if (state.scene === 'machine' && w.day2 === 'print') {
     // The button's insides: a seam shows the one line it was sending.
     showSeam(document.querySelector('#seamFlash'), {
@@ -981,12 +1124,13 @@ function hourBeat() {
     tellStory('НАЧАЛЬНИК', 'Это ЧТО?! Кто разрешил?!', 'Рука сама таскает?! Я тебя таскать нанимал, а не кнопочки жать! (хрясь — кнопка с проводами у него в кулаке) Всё. Нет кнопки — нет руки. Таскай руками!', 'ПРОВОЖАТЬ ЕГО ВЗГЛЯДОМ', () => {
       state = applyGameAction(state, { type: 'boss-tears-button' });
       audio.play('impact');
+      hear('boss.button'); // §17: his words, as you hear them today
       persistence.save(state);
       setTimeout(() => factoryView.comment('button-torn'), 600);
     });
   } else if (state.scene === 'condition' && w.ruleStage === 'rules') {
     tellStory('НАЧАЛЬНИК · ПО РАЦИИ', 'Рука делает некачественно.', '«Тащит всё подряд. Таскай ТОЛЬКО БЕЛЫЕ. Красные — не трогать. Увижу красный на ленте — штраф из твоих». Кнопки у тебя нет... но у руки есть панель правил.', 'ЧТО ЖЕ ДЕЛАТЬ…', () => {
-      factoryView.say('lunch', 'Мне жена так и говорит: если хлеб белый — бери, если нет — не трогай. (жуёт)');
+      factoryView.say('lunch', hear('loader.bread')?.text ?? 'Мне жена так и говорит: если хлеб белый — бери, если нет — не трогай. (жуёт)');
       setTimeout(() => showSeam(document.querySelector('#seamFlash'), {
         kicker: 'ШОВ · МЫСЛЬ ПРИШЛА САМА',
         lines: ['белый → <b>бери</b>', 'красный → <b>оставь</b>', 'ЕСЛИ… ТО…'],
@@ -1010,6 +1154,10 @@ function useAction() {
   if (exitOpen) return;
   const action = getNearbyAction(state);
   const target = getInteractionTarget(state);
+  // 18.2 (§17): talking to the loader / the boss's radio, unless the thing
+  // the scene wants is right under your eyes.
+  const talkTo = hallTalkTarget();
+  if (talkTo && !(action && target && action.type === target.type && lookingAt(target))) { talkInHall(talkTo); return; }
   if (!action) return;
   if (firstPersonScene() && target && action.type === target.type && !lookingAt(target)) return;
   recordFirstAction();
@@ -1174,10 +1322,19 @@ function updateHud(now = performance.now()) {
   const target = getInteractionTarget(state);
   const transform = getViewportTransform({ width: canvas.clientWidth, height: canvas.clientHeight }, getSceneCameraTarget(state));
   const fpTargetReady = firstPersonScene() && target && nearby?.type === target.type && lookingAt(target);
-  hud.action.style.display = (!machineOpen && !storyActive && target && (firstPersonScene() ? fpTargetReady : true)) ? 'flex' : 'none';
+  const talkWho = !fpTargetReady && !machineOpen && !storyActive && !isBlockingOverlayOpen() ? hallTalkTarget() : null;
+  for (const c of document.querySelectorAll('#gameHud [data-clock]')) { const t = clockText(); if (c.textContent !== t) { c.textContent = t; c.setAttribute('aria-label', `Часы · ${t}`); } }
+  hud.action.style.display = (!machineOpen && !storyActive && ((target && (firstPersonScene() ? fpTargetReady : true)) || talkWho)) ? 'flex' : 'none';
   hud.chip.hidden = true;
   hud.action.querySelector('.action-button__key').hidden = narrowViewport.matches;
-  if (target) {
+  if (talkWho) {
+    hud.action.style.left = '50%';
+    hud.action.style.top = '';
+    hud.action.dataset.direction = 'here';
+    hud.action.dataset.walking = 'false';
+    hud.action.querySelector('b').textContent = HALL_TALK_LABEL[talkWho];
+    hud.action.querySelector('.action-button__key').textContent = 'E';
+  } else if (target) {
     if (firstPersonScene()) {
       hud.action.style.left = '50%';
       hud.action.style.top = '';
@@ -1848,6 +2005,8 @@ if (isLocal) {
     blackice: { open: (opts) => blackice.open(opts), close: () => blackice.close(), enter: (n) => blackice.enter(n), lobby: () => blackice.lobby(), handle: (msg) => blackice.handle(msg), active: () => blackice.active, ready: () => blackice.ready, view: () => blackice.view, playing: () => blackice.playing, profile: () => ({ stats: campusProfile.stats, cleared: labyrinthCleared(campusProfile), xp: campusProfile.xp, wage: state.warehouse?.wage ?? 0 }) },
     hour: { openTerminal: () => openMachinePanel(), desk: () => hourDesk.step(), beat: () => hourBeat(), lesson: () => state.warehouse.lessonStage, state: () => ({ day2: state.warehouse.day2, button: state.warehouse.button, ruleStage: state.warehouse.ruleStage, scene: state.scene, storyActive }) },
     firstShift: { debug: (patch) => firstShift.debug(patch), state: () => firstShift.state(), body: () => firstShift.body(), speech: () => firstShift.speech(), chip: () => firstShift.chip() },
+    // 18.2: §16 reflexes and §17 meaning layers.
+    reflex: { record: () => JSON.parse(JSON.stringify(reflexRecord)), save: () => saveReflex(), talk: (who) => talkInHall(who), target: () => hallTalkTarget(), knows: () => [...knowsNow()], slip: (scene) => factoryView.pair(takeSlip(scene)) },
     otherMind: () => ({
       ...otherMindRuntime.snapshot(),
       phase: state.otherMind.phase,

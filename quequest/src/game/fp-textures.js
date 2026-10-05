@@ -407,6 +407,10 @@ export const SPRITES = {
   radio: sheet([
     '....KKKKKK....', 'KKKKKKKKKKKKKK', 'KSSKKRRKKKKSSK', 'SSSSKGGGGKSSSS', 'SKKSKGGGGKSKKS', 'SSSSKKKKKKSSSS', 'KSSKKKKKKKKSSK',
   ], { K: [30, 30, 34], S: [90, 92, 100], R: [220, 40, 40], G: [80, 220, 120] }, 32),
+  // 18.2 (§17): the sticky note that appears on the monitor after the first quest.
+  note: sheet([
+    'YYYYYYY', 'YKKYKKY', 'YYYYYYY', 'YKKKKYY', 'YYYYYYY', 'YKKYYYY', 'YYYYYYY',
+  ], { Y: [250, 222, 90], K: [96, 72, 30] }, 36),
   cat0: sheet([
     'K.K...........', 'KKK...........', 'KYK.......K...', 'KKKKKKKKKK.K..', '.KKKKKKKKK..K.', '.KKKKKKKKK....', '.K.K....K.K...',
   ], { K: [36, 34, 38], Y: [220, 220, 60] }, 30),

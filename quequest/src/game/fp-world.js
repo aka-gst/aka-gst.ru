@@ -118,6 +118,10 @@ export function createFpWorld(root, {
   onGatewayNight = () => 0, onArFix = () => 0,
   // Доска Сани: onLockReward(id) -> { first, pay, xp, skillGain, reward }.
   onLockReward = () => ({ first: false }), getMuted = () => false,
+  // 18.2 (§17): meaning(id) -> a phrase in the layer the player can hear now
+  // ({ who, text, seam }); onSeam(code) flickers the code under a changed line;
+  // homeChanges() -> what is a little different at home; onHomeNoticed(id).
+  meaning = () => null, onSeam = () => {}, homeChanges = () => [], onHomeNoticed = () => {},
 } = {}) {
   if (!root) return { open() {}, close() {}, surface() {}, state: () => null };
   const canvas = root.querySelector('#fpWorldCanvas'); const ctx = canvas.getContext('2d');
@@ -195,8 +199,38 @@ export function createFpWorld(root, {
 
   // Lights are baked by engine-core.js for the rung in use (a 2D grid for
   // the raycaster, a per-face atlas for polygons); this only notes a change.
-  function relight() { lightKey = `${levelId}|${JSON.stringify(ws.lights)}|${lampIsBroken()}`; }
-  function litLamps() { return activeLamps(levelId, lampIsBroken() ? { ...ws.lights, work: false } : ws.lights); }
+  function homeExtras() { return levelId === 'home' ? homeChanges() : []; }
+  function relight() { lightKey = `${levelId}|${JSON.stringify(ws.lights)}|${lampIsBroken()}|${homeExtras().map((c) => c.id).join(',')}`; }
+  function litLamps() {
+    const lamps = activeLamps(levelId, lampIsBroken() ? { ...ws.lights, work: false } : ws.lights);
+    return [...lamps, ...homeExtras().filter((c) => c.lamp).map((c) => c.lamp)];
+  }
+  // 18.2: coming in. Витя greets you in the garage with the phrase as you can
+  // hear it now (§17); at home, the first time something changed, you notice.
+  let noticeTimer = 0;
+  function enterLine(level, now = performance.now()) {
+    if (level === 'garage') {
+      const m = meaning('vitya.gate');
+      if (m) {
+        speech = { who: 'neighbor', name: WORLD_SPEAKERS.neighbor, text: m.text, until: now + 3000 + m.text.length * 45 };
+        onSound('chatter');
+        if (m.seam) onSeam(m.seam);
+        return;
+      }
+    }
+    comment(`enter-${level}`, true, now);
+    if (level === 'home') {
+      const fresh = homeChanges().find((c) => c.hint && !c.noticed);
+      clearTimeout(noticeTimer);
+      if (fresh) noticeTimer = setTimeout(() => {
+        if (!active || levelId !== 'home') return;
+        const t = performance.now();
+        speech = { who: 'me', name: WORLD_SPEAKERS.me, text: fresh.hint, until: t + 3600 };
+        onSound('seam');
+        onHomeNoticed(fresh.id);
+      }, 2600);
+    }
+  }
 
   // ------------------------------------------------------------- levels
   function loadLevel(id, { arrive = false } = {}) {
@@ -377,7 +411,7 @@ export function createFpWorld(root, {
     loadLevel(to, { arrive: true });
     relight();
     flash = { color: [0, 0, 0], at: performance.now(), ms: 500 };
-    comment(`enter-${to}`, true);
+    enterLine(to);
   }
   let flash = null;
 
@@ -828,6 +862,8 @@ export function createFpWorld(root, {
       S(pcImg, 5.6, 1.35, 1.05, { fullbright: true, glow: 1, prop: 'pc' });
       S(SPRITES.toilet, 1.5, 8.35, HOME_BASE, { prop: 'toilet' });
       S(Math.floor(now / 700) % 3 === 0 ? SPRITES.cat1 : SPRITES.cat0, 10.4, 5.45, 0.75, { prop: 'cat' });
+      // 18.2 (§17): what is different at home after a quest.
+      for (const c of homeExtras()) if (c.sprite && SPRITES[c.sprite]) S(SPRITES[c.sprite], c.at.x, c.at.z, c.at.y, { fullbright: true, prop: 'note' });
       for (const t of THINGS.home) if (t.kind === 'switch') sw(t);
       if (atlas?.lamp) for (const [x, z, g] of [[3.5, 3.5, 'bedroom'], [10.5, 3.2, 'living'], [9, 9.2, 'kitchen']]) S(atlas.lamp, x, z, 3.0 - 1.2, { fullbright: ws.lights[g] !== false, ppm: 48, prop: 'lamp', fan: g === 'living' });
     }
@@ -1122,7 +1158,7 @@ export function createFpWorld(root, {
     checkEra(performance.now());
     relight();
     held.clear();
-    comment(`enter-${level}`, true);
+    enterLine(level);
     if (arWantWorn && headsetOwned(hs) && !headsetWorn(hs)) { hs = { ...headsetStep(hs, 'toggle', performance.now(), { reduced: true }), phase: 'on' }; arWantWorn = false; }
     renderArButton();
     last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);

@@ -12,6 +12,7 @@ import { createChatter, createMomentWatcher } from './npc-chatter.js';
 import { drawSpeech, surfaceOf, dressHall, subtitleFloorRow } from './fp-overlay.js';
 import { onReleaseKeys } from './key-guard.js';
 import { drawFace, faceIdFor } from './faces.js';
+import { REFLEXES, fightBeat, BAR_BEATS } from './gamer-reflex.js';
 
 // One price for a crate across the whole game; the first shift pays the same piece rate.
 export const FIRST_SHIFT_PAY = CRATE_PAY;
@@ -47,7 +48,7 @@ function crateStack() {
 
 export function createFirstShiftState() {
   return {
-    phase: 'briefing', delivered: 0, carrying: null, bossBeat: 0, chipVisible: false, complete: false,
+    phase: 'briefing', delivered: 0, carrying: null, bossBeat: 0, chipVisible: false, chipFound: false, complete: false,
     fightMeter: 50, fightWon: null, asks: {}, lastAsk: null,
     player: { x: SPOTS.spawn.x, z: SPOTS.spawn.z, yaw: SPOTS.spawn.yaw },
     crates: crateStack(),
@@ -141,7 +142,9 @@ export function stepFirstShift(state, action) {
   }
   if (action === 'fight-done' && s.phase === 'fight-result') { s.phase = 'payday'; return s; }
   if (action === 'payday-done' && s.phase === 'payday') { s.phase = 'choice'; s.chipVisible = true; return s; }
-  if (action === 'chip' && s.phase === 'choice' && s.chipVisible && !s.carrying) { s.phase = 'done'; s.complete = true; return s; }
+  // 18.2 (§16): the chip lies behind a crate; the hand looks there first.
+  if (action === 'peek' && s.phase === 'choice' && s.chipVisible) { s.chipFound = true; return s; }
+  if (action === 'chip' && s.phase === 'choice' && s.chipVisible && s.chipFound && !s.carrying) { s.phase = 'done'; s.complete = true; return s; }
   return s;
 }
 
@@ -180,8 +183,6 @@ export function firstShiftBossLine(phase = 'briefing', fightWon = null) {
 
 const VIEW_ROWS = 240;
 const BAR_H = 32;
-const FIGHT_CYCLE_MS = 900;
-const FIGHT_HOT_MS = 280;
 const REACH = 2.1;
 const WHITE = rgb(236, 236, 228);
 const RED = rgb(232, 60, 44);
@@ -189,12 +190,15 @@ const GOLD = rgb(255, 200, 70);
 const CYAN = rgb(110, 240, 255);
 const DIM = rgb(150, 150, 146);
 
-export function createFirstShift(root, { onComplete = () => {}, onSound = () => {}, onFlag = () => {} } = {}) {
+// 18.2: onReflex(id) -- a gamer reflex (§16) fired; gamerLine(scene) -- the
+// host hands out one gamer slip per scene (gamer-reflex.js), or null.
+export function createFirstShift(root, { onComplete = () => {}, onSound = () => {}, onFlag = () => {}, onReflex = () => {}, gamerLine = () => null } = {}) {
   if (!root) return { open() {}, close() {}, state: () => createFirstShiftState() };
   const canvas = root.querySelector('#firstShiftCanvas'); const ctx = canvas?.getContext('2d');
   const dialogue = root.querySelector('#firstShiftDialogue'); const bossNext = root.querySelector('#firstShiftBossNext');
   const choices = root.querySelector('#firstShiftChoices'); const bossTalk = root.querySelector('#firstShiftBossTalk'); const bossFightBtn = root.querySelector('#firstShiftBossFight');
   const fightPanel = root.querySelector('#firstShiftFight'); const fightMeterEl = root.querySelector('#firstShiftFightMeter');
+  const beatPips = [...root.querySelectorAll('#firstShiftBeats li')];
   const status = root.querySelector('#firstShiftStatus'); const wallet = root.querySelector('#firstShiftPay'); const prompt = root.querySelector('#firstShiftPrompt');
   const reduceMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
@@ -224,6 +228,37 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   // gate lifts, and the chip falls out of his pocket on the way.
   let boss = { x: SPOTS.boss.x, z: SPOTS.boss.z, mode: 'stand', t: 0, leg: 0, facing: Math.PI };
   let chip = null; // { x, z, y, vy, landed }
+  // 18.2: the lone crate by the boss's way out, and the peek behind it.
+  const LONE = SPOTS.loneCrate;
+  let peek = null; // { at, dx, dz, cx, cz } -- a lean round the crate, and the crate shoved aside
+  const crateAt = () => {
+    if (!peek) return LONE;
+    const k = Math.min(1, Math.max(0, (performance.now() - peek.at - 250) / 450));
+    const e = 1 - (1 - k) * (1 - k);
+    return { x: LONE.x + peek.cx * e, z: LONE.z + peek.cz * e };
+  };
+  let lastBeat = -1; let slamAt = -1e9; let holdBeat = null; // debug: freeze the bar at a moment (ms)
+  const fightMs = (now) => holdBeat ?? (now - fightClockStart);
+  // Gamer slips: one per scene, the reply a moment later.
+  const slipScenes = new Set(); let slipTimer = 0; let manualSince = 0;
+  function slip(scene) {
+    if (slipScenes.has(scene)) return false;
+    const line = gamerLine(scene);
+    if (!line) return false;
+    slipScenes.add(scene);
+    const now = performance.now();
+    speech = { who: 'me', name: 'ТЫ', text: line.me, until: now + 2600 };
+    onSound('chatter');
+    clearTimeout(slipTimer);
+    slipTimer = setTimeout(() => {
+      if (!active) return;
+      const t = performance.now();
+      speech = { who: line.who, name: FIRST_SHIFT_WORKERS[line.who]?.title ?? 'НАЧАЛЬНИК', text: line.reply, until: t + 2800 };
+      if (WORKER_SPOTS[line.who]) talkedUntil[line.who] = Math.max(talkedUntil[line.who] ?? 0, t + 2200);
+      onSound('chatter');
+    }, 2700);
+    return true;
+  }
   // Where everyone is looking (world yaw). People turn to you when you talk
   // to them and back to their work after; the boss keeps an eye on you.
   const facing = {};
@@ -267,7 +302,9 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     }
   }
 
-  function fightHot(now) { return state.phase === 'fight' && ((now - fightClockStart) % FIGHT_CYCLE_MS) >= FIGHT_CYCLE_MS - FIGHT_HOT_MS; }
+  // 18.2 (§16 «у всех боссов есть паттерн»): 1 · 2 · 3 · БАМ -- he slams his
+  // desk every 4th beat and is open right after; that is when a push lands.
+  function fightHot(now) { return state.phase === 'fight' && fightBeat(fightMs(now)).hot; }
   function say(text, ms = 2200) { message = text; messageUntil = performance.now() + ms; }
   function armDead() { return state.phase !== 'done'; }
   function bossPresent() { return boss.mode !== 'gone'; }
@@ -350,7 +387,17 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       cands.push({ ...t, dist });
     };
     if (state.phase === 'report' && bossPresent()) consider({ kind: 'boss', x: boss.x, z: boss.z });
-    if (state.phase === 'choice' && chip?.landed && !state.carrying) consider({ kind: 'chip', x: chip.x, z: chip.z });
+    if (state.phase === 'choice' && chip?.landed && !state.carrying) {
+      if (!state.chipFound) {
+        // The crate (or the chip itself, if you walked round) -- look behind first.
+        consider({ kind: 'peek', x: LONE.x, z: LONE.z });
+        if (Math.hypot(chip.x - p.x, chip.z - p.z) < 1.4) cands.push({ kind: 'peek', x: LONE.x, z: LONE.z, dist: 0 });
+      } else {
+        const dx = chip.x - p.x, dz = chip.z - p.z; const dist = Math.hypot(dx, dz);
+        const fwd = dx * sin - dz * cos; const side = dx * cos + dz * sin;
+        if (fwd > 0.05 && dist < 3 && Math.abs(Math.atan2(side, fwd)) < 0.45) cands.push({ kind: 'chip', x: chip.x, z: chip.z, dist });
+      }
+    }
     if (!talk) for (const w of workerTargets()) consider(w);
     const hit = castCenter(map, p.x, p.z, p.yaw, REACH, EYE);
     if (hit) {
@@ -428,11 +475,43 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       state = stepFirstShift(state, 'report-boss'); onSound('ui-click'); document.exitPointerLock?.();
     } else if (target.kind === 'worker') {
       openTalk(target.id); return;
+    } else if (target.kind === 'peek') {
+      peekBehind(now);
     } else if (target.kind === 'chip') {
       state = stepFirstShift(state, 'chip'); onSound('pickup');
       if (state.phase === 'done') { chip = null; startDive(now); }
     }
     renderText(); setDialogue();
+  }
+
+  // 18.2 (§16): the hand looks behind the crate by itself. A lean round its
+  // side, the eye drops to the floor -- and there it is.
+  function peekBehind(now) {
+    if (state.chipFound || !chip) return;
+    state = stepFirstShift(state, 'peek');
+    const p = state.player;
+    const ax = LONE.x - p.x, az = LONE.z - p.z; const len = Math.hypot(ax, az) || 1;
+    // Lean to the side the chip is on (perpendicular to the line to the crate).
+    const side = Math.sign((ax * (chip.z - p.z) - az * (chip.x - p.x))) || 1;
+    // Lean a little toward the chip; the hand shoves the crate the other way.
+    peek = { at: now, dx: (-az / len) * side * 0.3, dz: (ax / len) * side * 0.3, cx: (az / len) * side * 0.85, cz: (-ax / len) * side * 0.85 };
+    onSound('drop');
+    turnTo = Math.atan2(chip.x - p.x, -(chip.z - p.z));
+    manualLookAt = -1e9;
+    onSound(REFLEXES.crate.sound);
+    faceOuchUntil = now + 1400;
+    speech = { who: 'me', name: 'ТЫ', text: REFLEXES.crate.thought, until: now + 3400 };
+    setTimeout(() => { if (active) { say(REFLEXES.crate.found, 2400); onSound('scan'); } }, 520);
+    onReflex('crate');
+    // Someone saw you do it.
+    setTimeout(() => {
+      if (!active || state.phase !== 'choice') return;
+      const t = performance.now();
+      speech = { who: 'lunch', name: FIRST_SHIFT_WORKERS.lunch.title, text: 'Ты чего за ящики заглядываешь? Там крысы. (жуёт)', until: t + 3000 };
+      talkedUntil.lunch = Math.max(talkedUntil.lunch ?? 0, t + 2400);
+      onSound('chatter');
+    }, 3600);
+    renderText();
   }
 
   // ------------------------------------------------------------- the dive
@@ -495,12 +574,12 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     else if (state.phase === 'manual') status.textContent = state.carrying ? 'Ящик в руках, тяжёлый. Лента — за рукой 07. Положи на неё.' : `Осталось перенести: ${MANUAL_DELIVERY_TARGET - state.delivered}. Ящики — в куче слева.`;
     else if (state.phase === 'report') status.textContent = 'Три ящика на ленте. Вернись к начальнику.';
     else if (state.phase === 'confront') status.textContent = 'Выбирай: поговорить или толкнуть его.';
-    else if (state.phase === 'fight') status.textContent = 'ПРОБЕЛ / E — только когда полоса вспыхивает зелёным.';
+    else if (state.phase === 'fight') status.textContent = 'Считай: 1 · 2 · 3 · БАМ. Толкай сразу после БАМ.';
     else if (state.phase === 'fight-result') status.textContent = state.fightWon ? 'Начальник отступил.' : 'Начальник тебя отодвинул.';
     else if (state.phase === 'payday') status.textContent = 'Начальник собирается на погрузку.';
-    else if (state.phase === 'choice') status.textContent = chip?.landed
-      ? 'Начальник ушёл. У него из кармана что-то выпало — светится на полу.'
-      : 'Начальник уходит.';
+    else if (state.phase === 'choice') status.textContent = !chip?.landed ? 'Начальник уходит.'
+      : state.chipFound ? 'За ящиком лежит чип. Светится.'
+      : 'Начальник ушёл. Что-то звякнуло — за одиноким ящиком у прохода.';
     // 29.09: Сергей -- boss should hurry you along if you just stand there,
     // and eventually smack you if you keep ignoring him.
     if (performance.now() < nudgeUntil) status.textContent = nudgeText;
@@ -514,6 +593,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       else if (target?.kind === 'belt') text = 'E · ПОЛОЖИТЬ НА ЛЕНТУ';
       else if (target?.kind === 'boss') text = 'E · К НАЧАЛЬНИКУ';
       else if (target?.kind === 'worker') text = `E · ${FIRST_SHIFT_WORKERS[target.id].title}: ПОПРОСИТЬ`;
+      else if (target?.kind === 'peek') text = 'E · ЗАГЛЯНУТЬ ЗА ЯЩИК';
       else if (target?.kind === 'chip') text = 'E · ПОДНЯТЬ';
       prompt.textContent = text; prompt.dataset.hot = String(Boolean(target));
     }
@@ -521,6 +601,10 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     root.dataset.phase = state.phase;
     if (fightMeterEl) fightMeterEl.style.width = `${state.fightMeter}%`;
     if (fightPanel) fightPanel.dataset.hot = String(fightHot(performance.now()));
+    if (state.phase === 'fight' && beatPips.length) {
+      const b = fightBeat(fightMs(performance.now())).beat;
+      beatPips.forEach((li, i) => { li.dataset.on = String(i === b); });
+    }
   }
 
   // ------------------------------------------------------------ simulation
@@ -533,6 +617,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     // little personal space, so they never slide out under the view.
     if (bossPresent() && boss.mode === 'stand') out.push({ x: boss.x, z: boss.z, r: 0.62, top: 1.9 });
     for (const w of Object.values(WORKER_SPOTS)) out.push({ x: w.x, z: w.z, r: w === WORKER_SPOTS.lunch ? 0.62 : 0.6, top: 1.85 });
+    const c = crateAt(); out.push({ x: c.x, z: c.z, r: 0.42, top: CRATE_H });
     return out;
   }
 
@@ -546,16 +631,17 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   // The boss's desk (the bench 'WW' west of him) and where his fist lands.
   const DESK = { x: 7.55, z: 10.5, y: 0.95 };
   let bossPath = SPOTS.bossExit;
-  // A free spot a couple of metres in front of the player (close enough to
-  // see without looking down past the status bar), inside the hall.
-  function dropPointInView() {
-    const yaw = state.player.yaw;
-    for (const d of [2.4, 2.0, 2.8, 1.6]) {
-      const x = state.player.x + Math.sin(yaw) * d; const z = state.player.z - Math.cos(yaw) * d;
+  // 18.2: where the chip ends up -- just behind the lone crate, on the far
+  // side from wherever you stand when it falls.
+  function hideSpot() {
+    const p = state.player;
+    const base = Math.atan2(LONE.x - p.x, -(LONE.z - p.z));
+    for (const da of [0, 0.5, -0.5, 1, -1, 1.6, -1.6, Math.PI]) {
+      const a = base + da; const x = LONE.x + Math.sin(a) * 0.62; const z = LONE.z - Math.cos(a) * 0.62;
       const cell = cellAt(map, x, z);
-      if (cell && !cell.solid && cell.floor <= 0.3 && x > 1 && x < 15 && z > 1 && z < 13.5) return { x, z };
+      if (cell && !cell.solid && cell.floor <= 0.3) return { x, z };
     }
-    return { x: state.player.x, z: Math.max(1.5, state.player.z - 1) };
+    return { x: LONE.x + 0.6, z: LONE.z };
   }
 
   function updateBoss(dt, now) {
@@ -574,9 +660,8 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       }
       if (boss.t > 1.1) {
         boss.mode = 'walk'; boss.leg = 0; boss.t = 0;
-        // 18.1 («роняет штуку за колонной — должно быть прямо перед глазами»):
-        // his way out passes right in front of you, and that is where it drops.
-        bossPath = [dropPointInView(), ...SPOTS.bossExit];
+        // 18.2 (§16): his way out passes the lone crate; the chip falls there.
+        bossPath = SPOTS.bossExit;
       }
     } else if (boss.mode === 'walk') {
       boss.t += dt;
@@ -586,7 +671,9 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       if (d <= v) {
         boss.x = wp.x; boss.z = wp.z;
         if (boss.leg === 0 && !chip) {
-          chip = { x: wp.x - 0.15, z: wp.z + 0.1, y: 1.05, vy: 0.4, landed: false };
+          const h = hideSpot();
+          chip = { x: h.x, z: h.z, y: 0.6, vy: 0.3, landed: false };
+          onSound('clank');
         }
         boss.leg += 1;
         if (boss.leg >= bossPath.length) { boss.mode = 'gone'; doorWanted = 0; }
@@ -600,8 +687,8 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
         chip.y = 0.02;
         if (Math.abs(chip.vy) > 1.2) { chip.vy = -chip.vy * 0.35; onSound('scan'); }
         else {
-          chip.landed = true; chip.vy = 0; say('ЧТО-ТО ВЫПАЛО', 2000); renderText();
-          turnTo = Math.atan2(chip.x - state.player.x, -(chip.z - state.player.z));
+          chip.landed = true; chip.vy = 0; say('ДЗЫНЬ… ЗА ЯЩИКОМ?', 2200); renderText();
+          turnTo = Math.atan2(LONE.x - state.player.x, -(LONE.z - state.player.z));
         }
       }
     }
@@ -611,6 +698,19 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     door = clamp(door + Math.sign(doorGoal - door) * Math.min(Math.abs(doorGoal - door), dt * (doorWanted ? 0.8 : 1.6)), 0, 1);
     if ((prev === 0 && door > 0) || (prev === 1 && door < 1)) onSound('door');
     for (const cell of map.cells) if (cell.door) cell.ceil = door * DOOR_H;
+  }
+
+  // The fight's bar: a soft tick on 1, 2, 3 and the desk slam on 4.
+  function updateBeat(now) {
+    const fb = fightBeat(fightMs(now));
+    const key = fb.bar * BAR_BEATS + fb.beat;
+    if (key === lastBeat) return;
+    lastBeat = key;
+    if (fb.slam) {
+      slamAt = now; onSound('impact');
+      for (let i = 0; i < 10; i++) particles.push({ x: DESK.x + (Math.random() - 0.5) * 0.5, z: DESK.z + (Math.random() - 0.5) * 0.4, y: DESK.y, vx: (Math.random() - 0.5) * 1.2, vz: (Math.random() - 0.5) * 1.2, vy: 0.5 + Math.random(), life: 0.4 + Math.random() * 0.3, color: rgb(190, 180, 160), size: 0.03 });
+      dynFlash = { x: DESK.x, z: DESK.z, until: now + 90 };
+    } else onSound('beat');
   }
 
   function updateFacing(dt) {
@@ -728,18 +828,24 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     }
     if (!blocked) for (const ev of moments.frame(dt, { pitch, moving, busy: state.phase === 'manual' || !!talk })) comment(ev);
     if (speech && now > speech.until) speech = null;
+    if (state.phase === 'fight') updateBeat(now);
+    // Gamer slips (§16), one per scene: wondering where to save a little into
+    // the carrying, the "!" over the boss once the three crates are done.
+    if (state.phase === 'manual' && !blocked) { if (!manualSince) manualSince = now; if (now - manualSince > 9000 && !speech) slip('shift1-manual'); }
+    if (state.phase === 'report' && !blocked && !speech && state.delivered >= MANUAL_DELIVERY_TARGET) slip('shift1-report');
     updateBoss(dt, now);
     updateFacing(dt);
     updateWorld(dt, now);
     target = blocked ? null : chooseTarget();
-    // The dropped chip pulls the eye even before it is in reach.
+    // The clink pulls the eye to the crate (and, once found, to the chip).
     if (!target && chip?.landed && state.phase === 'choice' && now - manualLookAt > 1500) {
-      const dist = Math.max(0.5, Math.hypot(chip.x - body.x, chip.z - body.z));
-      const want = clampPitch(Math.atan2(0.1 - (body.y + EYE), dist));
+      const fx = state.chipFound ? chip.x : LONE.x; const fz = state.chipFound ? chip.z : LONE.z;
+      const dist = Math.max(0.5, Math.hypot(fx - body.x, fz - body.z));
+      const want = clampPitch(Math.atan2((state.chipFound ? 0.1 : 0.5) - (body.y + EYE), dist));
       if (want < pitch) pitch += (want - pitch) * Math.min(1, dt * 3);
     }
     if (target && now - manualLookAt > 1500) {
-      const aimY = target.kind === 'chip' ? 0.15 : target.kind === 'worker' ? (target.id === 'lunch' ? 0.95 : 1.15) : target.kind === 'boss' ? 1.3
+      const aimY = target.kind === 'chip' ? 0.15 : target.kind === 'peek' ? 0.45 : target.kind === 'worker' ? (target.id === 'lunch' ? 0.95 : 1.15) : target.kind === 'boss' ? 1.3
         : target.kind === 'crate' ? Math.max(0.4, CRATE_H * pileCount(state, target.cx, target.cz) - 0.2) : BELT_H;
       const tx = target.x ?? target.cx + 0.5; const tz = target.z ?? target.cz + 0.5;
       const dist = Math.max(0.5, Math.hypot(tx - body.x, tz - body.z));
@@ -828,7 +934,9 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     const bob = reduceMotion ? 0 : Math.sin(walkPhase * 2) * 1.6;
     const dip = reduceMotion ? 0 : landingDip(dipImpact, (now - dipAt) / 320);
     const viewEye = body.y + EYE - dip * 0.22;
-    const cam = { x: state.player.x, z: state.player.z, yaw: state.player.yaw + shake * 0.004, eye: viewEye, bob: (body.grounded ? bob : 0) + shake + dip * 6, pitch: pitchShear(pitch, viewH) };
+    // 18.2: the peek behind the crate -- lean out and back, ~1.6 s.
+    const lean = peek && !reduceMotion ? Math.sin(Math.min(1, (now - peek.at) / 1600) * Math.PI) : 0;
+    const cam = { x: state.player.x + (peek?.dx ?? 0) * lean, z: state.player.z + (peek?.dz ?? 0) * lean, yaw: state.player.yaw + shake * 0.004, eye: viewEye - lean * 0.25, bob: (body.grounded ? bob : 0) + shake + dip * 6, pitch: pitchShear(pitch, viewH) };
 
     const sprites = [];
     const push = (s) => { if (s) sprites.push(s); };
@@ -856,13 +964,15 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       if (state.phase === 'briefing') pose = 'point';
       if (now < bossAngryUntil) pose = 'angry';
       if (state.phase === 'confront') pose = 'angry';
-      if (state.phase === 'fight') pose = now < bossHitUntil ? 'hit' : 'fight';
+      if (state.phase === 'fight') pose = now < bossHitUntil ? 'hit' : (now - slamAt < 320 ? 'bang' : 'fight');
       if (state.phase === 'fight-result') pose = state.fightWon ? 'hit' : 'angry';
       if (boss.mode === 'bang') pose = boss.t > 0.3 && boss.t < 0.8 ? 'bang' : 'angry';
       if (boss.mode === 'walk') pose = `walk${Math.floor(boss.t * 6) % 4}`;
       const sway = state.phase === 'fight' ? Math.sin(now * 0.011) * 0.08 : 0;
       push(person(`boss_${pose}`, boss.x + sway, boss.z, boss.facing));
     }
+    const lone = crateAt();
+    push(sprite('crate3q', lone.x, lone.z, 0, target?.kind === 'peek' ? { fullbright: true, glow: 1.15 } : {}));
     if (chip) push(sprite('chip', chip.x, chip.z, chip.y, { ppm: 48, fullbright: true, glow: 1.2 }));
     for (const c of beltCrates) push(sprite('crate3q', c.x, c.z, BELT_H));
 
@@ -908,7 +1018,9 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     }
     if (speech && !dive && dialogue.hidden) {
       const floor = prompt && !prompt.hidden ? subtitleFloorRow(viewH, VIEW_ROWS, canvas.getBoundingClientRect(), prompt.getBoundingClientRect()) : null;
-      drawSpeech(buf, W, viewH, speech, speakerAt(speech.who), { ...view, cam }, { floor });
+      // 18.2: once the chip is found behind the crate, lines go up and leave the floor (and the chip) clear.
+      const raised = state.chipFound && state.phase === 'choice' ? Math.round(viewH * 0.42) : null;
+      drawSpeech(buf, W, viewH, speech, speakerAt(speech.who), { ...view, cam }, { floor: raised ?? floor });
     }
     if (dive) drawDive(buf, now, viewH);
     // Doom-style pickup/event message, top-left of the view.
@@ -1106,6 +1218,10 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (talk) { ask('fix'); return; }
     if (state.phase !== 'confront') return;
     state = stepFirstShift(state, 'fight-start'); fightClockStart = performance.now(); onSound('door');
+    // 18.2 (§16): before the first slam the hand already knows the rhythm.
+    lastBeat = -1;
+    speech = { who: 'me', name: 'ТЫ', text: REFLEXES.pattern.thought, until: performance.now() + 3600 };
+    onSound(REFLEXES.pattern.sound); onReflex('pattern');
     turnTo = Math.atan2(boss.x - state.player.x, -(boss.z - state.player.z));
     setDialogue(); renderText(); canvas?.focus({ preventScroll: true }); canvas?.requestPointerLock?.();
   });
@@ -1115,7 +1231,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     state = createFirstShiftState(); active = true; root.hidden = false;
     idleSeconds = 0; idleStage = 0; nudgeUntil = 0; flashUntil = 0; daydreamUntil = 0; talk = null; message = ''; messageUntil = 0;
     boss = { x: SPOTS.boss.x, z: SPOTS.boss.z, mode: 'stand', t: 0, leg: 0, facing: Math.PI }; bossPath = SPOTS.bossExit; chip = null; door = 0; doorWanted = 0; resetFacing();
-    beltCrates.length = 0; particles.length = 0; turnTo = null; dive = null;
+    beltCrates.length = 0; particles.length = 0; turnTo = null; dive = null; peek = null; lastBeat = -1; slamAt = -1e9; slipScenes.clear(); clearTimeout(slipTimer); manualSince = 0;
     body = createBody(state.player.x, state.player.z); pitch = 0; dipAt = -1e9; speech = null; chatter.reset();
     diveFx.load();
     resize(); setDialogue(); renderText(); last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(update); bossNext.focus({ preventScroll: true });
@@ -1123,6 +1239,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   function close() { active = false; dive = null; root.hidden = true; cancelAnimationFrame(raf); held.clear(); if (document.pointerLockElement === canvas) document.exitPointerLock?.(); }
   // Test/debug hook: lets the screenshot script stand the player somewhere.
   function debug(patch = {}) {
+    if (patch.player?.yaw !== undefined) turnTo = null;
     if (patch.player) { Object.assign(state.player, patch.player); body.x = state.player.x; body.z = state.player.z; if (patch.player.y !== undefined) { body.y = patch.player.y; body.grounded = false; } }
     if (patch.pitch !== undefined) pitch = clampPitch(patch.pitch);
     if (patch.comment) comment(patch.comment, true);
@@ -1130,10 +1247,12 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (patch.state) state = { ...state, ...patch.state };
     if (patch.boss) Object.assign(boss, patch.boss);
     if (patch.chip !== undefined) chip = patch.chip;
+    if (patch.peek) peekBehind(performance.now());
     if (patch.door !== undefined) { door = patch.door; doorWanted = patch.door; }
     if (patch.talk !== undefined) { talk = patch.talk; }
     if (patch.punch) punchAt = performance.now();
-    if (patch.fightClock) fightClockStart = performance.now();
+    if (patch.holdBeat !== undefined) { holdBeat = patch.holdBeat; lastBeat = -1; }
+    if (patch.fightClock) { fightClockStart = performance.now() - (Number(patch.fightClock) || 0); lastBeat = -1; }
     // dive: milliseconds into the dive (null ends it), for screenshots.
     if (patch.dive !== undefined) dive = patch.dive === null ? null : { start: performance.now() - patch.dive, step: -1, after: false, meltSrc: null };
     setDialogue(); renderText();
