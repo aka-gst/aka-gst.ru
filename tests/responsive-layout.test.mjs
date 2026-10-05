@@ -16,20 +16,23 @@ const рядом = (path) => new URL(`../../${path}`, import.meta.url);
 // ровно один раз: переименует папку — правится одна строка.
 const ОБЩАЯ = 'Zakriva';
 const site = (path) => readFileSync(тут(path), 'utf8');
-const read = (path) => readFileSync(рядом(path), 'utf8');
+const read = (path) => внутри(path); // те же места поиска, что и у «внутри»
 // Игры переезжают из общей папки в dev/ по одной: neon-lines уехал
 // 31 августа, и пять проверок разом покраснели на несуществующем пути.
 // Поэтому ищем в обоих местах, а не в одном: тест должен падать, когда
 // сломана игра, а не когда её перенесли.
+// 05.10.2026: репозитории разложены по ~/dev/_sites, ~/dev/_games, ~/dev/_progs — сайт теперь в _sites,
+// игры в _games; ищем и там (от tests/ это ../../../_games), иначе восемь проверок красные на переезде.
+const дев = (path) => new URL(`../../../${path}`, import.meta.url);
 const внутри = (path) => {
-  for (const где of [рядом(path), рядом(`${ОБЩАЯ}/${path}`)]) {
+  for (const где of [рядом(path), рядом(`${ОБЩАЯ}/${path}`), дев(`_games/${path}`), дев(`_progs/${path}`), дев(path)]) {
     try {
       return readFileSync(где, 'utf8');
     } catch (e) {
       if (e.code !== 'ENOENT') throw e;
     }
   }
-  throw new Error(`не найдено ни в dev/, ни в ${ОБЩАЯ}/: ${path}`);
+  throw new Error(`не найдено ни в dev/, ни в ${ОБЩАЯ}/, ни в dev/_games|_progs: ${path}`);
 };
 const json = (path) => JSON.parse(site(path));
 
@@ -505,7 +508,7 @@ test('единое меню и форма имени используются в
   // чужое устройство — нет.
 });
 
-test('игровые названия и анимации на месте', () => {
+test('игровые названия и анимации на месте', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); карточки игр на index.html больше нет, витрина игр — games.html по списку Сергея (content-policy.mjs)' }, () => {
   // Карточка КНБ на сайте теперь называется полным именем прототипа,
   // а не «КНБ 2»: слаг лидерборда knb-2 при этом не менялся.
   const html = site('index.html');
@@ -576,7 +579,7 @@ test('поддерживаемые телефоны получают такти�
   assert.match(read('bitva-stihiy/src/audio.js'), /navigator\.vibrate/);
 });
 
-test('Орёл-решка подключена к сайту, аналитике и глобальному топу', () => {
+test('Орёл-решка подключена к сайту, аналитике и глобальному топу', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); карточки игр на index.html больше нет, витрина игр — games.html по списку Сергея (content-policy.mjs)' }, () => {
   const home = site('index.html');
   const game = read('orel-reshka/orel-reshka.html');
   assert.match(home, /href="\/coin\/"/);
