@@ -191,10 +191,15 @@ if scp -q $SSHOPTS "$HOST:/opt/zakriva/caddy/Caddyfile" "$tmp" 2>/dev/null; then
   # со статусом. Страж, который ругается по пустякам, начнут обходить, и он
   # промолчит там, где важно. Опасна ровно одна пропажа: адрес или апстрим,
   # который есть на сервере и которого нет у нас. Так уехали звонки.
-  routes() {
-    grep -oE '^[[:space:]]*(redir|handle|handle_path|reverse_proxy|root)[[:space:]]+[^{]*|^[a-z0-9_.*-]+([[:space:]]*,[[:space:]]*[a-z0-9_.*-]+)*[[:space:]]*\{' "$1" \
-      | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; s/[[:space:]]\{1,\}/ /g' | sort -u
-  }
+  # 05.10.2026: ключи — хосты, пути и апстримы, а не целые строки: замена цели redir
+  # или handle→route не считается потерей (страж ложно останавливал /qa-quest → /quequest/,
+  # и конфиг клали руками в обход). Оба исхода — sh tools/proverka-storozha-caddy.sh.
+  . "$HERE/tools/marshruty-caddy.sh"
+  routes() { klyuchi_marshrutov "$1"; }
+  # Сам страж проверяется поломкой перед каждой выкладкой конфига: сломанный страж молчит.
+  if $caddy && ! sh "$HERE/tools/proverka-storozha-caddy.sh" >/dev/null 2>&1; then
+    echo "  страж Caddy не проходит свою проверку (sh tools/proverka-storozha-caddy.sh) — --caddy отменён" >&2; exit 1
+  fi
   # Через временные файлы, а не подстановкой процессов: sh её не умеет,
   # и «sh deploy.sh» падал бы на ней с кодом 0 — вызывающий решил бы,
   # что выкладка удалась.
