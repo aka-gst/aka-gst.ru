@@ -11,7 +11,7 @@
 
 import { hasSight, angleDelta, TILE_SIZE } from './world.js';
 import { weakTo } from './level.js';
-import { lightOn } from './vospriyatie/light.js';
+import { lightOn } from './vendor/stels-ii@1.0.0/light.js';
 
 /*
  * Помощь прицеливанию. Ширина сектора зависит от того, чем целятся:

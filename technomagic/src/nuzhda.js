@@ -20,10 +20,10 @@
  * молчит: своя ступень лестницы важнее совета.
  */
 
-import { illumination, lightOn } from './vospriyatie/light.js';
-import { sightReach, angleDiff } from './vospriyatie/vision.js';
-import { sightMul } from './vospriyatie/alarm.js';
-import { GUARD, LIGHT } from './vospriyatie/tuning.js';
+import { illumination, lightOn } from './vendor/stels-ii@1.0.0/light.js';
+import { sightReach, angleDiff } from './vendor/stels-ii@1.0.0/vision.js';
+import { sightMul } from './vendor/stels-ii@1.0.0/alarm.js';
+import { GUARD, LIGHT } from './vendor/stels-ii@1.0.0/tuning.js';
 import { hasSight, TILE_SIZE } from './world.js';
 
 /* Пост «перекрывает дорогу», если стоит ближе стольких клеток. */

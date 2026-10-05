@@ -40,7 +40,7 @@
 
 import { TILE_SIZE } from './level.js';
 import { hasSight } from './world.js';
-import { canSee } from './vospriyatie/vision.js';
+import { canSee } from './vendor/stels-ii@1.0.0/vision.js';
 import { litAt } from './vospriyatie/svet.js';
 
 /* Цена одной хорошей жизни. */

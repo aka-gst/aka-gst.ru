@@ -1960,6 +1960,13 @@ body.is-shooting .camtoggle { display: none !important; }
 .treker-list span { font: 600 10px/1.35 var(--mono); color: #cfe3e0; }
 .treker-list .treker-empty { border-left-color: #2c3533; color: #8fa39b; font: 600 10px var(--mono); cursor: default; }
 body.is-shooting .treker { display: none !important; }
+/* Задания уступают героя и цель подсказки (приёмка Глаз 05.10; igra.js,
+   PANEL): пока под ними тот, на кого смотрят, — почти прозрачные и не
+   ловят касаний. */
+.treker { transition: opacity .18s; }
+.treker[data-yield="1"] { opacity: .16; }
+.treker[data-yield="1"] .treker-head,
+.treker[data-yield="1"] .treker-list li { pointer-events: none; }
 
 @media (pointer: coarse) and (orientation: portrait),
        (max-width: 700px) and (orientation: portrait) {

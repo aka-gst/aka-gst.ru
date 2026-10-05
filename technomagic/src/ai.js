@@ -24,7 +24,7 @@
  * ИСКЛЮЧЕНИЕ — ЭТАЖ С ДОЗОРОМ (флаг `watchful`, пока только «Башня»).
  * Там правило выше давало проход без единого приёма: тихо и хитрость
  * проходились без пара и без приманки (приёмка 03.10). На таком этаже
- * страж видит глазами МГС (src/vospriyatie/vision.js, дословно), узнаёт
+ * страж видит глазами МГС (src/vendor/stels-ii@1.0.0/vision.js, дословно), узнаёт
  * по формуле МГС (watchNotice), тревога — машина МГС (world.js,
  * noteAlarm), а стоит он на посту и смотрит туда, куда поставлен. На шум
  * идёт по прямой; в стену и в огонь не лезет — встаёт и смотрит; домой
@@ -33,11 +33,12 @@
 
 import { TILE_SIZE, BODY, WEAPONS, angleDelta, turnToward, clamp, hasSight, hasShot, emitNoise, tileIndex, noteAlarm } from './world.js';
 import { blocksMove } from './level.js';
-import { burningIndex } from './field.js';
-import { canSee } from './vospriyatie/vision.js';
-import { sightMul } from './vospriyatie/alarm.js';
-import { GUARD, INVESTIGATE } from './vospriyatie/tuning.js';
+import { burningIndex, GROUND } from './field.js';
+import { canSee } from './vendor/stels-ii@1.0.0/vision.js';
+import { sightMul } from './vendor/stels-ii@1.0.0/alarm.js';
+import { GUARD, INVESTIGATE } from './vendor/stels-ii@1.0.0/tuning.js';
 import { glanceAngle } from './vospriyatie/svideteli.js';
+import { taskStep, learnFear } from './podgotovka.js';
 
 const SIGHT_RANGE = 300;
 const SIGHT_HALF = 0.95;   /* половина конуса, ~110° целиком */
@@ -52,11 +53,56 @@ const NEIGHBOURS = [
 
 
 /*
+ * ОПАСНАЯ КЛЕТКА — СВОЯ У КАЖДОГО СТРАЖА (05.10, ответ Сергея: «чтобы они
+ * видели, что творится с их коллегами, и уже тогда понимали, что не надо
+ * подходить к огню»).
+ *
+ * Горящий пол — стена для всех, как и было. Сверх этого тот, кто ВИДЕЛ,
+ * как своего жжёт (enemy.fearOf, src/podgotovka.js), держится от пламени
+ * на клетку: соседняя с огнём клетка для него тоже стена, и молодой огонь
+ * (ещё не разгоревшийся, FIRE_CATCH) — тоже. Видевший разряд по луже
+ * обходит лужи. Тактический поиск пути из Миллингтона (§6.3: «стоимость
+ * клетки растёт у огня») в самом дешёвом виде: стоимость бесконечная,
+ * и обход получается без отдельной логики.
+ */
+export const fears = (enemy, element) => Boolean(enemy && enemy.fearOf && enemy.fearOf.has(element));
+
+function flameNear(world, idx) {
+  if (world.ground[idx] === GROUND.FIRE) return true;
+  const x = idx % world.w;
+  const y = (idx / world.w) | 0;
+  for (const [dx, dy] of NEIGHBOURS) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (nx < 0 || ny < 0 || nx >= world.w || ny >= world.h) continue;
+    if (world.ground[ny * world.w + nx] === GROUND.FIRE) return true;
+  }
+  return false;
+}
+
+export function hazardIndex(world, enemy, idx) {
+  if (idx < 0) return false;
+  if (burningIndex(world, idx)) return true;
+  if (!enemy || !enemy.fearOf || !enemy.fearOf.size || !RULES.wary) return false;
+  if (enemy.fearOf.has('fire') && flameNear(world, idx)) return true;
+  if (enemy.fearOf.has('bolt') && world.ground[idx] === GROUND.WATER) return true;
+  return false;
+}
+
+/* Поломка для проверки (п.6): RULES.wary = false — видевший ходит, как
+   невидевший; tests/adaptaciya.mjs, раздел «обход», обязан покраснеть. */
+export const RULES = { wary: true };
+
+/*
  * Волна расстояний от игрока по проходимым клеткам. Поле маленькое
  * (тысяча клеток), поэтому проще пересчитать его целиком четыре раза в
  * секунду, чем вести и чинить пути для каждого врага.
+ *
+ * `who` — чьими глазами считать опасные клетки (hazardIndex): null —
+ * общая волна (горящий пол), страж со страхом — волна осторожных
+ * (world.flowWary, world.js).
  */
-export function buildFlowField(world, x, y) {
+export function buildFlowField(world, x, y, who = null) {
   const size = world.w * world.h;
   const field = new Int16Array(size).fill(-1);
   const start = tileIndex(world, x, y);
@@ -86,7 +132,7 @@ export function buildFlowField(world, x, y) {
        * а пожар из инструмента превращается в кнопку «победить». Пусть
        * лучше стоят по ту сторону и ждут, пока прогорит.
        */
-      if (field[idx] !== -1 || blocksMove(world.tiles[idx]) || burningIndex(world, idx)) continue;
+      if (field[idx] !== -1 || blocksMove(world.tiles[idx]) || hazardIndex(world, who, idx)) continue;
       field[idx] = next;
       queue[tail++] = idx;
     }
@@ -96,15 +142,18 @@ export function buildFlowField(world, x, y) {
 }
 
 
-/* Куда шагнуть, чтобы стать ближе к игроку по волне. */
+/* Куда шагнуть, чтобы стать ближе к игроку по волне. Видевший огонь
+   ходит по своей волне (world.flowWary): у пламени не идёт. Стоит в
+   опасной клетке — шагает в любую соседнюю, откуда волна есть. */
 function flowStep(world, enemy) {
-  const field = world.flow;
+  const field = (enemy.fearOf && enemy.fearOf.size && world.flowWary) ? world.flowWary : world.flow;
   const cx = Math.floor(enemy.x / TILE_SIZE);
   const cy = Math.floor(enemy.y / TILE_SIZE);
   const here = field[cy * world.w + cx];
-  if (here === undefined || here < 0) return null;
+  if (here === undefined) return null;
+  if (here < 0 && field === world.flow) return null;
 
-  let best = here;
+  let best = here < 0 ? Infinity : here;
   let bestX = 0;
   let bestY = 0;
 
@@ -117,6 +166,10 @@ function flowStep(world, enemy) {
     if (dx && dy) {
       if (blocksMove(world.tiles[cy * world.w + nx])) continue;
       if (blocksMove(world.tiles[ny * world.w + cx])) continue;
+      /* Осторожный не срезает угол и у пламени: тело по диагонали
+         цепляет соседние клетки. */
+      if (field === world.flowWary && (hazardIndex(world, enemy, cy * world.w + nx)
+        || hazardIndex(world, enemy, ny * world.w + cx))) continue;
     }
 
     const value = field[ny * world.w + nx];
@@ -163,7 +216,7 @@ export function thinkEnemy(world, enemy, dt, speed) {
 
   /*
    * Этаж с дозором («Башня», флаг `watchful`) видит глазами МГС: конус
-   * 55°, 7 клеток, чутьё спиной на клетку (src/vospriyatie/vision.js,
+   * 55°, 7 клеток, чутьё спиной на клетку (src/vendor/stels-ii@1.0.0/vision.js,
    * дословно). Пар и пыль прячут сами — луч МГС здесь ходит через наш
    * hasSight. Остальные этажи смотрят прежним кругом в 110° и 300 px.
    */
@@ -207,6 +260,17 @@ export function thinkEnemy(world, enemy, dt, speed) {
   if (enemy.watching > 0) {
     enemy.watching -= dt;
     enemy.angle = turnToward(enemy.angle, toPlayer, dt * 3);
+  }
+
+  /*
+   * ПОРУЧЕНИЕ (05.10, src/podgotovka.js): тушить, за плащом, намочить
+   * плащ. Идёт, пока страж свободен — стоит на посту или возвращается
+   * на него. Увидел игрока, услышал шум, лёг — поручение снимает
+   * podgotovka.js, и дальше всё как было.
+   */
+  if (enemy.task && (enemy.state === 'idle' || (enemy.state === 'alert' && !enemy.heard))) {
+    const move = taskStep(world, enemy, dt, speed);
+    if (move) return { ...result, ...move };
   }
 
   switch (enemy.state) {
@@ -278,6 +342,12 @@ export function thinkEnemy(world, enemy, dt, speed) {
          * здесь то же правило, только для шага на шум.
          */
         if (watch && (!step || fireAhead(world, enemy, step))) {
+          /* Упёрся в пламя по дороге — запомнил: огонь на пути тоже
+             учит обходить (05.10). Только обходить: тушить и бегать за
+             плащом учит лишь то, что сделали с СВОИМ (podgotovka.js). */
+          if (step && burningIndex(world, tileIndex(world, enemy.x + step.x * (BODY + 10), enemy.y + step.y * (BODY + 10)))) {
+            learnFear(world, enemy, 'fire', 'ogon');
+          }
           enemy.angle = turnToward(enemy.angle, Math.atan2(point.y - enemy.y, point.x - enemy.x), dt * GUARD.turnRate);
           enemy.search = (enemy.search ?? INVESTIGATE) - dt;
           if (enemy.search <= 0) { enemy.heard = null; enemy.search = INVESTIGATE; }
@@ -398,10 +468,14 @@ export function thinkEnemy(world, enemy, dt, speed) {
         /* Стрелок держит дистанцию: вплотную он беспомощен, и это шанс игрока. */
         if (dist < 90) {
           const away = toPlayer + Math.PI;
-          result.vx = Math.cos(away) * speed.walk;
-          result.vy = Math.sin(away) * speed.walk;
+          /* Видевший огонь и пятясь в него не шагнёт. */
+          if (!(wary(enemy) && lineHazard(world, enemy, away))) {
+            result.vx = Math.cos(away) * speed.walk;
+            result.vy = Math.sin(away) * speed.walk;
+          }
         } else if (!shootable) {
-          const step = flowStep(world, enemy) || { x: Math.cos(toPlayer), y: Math.sin(toPlayer) };
+          const step = flowStep(world, enemy)
+            || (wary(enemy) ? { x: 0, y: 0 } : { x: Math.cos(toPlayer), y: Math.sin(toPlayer) });
           result.vx = step.x * speed.run;
           result.vy = step.y * speed.run;
         }
@@ -427,9 +501,16 @@ export function thinkEnemy(world, enemy, dt, speed) {
 
       const reach = weapon.reach + BODY - 6;
       if (dist > reach) {
-        const step = (visible && hasSight(world, enemy.x, enemy.y, player.x, player.y))
+        /* Видит — бежит напрямик. Кроме того, кто видел, как жжёт своих:
+           напрямик через пламя он не побежит, а обойдёт по своей волне
+           или встанет у края (05.10). Невидевший бежит как раньше —
+           хоть сквозь огонь. */
+        let step = (visible && hasSight(world, enemy.x, enemy.y, player.x, player.y))
           ? { x: Math.cos(toPlayer), y: Math.sin(toPlayer) }
           : (flowStep(world, enemy) || { x: 0, y: 0 });
+        if (wary(enemy) && (step.x || step.y) && lineHazard(world, enemy, Math.atan2(step.y, step.x))) {
+          step = flowStep(world, enemy) || { x: 0, y: 0 };
+        }
         const rush = charged ? 1.14 : 1;
         result.vx = step.x * speed.run * rush;
         result.vy = step.y * speed.run * rush;
@@ -515,7 +596,7 @@ function homeStep(world, enemy) {
         const ny = ay + NEIGHBOURS[i][1];
         if (nx < 0 || ny < 0 || nx >= world.w || ny >= world.h) continue;
         const idx = ny * world.w + nx;
-        if (field[idx] !== -1 || blocksMove(world.tiles[idx]) || burningIndex(world, idx)) continue;
+        if (field[idx] !== -1 || blocksMove(world.tiles[idx]) || hazardIndex(world, enemy, idx)) continue;
         field[idx] = field[at] + 1;
         queue[tail++] = idx;
       }
@@ -547,7 +628,7 @@ function homeStep(world, enemy) {
  * Шаг к произвольной точке по клеткам — тот же поиск в ширину, что домой
  * (homeStep), только от точки обыска. Кэш на полсекунды и на точку.
  */
-function pathStep(world, enemy, point) {
+export function pathStep(world, enemy, point) {
   const here = tileIndex(world, enemy.x, enemy.y);
   const goal = tileIndex(world, point.x, point.y);
   if (here === goal) return { x: (point.x - enemy.x) / (Math.hypot(point.x - enemy.x, point.y - enemy.y) || 1), y: (point.y - enemy.y) / (Math.hypot(point.x - enemy.x, point.y - enemy.y) || 1) };
@@ -567,7 +648,7 @@ function pathStep(world, enemy, point) {
         const ny = ay + NEIGHBOURS[i][1];
         if (nx < 0 || ny < 0 || nx >= world.w || ny >= world.h) continue;
         const idx = ny * world.w + nx;
-        if (field[idx] !== -1 || blocksMove(world.tiles[idx]) || burningIndex(world, idx)) continue;
+        if (field[idx] !== -1 || blocksMove(world.tiles[idx]) || hazardIndex(world, enemy, idx)) continue;
         field[idx] = field[at] + 1;
         queue[tail++] = idx;
       }
@@ -595,11 +676,23 @@ function pathStep(world, enemy, point) {
 }
 
 /* Горит ли пол там, куда страж ступит следующим шагом. Щуп — тот же,
-   что у упора в стену (flowStepToward): тело плюс десять пикселей. */
+   что у упора в стену (flowStepToward): тело плюс десять пикселей. Для
+   видевшего огонь «горит» — и клетка у пламени (hazardIndex). */
 function fireAhead(world, enemy, step) {
   const probeX = enemy.x + step.x * (BODY + 10);
   const probeY = enemy.y + step.y * (BODY + 10);
-  return burningIndex(world, tileIndex(world, probeX, probeY));
+  return hazardIndex(world, enemy, tileIndex(world, probeX, probeY));
+}
+
+const wary = (enemy) => Boolean(enemy.fearOf && enemy.fearOf.size);
+
+/* Опасно ли бежать по прямой в эту сторону: щуп на шаг и на клетку. */
+function lineHazard(world, enemy, angle) {
+  for (const reach of [BODY + 10, TILE_SIZE * 1.1]) {
+    const at = tileIndex(world, enemy.x + Math.cos(angle) * reach, enemy.y + Math.sin(angle) * reach);
+    if (hazardIndex(world, enemy, at)) return true;
+  }
+  return false;
 }
 
 /* Волна построена от игрока, а к точке шума враг идёт по прямой со скольжением. */

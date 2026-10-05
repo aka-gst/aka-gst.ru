@@ -64,7 +64,7 @@ import {
 import { blocksMove, TILE_SIZE } from './level.js';
 import { GROUND } from './field.js';
 import { hasSight, setCircuit } from './world.js';
-import { INVESTIGATE } from './vospriyatie/tuning.js';
+import { INVESTIGATE } from './vendor/stels-ii@1.0.0/tuning.js';
 import { knowsBlood } from './karma.js';
 
 /* Дальность разговора: сквозь прутья клетки — две клетки с хвостом. */
@@ -155,7 +155,16 @@ const KUZNEC = {
     },
     bashnya: {
       say: 'Ядро там. Щитоносцы кругом, поле. Тебе туда не надо.',
-      choices: [{ id: 'ok', text: 'Посмотрим.', next: null }],
+      choices: [
+        { id: 'ok', text: 'Посмотрим.', next: null },
+        /* Слух про склад (05.10, src/podgotovka.js): где плащи и что
+           будет, если их не станет. */
+        { id: 'plashchi', text: 'А от огня они чем спасаются?', next: 'plashchi' },
+      ],
+    },
+    plashchi: {
+      say: 'Мокрые плащи, в сундуке у сторожки. Сгорит сундук — побегают зря.',
+      choices: [{ id: 'ok', text: 'Учту.', next: null }],
     },
   },
 };

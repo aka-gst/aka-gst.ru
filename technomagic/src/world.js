@@ -24,10 +24,10 @@ import {
 } from './field.js';
 import { spellOf, STACK_LIMIT, CHARGE_STEP, colourOf, ELEMENT_ORDER, ELEMENTS } from './magic.js';
 import { createOperation, updateOperation } from './operation.js';
-/* Зрение и тревога МГС — дословно (src/vospriyatie/). Работают только на
+/* Зрение и тревога МГС — общий модуль stels-ii (src/vendor/). Работают только на
    этажах с флагом `watchful`; остальные этажи их не видят вовсе. */
-import { createAlarm, updateAlarm, spotted, disturb, sightMul, CALM } from './vospriyatie/alarm.js';
-import { canSee } from './vospriyatie/vision.js';
+import { createAlarm, updateAlarm, spotted, disturb, sightMul, CALM } from './vendor/stels-ii@1.0.0/alarm.js';
+import { canSee } from './vendor/stels-ii@1.0.0/vision.js';
 /* Свет МГС (light.js дословно) и наши источники — только на этаже, который
    назвал свои лампы («Башня»); остальные этажи света не получают вовсе. */
 import { createLighting, updateLighting, lampsTouched, lampHit, seen as litTarget } from './vospriyatie/svet.js';
@@ -40,6 +40,7 @@ import { initWitnesses, updateWitnesses } from './vospriyatie/svideteli.js';
 /* Слой «г»: жители, разговоры, задания «Башни» (src/zhiteli.js). */
 import { initResidents, updateResidents } from './zhiteli.js';
 import { createKarma, stepKarma } from './karma.js';
+import { stepPodgotovka, initPodgotovka, learnFear, cloakContact, cloakHeat, wetCloak, fearProbe } from './podgotovka.js';
 
 export { TILE_SIZE };
 
@@ -395,7 +396,7 @@ function raiseOperationAlarm(world, cause, engage = false, x = null, y = null) {
  * =========================================================
  * На обычных этажах тревога — один флаг `engaged`: поднялся и не
  * опускается. На этаже с флагом `watchful` («Башня») вместо него живёт
- * машина состояний МГС (src/vospriyatie/alarm.js, дословно):
+ * машина состояний МГС (src/vendor/stels-ii@1.0.0/alarm.js, дословно):
  * ТРЕВОГА → ПОИСК 20 с → НАСТОРОЖЕ 45 с → тихо. `engaged` здесь не
  * хранится, а выводится каждый кадр: «не тихо» — значит этаж настороже,
  * и всё, что раньше спрашивало флаг (шаги слышны, тела ищут), спрашивает
@@ -979,8 +980,11 @@ export function createWorld(level) {
   /* Карма (src/karma.js): на любом этаже, пусть пустая, — экран читает её всегда. */
   world.karma = createKarma();
   if (level.residents) initResidents(world);
+  /* Склад плащей (src/podgotovka.js): только этаж с `sklad`. */
+  initPodgotovka(world);
 
   world.flow = buildFlowField(world, world.player.x, world.player.y);
+  world.flowWary = null;
   return world;
 }
 
@@ -1122,7 +1126,7 @@ const WITNESS_SIGHT = 300;
 const WITNESS_HEAR = 130;
 
 /* Один страж и одно тело: заметил ли он, что тело упало. Вынесено из
-   witnessed() 04.10, чтобы тот же ответ брала и выучка (adaptKin ниже):
+   witnessed() 04.10, чтобы тот же ответ брал и страх (witnessHurt ниже):
    «увидел, как своего свалили огнём» и «заметил смерть» — один вопрос. */
 function sawFall(world, enemy, victim) {
   if (!enemy.alive || enemy === victim) return false;
@@ -1150,31 +1154,34 @@ function witnessed(world, victim) {
 
 /*
  * ЗАЩИТЫ ВРАГА (отзыв Сергея 04.10, п.18: «непонятно, какие заклинания
- * против каких противников: показывать защиты. Один гоблин убит огнём —
- * второй уже защищён от огня, надо придумать новый способ»).
+ * против каких противников: показывать защиты»).
  *
- * У врага две части защиты:
+ * До 05.10 здесь была выучка: свалил своего огнём у них на глазах —
+ * через секунду огонь их больше не брал. Сергей, 05.10: «как он через
+ * секунду не боится огня? Так могут только спец-маги, или если он
+ * сбегает за спец-защитой». Выучку убрали. Защита теперь бывает двух
+ * видов, и обе — вещь, а не знание:
  *   resist   своя стихия с рождения (щит носителя, цвет заклинателя) —
- *            как было, строкой;
- *   learned  выученные: стихии, которыми при нём свалили СВОЕГО (того же
- *            kind) — adaptKin ниже. Массив, по порядку выучки.
- * Полный список для экрана — resistList(enemy). Если своей стихии нет, а
- * выучка есть, resist становится первой выученной: кольцо защиты в обоих
- * видах (render.js, view3d/igra.js читают enemy.resist) появляется без
- * правки отрисовки.
+ *            «спец-маги», как было, строкой;
+ *   gear     снаряжение: мокрый плащ со склада (src/podgotovka.js),
+ *            ['fire'], пока плащ мокрый. Высох — защиты нет.
+ * Что видевшие поняли — не защита, а поведение: обходят огонь, тушат,
+ * бегут за плащом (enemy.fearOf, enemy.task — podgotovka.js).
+ * Полный список для экрана — resistList(enemy); src/zashchity.js читает
+ * те же поля, кольцо и щиток над головой появляются без правки отрисовки.
  *
- * Правило одно на обе части: удар не проходит, если ВСЕ стихии удара в
- * защите. Огнеупорного берёт ПАР (огонь+вода): вода не выучена.
+ * Правило одно: удар не проходит, если ВСЕ стихии удара в защите.
+ * Огнеупорного берёт ПАР (огонь+вода): вода не в защите.
  */
 export function resistList(enemy) {
   const out = [];
   if (enemy.resist) out.push(enemy.resist);
-  for (const element of enemy.learned || []) if (!out.includes(element)) out.push(element);
+  for (const element of enemy.gear || []) if (!out.includes(element)) out.push(element);
   return out;
 }
 
 export function resists(enemy, elements) {
-  if (!enemy.resist && !(enemy.learned && enemy.learned.length)) return false;
+  if (!enemy.resist && !(enemy.gear && enemy.gear.length)) return false;
   if (!elements || !elements.length) return false; /* железо стойкость не разбирает */
   const list = resistList(enemy);
   return elements.every((element) => list.includes(element));
@@ -1186,95 +1193,55 @@ export function resisted(world, enemy, angle, source = {}) {
   enemy.hitFlash = 0.12;
   enemy.blocked = 0.3;
   pop(world, enemy.x, enemy.y, 15, '255,255,255');
-  /* Стихия в событии — та, что ударила и не прошла: у выучившего огонь
-     «ОГОНЬ ЕГО НЕ БЕРЁТ», а не цвет его родного щита. */
+  /* Стихия в событии — та, что ударила и не прошла. Держал плащ, а не
+     своя стихия, — событие говорит это (`gear`), и удар плащ сушит. */
   const element = source.elements[0];
+  const byGear = !(enemy.resist && source.elements.every((e) => e === enemy.resist));
   spark(world, enemy.x, enemy.y, angle + Math.PI, 1.4, 8, colourOf(element), 160);
-  world.events.push({
-    type: 'resist', element,
-    learned: (enemy.learned || []).includes(element),
-    kind: enemy.kind,
-  });
+  if (byGear) cloakContact(world, enemy);
+  world.events.push({ type: 'resist', element, gear: byGear, kind: enemy.kind });
   return true;
 }
 
 /*
- * ВЫУЧКА СВОИХ. Свалили врага стихией — и это ВИДЕЛИ другие того же рода
- * (sawFall: тот же конус МГС со светом, что у «заметил смерть», или
- * вплотную слышал), — они выучивают эти стихии: в следующий раз то же
- * самое по ним не пройдёт.
+ * ВИДЕЛИ, ЧТО ТВОРИТСЯ СО СВОИМИ (05.10). Стража стихией жгут, валят
+ * или бьют током в луже — и это ВИДЕЛИ другие (sawFall: тот же конус
+ * МГС со светом, что у «заметил смерть», или вплотную слышал). Видевшие
+ * не получают защиты — они понимают: огонь обходят на клетку, при тишине
+ * тушат, а за плащом бегут на склад (podgotovka.js). Любой свой, не
+ * только того же рода: горящий товарищ страшен всем.
  *
- * Почему «на глазах», а не всем на этаже сразу (решение 04.10): канон
- * «Глубины» §12 — «репутация не должна изменяться магически глобально:
- * событие увидел NPC → … → конкретные люди начали реагировать». Знание
- * врагов — та же репутация, только у врагов. И это даёт стелсу цену:
- * свалил одного без свидетелей — остальные не готовы.
- *
- * «Свалили» — и убит, и усыплён одиночной стихией, и заморожен: на этаже
- * с дозором одиночная стихия не убивает (killEnemy), и без этого огонь в
- * руке с порога не учил бы никого ничему. Учат только удары игрока:
- * чужая пуля в спину товарища — не наука.
- *
- * Выучка не мгновенная: LEARN_DELAY ниже. Событие `adapt` — для экрана:
- * кто, сколько их, какие стихии теперь не берут.
+ * Флаг этажа `adaptive`, как раньше: «Башня» учит, кампания — как была.
  */
-/* Сколько секунд уходит у видевшего на то, чтобы понять, чем свалили
-   своего. Не ноль по делу: удар, который уже летит, — цепь по луже,
-   веер, выдох по двоим — бьёт всех, кого застал, и не должен
-   останавливаться о «выученное» посреди себя. Замер на «Ядре»
-   (tests/evgeny-sandbox.mjs, бочка под молнией): плевок усыпил первого
-   на 0.33 с, цепь по разлитой воде добила последнего на 1.07 с — 0.74 с
-   одного и того же выпуска. С задержкой 0.6 второй успевал выучить
-   молнию посреди цепи и устоять; с 1.0 — нет. Человек между двумя
-   своими выпусками тратит больше секунды (набор, откат, прицел), так
-   что «второй огонь не берёт» он видит. */
-export const LEARN_DELAY = 1.0;
-
-function adaptKin(world, victim, source) {
-  /* Флаг этажа, как дозор: «Башня» учит врагов, восемь этажей кампании —
-     как были (старые уровни не трогаем: там бот кампании с двумя
-     стихиями на этаже упирался бы в выучку и погибал — tests/sim.mjs,
-     «ВХОД В ПАРК», 1/8 вместо 8/8). */
-  if (!world.level || !world.level.adaptive) return;
-  if (!source || source.by !== 'player' || !source.elements || !source.elements.length) return;
-  const elements = [...new Set(source.elements)];
+/* Сколько видевший смотрит на горящего своего, прежде чем что-то делать
+   по поручению (podgotovka.js, assign): горит товарищ 0.7 с, падает —
+   и только потом «за плащом» или «тушить». */
+const SHOCK_TIME = 1.5;
+function witnessHurt(world, victim, element) {
+  if (!world.level || !world.level.adaptive || !element) return;
+  let learners = 0;
   for (const other of world.enemies) {
-    if (other === victim || other.kind !== victim.kind || !other.alive || other.downed > 0) continue;
+    if (other === victim || !other.alive || other.downed > 0) continue;
     if (!sawFall(world, other, victim)) continue;
-    const fresh = elements.filter((element) => !resistList(other).includes(element)
-      && !(other.pendingLearn || []).some((p) => p.element === element));
-    if (!fresh.length) continue;
-    other.pendingLearn = [...(other.pendingLearn || []),
-      ...fresh.map((element) => ({ element, at: world.time + LEARN_DELAY, kind: victim.kind, x: victim.x, y: victim.y }))];
+    if (learnFear(world, other, element, 'kollega', false)) learners += 1;
+    if (element === 'fire') {
+      other.douser = true;
+      /* Поручения — не сразу: сперва досмотреть, что с товарищем (его
+         падение слышно, и шум иначе сбивал бы поручение в тот же миг). */
+      other.shockUntil = world.time + SHOCK_TIME;
+      if (!other.cloak) other.wantsCloak = true;
+    }
   }
+  if (learners) world.events.push({ type: 'fear', element, learners, x: victim.x, y: victim.y });
 }
 
-/* Понял — выучил: отложенная выучка становится защитой. Одно событие
-   `adapt` на кадр и вид — для экрана («ГРОМИЛЫ ЗАЩИТИЛИСЬ ОТ ОГНЯ»). */
-function ripenLearning(world) {
-  const out = new Map();
-  for (const enemy of world.enemies) {
-    if (!enemy.pendingLearn || !enemy.pendingLearn.length) continue;
-    const ready = enemy.pendingLearn.filter((p) => world.time >= p.at);
-    if (!ready.length) continue;
-    enemy.pendingLearn = enemy.pendingLearn.filter((p) => world.time < p.at);
-    if (!enemy.alive) continue;
-    for (const p of ready) {
-      if (resistList(enemy).includes(p.element)) continue;
-      enemy.learned = [...(enemy.learned || []), p.element];
-      const key = `${p.kind}`;
-      const entry = out.get(key) || { kind: p.kind, elements: [], learners: new Set(), x: p.x, y: p.y };
-      if (!entry.elements.includes(p.element)) entry.elements.push(p.element);
-      entry.learners.add(enemy);
-      out.set(key, entry);
-    }
-    if (!enemy.resist && enemy.learned && enemy.learned.length) enemy.resist = enemy.learned[0];
-  }
-  for (const entry of out.values()) {
-    world.events.push({
-      type: 'adapt', kind: entry.kind, elements: entry.elements, learners: entry.learners.size, x: entry.x, y: entry.y,
-    });
-  }
+/* Какой стихией этот удар страшен видевшему: огонь — огонь; ток по
+   мокрому или цепь по луже — «вода под током». */
+function hazardOf(enemy, cause, source = {}) {
+  const elements = source.elements || [];
+  if (cause === 'fire' || elements.includes('fire') || enemy.burning > 0) return 'fire';
+  if (cause === 'chain' || ((enemy.wet || 0) > 0 && source.traits && source.traits.shock)) return 'bolt';
+  return null;
 }
 
 export function knockDown(world, enemy, angle, срок = DOWN_TIME) {
@@ -1368,7 +1335,7 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
     enemy.brittle = 3;
     knockDown(world, enemy, angle);
     world.events.push({ type: 'frozen', x: enemy.x, y: enemy.y });
-    adaptKin(world, enemy, source);
+    witnessHurt(world, enemy, hazardOf(enemy, cause, source));
     return;
   }
 
@@ -1424,14 +1391,14 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
       by: source.by || 'player',
       permanent: Boolean(enemy.unconscious),
     });
-    adaptKin(world, enemy, source);
+    witnessHurt(world, enemy, hazardOf(enemy, cause, source));
     return;
   }
 
   enemy.alive = false;
   enemy.unconscious = false;
   world.kills += 1;
-  adaptKin(world, enemy, source);
+  witnessHurt(world, enemy, hazardOf(enemy, cause, source));
 
   /*
    * Тело падает — и это слышно. Шум идёт всегда, даже когда тревоги нет:
@@ -1942,6 +1909,14 @@ function land(world, tiles, substance, at, force = false) {
  * следа сигнатуры, — иначе лёд на рву таял бы от пожара соломы, но не от
  * пожара скамьи, и игрок справедливо решил бы, что мир врёт.
  */
+/* Ведро воды из рук стража (src/podgotovka.js): то же вещество, что
+   разливает бочка (SPILL), и та же дверь, что у заклинания, — огонь
+   гаснет по таблице встреч (field.js, meet), событие `doused` уходит
+   так же. Своего правила тушения у стражи нет. */
+export function splashWater(world, x, y, r) {
+  layDown(world, tilesInCircle(world, x, y, r), SPILL, { x, y, r });
+}
+
 function layDown(world, tiles, substance, at, force = false) {
   const moat = reshapeMoat(world, tiles, substance);
   /* Клетка, которую вещество только что превратило из рва в мост, своего
@@ -2622,6 +2597,8 @@ function scorch(world, body, dt) {
 
   if (ground === GROUND.WATER || ground === GROUND.MUD) {
     body.wet = WET_TIME;
+    /* Плащ мокнет там же, где мокнет тело: лужа, грязь (podgotovka.js). */
+    if (body.cloak) wetCloak(world, body);
     if (body.burning > 0) {
       body.burning = 0;
       addCloud(world, body.x, body.y, TILE_SIZE, 'steam');
@@ -2629,11 +2606,19 @@ function scorch(world, body, dt) {
     }
   }
 
+  /* Мокрый плащ в пламени держит, но сохнет: шаг в огонь и каждая
+     секунда в нём выпаривают воду (podgotovka.js, cloakHeat). Высох —
+     строкой ниже загорится, как любой. */
+  const onFire = burningAt(world, body.x, body.y);
+  if (body.cloak) cloakHeat(world, body, onFire, dt);
+
   /* Стойкий к огню в огне не горит: это та же стойкость, просто пол. */
-  if (!body.burning && !body.wet && burningAt(world, body.x, body.y)
+  if (!body.burning && !body.wet && onFire
       && !resists(body, ['fire'])) {
     body.burning = BURN_TIME;
     world.events.push({ type: 'ignite', player: body === world.player });
+    /* Свой загорелся у них на глазах — видевшие поняли про огонь (05.10). */
+    if (world.enemies.includes(body)) witnessHurt(world, body, 'fire');
     const origin = body.heard?.origin;
     if (world.enemies.includes(body) && origin
         && Math.hypot(body.x - origin.x, body.y - origin.y) <= TILE_SIZE * 2
@@ -2734,6 +2719,9 @@ export function update(world, dt, intent) {
   const playerCell = tileIndex(world, world.player.x, world.player.y);
   if (world.flowTimer <= 0 || playerCell !== world.flowFrom) {
     world.flow = buildFlowField(world, world.player.x, world.player.y);
+    /* Волна осторожных — только если на этаже кто-то видел, как жжёт своих. */
+    const probe = fearProbe(world);
+    world.flowWary = probe ? buildFlowField(world, world.player.x, world.player.y, probe) : null;
     world.flowFrom = playerCell;
     world.flowTimer = 0.2;
   }
@@ -2779,7 +2767,7 @@ export function update(world, dt, intent) {
   /* Карма — до жителей: убийство этого кадра уже знают те, кто видел,
      и жители в этом же кадре отвечают на него отказом и провалом. */
   stepKarma(world);
-  ripenLearning(world);
+  stepPodgotovka(world, dt);
   updateResidents(world, dt, intent);
   maybeSlow(world);
 

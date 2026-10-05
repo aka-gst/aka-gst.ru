@@ -37,8 +37,8 @@
  * этажей кампании видят как видели.
  */
 
-import { createLight, updateLights, illumination, breakLight, douseLight, lightOn } from './light.js';
-import { LIGHT } from './tuning.js';
+import { createLight, updateLights, illumination, breakLight, douseLight, lightOn } from '../vendor/stels-ii@1.0.0/light.js';
+import { LIGHT } from '../vendor/stels-ii@1.0.0/tuning.js';
 import { TILE_SIZE } from '../level.js';
 import { GROUND } from '../field.js';
 

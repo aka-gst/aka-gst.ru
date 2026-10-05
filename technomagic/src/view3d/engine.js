@@ -231,10 +231,10 @@ export class Builder {
    --------------------------------------------------------- */
 
 const VS = `
-attribute vec3 a_position; attribute vec3 a_normal; attribute vec3 a_color; attribute vec4 a_extra; attribute vec2 a_anchor;
+attribute vec3 a_position; attribute vec3 a_normal; attribute vec3 a_color; attribute vec4 a_extra; attribute vec2 a_anchor; attribute vec2 a_uv;
 uniform mat4 u_model; uniform mat4 u_viewProjection;
 uniform vec3 u_cutCenter; uniform vec2 u_cutDir; uniform vec4 u_cut; uniform vec2 u_cut2;
-varying vec3 v_world; varying vec3 v_normal; varying vec3 v_color; varying vec4 v_extra; varying float v_cut; varying float v_fade;
+varying vec3 v_world; varying vec3 v_normal; varying vec3 v_color; varying vec4 v_extra; varying float v_cut; varying float v_fade; varying vec2 v_uv;
 void main(){
   vec4 w = u_model * vec4(a_position, 1.);
   float k = 0., fade = 0.;
@@ -274,7 +274,7 @@ void main(){
   v_cut = k; v_fade = fade;
   v_world = w.xyz;
   v_normal = normalize(mat3(u_model) * a_normal);
-  v_color = a_color; v_extra = a_extra;
+  v_color = a_color; v_extra = a_extra; v_uv = a_uv;
   gl_Position = u_viewProjection * w;
 }`;
 
@@ -284,13 +284,14 @@ precision highp float;
 #else
 precision mediump float;
 #endif
-varying vec3 v_world; varying vec3 v_normal; varying vec3 v_color; varying vec4 v_extra; varying float v_cut; varying float v_fade;
+varying vec3 v_world; varying vec3 v_normal; varying vec3 v_color; varying vec4 v_extra; varying float v_cut; varying float v_fade; varying vec2 v_uv;
 uniform vec3 u_tint; uniform float u_emissive; uniform float u_alpha; uniform float u_unlit; uniform float u_surf;
 uniform vec3 u_eye; uniform vec3 u_viewDir; uniform float u_ortho; uniform vec3 u_focus;
 uniform vec3 u_fog; uniform vec2 u_fogRange;
 uniform vec3 u_sky; uniform vec3 u_ground; uniform vec3 u_moonDir; uniform vec3 u_moonColor;
 uniform vec4 u_lightPos[${MAX_LIGHTS}]; uniform vec4 u_lightCol[${MAX_LIGHTS}];
 uniform float u_time; uniform float u_grass;
+uniform sampler2D u_map; uniform float u_useMap;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
   return mix(mix(hash(i), hash(i + vec2(1., 0.)), f.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), f.x), f.y); }
@@ -304,6 +305,8 @@ void main(){
   }
   float surf = u_surf >= 0. ? u_surf : v_extra.y;
   vec3 base = v_color * u_tint;
+  /* Модель с картинкой (modeli.js): цвет вершины — тон, картинка — рисунок. */
+  if (u_useMap > .5) base *= texture2D(u_map, v_uv).rgb;
   float alpha = v_extra.w * u_alpha;
   vec3 n = normalize(v_normal);
   float spec = 0.;
@@ -464,6 +467,31 @@ void main(){
   gl_FragColor = vec4(pow(max(col, vec3(0.)), vec3(.92)), alpha);
 }`;
 
+/*
+ * ПЕРСОНАЖ С КОЖЕЙ (modeli.js): своя вершинная программа, фрагментная —
+ * та же FS, что у всего мира, поэтому свет, туман, подсветка края (SKIN)
+ * и ночь у фигур те же, что у стен. Кости — массив матриц в униформах:
+ * у наших персонажей 23 кости, SKIN_BONES × 4 векторов + 8 на остальное
+ * укладываются в гарантированные WebGL 1 128 векторов. Срез стен фигуры
+ * не касается (v_cut, v_fade = 0). Матрица из матрицы (mat3(mat4)) в
+ * GLSL ES 1.0 не обязана собираться — нормаль ведётся через vec4(…, 0.).
+ */
+export const SKIN_BONES = 24;
+export const SKIN_STRIDE = 18; /* положение 3 · нормаль 3 · цвет 3 · кости 4 · веса 4 · свечение 1 */
+const SKINVS = `
+attribute vec3 a_position; attribute vec3 a_normal; attribute vec3 a_color; attribute vec4 a_joints; attribute vec4 a_weights; attribute float a_glow;
+uniform mat4 u_model; uniform mat4 u_viewProjection; uniform mat4 u_bones[${SKIN_BONES}];
+varying vec3 v_world; varying vec3 v_normal; varying vec3 v_color; varying vec4 v_extra; varying float v_cut; varying float v_fade; varying vec2 v_uv;
+void main(){
+  mat4 sk = u_bones[int(a_joints.x)] * a_weights.x + u_bones[int(a_joints.y)] * a_weights.y
+          + u_bones[int(a_joints.z)] * a_weights.z + u_bones[int(a_joints.w)] * a_weights.w;
+  vec4 w = u_model * (sk * vec4(a_position, 1.));
+  v_world = w.xyz;
+  v_normal = normalize((u_model * (sk * vec4(a_normal, 0.))).xyz);
+  v_color = a_color; v_extra = vec4(a_glow, 0., 0., 1.); v_cut = 0.; v_fade = 0.; v_uv = vec2(0.);
+  gl_Position = u_viewProjection * w;
+}`;
+
 const QUADVS = 'attribute vec2 a_position;varying vec2 v_uv;void main(){v_uv=a_position*.5+.5;gl_Position=vec4(a_position,0.,1.);}';
 /* Размытие свечения — как у Vanta: выжимка ярче порога и гаусс в две стороны. */
 const BLURFS = `precision mediump float;varying vec2 v_uv;uniform sampler2D u_texture;uniform vec2 u_step;uniform float u_extract;
@@ -532,6 +560,84 @@ export class Renderer {
       this.register(name, new Builder().add(geo, M.identity()).data);
     }
     this.register('blob', blobGeometry());
+    /* Белая точка 1×1 — картинка по умолчанию: у сэмплера всегда есть что читать. */
+    this.white = this.createTexture(null);
+    this.skinGeometries = new Map();
+    this.skinProgram = null;
+    this.skinError = null;
+  }
+
+  /*
+   * Картинка модели → текстура. Сторона степени двойки — с мипами и
+   * повтором (стена Kenney тянется по клетке, рисунок повторяется), иначе
+   * WebGL 1 повтора не умеет — край прижимается. source = null — белая точка.
+   */
+  createTexture(source) {
+    const gl = this.gl, t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    if (!source) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      return t;
+    }
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+    const w = source.width, h = source.height;
+    const pot = (w & (w - 1)) === 0 && (h & (h - 1)) === 0;
+    if (pot) {
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    } else gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    for (const k of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T]) gl.texParameteri(gl.TEXTURE_2D, k, pot ? gl.REPEAT : gl.CLAMP_TO_EDGE);
+    return t;
+  }
+
+  /*
+   * Программа персонажей — по первому требованию и под try: не собралась
+   * (старый телефон, мало униформ) — skinError, и modeli.js рисует фигуры
+   * прежними, процедурными. Мир без неё не ломается.
+   */
+  skinReady() {
+    if (this.skinProgram) return true;
+    if (this.skinError) return false;
+    try {
+      const need = SKIN_BONES * 4 + 8;
+      const have = this.gl.getParameter(this.gl.MAX_VERTEX_UNIFORM_VECTORS);
+      if (have < need) throw new Error(`униформ ${have}, нужно ${need}`);
+      this.skinProgram = this.makeProgram(SKINVS, FS);
+      return true;
+    } catch (error) {
+      this.skinError = error.message;
+      return false;
+    }
+  }
+
+  /* prepared — из gltf.js prepareSkinned: один буфер вершин и один индексов. */
+  registerSkinned(name, k) {
+    const gl = this.gl, n = k.vertices, data = new Float32Array(n * SKIN_STRIDE);
+    /* Перекраска (modeli.js, repaint) регистрирует ту же модель заново: прежние буферы — прочь. */
+    const old = this.skinGeometries.get(name);
+    if (old) { gl.deleteBuffer(old.vbuf); gl.deleteBuffer(old.ibuf); }
+    for (let i = 0; i < n; i += 1) {
+      const o = i * SKIN_STRIDE;
+      data.set(k.pos.subarray(i * 3, i * 3 + 3), o);
+      data.set(k.nrm.subarray(i * 3, i * 3 + 3), o + 3);
+      data.set(k.col.subarray(i * 3, i * 3 + 3), o + 6);
+      data.set(k.joints.subarray(i * 4, i * 4 + 4), o + 9);
+      data.set(k.weights.subarray(i * 4, i * 4 + 4), o + 13);
+      /* Свечение части тела (modeli.js, KRASKI: метка класса) — 0, если краски нет. */
+      data[o + 17] = k.glow ? k.glow[i] : 0;
+    }
+    const vbuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    const ibuf = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibuf);
+    if (k.index instanceof Uint32Array && !gl.getExtension('OES_element_index_uint')) throw new Error('индексы 32 бита не поддерживаются');
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, k.index, gl.STATIC_DRAW);
+    this.skinGeometries.set(name, { vbuf, ibuf, count: k.index.length, type: k.index instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT });
   }
 
   makeProgram(vs, fs) {
@@ -552,18 +658,20 @@ export class Renderer {
   loc(p, name) { if (!(name in p.u)) p.u[name] = this.gl.getUniformLocation(p.p, name); return p.u[name]; }
   attr(p, name) { if (!(name in p.a)) p.a[name] = this.gl.getAttribLocation(p.p, name); return p.a[name]; }
 
-  register(name, data) {
+  /* opts.stride — 15 (обычный) или 17 (с картинкой: + u, v); opts.texture — её текстура. */
+  register(name, data, opts = {}) {
     const gl = this.gl;
     const old = this.geometries.get(name);
     const b = old ? old.buffer : gl.createBuffer();
+    const stride = opts.stride || STRIDE;
     gl.bindBuffer(gl.ARRAY_BUFFER, b);
     gl.bufferData(gl.ARRAY_BUFFER, data instanceof Float32Array ? data : new Float32Array(data), gl.STATIC_DRAW);
-    this.geometries.set(name, { buffer: b, count: data.length / STRIDE });
+    this.geometries.set(name, { buffer: b, count: data.length / stride, stride, texture: opts.texture || null });
   }
 
   /* Запечённый слой: один буфер, один вызов. */
   setStatic(key, data, options = {}) {
-    this.register(key, data);
+    this.register(key, data, { stride: options.stride, texture: options.texture });
     const existing = this.statics.find((s) => s.key === key);
     const entry = { key, transparent: Boolean(options.transparent || options.shadow), additive: Boolean(options.additive), shadow: Boolean(options.shadow) };
     if (existing) Object.assign(existing, entry); else this.statics.push(entry);
@@ -631,11 +739,12 @@ export class Renderer {
     const gl = this.gl;
     this.eye = camera.eye;
     this.viewProjection = M.multiply(camera.proj, camera.view);
-    const opaque = [], transparent = [];
+    const opaque = [], transparent = [], skinned = [];
     const walk = (node, parent) => {
       if (!node.visible) return;
       node.world = M.multiply(parent, node.localMatrix || M.compose(node.position, node.rotation, node.scale));
-      if (node.geometry) {
+      if (node.skin) skinned.push(node);
+      else if (node.geometry) {
         if (node.material.alpha < 0.999 || node.material.additive || node.material.shadow) transparent.push(node);
         else opaque.push(node);
       }
@@ -654,30 +763,12 @@ export class Renderer {
 
     const p = this.program;
     gl.useProgram(p.p);
-    gl.uniformMatrix4fv(this.loc(p, 'u_viewProjection'), false, this.viewProjection);
-    gl.uniform3fv(this.loc(p, 'u_eye'), camera.eye);
-    gl.uniform3fv(this.loc(p, 'u_viewDir'), camera.viewDir);
-    gl.uniform1f(this.loc(p, 'u_ortho'), camera.ortho ? 1 : 0);
-    gl.uniform3fv(this.loc(p, 'u_focus'), camera.focus);
-    gl.uniform3fv(this.loc(p, 'u_fog'), this.fog);
-    gl.uniform2fv(this.loc(p, 'u_fogRange'), params.fogRange || [9, 20]);
-    gl.uniform3fv(this.loc(p, 'u_sky'), this.sky);
-    gl.uniform3fv(this.loc(p, 'u_ground'), this.ground);
-    gl.uniform3fv(this.loc(p, 'u_moonDir'), this.moonDir);
-    gl.uniform3fv(this.loc(p, 'u_moonColor'), this.moonColor);
-    gl.uniform4fv(this.loc(p, 'u_lightPos[0]'), this.lightPos);
-    gl.uniform4fv(this.loc(p, 'u_lightCol[0]'), this.lightCol);
-    gl.uniform1f(this.loc(p, 'u_time'), params.time || 0);
-    gl.uniform1f(this.loc(p, 'u_grass'), this.grass);
-    const c = this.cut;
-    gl.uniform3fv(this.loc(p, 'u_cutCenter'), c.center);
-    gl.uniform2fv(this.loc(p, 'u_cutDir'), c.dir);
-    gl.uniform4f(this.loc(p, 'u_cut'), c.depth, c.radius, c.low, c.on ? 1 : 0);
-    gl.uniform2f(this.loc(p, 'u_cut2'), c.soft ?? 0.75, c.extent ?? 0.5);
+    this.sceneUniforms(p, camera, params);
 
     const identity = M.identity();
     for (const s of this.statics) if (!s.transparent) this.drawBuffer(s.key, identity, NEUTRAL);
     for (const n of opaque) this.drawNode(n);
+    if (skinned.length) this.drawSkinned(skinned, camera, params);
 
     /* Тени — до прозрачного, с отступом по глубине: иначе пятно мерцает
        на полу (та самая z-борьба). */
@@ -700,7 +791,7 @@ export class Renderer {
       gl.blendFunc(gl.SRC_ALPHA, n.material.additive ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA);
       this.drawNode(n);
     }
-    for (const a of ['a_position', 'a_normal', 'a_color', 'a_extra', 'a_anchor']) gl.disableVertexAttribArray(this.attr(p, a));
+    for (const a of ['a_position', 'a_normal', 'a_color', 'a_extra', 'a_anchor', 'a_uv']) { const l = this.attr(p, a); if (l >= 0) gl.disableVertexAttribArray(l); }
     /* Мягкие клубы (пар, пыль) — обычным смешиванием: облако прячет то,
        что за ним. Искры — сложением поверх: они светятся. */
     if (soft && soft.length) this.drawParticles(soft, camera, false);
@@ -737,6 +828,31 @@ export class Renderer {
     gl.disableVertexAttribArray(this.attr(pp, 'a_position'));
   }
 
+  /* Общие униформы кадра — и для мира, и для персонажей (одна FS). */
+  sceneUniforms(p, camera, params) {
+    const gl = this.gl;
+    gl.uniformMatrix4fv(this.loc(p, 'u_viewProjection'), false, this.viewProjection);
+    gl.uniform3fv(this.loc(p, 'u_eye'), camera.eye);
+    gl.uniform3fv(this.loc(p, 'u_viewDir'), camera.viewDir);
+    gl.uniform1f(this.loc(p, 'u_ortho'), camera.ortho ? 1 : 0);
+    gl.uniform3fv(this.loc(p, 'u_focus'), camera.focus);
+    gl.uniform3fv(this.loc(p, 'u_fog'), this.fog);
+    gl.uniform2fv(this.loc(p, 'u_fogRange'), params.fogRange || [9, 20]);
+    gl.uniform3fv(this.loc(p, 'u_sky'), this.sky);
+    gl.uniform3fv(this.loc(p, 'u_ground'), this.ground);
+    gl.uniform3fv(this.loc(p, 'u_moonDir'), this.moonDir);
+    gl.uniform3fv(this.loc(p, 'u_moonColor'), this.moonColor);
+    gl.uniform4fv(this.loc(p, 'u_lightPos[0]'), this.lightPos);
+    gl.uniform4fv(this.loc(p, 'u_lightCol[0]'), this.lightCol);
+    gl.uniform1f(this.loc(p, 'u_time'), params.time || 0);
+    gl.uniform1f(this.loc(p, 'u_grass'), this.grass);
+    const c = this.cut;
+    gl.uniform3fv(this.loc(p, 'u_cutCenter'), c.center);
+    gl.uniform2fv(this.loc(p, 'u_cutDir'), c.dir);
+    gl.uniform4f(this.loc(p, 'u_cut'), c.depth, c.radius, c.low, c.on ? 1 : 0);
+    gl.uniform2f(this.loc(p, 'u_cut2'), c.soft ?? 0.75, c.extent ?? 0.5);
+  }
+
   bindQuad(p) {
     const gl = this.gl;
     gl.bindBuffer(gl.ARRAY_BUFFER, this.quad);
@@ -751,7 +867,7 @@ export class Renderer {
     const gl = this.gl, p = this.program, g = this.geometries.get(key);
     if (!g || !g.count) return;
     gl.bindBuffer(gl.ARRAY_BUFFER, g.buffer);
-    const bytes = STRIDE * 4;
+    const bytes = g.stride * 4;
     const attribute = (name, size, offset) => {
       const a = this.attr(p, name);
       if (a < 0) return;
@@ -760,6 +876,18 @@ export class Renderer {
     };
     attribute('a_position', 3, 0); attribute('a_normal', 3, 3); attribute('a_color', 3, 6);
     attribute('a_extra', 4, 9); attribute('a_anchor', 2, 13);
+    /* Картинка — только у буферов модели (шаг 17): у обычного буфера
+       включённый a_uv читал бы за его концом, и WebGL отказал бы в вызове. */
+    const uv = this.attr(p, 'a_uv');
+    const map = g.texture || material.map || null;
+    if (uv >= 0) {
+      if (g.stride > STRIDE) { gl.enableVertexAttribArray(uv); gl.vertexAttribPointer(uv, 2, gl.FLOAT, false, bytes, STRIDE * 4); }
+      else gl.disableVertexAttribArray(uv);
+    }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, map && g.stride > STRIDE ? map : this.white);
+    gl.uniform1i(this.loc(p, 'u_map'), 0);
+    gl.uniform1f(this.loc(p, 'u_useMap'), map && g.stride > STRIDE ? 1 : 0);
     gl.uniformMatrix4fv(this.loc(p, 'u_model'), false, model);
     gl.uniform3fv(this.loc(p, 'u_tint'), material.color);
     gl.uniform1f(this.loc(p, 'u_emissive'), material.emissive || 0);
@@ -769,6 +897,48 @@ export class Renderer {
     gl.uniform1f(this.loc(p, 'u_surf'), material.surf ?? -1);
     gl.drawArrays(gl.TRIANGLES, 0, g.count);
     this.stats.calls += 1; this.stats.triangles += g.count / 3;
+  }
+
+  /*
+   * Персонажи: своя программа, общие униформы кадра; у узла node.skin —
+   * Float32Array матриц костей (gltf.js finishPose), node.geometry — имя
+   * из registerSkinned. После — атрибуты выключаются, мир рисуется дальше
+   * своей программой (униформы у программы свои и не теряются).
+   */
+  drawSkinned(nodes, camera, params) {
+    const gl = this.gl, main = this.program;
+    for (const a of ['a_position', 'a_normal', 'a_color', 'a_extra', 'a_anchor', 'a_uv']) { const l = this.attr(main, a); if (l >= 0) gl.disableVertexAttribArray(l); }
+    const p = this.skinProgram;
+    gl.useProgram(p.p);
+    this.sceneUniforms(p, camera, params);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.white);
+    gl.uniform1i(this.loc(p, 'u_map'), 0);
+    gl.uniform1f(this.loc(p, 'u_useMap'), 0);
+    const attrs = [['a_position', 3, 0], ['a_normal', 3, 3], ['a_color', 3, 6], ['a_joints', 4, 9], ['a_weights', 4, 13], ['a_glow', 1, 17]];
+    for (const n of nodes) {
+      const g = this.skinGeometries.get(n.geometry);
+      if (!g) continue;
+      gl.bindBuffer(gl.ARRAY_BUFFER, g.vbuf);
+      for (const [name, size, offset] of attrs) {
+        const a = this.attr(p, name);
+        if (a < 0) continue;
+        gl.enableVertexAttribArray(a);
+        gl.vertexAttribPointer(a, size, gl.FLOAT, false, SKIN_STRIDE * 4, offset * 4);
+      }
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, g.ibuf);
+      gl.uniformMatrix4fv(this.loc(p, 'u_model'), false, n.world);
+      gl.uniformMatrix4fv(this.loc(p, 'u_bones[0]'), false, n.skin);
+      const m = n.material;
+      gl.uniform3fv(this.loc(p, 'u_tint'), m.color);
+      gl.uniform1f(this.loc(p, 'u_emissive'), m.emissive || 0);
+      gl.uniform1f(this.loc(p, 'u_alpha'), m.alpha ?? 1);
+      gl.uniform1f(this.loc(p, 'u_unlit'), m.unlit || 0);
+      gl.uniform1f(this.loc(p, 'u_surf'), m.surf ?? -1);
+      gl.drawElements(gl.TRIANGLES, g.count, g.type, 0);
+      this.stats.calls += 1; this.stats.triangles += g.count / 3;
+    }
+    for (const [name] of attrs) { const a = this.attr(p, name); if (a >= 0) gl.disableVertexAttribArray(a); }
+    gl.useProgram(main.p);
   }
 
   drawParticles(data, camera, additive = true) {

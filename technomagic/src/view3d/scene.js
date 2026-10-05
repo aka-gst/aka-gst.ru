@@ -21,6 +21,7 @@ import { Builder, Geo, Node, SURF, STRIDE } from './engine.js';
 import { WALL_H, cutAmount } from './camera.js';
 import { createGait, stepGait } from './hodba.js';
 import { spellLook, lookByColour, trailParticles, burstParticles } from './vid-zaklinaniy.js';
+import { bakeModel, modelBounds, modelNodes, actorModel, Aktyor, ACTOR_SCALE, TEX_STRIDE } from './modeli.js';
 
 export { WALL_H };
 const T = TILE_SIZE;
@@ -165,6 +166,22 @@ const hasLamp = (tx, ty) => ((tx * 7 + ty * 13) % 11) === 0;
    ПЕЧЬ ЭТАЖА
    --------------------------------------------------------- */
 
+/*
+ * Модели из библиотеки (modeli.js) на время одной печи: MODELS — сама
+ * библиотека (или null — всё процедурное, как до 05.10), MO — куда
+ * ложатся вершины: без картинки — прямо в общий буфер этажа, с картинкой
+ * — в свой буфер на картинку (scene.setModelStatics). Каждая замена ниже
+ * устроена одинаково: модель есть — ставится модель, нет (не загрузилась,
+ * битая, выключена) — прежняя процедурная фигура, ни одной пустой клетки.
+ */
+let MODELS = null;
+let MO = null;
+const hasModel = (id) => Boolean(MODELS && MODELS.has(id));
+const model = (id, m, opts) => hasModel(id) && bakeModel(MO, MODELS, id, m, opts);
+/* Средняя яркость камня Kenney (cobblestone, 64×64): тон стены этажа делится
+   на неё, чтобы кладка с картинкой была той же светлоты, что процедурная. */
+const KENNEY_STONE = 0.55;
+
 export function bakeLevel(world, options = {}) {
   const pal0 = PALETTES[world.level.theme] || PALETTES[0];
   /*
@@ -180,6 +197,8 @@ export function bakeLevel(world, options = {}) {
   const b = new Builder();
   const shadows = new Builder();
   const glass = new Builder();
+  MODELS = options.models && options.models.ready ? options.models : null;
+  MO = { plain: b.data, tex: new Map() };
   const yard = regions(world);
   const fixtures = { lights: [], forces: [], exits: [], crystals: [], panels: [], lamps: [], unknown: [] };
 
@@ -248,9 +267,16 @@ export function bakeLevel(world, options = {}) {
         }
         const shade = 0.9 + h * 0.18;
         const col = pal.wall.map((c) => c * shade);
-        box(b, tx, 0, ty, tx + 1, WALL_H, ty + 1,
-          { color: col, surf: SURF.BRICK, cut: 1, anchor, shade: baseShade },
-          { color: pal.cap, surf: SURF.CAP, cut: 1, anchor });
+        /* Стена Kenney (выбор Сергея): куб 1×1×1, картинка по миру — клетка
+           один повтор, камень не тянется на высоту стены; тон — палитра этажа. */
+        if (!model('stena', at(tx + 0.5, 0, ty + 0.5, 0, 1, WALL_H, 1), {
+          tint: col.map((c) => c / KENNEY_STONE), tintTop: pal.cap.map((c) => c / KENNEY_STONE * 1.15),
+          cut: 1, anchor, planarUV: true, shade: baseShade,
+        })) {
+          box(b, tx, 0, ty, tx + 1, WALL_H, ty + 1,
+            { color: col, surf: SURF.BRICK, cut: 1, anchor, shade: baseShade },
+            { color: pal.cap, surf: SURF.CAP, cut: 1, anchor });
+        }
         /* Фонарь — только на стене, у которой есть пол рядом: иначе он
            светил бы в толщу ограды. */
         const open = [[0, 1], [1, 0], [-1, 0], [0, -1]].find(([dx, dy]) => {
@@ -299,7 +325,42 @@ export function bakeLevel(world, options = {}) {
     b.add(Geo.quad(), at((x0 + x1) / 2, -0.01, (z0 + z1) / 2, 0, x1 - x0, 1, z1 - z0), outsideLook);
   }
 
-  return { opaque: b.data, shadows: shadows.data, glass: glass.data, fixtures, vertices: b.count + shadows.count + glass.count, massCells };
+  /*
+   * Башня-ориентир (выбор Сергея), только на этаже с ядром: встаёт из
+   * массы стен — на ближайшей к ядру клетке, у которой все соседи стены
+   * (в «Башне» это блок 3×3 во дворе под залом). За оградой её не видно:
+   * камера держит кадр в пределах карты (первый кадр 05.10 — пусто).
+   * Рисуется живой частью кадра (createLiveScene): между камерой и героем
+   * она редеет, а не закрывает его.
+   */
+  const core = (world.props || []).find((p) => p.kind === 'core');
+  if (hasModel('bashnya') && world.level.operation && core) {
+    let best = null;
+    for (let ty = 1; ty < world.h - 1; ty += 1) {
+      for (let tx = 1; tx < world.w - 1; tx += 1) {
+        if (!solid(tx, ty) || !interior(tx, ty)) continue;
+        const d = Math.hypot(tx + 0.5 - core.x / T, ty + 0.5 - core.y / T);
+        if (!best || d < best.d) best = { x: tx + 0.5, z: ty + 0.5, d };
+      }
+    }
+    if (best) fixtures.landmark = { id: 'bashnya', x: best.x, z: best.z, scale: 3.4, ry: 0.5 };
+  }
+
+  const models = [...MO.tex.entries()].map(([key, t]) => ({ key: `mdl:${key}`, data: t.data, texture: t.texture }));
+  const modelVertices = models.reduce((n, m) => n + m.data.length / TEX_STRIDE, 0);
+  MODELS = null; MO = null;
+  return { opaque: b.data, shadows: shadows.data, glass: glass.data, models, fixtures, vertices: b.count + shadows.count + glass.count + modelVertices, massCells };
+}
+
+/*
+ * Буферы моделей с картинкой в рендерер: по одному на картинку. Старые,
+ * которых в этой печи нет (уровень сменился), снимаются — иначе висели бы
+ * стены прошлого этажа.
+ */
+export function setModelStatics(renderer, baked) {
+  const keep = new Set((baked.models || []).map((m) => m.key));
+  renderer.statics = renderer.statics.filter((s) => !s.key.startsWith('mdl:') || keep.has(s.key));
+  for (const m of baked.models || []) renderer.setStatic(m.key, m.data, { stride: TEX_STRIDE, texture: m.texture });
 }
 
 /* Последним n вершинам — срез 1 и якорь клетки. */
@@ -388,6 +449,13 @@ function blob(shadows, x, z, r, strength = 1) {
 }
 
 function lamp(b, tx, ty, [dx, dy], pal, anchor, fixtures) {
+  /* Настенный фонарь (Lantern_Wall, выбор Сергея) — на грани стены к полу. */
+  if (hasModel('fonar')) {
+    const fx = tx + 0.5 + dx * 0.5, fz = ty + 0.5 + dy * 0.5;
+    model('fonar', at(fx, 0.35, fz, Math.atan2(dx, dy), 0.62, 0.62, 0.62), { tint: [1.3, 1.25, 1.2], cut: 2, anchor });
+    fixtures.lamps.push({ pos: [fx + dx * 0.45, 0.95, fz + dy * 0.45], color: C(pal.lamp), anchor });
+    return;
+  }
   const x = tx + 0.5 + dx * 0.3, z = ty + 0.5 + dy * 0.3;
   const metal = [0.08, 0.08, 0.1];
   b.add(CYL8, at(x, WALL_H + 0.14, z, 0, 0.07, 0.28, 0.07), { color: metal, surf: SURF.METAL, cut: 2, anchor });
@@ -428,7 +496,16 @@ function door(b, glass, world, tx, ty, t, pal, anchor, fixtures) {
   put(CUBE_SIDES, 0, WALL_H - 0.15, 0, 0.64, 0.3, 0.6, stone);
   put(CUBE_TOP, 0, WALL_H - 0.15, 0, 0.64, 0.3, 0.6, capOpts);
 
-  if (t === TILE.WOOD || t === TILE.DOOR) {
+  /* Дверь в арке (Arch_Door, выбор Сергея): по высоте проёма под
+     перемычкой (1.3), края арки уходят в столбы рамы. */
+  const arch = (t === TILE.WOOD || t === TILE.DOOR) && hasModel('dver') && modelBounds(MODELS, 'dver');
+  if (arch) {
+    const k = (WALL_H - 0.3) / (arch.max[1] - arch.min[1]);
+    const tone = t === TILE.WOOD ? [1.6, 1.5, 1.45] : [1.9, 1.8, 1.7];
+    /* Срез — редеющий (3), а не сплющенный: сотни вершин арки, прижатые к
+       высоте пенька, рябили полосами (кадр 05.10 у ворот WWW). */
+    model('dver', M.multiply(at(cx, 0, cz, ry), at(0, -arch.min[1] * k, 0, 0, k, k, k)), { tint: tone, cut: 3, anchor });
+  } else if (t === TILE.WOOD || t === TILE.DOOR) {
     const wood = t === TILE.WOOD ? [0.34, 0.2, 0.11] : [0.42, 0.28, 0.15];
     put(CUBE, 0, 0.66, 0, 0.64, 1.3, 0.14, { color: wood, surf: SURF.WOOD });
     for (const y of [0.3, 1.0]) put(CUBE, 0, y, 0, 0.64, 0.07, 0.17, { color: [0.07, 0.07, 0.08], surf: SURF.METAL });
@@ -463,9 +540,12 @@ function door(b, glass, world, tx, ty, t, pal, anchor, fixtures) {
 
 function barrel(b, shadows, x, z, h) {
   const wood = [0.36 + h * 0.06, 0.22, 0.12];
-  b.add(Geo.cylinder(0.27, 0.27, 0.78, 14, false), at(x, 0.39, z, h * 3), { color: wood, surf: SURF.WOOD });
-  b.add(CYL, at(x, 0.39, z, 0, 0.3, 0.5, 0.3), { color: wood, surf: SURF.WOOD });
-  for (const y of [0.1, 0.39, 0.68]) b.add(TORUS, at(x, y, z, 0, 0.29, 0.5, 0.29), { color: [0.1, 0.1, 0.11], surf: SURF.METAL });
+  /* Бочка MegaKit (выбор Сергея): высота 0.9 → 0.78, как у прежней. */
+  if (!model('bochka', at(x, 0, z, h * 3, 0.86, 0.86, 0.86), { cut: 3, anchor: [x, z] })) {
+    b.add(Geo.cylinder(0.27, 0.27, 0.78, 14, false), at(x, 0.39, z, h * 3), { color: wood, surf: SURF.WOOD });
+    b.add(CYL, at(x, 0.39, z, 0, 0.3, 0.5, 0.3), { color: wood, surf: SURF.WOOD });
+    for (const y of [0.1, 0.39, 0.68]) b.add(TORUS, at(x, y, z, 0, 0.29, 0.5, 0.29), { color: [0.1, 0.1, 0.11], surf: SURF.METAL });
+  }
   /* Бочка с водой: вода видна сверху — это подсказка, чем она станет. */
   b.add(DISC, at(x, 0.775, z, 0, 0.25, 1, 0.25), { color: [0.06, 0.18, 0.26], surf: SURF.WATER, emissive: 0.05 });
   blob(shadows, x, z, 0.52);
@@ -515,7 +595,11 @@ function crystal(b, shadows, x, z, h, fixtures) {
   const bolt = C('#ffd84a');
   box(b, x - 0.36, 0, z - 0.36, x + 0.36, 0.22, z + 0.36, { color: [0.2, 0.19, 0.23], surf: SURF.BRICK, shade: baseShade }, { color: [0.12, 0.12, 0.15], surf: SURF.CAP });
   /* Кристалл выше стены: он стоит в проёме ограды, и сбоку его иначе не видно. */
-  b.add(SHARD, at(x, 1.0, z, h * 4 + 0.6, 0.44, 0.8, 0.44), { color: bolt, emissive: 0.9 });
+  /* Crystal1 (выбор Сергея) — формой; цвет — молнии, как был: это правило
+     («берёт только разряд»), а не украшение. */
+  if (!model('kristall', at(x, 1.0, z, h * 4 + 0.6, 1.6, 1.6, 1.6), { color: bolt, emissive: 0.25, cut: 3, anchor: [x, z] })) {
+    b.add(SHARD, at(x, 1.0, z, h * 4 + 0.6, 0.44, 0.8, 0.44), { color: bolt, emissive: 0.9 });
+  }
   b.add(SHARD, at(x + 0.2, 0.45, z + 0.12, 1 + h, 0.14, 0.24, 0.14, 0.4, -0.5), { color: bolt, emissive: 0.8 });
   b.add(SHARD, at(x - 0.18, 0.42, z - 0.1, 2 + h, 0.12, 0.2, 0.12, -0.3, 0.45), { color: bolt, emissive: 0.8 });
   fixtures.crystals.push({ x, z });
@@ -555,6 +639,15 @@ function panel(b, shadows, world, tx, ty, fixtures) {
   put(CUBE, 0, 0.58, 0.19, 0.06, 0.24, 0.05, { color: [0.79, 0.84, 0.89], surf: SURF.METAL });
   /* Жгут кабелей к полу: щиток — часть сети, а не тумба. */
   put(CYL8, 0.26, 0.2, 0.16, 0.035, 0.4, 0.035, { color: [0.05, 0.05, 0.06] });
+  /* Колонна труб (Column_Pipes, выбор Сергея) — стояк за щитком, выше
+     стены: щиток — часть сети, «техно» видно издалека. Сбоку и спереди
+     она закрывала его лампы с того или иного поворота камеры (кадры v11),
+     на полу путалась бы с преградой. */
+  const pipe = modelBounds(MODELS, 'truba');
+  if (pipe) {
+    const k = (WALL_H + 0.7) / (pipe.max[1] - pipe.min[1]);
+    model('truba', M.multiply(at(x, 0, z, ry), at(0, 0, -0.3, 0, k, k, k)), { tint: [1.25, 1.2, 1.2], cut: 3, anchor: [x, z] });
+  }
   fixtures.panels.push({ x, z });
   fixtures.lights.push({ pos: [x + dx * 0.5, 0.9, z + dz * 0.5], color: yellow, power: 1.0, range: 3.4, flicker: 0.04 });
   blob(shadows, x, z, 0.6);
@@ -683,6 +776,96 @@ function animate(node, pose) {
 /* 05.10: Сергей «огонь — чуток тусклее» — всё, кроме радиуса, на пятую часть ниже. */
 export const FIRE_TONE = { light: 0.36, lightY: 1.2, range: 3.2, tongue: 0.18, crowd: 0.12, ember: 0.4, floor: 0.45 };
 
+/*
+ * ТОН ЛАМП «БАШНИ» (приёмка Глаз 05.10, кадры pilot-vid/v11) — беда та же,
+ * что у пожара: НАКОПЛЕНИЕ. Пятна ламп клались на пол сложением, а три
+ * фонаря двора — сторожка, двор, проход (радиусы 6.7, 4.5 и 6.7 клетки,
+ * src/lestnica.js) — перекрываются: на полу между ними два-три пятна по
+ * 0.5 поверх пола, свет фонарей точкой и свечение порога. Кадр двора на
+ * компьютере — 3.6% поля в 255, сплошное белое 352×172 точки, плиток под
+ * ним не видно. Правило при этом берёт у ламп МАКСИМУМ, а не сумму
+ * (light.js, illumination): «двойной свет» врал — там видят так же, как у
+ * одной лампы. Теперь пятна ламп сливаются максимумом (mergePools ниже),
+ * а сила пятна и света точкой подобраны замером (pilot-vid/zamer-v12.mjs).
+ *   pool         — пятно на полу, сложением поверх пола (было 0.5);
+ *   light, range — свет фонаря точкой на стены и фигуры рядом (было 1.1, 2.2);
+ *   glow         — ореол вокруг фонаря (было 0.22);
+ *   step         — шаг сетки слитого пятна, клетки;
+ *   merge        — false: поломка для проверок, пятна прежним сложением.
+ */
+/* 05.10, замер pilot-vid/zamer-v12.mjs (двор, герой на 24.5,20.5):
+ *   было — сложение, 0.5 / 1.1 / 0.22: ≥235 у 3.1% поля (компьютер), белое
+ *     324×165, пик 255, пятно/фон 2.93 (плитки в пятне не видно, разброс 0);
+ *   только максимум, числа прежние: ≥235 у 0.67%, пик 249 — сумма была
+ *     главной бедой, но и одно пятно 0.5 на светлом полу с порогом
+ *     свечения (0.62) упиралось в белое;
+ *   стало — максимум, 0.4 / 0.7 / 0.1: пик пятна 208 (компьютер) и 197
+ *     (телефон), пятно/фон 2.17 и 2.02 (правило стелса — не меньше 1.8),
+ *     разброс серого в пятне 2.3 против 1.1 вне света — плитка видна.
+ *   2.7 раза пол — недостижимо при пике ≤ 215: фон пола ночью 87. */
+export const LAMP_TONE = { pool: 0.4, light: 0.7, range: 2.2, glow: 0.1, step: 1 / 3, merge: true };
+
+/* Пятно — круг из равных лучей (lightShape, 40 лучей от угла 0)? Луч
+   прожектора (дуга) — нет: он рисуется прежним веером. */
+export const isRoundFan = (rays) => Boolean(rays) && rays.length >= 8 && Math.abs(rays[0].a) < 1e-9
+  && Math.abs(rays[1].a - (Math.PI * 2) / rays.length) < 1e-6;
+
+/* Докуда достаёт пятно в сторону угла a: между соседними лучами — по прямой. */
+function fanReach(rays, a) {
+  const n = rays.length;
+  let u = a / ((Math.PI * 2) / n);
+  u -= Math.floor(u / n) * n;
+  const i = Math.floor(u) % n, t = u - Math.floor(u);
+  return rays[i].d + (rays[(i + 1) % n].d - rays[i].d) * t;
+}
+
+/*
+ * Пятна ламп одним полем: в каждой точке сетки — НАИБОЛЬШАЯ освещённость
+ * из пятен, которые туда достают (форма — лучи пятна, укороченные о стены,
+ * как у правила). pools — из lightPools (vidimost.js, точки мира), lit(d, r)
+ * — poolLit оттуда же, power — сила пятна (LAMP_TONE.pool). Ответ — тройки
+ * (x, z, a) в клетках, по три на треугольник; пятна не кругом (дуга
+ * прожектора) не сливаются — их отдаёт rest.
+ */
+export function mergePools(pools, lit, power, step = LAMP_TONE.step) {
+  const round = pools.filter((p) => isRoundFan(p.rays));
+  const rest = pools.filter((p) => !isRoundFan(p.rays));
+  if (!round.length || !(power > 0)) return { tris: new Float32Array(0), rest, vertices: 0 };
+  let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+  for (const p of round) {
+    x0 = Math.min(x0, (p.x - p.r) / T); x1 = Math.max(x1, (p.x + p.r) / T);
+    z0 = Math.min(z0, (p.y - p.r) / T); z1 = Math.max(z1, (p.y + p.r) / T);
+  }
+  x0 = Math.floor(x0 / step) * step; z0 = Math.floor(z0 / step) * step;
+  const nx = Math.ceil((x1 - x0) / step) + 1, nz = Math.ceil((z1 - z0) / step) + 1;
+  const val = new Float32Array(nx * nz);
+  for (let j = 0; j < nz; j += 1) {
+    for (let i = 0; i < nx; i += 1) {
+      const px = (x0 + i * step) * T, pz = (z0 + j * step) * T;
+      let best = 0;
+      for (const p of round) {
+        const dx = px - p.x, dz = pz - p.y;
+        if (Math.abs(dx) >= p.r || Math.abs(dz) >= p.r) continue;
+        const d = Math.hypot(dx, dz);
+        if (d >= p.r || d > fanReach(p.rays, Math.atan2(dz, dx)) + 1e-6) continue;
+        const v = lit(d, p.r);
+        if (v > best) best = v;
+      }
+      val[j * nx + i] = best * power;
+    }
+  }
+  const out = [];
+  for (let j = 0; j + 1 < nz; j += 1) {
+    for (let i = 0; i + 1 < nx; i += 1) {
+      const a = val[j * nx + i], b = val[j * nx + i + 1], c = val[(j + 1) * nx + i + 1], d = val[(j + 1) * nx + i];
+      if (Math.max(a, b, c, d) < 0.002) continue;
+      const xa = x0 + i * step, xb = xa + step, za = z0 + j * step, zb = za + step;
+      out.push(xa, za, a, xb, za, b, xb, zb, c, xa, za, a, xb, zb, c, xa, zb, d);
+    }
+  }
+  return { tris: new Float32Array(out), rest, vertices: out.length / 3 };
+}
+
 /* Лежащий: тот же маг, опрокинутый на спину. */
 function lay(node, angle, down) {
   node.body.rotation = down ? [-Math.PI / 2, 0, 0] : [0, 0, 0];
@@ -727,6 +910,78 @@ export function createLiveScene(renderer) {
     paint(n);
     if (n.tip) n.tip.visible = false;
     return n;
+  }
+
+  /*
+   * ПЕРСОНАЖИ МОДЕЛЯМИ (modeli.js). Библиотека — renderer.models (её
+   * ставит игра или пилот); нет её, нет модели, не собралась программа
+   * кожи — фигура процедурная, как до 05.10. Клип — из того, что фигура
+   * делает в мире: путь между кадрами отрисовки (скорость), удар по ней
+   * (hitFlash, у героя — убыль hp), выстрел/заклинание (flash, у героя —
+   * замах или новый откат), замах дубинкой (swing), лежит (downed, труп).
+   */
+  const aktyors = new WeakMap();
+  let lastTime = null;
+  let landmark = null;
+  function aktyorFor(obj, kind) {
+    const lib = renderer.models;
+    if (!lib || !lib.ready || !renderer.skinProgram) return null;
+    const id = actorModel(kind, obj);
+    if (!lib.has(id)) return null;
+    let a = aktyors.get(obj);
+    if (!a || a.id !== id) {
+      a = new Aktyor(lib, id);
+      a.seen = { x: obj.x / T, z: obj.y / T, hit: obj.hitFlash || 0, hp: obj.hp, cool: obj.cooldown || 0, wind: obj.windup || 0, flash: obj.flash || 0, swing: obj.swing || 0, speed: 0 };
+      aktyors.set(obj, a);
+    }
+    return a;
+  }
+  function stateOf(a, obj, kind, dt, down) {
+    const x = obj.x / T, z = obj.y / T, s = a.seen;
+    const moved = Math.hypot(x - s.x, z - s.z);
+    /* Перенос (кольцо, постановка сцены) — не шаг. */
+    const v = dt > 0 && moved < 1.5 ? moved / dt : 0;
+    if (dt > 0) s.speed += (v - s.speed) * Math.min(1, dt * 10);
+    let pulse = null;
+    if ((obj.hitFlash || 0) > s.hit + 0.01 || (kind === 'player' && obj.hp < s.hp)) pulse = 'hit';
+    else if (kind === 'player' && (((obj.windup || 0) > 0 && s.wind <= 0) || (obj.cooldown || 0) > s.cool + 0.05)) pulse = 'cast';
+    else if ((obj.flash || 0) > s.flash + 0.01) pulse = 'cast';
+    else if ((obj.swing || 0) > s.swing + 0.01) pulse = 'swing';
+    Object.assign(s, { x, z, hit: obj.hitFlash || 0, hp: obj.hp, cool: obj.cooldown || 0, wind: obj.windup || 0, flash: obj.flash || 0, swing: obj.swing || 0 });
+    return { speed: s.speed, down, pulse };
+  }
+  /* Что в руке у модели — те же вещи, что у процедурной фигуры (щит
+     щитоносца цветом стихии — правило «этим не бей», шар стрелка). */
+  function propsFor(a, kind, element) {
+    if (a.props !== undefined) return a.props;
+    a.props = null;
+    if (kind === 'player') {
+      /* Посох с горящим навершием, как у процедурного героя: по нему глаз
+         находит героя в свалке первым (у модели волшебника посоха нет). */
+      const g = new Node();
+      /* Высота — по модели (рост мага без шляпы ~1.0): навершие у полей шляпы, а не над ней. */
+      part(g, 'cylinder', [0.3, 0.2, 0.12], [0, 0.52, 0], [0.025, 1.04, 0.025], { surf: SURF.SKIN });
+      part(g, 'sphere', C(ROBES.player.trim), [0, 1.07, 0], [0.06, 0.06, 0.06], { emissive: 1.6 });
+      part(g, 'sphere', C('#4fe8ff'), [0, 1.07, 0], [0.13, 0.13, 0.13], { emissive: 0.6, alpha: 0.3, additive: true, unlit: 1 });
+      g.bone = 'Fist.R'; g.ahead = 0.1; g.ground = true;
+      a.props = g;
+    } else if (kind === 'carrier' && element) {
+      const c = C(colourOf(element));
+      const g = new Node();
+      g.shield = [
+        part(g, 'cylinder', [0.14, 0.15, 0.17], [0, 0, 0], [0.33, 0.05, 0.33], { surf: SURF.METAL, rot: [Math.PI / 2, 0, 0] }),
+        part(g, 'torus', c, [0, 0, 0.03], [0.33, 0.7, 0.33], { emissive: 1.5, rot: [Math.PI / 2, 0, 0] }),
+        part(g, 'sphere', c, [0, 0, 0.03], [0.08, 0.08, 0.03], { emissive: 1.6 }),
+      ];
+      g.bone = 'Fist.L'; g.ahead = 0.16;
+      a.props = g;
+    } else if (kind === 'caster' && element) {
+      const g = new Node();
+      part(g, 'sphere', C(colourOf(element)), [0, 0, 0], [0.07, 0.07, 0.07], { emissive: 1.8 });
+      g.bone = 'Fist.R'; g.ahead = 0.06;
+      a.props = g;
+    }
+    return a.props;
   }
 
   function figureFor(obj, kind, element) {
@@ -792,6 +1047,21 @@ export function createLiveScene(renderer) {
           const px = f.ry ? f.x : f.x + off, pz = f.ry ? f.z + off : f.z;
           particles.push(px, 0.1 + ph * 1.25, pz, f.color[0], f.color[1], f.color[2], 0.8 * (1 - ph), 0.09);
         }
+      }
+
+      /* Башня-ориентир (bakeLevel, fixtures.landmark): между камерой и
+         героем — полупрозрачная, иначе пятиклеточная башня прятала бы его. */
+      const lm = fx.landmark;
+      const lmNodes = lm && renderer.models ? (landmark || (landmark = modelNodes(renderer.models, lm.id))) : null;
+      if (lmNodes) {
+        lmNodes.position = [lm.x, -0.01, lm.z];
+        lmNodes.rotation = [0, lm.ry, 0];
+        lmNodes.scale = [lm.scale, lm.scale, lm.scale];
+        const c = renderer.cut, rx = lm.x - c.center[0], rz = lm.z - c.center[2];
+        const along = rx * c.dir[0] + rz * c.dir[1], side = Math.abs(rx * c.dir[1] - rz * c.dir[0]);
+        const hides = c.on && along > -0.5 && along < 9 && side < 1.6;
+        for (const n of lmNodes.children) { n.material.alpha = hides ? 0.3 : 1; n.material.color = [1.05, 1.05, 1.1]; }
+        root.add(lmNodes);
       }
 
       /* Выход: светится, только когда открыт — свет и есть сообщение. */
@@ -922,6 +1192,8 @@ export function createLiveScene(renderer) {
       }
 
       /* Маги. Живые стоят, сбитые лежат, мёртвые — лежат и темнеют. */
+      const actorDt = lastTime === null ? 0 : Math.min(0.1, Math.max(0, time - lastTime));
+      lastTime = time;
       const actors = [];
       /* hideHero — только для замера «сколько героя видно»: фигура
          убирается, свет посоха остаётся, чтобы разница была одной фигурой. */
@@ -939,6 +1211,42 @@ export function createLiveScene(renderer) {
       if (others) for (const c of world.civilians) if (c.alive) actors.push([c, 'civil', null]);
       if (others && world.hostage && world.hostage.alive && !world.hostage.rescued) actors.push([world.hostage, 'hostage', null]);
       for (const [obj, kind, element] of actors) {
+        const down = (obj.downed || 0) > 0;
+        const a = aktyorFor(obj, kind);
+        if (a) {
+          const node = a.update(actorDt, stateOf(a, obj, kind, actorDt, down));
+          node.position = [obj.x / T, 0, obj.y / T];
+          node.rotation = [0, Math.PI / 2 - (obj.angle || 0), 0];
+          node.scale = [ACTOR_SCALE, ACTOR_SCALE, ACTOR_SCALE];
+          /* Герой светлее прочих: его ищут глазами первым. Балахон модели
+             (0.17, 0.26, 0.37 в гамме) вдвое темнее процедурного (#2b5f86 и
+             светлый #59a8cf) — ×1.7 возвращает ту же светлоту (кадры v11). */
+          node.material.color = kind === 'player' ? [1.7, 1.7, 1.8] : [1, 1, 1];
+          if (!(kind === 'player' && options.hide && options.hide.has('hero'))) root.add(node);
+          const g = propsFor(a, kind, element);
+          if (g) {
+            const w = M.compose(node.position, node.rotation, node.scale);
+            const hand = a.bonePoint(g.bone, w);
+            const ang = Math.PI / 2 - (obj.angle || 0);
+            if (hand) g.position = [hand[0] + Math.sin(ang) * g.ahead, g.ground ? 0 : hand[1], hand[2] + Math.cos(ang) * g.ahead];
+            g.rotation = [0, ang, 0];
+            if (g.shield) {
+              const [plate, rim, boss] = g.shield;
+              plate.visible = rim.visible = boss.visible = !(options.hide && options.hide.has('shields'));
+              if (!rim.lit) { rim.lit = rim.material.color.slice(); boss.lit = boss.material.color.slice(); }
+              const kk = options.calm ? 0.6 : 1;
+              rim.material.color = rim.lit.map((c) => c * kk);
+              boss.material.color = boss.lit.map((c) => c * kk);
+              rim.material.emissive = options.calm ? 0.15 : 1.5;
+              boss.material.emissive = options.calm ? 0.2 : 1.6;
+            }
+            if (!down) root.add(g);
+          }
+          const sh = a.shadow || (a.shadow = Object.assign(new Node('blob', { shadow: true }), { scale: [0.5, 1, 0.5] }));
+          sh.position = [obj.x / T, 0.008, obj.y / T];
+          root.add(sh);
+          continue;
+        }
         const n = figureFor(obj, kind, element);
         /* Щуп замера (igra.js, probe): щит без хозяина не рисуется. */
         if (n.shield) for (const s of n.shield) s.visible = !(options.hide && options.hide.has('shields'));
@@ -965,6 +1273,18 @@ export function createLiveScene(renderer) {
         root.add(n.shadow);
       }
       for (const c of world.corpses) {
+        /* Труп моделью: клип «Death» с той секунды, как его увидели, и
+           последний кадр — пока лежит. Темнее живых. */
+        const ca = aktyorFor(c, c.kind || 'thug');
+        if (ca) {
+          const node = ca.update(actorDt, { speed: 0, down: true, pulse: null });
+          node.position = [c.x / T, 0, c.y / T];
+          node.rotation = [0, Math.PI / 2 - (c.angle || 0), 0];
+          node.scale = [ACTOR_SCALE, ACTOR_SCALE, ACTOR_SCALE];
+          node.material.color = [0.62, 0.6, 0.66];
+          root.add(node);
+          continue;
+        }
         let n = corpseNodes.get(c);
         if (!n) { n = makeFigure('dead'); corpseNodes.set(c, n); }
         n.position = [c.x / T, 0, c.y / T];
@@ -984,7 +1304,10 @@ export function createLiveScene(renderer) {
         const tipA = Math.PI / 2 - p.angle;
         const tx = hx + Math.cos(tipA) * 0.3 + Math.sin(tipA) * 0.1;
         const tz = hz - Math.sin(tipA) * 0.3 + Math.cos(tipA) * 0.1;
-        lights.push({ pos: [tx, 1.3, tz], color: C('#9df9ff'), power: 0.75, range: 3.2 });
+        /* Щуп замера (igra.js, probe hide: staff): свет посоха снят — «серый
+           лист классов» (pilot-vid/zamer-v12.mjs) иначе подсвечивал бы тех,
+           кто стоит к герою ближе, и мерил бы соседство, а не краску. */
+        if (!(options.hide && options.hide.has('staff'))) lights.push({ pos: [tx, 1.3, tz], color: C('#9df9ff'), power: 0.75, range: 3.2 });
       }
 
       spellLayer(world, root, lights, particles, soft, time);

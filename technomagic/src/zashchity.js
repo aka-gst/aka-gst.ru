@@ -15,10 +15,12 @@
  * незнакомое молча отбрасывается — щиток не врёт и не падает:
  *   resist: 'fire' | ['fire', 'wind'] | Set | { fire: 1, wind: 0 }
  *   resists / adapted / learned — так же.
+ *   gear — снаряжение (05.10: мокрый плащ со склада, src/podgotovka.js;
+ *   мир держит ['fire'], пока плащ мокрый, и null, когда высох).
  * Проверка — tests/zashchity.mjs.
  */
 
-const FIELDS = ['resist', 'resists', 'adapted', 'learned'];
+const FIELDS = ['resist', 'resists', 'adapted', 'learned', 'gear'];
 
 function idsOf(value) {
   if (!value) return [];

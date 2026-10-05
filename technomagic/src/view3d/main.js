@@ -31,7 +31,8 @@
 
 import { createWorld, update, grantElement } from '../world.js';
 import { Renderer } from './engine.js';
-import { bakeLevel, bakeGround, createLiveScene, levelOf, hintCell, unknownTilesWarned } from './scene.js';
+import { bakeLevel, bakeGround, createLiveScene, levelOf, hintCell, unknownTilesWarned, setModelStatics } from './scene.js';
+import { createModelLibrary } from './modeli.js';
 import { createCamera, groundAxes, MODES, screenToGround, worldToScreen, zoomScale, cutAmount } from './camera.js';
 import { tightSpots, openSpot } from './spots.js';
 import { TILE_SIZE } from '../level.js';
@@ -93,6 +94,11 @@ const makeWorld = () => (shooting ? withSeed(20261003, () => createWorld(level))
 let world = makeWorld();
 const renderer = new Renderer(canvas);
 const live = createLiveScene(renderer);
+/* 3D-модели (modeli.js): ?modeli=0 — всё процедурное, кадр «до»;
+   ?modeli=ploskiy — картинки моделей сведены к цвету грани (сверка стилей). */
+const models = params.get('modeli') === '0' ? null : createModelLibrary({ style: params.get('modeli') === 'ploskiy' ? 'ploskiy' : 'tekstura' });
+renderer.models = models;
+if (models) models.load().then(() => { models.attach(renderer); bake(); if (held) draw(clock, 0); });
 const camera = createCamera(camName, {
   yaw: params.has('yaw') ? Number(params.get('yaw')) : undefined,
   persp: params.get('persp') === '1' ? 1 : 0,
@@ -107,7 +113,8 @@ let bakeMs = 0;
 
 function bake() {
   const t0 = performance.now();
-  baked = bakeLevel(world, { massRoof });
+  baked = bakeLevel(world, { massRoof, models });
+  setModelStatics(renderer, baked);
   renderer.setStatic('static', baked.opaque);
   renderer.setStatic('shadows', baked.shadows, { shadow: true });
   renderer.setStatic('glass', baked.glass, { transparent: true });
@@ -384,6 +391,8 @@ function diffStats(a, b, threshold = 60) {
 
 window.vid = {
   ready: true,
+  /* Модели: загружены ли и какие не пришли (null — выключены ?modeli=0). */
+  modeli: () => (models ? { ready: models.ready, failed: Object.fromEntries(models.failed), skin: renderer.skinError } : null),
   level: levelName,
   cam: camName,
   get world() { return world; },

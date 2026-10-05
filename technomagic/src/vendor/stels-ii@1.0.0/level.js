@@ -1,7 +1,16 @@
 /*
- * ПРОКЛАДКА: луч для перенесённого vision.js
+ * ФАЙЛ ИГРЫ, НЕ МОДУЛЯ — прокладка ТехноМагии для общего модуля stels-ii.
  * =========================================================
- * vision.js (дословно из МГС, см. его шапку) импортирует из `./level.js`
+ * Лежит в папке вендора рядом с файлами модуля только потому, что
+ * vision.js и light.js модуля импортируют `./level.js` из своей папки
+ * (MANIFEST.json → needs: rayBlocked, rayReach). В MANIFEST.json не входит
+ * и sha-сверкой не охраняется — правится здесь, как любой файл игры.
+ * tools/obnovit-stels-ii.sh при смене версии модуля переносит его в папку
+ * новой версии байт в байт. Импорты игры — на две папки вверх (src/).
+ *
+ * ПРОКЛАДКА: луч для vision.js модуля
+ * =========================================================
+ * vision.js (дословно из МГС, модуль stels-ii) импортирует из `./level.js`
  * две функции луча — rayBlocked и rayReach — и зовёт их с первым
  * аргументом `level`. В МГС это его карта; здесь это наш мир целиком:
  * так зрение стража ходит по нашим клеткам и нашим облакам, а не по
@@ -23,9 +32,9 @@
  * что страж смотрит сквозь облако, а страж бы не видел.
  */
 
-import { hasSight, tileAt } from '../world.js';
-import { blocksSight, TILE_SIZE } from '../level.js';
-import { cloudsBlock } from '../field.js';
+import { hasSight, tileAt } from '../../world.js';
+import { blocksSight, TILE_SIZE } from '../../level.js';
+import { cloudsBlock } from '../../field.js';
 
 export function rayBlocked(world, ax, ay, bx, by) {
   return !hasSight(world, ax, ay, bx, by);

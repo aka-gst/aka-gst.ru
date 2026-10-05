@@ -47,6 +47,7 @@ import { TILE_SIZE, weakTo, brokenBy } from '../level.js';
 import { BODY } from '../world.js';
 import { colourOf, CHARGE_STEP, spellOf, ELEMENTS } from '../magic.js';
 import { resistList, resistWords } from '../zashchity.js';
+import { taskLabel } from '../podgotovka.js';
 import { CAST_LABEL_TIME } from './vid-zaklinaniy.js';
 import { GROUND, groundAt, conducts } from '../field.js';
 import { hintPointer } from '../ukazatel.js';
@@ -54,7 +55,8 @@ import { speechMarks } from '../zhiteli-vid.js';
 import { dangerZone } from '../opasnost.js';
 import { lightPools, poolLit, POOL_CORE, sightRegion, coneTint, guardMark, COIN_NOISE, RING_TIME } from '../vidimost.js';
 import { Renderer, Node, Builder, Geo, STRIDE, SURF } from './engine.js';
-import { bakeLevel, bakeGround, createLiveScene, levelOf } from './scene.js';
+import { bakeLevel, bakeGround, createLiveScene, levelOf, setModelStatics, LAMP_TONE, mergePools } from './scene.js';
+import { createModelLibrary, modelNodes, KRASKI } from './modeli.js';
 import { createCamera, worldToScreen, zoomScale, groundAxes, INTRO, GLANCE, GLANCE_LENGTH, glanceCurve } from './camera.js';
 import { keysToWorld, stickToWorld, screenAngleToWorld, pickWorld, isoViewRadius, cellHeight, browserOwns } from './vvod.js';
 import * as M from './math.js';
@@ -90,6 +92,23 @@ const glow = (colour, alpha, emissive = 1.2) => ({ color: M.rgb(colour), emissiv
  */
 export const ACCENT = { on: true, rings: 0.4, arrow: 24 };
 
+/*
+ * ПАНЕЛИ УСТУПАЮТ ГЕРОЯ И ЦЕЛЬ (приёмка Глаз 05.10, кадры v11: «ЗАДАНИЯ /
+ * ЯДРО ИЗ БАШНИ» лежали на поле, в зале — на верхушке башни). Панель из
+ * PANEL.ids (сейчас одна — задания слева, #treker), под которой оказались
+ * герой (ступни — макушка) или цель подсказки (клетка и её верх; за
+ * кадром — стрелка у края), прозрачнеет и пропускает касания (style.css,
+ * data-yield). Прямоугольники панели читаются не чаще PANEL.every мс.
+ * PANEL.on = false — поломка для проверок: панель лежит поверх, как раньше.
+ */
+export const PANEL = { on: true, ids: ['treker'], every: 250, pad: 6 };
+
+/* Задевает ли хоть один прямоугольник панели хоть одну рамку (x, y, w, h). */
+export function panelCovers(rects, boxes, pad = PANEL.pad) {
+  return rects.some((r) => boxes.some((b) => b.x < r.x + r.w + pad && b.x + b.w > r.x - pad
+    && b.y < r.y + r.h + pad && b.y + b.h > r.y - pad));
+}
+
 export function createIsoRenderer(surface, options = {}) {
   const doc = surface.ownerDocument;
   const glCanvas = doc.createElement('canvas');
@@ -107,6 +126,17 @@ export function createIsoRenderer(surface, options = {}) {
   }
   const overlay = surface.getContext('2d');
   const live = createLiveScene(gl);
+  /* 3D-модели (modeli.js, 05.10): грузятся в фоне; пока не пришли или если
+     модель битая — те же процедурные стены и фигуры, что были. */
+  const models = createModelLibrary();
+  gl.models = models;
+  models.load().then(() => models.attach(gl));
+  /* Узлы фонарей по лампе мира — в своей таблице: мир не трогаем. */
+  const lanterns = new WeakMap();
+  /* Lantern_Wall: клетка фонаря в модели — около (0, 0.8, 0.8), кронштейн
+     от кладки (trash-замер вершин). Масштаб и высота — чтобы клетка легла
+     туда же, где был прежний фонарь и его свет: 0.36 от кладки, 1.08. */
+  const LANTERN = { k: 0.45, y: 0.72 };
   gl.register('thinring', new Builder().add(Geo.ring(0.9, 1, Math.PI * 2, 48), M.identity()).data);
   /* Телефон стоя — девять клеток поперёк на общем плане (camera.js,
      zoomScale): маг ×1.2 крупнее прежнего. Дальность огня стрелков
@@ -133,7 +163,8 @@ export function createIsoRenderer(surface, options = {}) {
    * и кадра не меняет. clock — часы отрисовки стоят (рябь, мерцание, пульс
    * не двигаются, и два кадра подряд совпадают пиксель в пиксель); hide —
    * что не рисовать: hero (фигура героя без кольца и тени), stack (очередь
-   * над головой), lamps, shields, coins, marks, cones — разница двух
+   * над головой), lamps, shields, coins, marks, cones, rings (кольца под
+   * стражей), staff (свет посоха, scene.js) — разница двух
    * кадров и есть то, что видит человек на месте этой вещи; voidMask —
    * всё за краем карты чистым пурпуром, без тумана и свечения: доля
    * пурпура = доля пустоты в кадре.
@@ -170,7 +201,9 @@ export function createIsoRenderer(surface, options = {}) {
   /* ---------------- печь этажа ---------------- */
 
   function rebake(world) {
-    baked = bakeLevel(world, { decorLamps: !world.lights, voidMask: probe.voidMask, readable: true });
+    baked = bakeLevel(world, { decorLamps: !world.lights, voidMask: probe.voidMask, readable: true, models: gl.models });
+    baked.modelsVersion = models.version;
+    setModelStatics(gl, baked);
     gl.setStatic('static', baked.opaque);
     gl.setStatic('shadows', baked.shadows, { shadow: true });
     gl.setStatic('glass', baked.glass, { transparent: true });
@@ -214,6 +247,7 @@ export function createIsoRenderer(surface, options = {}) {
       snapNext = true;
     }
     noteChanges(world);
+    if (baked && baked.modelsVersion !== models.version) rebake(world);
 
     const p = world.player;
     const spec = camera.update([p.x / T, p.y / T], dt, vp, snapNext, framing(world, vp, dt));
@@ -247,10 +281,53 @@ export function createIsoRenderer(surface, options = {}) {
       overlay.setTransform(1, 0, 0, 1, 0, 0);
       overlay.clearRect(0, 0, surface.width, surface.height);
     } else drawOverlay(world, spec, time);
+    yieldPanels(world, spec);
 
     stats.drawMs.push(performance.now() - t0);
     if (stats.drawMs.length > 240) { stats.drawMs.shift(); stats.gaps.shift(); }
     return lastView();
+  }
+
+  /* Панели поверх поля и то, что они обязаны уступать (PANEL выше). Всё —
+     в точках холста: рамка героя от ступней до макушки, цели — клетка и её
+     верх, а за кадром — стрелка у края. */
+  const panels = { at: -Infinity, list: [] };
+  function keepClearBoxes(world, spec) {
+    const out = [];
+    const ppu = spec.pxPerUnit || 40;
+    const p = world.player;
+    if (p && p.alive) {
+      const f = worldToScreen(spec, [p.x / T, 0, p.y / T]), h = worldToScreen(spec, [p.x / T, 1.6, p.y / T]);
+      out.push({ x: f.x - 0.35 * ppu, y: h.y, w: 0.7 * ppu, h: f.y - h.y + 0.15 * ppu });
+    }
+    const hint = world.hint;
+    if (hint && hint.target && world.state === 'play') {
+      if (pointer && !pointer.onScreen) {
+        const r = Math.max(22, 0.6 * ppu);
+        out.push({ x: pointer.x - r, y: pointer.y - r, w: 2 * r, h: 2 * r });
+      } else {
+        const a = worldToScreen(spec, [hint.target.x / T, 0, hint.target.y / T]), b = worldToScreen(spec, [hint.target.x / T, 1.6, hint.target.y / T]);
+        out.push({ x: a.x - 0.5 * ppu, y: b.y, w: ppu, h: a.y - b.y + 0.25 * ppu });
+      }
+    }
+    return out;
+  }
+  function yieldPanels(world, spec) {
+    const now = performance.now();
+    if (now - panels.at > PANEL.every) {
+      panels.at = now;
+      const can = surface.getBoundingClientRect();
+      panels.list = PANEL.ids.map((id) => doc.getElementById(id)).filter(Boolean).map((el) => ({
+        el,
+        rects: [...el.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width >= 1 && r.height >= 1)
+          .map((r) => ({ x: r.left - can.left, y: r.top - can.top, w: r.width, h: r.height })),
+      }));
+    }
+    const boxes = keepClearBoxes(world, spec);
+    for (const { el, rects } of panels.list) {
+      const give = PANEL.on && !el.hidden && panelCovers(rects, boxes);
+      if ((el.dataset.yield === '1') !== give) el.dataset.yield = give ? '1' : '0';
+    }
   }
 
   /*
@@ -411,7 +488,27 @@ export function createIsoRenderer(surface, options = {}) {
     return [reach, reach * 1.8];
   }
   const POOL_RGB = { lamp: [1, 0.82, 0.55], fire: [1, 0.5, 0.18], candle: [1, 0.7, 0.35] };
-  const POOL_POWER = { lamp: 0.5, fire: 0.25, candle: 0.4 };
+  /* Сила пятна лампы — LAMP_TONE.pool (scene.js), здесь — огонь и свечи. */
+  const POOL_POWER = { fire: 0.25, candle: 0.4 };
+  /* Слитое поле пятен ламп — заново только когда сменился набор пятен
+     (лучи у лампы считаются раз и хранятся, пока её не погасят, — light.js,
+     lightShape; с паром — заново на каждом шаге мира) или тон. */
+  const poolCache = { rays: [], power: -1, step: -1, data: new Float32Array(0) };
+  function lampPoolsMerged(lamps) {
+    const same = poolCache.power === LAMP_TONE.pool && poolCache.step === LAMP_TONE.step
+      && poolCache.rays.length === lamps.length && lamps.every((p, i) => poolCache.rays[i] === p.rays);
+    if (same) return { data: poolCache.data, rest: poolCache.rest };
+    const m = mergePools(lamps, poolLit, LAMP_TONE.pool, LAMP_TONE.step);
+    const c = POOL_RGB.lamp, n = m.tris.length / 3;
+    const data = new Float32Array(n * STRIDE);
+    for (let v = 0; v < n; v += 1) {
+      const x = m.tris[v * 3], z = m.tris[v * 3 + 1], a = m.tris[v * 3 + 2];
+      data.set([x, 0.028, z, 0, 1, 0, c[0], c[1], c[2], 0, SURF.SHADOW, 0, a, x, z], v * STRIDE);
+    }
+    if (n) gl.register('poolsLamp', data);
+    Object.assign(poolCache, { rays: lamps.map((p) => p.rays), power: LAMP_TONE.pool, step: LAMP_TONE.step, data, rest: m.rest });
+    return { data, rest: m.rest };
+  }
 
   /* ---------------- игровые метки в объёме ---------------- */
 
@@ -442,9 +539,18 @@ export function createIsoRenderer(surface, options = {}) {
       const data = [];
       const vert = (x, z, c, a) => data.push(x, 0.028, z, 0, 1, 0, c[0], c[1], c[2], 0, SURF.SHADOW, 0, a, x, z);
       const reachView = Math.max(14, spec.tilesAcross || 14) * T;
-      for (const pool of lightPools(world, { x: player.x, y: player.y, r: reachView })) {
+      /* Пятна ламп — одним полем, максимумом (scene.js, LAMP_TONE и
+         mergePools); огонь, свечи и дуга прожектора — прежним веером. */
+      let fans = lightPools(world, { x: player.x, y: player.y, r: reachView });
+      if (LAMP_TONE.merge) {
+        const lamps = fans.filter((p) => p.kind === 'lamp');
+        const merged = lampPoolsMerged(lamps);
+        fans = [...fans.filter((p) => p.kind !== 'lamp'), ...merged.rest];
+        if (merged.data.length) add('poolsLamp', { color: [1, 1, 1], alpha: 0.99, additive: true, unlit: 1, surf: SURF.SHADOW }, [0, 0, 0]);
+      }
+      for (const pool of fans) {
         const c = POOL_RGB[pool.kind] || POOL_RGB.lamp;
-        const power = POOL_POWER[pool.kind] || 0.4;
+        const power = pool.kind === 'lamp' ? LAMP_TONE.pool : POOL_POWER[pool.kind] || 0.4;
         const cx = pool.x / T, cz = pool.y / T;
         const ring = pool.rays.map((ray) => {
           const inner = Math.min(ray.d, POOL_CORE * pool.r);
@@ -484,7 +590,20 @@ export function createIsoRenderer(surface, options = {}) {
         const wx = lamp.x / T - ax * 0.15, wz = lamp.y / T - az * 0.15;
         const lx = wx + ax * 0.36, lz = wz + az * 0.36;
         const pos = [lx, 1.08, lz];
-        if (!probe.hide.has('lamps')) {
+        /* Фонарь Lantern_Wall (выбор Сергея, modeli.js): кронштейн у стены,
+           фонарь — там же, где был; нет модели — прежний из брусков. */
+        let lantern = !probe.hide.has('lamps') && lanterns.get(lamp);
+        if (lantern === undefined) { lantern = modelNodes(models, 'fonar', { color: [1.3, 1.25, 1.2] }); if (lantern) lanterns.set(lamp, lantern); }
+        if (gl.models !== models) lantern = null;
+        if (lantern) {
+          lantern.position = [wx, LANTERN.y, wz];
+          lantern.rotation = [0, Math.atan2(ax, az), 0];
+          lantern.scale = [LANTERN.k, LANTERN.k, LANTERN.k];
+          root.add(lantern);
+          /* Ореол меньше прежнего: клетку фонаря видно, а не только шар света. */
+          if (on) add('sphere', glow('#ffd9a0', LAMP_TONE.glow), pos, [0.19, 0.22, 0.19]);
+          else if (!lamp.broken) flatRing(lamp.x / T, lamp.y / T, 0.26, '#4de1ff', 0.45);
+        } else if (!probe.hide.has('lamps')) {
           const along = (k, thin) => (ax ? [k, thin, thin] : [thin, thin, k]);
           add('cube', iron, [wx + ax * 0.02, 1.3, wz + az * 0.02], ax ? [0.04, 0.34, 0.16] : [0.16, 0.34, 0.04]);
           add('cube', iron, [(wx + lx) / 2, 1.44, (wz + lz) / 2], along(0.38, 0.045));
@@ -502,7 +621,7 @@ export function createIsoRenderer(surface, options = {}) {
             if (!lamp.broken) flatRing(lamp.x / T, lamp.y / T, 0.26, '#4de1ff', 0.45);
           }
         }
-        if (on) lights.push({ pos, color: [1, 0.82, 0.55], power: 1.1, range: 2.2 });
+        if (on) lights.push({ pos, color: [1, 0.82, 0.55], power: LAMP_TONE.light, range: LAMP_TONE.range });
       }
     }
 
@@ -575,12 +694,15 @@ export function createIsoRenderer(surface, options = {}) {
       stateMark(e);
       /* Стихия врага — кольцом: «этим цветом не бей». Пока у подсказки
          есть цель — вполсилы (ACCENT выше), вспышка блока — всегда полная. */
-      if (e.resist) {
+      /* Щуп замера (hide: rings) — кольца под стражей не рисуются: «серый
+         лист классов» мерит фигуру, а не кольцо у её ног. */
+      if (e.resist && !probe.hide.has('rings')) {
         const pulse = 0.45 + Math.sin(time * 6 + (e.home ? e.home.x : 0)) * 0.2;
         flatRing(x, z, (BODY + 9) / T, colourOf(e.resist), e.blocked > 0 ? 1 : (pulse + 0.2) * dim, 'ring', 0.05);
       }
       /* Крепкий — тонкое белое; надломленный — розовое. */
-      if ((e.hp || 1) > 1 || e.tough) flatRing(x, z, (BODY + 3) / T, '#d9e2ea', 0.6 * dim);
+      if (probe.hide.has('rings')) { /* щуп замера — без колец */ }
+      else if ((e.hp || 1) > 1 || e.tough) flatRing(x, z, (BODY + 3) / T, '#d9e2ea', 0.6 * dim);
       else if (e.wasTough) flatRing(x, z, (BODY + 3) / T, '#ffb0b8', 0.55 * dim);
       if (e.hitFlash > 0) add('sphere', glow('#ffffff', Math.min(1, e.hitFlash * 3), 1.5), [x, 0.55, z], [0.38, 0.5, 0.38]);
       /* Замах: линия туда, куда прилетит, и кольцо, стягивающееся к телу. */
@@ -807,6 +929,26 @@ export function createIsoRenderer(surface, options = {}) {
         const x0 = s.x + 14 - ((ids.length - 1) * (w + gap)) / 2;
         ids.forEach((id, k) => resistBadge(g, x0 + k * (w + gap), s.y, w, h, ELEMENTS[id], (e.blocked || 0) > 0));
         if (world.locked === e) label(resistWords(ids, ELEMENTS), { x: s.x, y: s.y - h }, '#ffffff', 11);
+      }
+    }
+
+    /*
+     * ПОРУЧЕНИЯ СТРАЖИ (05.10, src/podgotovka.js): над щитками защит —
+     * словом, что он делает: «ТУШИТ · ВЕДРО», «ЗА ПЛАЩОМ», «МОЧИТ ПЛАЩ»;
+     * в плаще — «МОКРЫЙ ПЛАЩ» / «ПЛАЩ СОХНЕТ» / «ПЛАЩ СУХОЙ». Щиток ОГ
+     * в мокром плаще рисует блок защит выше (zashchity.js, поле gear).
+     */
+    if (!probe.hide.has('marks')) {
+      /* Двое у одной бочки — подписи не ложатся одна на другую: следующая
+         встаёт строкой выше (кадр дыма v10: «ТУШИТ · ВЕДРО» поверх соседа). */
+      const placed = [];
+      for (const e of world.enemies) {
+        const t = taskLabel(e);
+        if (!t) continue;
+        const s = { ...at(e.x, e.y, 2.3) };
+        for (let k = 0; k < 4 && placed.some((q) => Math.abs(q.x - s.x) < 90 && Math.abs(q.y - s.y) < 13); k += 1) s.y -= 13;
+        placed.push(s);
+        label(t.text, s, t.colour, 11);
       }
     }
 
@@ -1123,12 +1265,22 @@ export function createIsoRenderer(surface, options = {}) {
         probe.voidMask = Boolean(options.voidMask);
         if (bakedFor) rebake(bakedFor);
       }
-      return { clock: probe.clock, hide: [...probe.hide], voidMask: probe.voidMask };
+      /* models: false — кадр «до моделей» в том же прогоне (процедурное всё). */
+      if ('models' in options && Boolean(options.models) !== (gl.models === models)) {
+        gl.models = options.models ? models : null;
+        if (bakedFor) rebake(bakedFor);
+      }
+      return { clock: probe.clock, hide: [...probe.hide], voidMask: probe.voidMask, models: gl.models === models };
     },
     /* Нарисовать кадр сейчас, мимо кадрового цикла игры (для замера при
        остановленном цикле). */
     redraw() { if (bakedFor) draw(bakedFor); return Boolean(bakedFor); },
     act: cameraAct,
+    /* Краска по классу (modeli.js, KRASKI) для замера «серый лист»: без
+       аргумента — KRASKI, null — цвета набора (контроль), иначе своя таблица. */
+    kraski(table) { models.repaint(gl, table === undefined ? KRASKI : table); return models.ready; },
+    /* Модели (modeli.js): загружены ли, какие не пришли и почему. */
+    modeli() { return { ready: models.ready, on: gl.models === models, failed: Object.fromEntries(models.failed), skin: gl.skinError, statics: gl.statics.filter((x) => x.key.startsWith('mdl:')).length }; },
     /* Время кадра: отрисовка на процессоре и промежутки между кадрами. */
     frames() {
       return { n: stats.drawMs.length, drawMedianMs: +median(stats.drawMs).toFixed(2), drawP95Ms: +pct(stats.drawMs, 0.95).toFixed(2),

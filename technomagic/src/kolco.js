@@ -44,7 +44,7 @@
 import { update, hasSight, TILE_SIZE, BODY } from './world.js';
 import { TILE } from './level.js';
 import { GROUND } from './field.js';
-import { ALERT, SEARCH } from './vospriyatie/alarm.js';
+import { ALERT, SEARCH } from './vendor/stels-ii@1.0.0/alarm.js';
 import { takeRingQuest } from './zhiteli.js';
 
 export const KOLCO = Object.freeze({

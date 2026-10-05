@@ -36,7 +36,7 @@ import { createNeeds, needNow } from './nuzhda.js';
 import { createIsoRenderer } from './view3d/igra.js';
 import { pickView, CAMERA_KEYS, pageZoom } from './view3d/vvod.js';
 import { lightLevel, coinTarget, coinLanding } from './vidimost.js';
-import { ALARM_NAMES } from './vospriyatie/alarm.js';
+import { ALARM_NAMES } from './vendor/stels-ii@1.0.0/alarm.js';
 import { talkTarget, talkNow, questLog, NAMES as RESIDENT_NAMES } from './zhiteli.js';
 import {
   keyRoute, talkPrompt, NOBODY, patienceLeft, questToast, talkEventToast, questNext, questTarget,
@@ -1118,8 +1118,9 @@ let trekerOpen = (() => {
     const saved = localStorage.getItem(TREKER_KEY);
     if (saved === '0' || saved === '1') return saved === '1';
   } catch { /* хранилища нет — по умолчанию */ }
-  /* Телефон боком: высоты мало — свёрнут с начала. */
-  return !matchMedia('(pointer: coarse) and (orientation: landscape)').matches;
+  /* Телефон (стоя и боком) и узкое окно стоя — свёрнут с начала, одной
+     строкой: развёрнутый лежал на поле (приёмка Глаз 05.10). */
+  return !matchMedia('(pointer: coarse), (max-width: 700px) and (orientation: portrait)').matches;
 })();
 
 function syncTracker() {
@@ -1341,6 +1342,15 @@ let tutorStep = 0;
  * Дальше объяснять нечего, и слово переходит к насмешке.
  */
 const JABS = {
+  /* Подготовка стражи «Башни» (05.10, src/podgotovka.js). */
+  plashch: [
+    'ЕЩЁ ОДИН В МОКРОМ ПЛАЩЕ — ПАР ИЛИ ЖДАТЬ, ПОКА ВЫСОХНЕТ',
+    'ПЛАЩ СОХНЕТ СЕКУНД ЗА ДВАДЦАТЬ. ИЛИ ЗА ЧЕТЫРЕ ПЛЕВКА',
+  ],
+  fear: [
+    'ОНИ ЗАПОМНИЛИ ОГОНЬ',
+    'ВИДЕЛИ — ОБХОДЯТ',
+  ],
   ignite: [
     'ГОРИШЬ КРАСИВО, НО НЕДОЛГО',
     'ОГОНЬ НЕ РАЗБИРАЕТ, КТО ЕГО ЗВАЛ',
@@ -1852,7 +1862,21 @@ function drainEvents() {
       setToast(jab('held', 'ДЕРЖИТ УДАР — НУЖЕН СОСТАВ, ДОРОГАЯ ФОРМА ИЛИ ДОБИВАНИЕ'), 2.2);
       vibrate(12);
     } else if (event.type === 'resist') {
-      setToast(`${ELEMENTS[event.element].name} ЕГО НЕ БЕРЁТ — БЕЙ ДРУГИМ`, 1.8);
+      /* Держал мокрый плащ (05.10, src/podgotovka.js), а не своя стихия. */
+      setToast(event.gear
+        ? 'МОКРЫЙ ПЛАЩ — ОГОНЬ НЕ БЕРЁТ, ПОКА НЕ ВЫСОХНЕТ'
+        : `${ELEMENTS[event.element].name} ЕГО НЕ БЕРЁТ — БЕЙ ДРУГИМ`, 1.8);
+    } else if (event.type === 'sklad') {
+      /* Склад плащей «Башни»: диверсия снимает подготовку (05.10). */
+      setToast(event.what === 'ukraden' ? 'ПЛАЩИ УКРАДЕНЫ — СТРАЖЕ НЕЧЕМ ЗАКРЫТЬСЯ ОТ ОГНЯ'
+        : event.what === 'sgorel' ? 'СКЛАД СГОРЕЛ — ПЛАЩЕЙ БОЛЬШЕ НЕТ'
+          : 'СКЛАД РАЗБИТ — ПЛАЩЕЙ БОЛЬШЕ НЕТ', 2.6);
+    } else if (event.type === 'plashch' && event.what === 'net') {
+      setToast('ПЛАЩЕЙ НЕТ — СТРАЖ ВЕРНУЛСЯ НИ С ЧЕМ', 2.4);
+    } else if (event.type === 'plashch' && event.what === 'vzyal') {
+      setToast(jab('plashch', 'СТРАЖ НАДЕЛ МОКРЫЙ ПЛАЩ — ОГОНЬ НЕ ВОЗЬМЁТ, ПОКА НЕ ВЫСОХНЕТ'), 2.4);
+    } else if (event.type === 'fear' && event.element === 'fire' && event.why !== 'ogon') {
+      setToast(jab('fear', 'СТРАЖА ВИДЕЛА, КАК ГОРЯТ СВОИ, — ТЕПЕРЬ ОБХОДИТ ОГОНЬ'), 2.2);
     } else if (event.type === 'ignite' && event.player) {
       /* У горящего есть полсекунды и один выход — вода. Сказать об этом
          надо ровно один раз и ровно тогда, а не в подсказках перед боем. */
@@ -2255,7 +2279,7 @@ function step(now) {
  * и не чаще двух раз в секунду: раскладка меняется поворотом и тостом, а
  * не каждый кадр.
  */
-const OVERLAY_IDS = ['daemons', 'pad', 'operationHud', 'mute', 'tomeOpen', 'toast', 'physicalObservation', 'found', 'camctl', 'camToggle', 'vidno', 'talk', 'questOpen'];
+const OVERLAY_IDS = ['daemons', 'pad', 'operationHud', 'mute', 'tomeOpen', 'toast', 'physicalObservation', 'found', 'camctl', 'camToggle', 'vidno', 'talk', 'questOpen', 'trekerHead', 'trekerList'];
 let overlayCache = { at: -1, rects: [] };
 function overlayRects() {
   const now = performance.now();

@@ -29,12 +29,12 @@
  * Модуль чистый: ни DOM, ни холста. Пишет только свой кэш.
  */
 
-import { canSee, coneShape, sightReach, feelReach, angleDiff } from './vospriyatie/vision.js';
-import { sightMul } from './vospriyatie/alarm.js';
-import { lightShape, lightOn } from './vospriyatie/light.js';
+import { canSee, coneShape, sightReach, feelReach, angleDiff } from './vendor/stels-ii@1.0.0/vision.js';
+import { sightMul } from './vendor/stels-ii@1.0.0/alarm.js';
+import { lightShape, lightOn } from './vendor/stels-ii@1.0.0/light.js';
 import { litAt } from './vospriyatie/svet.js';
-import { rayReach } from './vospriyatie/level.js';
-import { GUARD, LIGHT, COIN, NOISE } from './vospriyatie/tuning.js';
+import { rayReach } from './vendor/stels-ii@1.0.0/level.js';
+import { GUARD, LIGHT, COIN, NOISE } from './vendor/stels-ii@1.0.0/tuning.js';
 import { blocksShot, TILE_SIZE } from './level.js';
 
 

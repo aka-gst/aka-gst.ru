@@ -46,9 +46,9 @@
  * жителей с полем `witness` нет, и ни одна строка ниже не исполняется.
  */
 
-import { canSee } from './vision.js';
-import { sightMul } from './alarm.js';
-import { ALARM } from './tuning.js';
+import { canSee } from '../vendor/stels-ii@1.0.0/vision.js';
+import { sightMul } from '../vendor/stels-ii@1.0.0/alarm.js';
+import { ALARM } from '../vendor/stels-ii@1.0.0/tuning.js';
 import { litAt, seen as litTarget } from './svet.js';
 import { noteAlarm, hasSight, TILE_SIZE } from '../world.js';
 import { blocksMove, TILE } from '../level.js';
