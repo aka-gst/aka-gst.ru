@@ -1239,6 +1239,26 @@ body.is-shooting .tome {
 
 .found[hidden] { display: none; }
 
+/* Знамя нового навыка (отзыв 04.10, п.16; src/znamya.js): верхняя строка
+   «ТЫ УЗНАЛ НОВЫЙ НАВЫК» — крупно, а не 10 точками серым; имя навыка
+   под ней — его цветом. Поля уже, чтобы на 360 точках строка влезала
+   в одну линию; сквозь знамя по-прежнему нажимается (pointer-events). */
+.found[data-big="1"] {
+  gap: 8px;
+  padding: 26px 18px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+}
+.found[data-big="1"] .found-kicker {
+  font: 900 clamp(20px, 5.6vw, 44px)/1.05 system-ui, -apple-system, sans-serif;
+  letter-spacing: .03em;
+  color: #ffffff;
+  text-shadow: 0 0 18px #ffe14d99, 0 2px 0 #050b0c;
+  white-space: nowrap;
+}
+.found[data-big="1"] b { font-size: clamp(26px, 6.4vw, 48px); }
+.found[data-big="1"] i { font-size: 12px; color: #d9ffff; }
+
 .found-kicker {
   font: 800 10px var(--mono);
   letter-spacing: .34em;
@@ -1815,4 +1835,153 @@ body.is-shooting .camtoggle { display: none !important; }
   body.vid-iso .daemon-key[data-element="talk"][data-near="0"]::before { color: #7d786a; }
   /* Нажатая стихия — тёмная подпись на её цвете (правило выше по файлу). */
   body.vid-iso .daemon-key[data-active="1"] i { color: #050b0c; }
+}
+
+/* =========================================================
+   КЛАВИШИ НА КОМПЬЮТЕРЕ ВИДНЫ ВСЕГДА (отзыв Сергея 04.10, п.7)
+   =========================================================
+   «Пропали подсказки клавиш магии — непонятно, что нажимать». В «Башне»
+   стихии выдаются по ступеням, и в начале кнопки закрыты: до 05.10
+   закрытая кнопка на компьютере была прозрачностью .3 с серым фильтром —
+   знак клавиши (← ↑ → ↓ ⇧) серым на чёрном почти не читался; а в узком
+   окне стоя (меньше 700 точек) знак прятался правилом телефона. Стало:
+   на мыши знак клавиши есть при любой ширине окна, закрытые — без
+   прозрачности, тусклой рамкой и серым знаком #6c7974 (4.2:1, как на
+   телефоне); у монеты — E, у разговора — F, у СБРОСА — Q. Только
+   объёмный вид: плоская кампания принята такой (свод, п.15). */
+@media (pointer: fine) {
+  body.vid-iso .daemon-key b { display: block; }
+  body.vid-iso .daemon-key[data-locked="1"],
+  body.vid-iso .daemon-key[data-empty="1"] {
+    opacity: 1;
+    filter: none;
+    border-color: #2c3533;
+  }
+  body.vid-iso .daemon-key[data-locked="1"] b,
+  body.vid-iso .daemon-key[data-locked="1"] i,
+  body.vid-iso .daemon-key[data-empty="1"] b,
+  body.vid-iso .daemon-key[data-empty="1"] i { color: #6c7974; }
+}
+
+/* =========================================================
+   СБРОС ОЧЕРЕДИ (отзыв Сергея 04.10, п.9)
+   =========================================================
+   Кнопка в ряду стихий, того же размера (свод, п.13), последней; Q на
+   компьютере, «✕» на пальце. Пустая очередь — тусклая (data-empty), но на
+   месте: ряд не перестраивается. Телефон стоя: восьмая кнопка в ряду
+   уже 44 точек ((375 − 52) / 8 = 40), поэтому там СБРОС — третьей в
+   строке КНИГА · ЗАДАНИЯ (#btn-dump-shelf), три одного размера. */
+.daemon-key[data-element="dump"] { border-color: #e6a0ad; color: #e6a0ad; }
+.mute.dump-shelf { display: none; }
+
+@media (pointer: coarse) {
+  body.vid-iso .daemon-key[data-element="dump"] b { display: none; }
+  body.vid-iso .daemon-key[data-element="dump"]::before {
+    content: attr(data-glyph);
+    font: 900 15px/1.1 var(--mono);
+    color: inherit;
+  }
+  body.vid-iso .daemon-key[data-element="dump"][data-empty="1"]::before { color: #6c7974; }
+}
+
+@media (pointer: coarse) and (orientation: portrait),
+       (max-width: 700px) and (orientation: portrait) {
+  body.vid-iso {
+    /* Три одного размера слева от ПУСКа (96) в строке КНИГА · ЗАДАНИЯ. */
+    --trio: calc((100vw - 24px - 96px - 20px - 8px) / 3);
+  }
+  body.vid-iso .daemons .daemon-key[data-element="dump"] { display: none; }
+  body.vid-iso .mute-second,
+  body.vid-iso .mute-third { width: var(--trio); }
+  body.vid-iso .mute-third { left: calc(max(12px, env(safe-area-inset-left)) + var(--trio) + 8px); }
+  body.vid-iso .mute.dump-shelf:not([hidden]) {
+    display: inline-flex;
+    left: calc(max(12px, env(safe-area-inset-left)) + 2 * (var(--trio) + 8px));
+    bottom: calc(var(--sb) + 52px);
+    width: var(--trio);
+    border-color: #e6a0ad88;
+    color: #e6a0ad;
+    touch-action: none;
+  }
+  body.vid-iso .mute.dump-shelf[data-empty="1"] { color: #6c7974; border-color: #2c3533; }
+}
+
+/* =========================================================
+   ЗАДАНИЯ СЛЕВА (отзыв Сергея 04.10, п.20; src/treker.js)
+   =========================================================
+   Компьютер: левый край под строкой счёта, шириной до 300 точек — шапка
+   задачи посередине, кнопки справа, герой в центре не закрыт. Телефон
+   стоя: под полосой КАМЕРА/шапка, левее середины (до 56% ширины), не
+   больше двух строк заданий — до героя в середине поля остаётся больше
+   150 точек. Телефон боком: свёрнут с начала (main.js), шапкой 44 точки. */
+.treker {
+  position: fixed;
+  top: calc(max(10px, env(safe-area-inset-top)) + 70px);
+  left: max(10px, env(safe-area-inset-left));
+  z-index: 8;
+  display: grid;
+  gap: 4px;
+  width: min(300px, 30vw);
+  pointer-events: none;
+}
+.treker[hidden] { display: none; }
+.treker-head {
+  justify-self: start;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #7ffcff55;
+  background: #061013d9;
+  color: #7ffcff;
+  font: 800 10px var(--mono);
+  letter-spacing: .12em;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+.treker-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.treker-list li {
+  display: grid;
+  gap: 2px;
+  padding: 6px 9px;
+  border-left: 3px solid #7ffcff88;
+  background: #061013c7;
+  color: #d9ffff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.treker-list li[data-tracked="1"] { border-left-color: #7ffcff; background: #0a2226d9; }
+.treker-list b { font: 800 11px/1.2 var(--mono); letter-spacing: .06em; color: #ffd27f; }
+.treker-list span { font: 600 10px/1.35 var(--mono); color: #cfe3e0; }
+.treker-list .treker-empty { border-left-color: #2c3533; color: #8fa39b; font: 600 10px var(--mono); cursor: default; }
+body.is-shooting .treker { display: none !important; }
+
+@media (pointer: coarse) and (orientation: portrait),
+       (max-width: 700px) and (orientation: portrait) {
+  body.vid-iso .treker {
+    top: calc(var(--strip) + 56px);
+    left: max(8px, env(safe-area-inset-left));
+    width: min(56vw, 240px);
+  }
+  body.vid-iso .treker-head { min-height: 44px; }
+  /* Две строки заданий, третья — в журнале. */
+  body.vid-iso .treker-list li:nth-child(n + 3):not(.treker-empty) { display: none; }
+  .treker-list b { font-size: 10px; }
+  /* Шаг — одной строкой (кадр дыма v9: две строки по три строки текста
+     занимали 250 точек верха поля); целиком — в журнале. */
+  .treker-list span { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+@media (pointer: coarse) and (orientation: landscape) {
+  .treker {
+    top: calc(max(8px, env(safe-area-inset-top)) + 52px);
+    left: max(12px, env(safe-area-inset-left));
+    width: min(240px, 32vw);
+  }
+  .treker-head { min-height: 44px; }
 }

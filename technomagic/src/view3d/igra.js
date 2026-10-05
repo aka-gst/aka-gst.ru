@@ -45,7 +45,9 @@
 
 import { TILE_SIZE, weakTo, brokenBy } from '../level.js';
 import { BODY } from '../world.js';
-import { colourOf, CHARGE_STEP, spellOf } from '../magic.js';
+import { colourOf, CHARGE_STEP, spellOf, ELEMENTS } from '../magic.js';
+import { resistList, resistWords } from '../zashchity.js';
+import { CAST_LABEL_TIME } from './vid-zaklinaniy.js';
 import { GROUND, groundAt, conducts } from '../field.js';
 import { hintPointer } from '../ukazatel.js';
 import { speechMarks } from '../zhiteli-vid.js';
@@ -54,7 +56,7 @@ import { lightPools, poolLit, POOL_CORE, sightRegion, coneTint, guardMark, COIN_
 import { Renderer, Node, Builder, Geo, STRIDE, SURF } from './engine.js';
 import { bakeLevel, bakeGround, createLiveScene, levelOf } from './scene.js';
 import { createCamera, worldToScreen, zoomScale, groundAxes, INTRO, GLANCE, GLANCE_LENGTH, glanceCurve } from './camera.js';
-import { keysToWorld, stickToWorld, screenAngleToWorld, pickWorld, isoViewRadius, cellHeight } from './vvod.js';
+import { keysToWorld, stickToWorld, screenAngleToWorld, pickWorld, isoViewRadius, cellHeight, browserOwns } from './vvod.js';
 import * as M from './math.js';
 
 const T = TILE_SIZE;
@@ -113,7 +115,7 @@ export function createIsoRenderer(surface, options = {}) {
   const camera = createCamera('uo', { portraitTiles: 9 });
   doc.body.classList.add('vid-iso');
 
-  const size = { cssW: 0, cssH: 0, dpr: 1 };
+  const size = { cssW: 0, cssH: 0, dpr: 1, zoomK: 1 };
   let placed = '';
   let bakedFor = null;
   let baked = null;
@@ -153,10 +155,13 @@ export function createIsoRenderer(surface, options = {}) {
     Object.assign(glCanvas.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
   }
 
-  function resize(cssW, cssH, ratio) {
+  function resize(cssW, cssH, ratio, zoomK = 1) {
     place();
     const dpr = Math.min(2, ratio || 1);
     size.cssW = cssW; size.cssH = cssH; size.dpr = dpr;
+    /* Зум страницы относительно загрузки (vvod.js, pageZoom): мир его не
+       замечает (camera.js, zoomScale), кнопки — растут. */
+    size.zoomK = zoomK > 0 ? zoomK : 1;
     gl.resize(cssW, cssH, dpr);
     const w = Math.round(cssW * dpr), h = Math.round(cssH * dpr);
     if (surface.width !== w || surface.height !== h) { surface.width = w; surface.height = h; }
@@ -201,7 +206,7 @@ export function createIsoRenderer(surface, options = {}) {
     if (size.cssW < 1 || size.cssH < 1) return lastView();
     world.rebake = false;
 
-    const vp = { cssWidth: size.cssW, cssHeight: size.cssH, width: size.cssW, height: size.cssH };
+    const vp = { cssWidth: size.cssW, cssHeight: size.cssH, width: size.cssW, height: size.cssH, zoomK: size.zoomK };
     if (world !== bakedFor) {
       bakedFor = world;
       changes = [];
@@ -349,7 +354,7 @@ export function createIsoRenderer(surface, options = {}) {
    * камеры не меняет, откуда стрелки начинают бить.
    */
   function lastView() {
-    const vp = { cssWidth: size.cssW || 1, cssHeight: size.cssH || 1 };
+    const vp = { cssWidth: size.cssW || 1, cssHeight: size.cssH || 1, zoomK: size.zoomK };
     const standard = zoomScale(vp, 0, camera.mode);
     const focus = lastSpec ? lastSpec.focus : [0, 0, 0];
     return {
@@ -735,6 +740,7 @@ export function createIsoRenderer(surface, options = {}) {
   /* ---------------- плоская накладка ---------------- */
 
   function drawOverlay(world, spec, time) {
+    if (castPending) { cast = { ...castPending, at: time }; castPending = null; }
     const g = overlay;
     const W = size.cssW, H = size.cssH;
     g.setTransform(1, 0, 0, 1, 0, 0);
@@ -784,6 +790,26 @@ export function createIsoRenderer(surface, options = {}) {
       }
     }
 
+    /*
+     * ЗАЩИТЫ ВРАГОВ (отзыв 04.10, п.18; src/zashchity.js): над головой —
+     * щиток на каждую стихию, которой враг не берётся, её цветом и знаком
+     * (ОГ, ВД…). Сбоку от «?»/«!» тревоги, а не на их месте. У врага под
+     * прицелом — словами «НЕ БЕРЁТ: ОГОНЬ». Блок удара (e.blocked) —
+     * щиток вспыхивает. До 05.10 защиту было видно только кольцом на полу.
+     */
+    if (!probe.hide.has('resist')) {
+      for (const e of world.enemies) {
+        if (!e.alive || (e.downed || 0) > 0) continue;
+        const ids = resistList(e, ELEMENTS);
+        if (!ids.length) continue;
+        const s = at(e.x, e.y, 1.62);
+        const w = 22, h = 25, gap = 3;
+        const x0 = s.x + 14 - ((ids.length - 1) * (w + gap)) / 2;
+        ids.forEach((id, k) => resistBadge(g, x0 + k * (w + gap), s.y, w, h, ELEMENTS[id], (e.blocked || 0) > 0));
+        if (world.locked === e) label(resistWords(ids, ELEMENTS), { x: s.x, y: s.y - h }, '#ffffff', 11);
+      }
+    }
+
     /* Свидетель бежит доносить (svideteli.js) — «!» над ним: его ещё можно
        перехватить. */
     for (const civ of world.civilians || []) {
@@ -793,6 +819,19 @@ export function createIsoRenderer(surface, options = {}) {
 
     /* Сбит с ног толчком стража (tolchok.js) — звёзды над головой. */
     const p = world.player;
+
+    /* Что выпущено (отзыв 04.10, п.17): «ЖАР · ВЫДОХ» над головой цветом
+       вещества, 1.2 с, всплывает и гаснет. Часы — отрисовки (кадры замера
+       при стоящих часах совпадают). */
+    if (cast && p.alive) {
+      const age = time - cast.at;
+      if (age >= 0 && age < CAST_LABEL_TIME) {
+        const s = at(p.x, p.y, 2.25);
+        g.globalAlpha = Math.min(1, (CAST_LABEL_TIME - age) / 0.35);
+        label(cast.text, { x: s.x, y: s.y - age * 14 }, cast.colour, 15);
+        g.globalAlpha = 1;
+      } else if (age >= CAST_LABEL_TIME) cast = null;
+    }
     if (p.alive && (p.stun || 0) > 0) {
       for (let i = 0; i < 3; i += 1) {
         const a = time * 7 + (i * Math.PI * 2) / 3;
@@ -866,6 +905,29 @@ export function createIsoRenderer(surface, options = {}) {
     talkOverlay(world, g, at, label, W, H);
   }
   let pointer = null;
+  let cast = null;
+  let castPending = null;
+
+  /* Щиток защиты: тёмный щит с каймой цвета стихии и её знаком. */
+  function resistBadge(g, cx, cy, w, h, element, flash) {
+    g.save();
+    g.beginPath();
+    g.moveTo(cx - w / 2, cy - h / 2);
+    g.lineTo(cx + w / 2, cy - h / 2);
+    g.lineTo(cx + w / 2, cy + h * 0.08);
+    g.quadraticCurveTo(cx + w / 2, cy + h * 0.36, cx, cy + h / 2);
+    g.quadraticCurveTo(cx - w / 2, cy + h * 0.36, cx - w / 2, cy + h * 0.08);
+    g.closePath();
+    g.fillStyle = flash ? element.colour : 'rgba(6,10,12,.92)';
+    g.fill();
+    g.lineWidth = 2.5;
+    g.strokeStyle = element.colour;
+    g.stroke();
+    g.fillStyle = flash ? '#050b0c' : element.colour;
+    g.font = '900 10px ui-monospace, Menlo, monospace';
+    g.fillText(element.short, cx, cy - 1);
+    g.restore();
+  }
 
   /*
    * ЖИТЕЛИ (слой «г») — как у плоского вида (render.js, drawTalkMarks):
@@ -979,6 +1041,9 @@ export function createIsoRenderer(surface, options = {}) {
 
   /* Колесо: тачпад шлёт мелкие доли, мышь — крупные щелчки. */
   surface.addEventListener('wheel', (event) => {
+    /* Колесо с Ctrl/Cmd и щипок тачпада — зум страницы, не камеры
+       (отзыв 04.10, п.8; vvod.js, browserOwns). */
+    if (browserOwns(event)) return;
     camera.zoomBy(Math.max(-0.25, Math.min(0.25, -event.deltaY * 0.0022)));
     event.preventDefault();
   }, { passive: false });
@@ -1098,6 +1163,9 @@ export function createIsoRenderer(surface, options = {}) {
     },
     screenAngle(angle) { return screenAngleToWorld(yawNow(), camera.mode.pitch, angle); },
     cameraAct,
+    /* Имя выпущенного над героем (main.js на событие daemon). Время
+       ставится первым кадром отрисовки после — часы те, что у кадра. */
+    castLabel(label) { castPending = label && label.text ? label : null; },
     debug,
   };
 }

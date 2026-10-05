@@ -20,8 +20,9 @@
  * место падения, без разброса (world.js, emitNoise) — как у МГС, где
  * hearNoise ставит подозрение ровно в точку шума.
  *
- * Только на этаже, который назвал число монет (`level.coins`, «Башня» —
- * три); на остальных `world.coins` нет, и намерение бросить молча
+ * Только на этаже, который назвал число монет (`level.coins`) или места,
+ * где они лежат (`level.coinSpots`, «Башня» с 04.10 — три на полу, ноль
+ * в кармане); на остальных `world.coins` нет, и намерение бросить молча
  * ничего не делает.
  */
 
@@ -34,6 +35,23 @@ const PICKUP = 14 * (32 / 24);
 export function createCoins(world, count = COIN.count) {
   world.coins = [];
   world.coinsLeft = count;
+}
+
+/*
+ * Монеты, лежащие на полу с начала этажа (не МГС — у него монеты в
+ * кармане с порога; здесь отзыв Сергея 04.10, п.15: «в начале игрок
+ * видит монетку и понимает: можно бросить и отвлечь охранника»). Лежащая
+ * — та же упавшая монета, что подбирают обратно в stepCoins: одна
+ * дверь подбора на обе.
+ */
+export function layCoins(world, cells) {
+  if (!world.coins) createCoins(world, 0);
+  for (const [cx, cy] of cells || []) {
+    world.coins.push({
+      x: (cx + 0.5) * TILE_SIZE, y: (cy + 0.5) * TILE_SIZE,
+      vx: 0, vy: 0, left: 0, landed: true, t: 1, lying: true,
+    });
+  }
 }
 
 function blocked(world, x, y) {
@@ -102,7 +120,16 @@ export function stepCoins(world, dt, emitNoise) {
   world.coins = world.coins.filter((c) => {
     if (c.landed && c.t > 0.4 && p.alive && Math.hypot(c.x - p.x, c.y - p.y) < PICKUP) {
       world.coinsLeft += 1;
-      world.events.push({ type: 'coin-picked', left: world.coinsLeft });
+      /* Первая монета с пола — новый навык (п.15, п.16 отзыва 04.10): поля
+         `skill` и `banner` для крупной плашки экрана, один раз за попытку.
+         Тем же событием, что подбор (main.js его уже показывает), а не
+         новым видом: событие без ветки в main.js до человека не доходит. */
+      const first = c.lying && !world.coinSkill;
+      if (first) world.coinSkill = true;
+      world.events.push({
+        type: 'coin-picked', left: world.coinsLeft, lying: Boolean(c.lying),
+        ...(first ? { skill: 'coin', banner: 'ТЫ УЗНАЛ НОВЫЙ НАВЫК: МОНЕТА', hint: 'ЗВОН ОТВЛЕКАЕТ СТРАЖУ' } : {}),
+      });
       return false;
     }
     return true;

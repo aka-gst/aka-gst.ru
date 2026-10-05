@@ -60,17 +60,29 @@ function clampLag(current, desired, maxLag) {
  * ближе общего: на узком телефоне иначе «крупный» почти не отличался бы.
  */
 export function zoomScale(viewport, zoom, mode = MODES.uo) {
-  const short = Math.min(viewport.cssWidth, viewport.cssHeight);
+  /*
+   * Зум страницы (Ctrl/Cmd +/−) не трогает зум игры (отзыв Сергея 04.10,
+   * п.8). Браузер при зуме страницы уменьшает размер холста в CSS-точках и
+   * поднимает devicePixelRatio; zoomK — во сколько раз страница сейчас
+   * крупнее, чем при загрузке (vvod.js, pageZoom). Счёт ниже идёт в
+   * «точках при загрузке» (CSS × zoomK) — они от зума страницы не зависят,
+   * — а ответ переводится обратно в CSS. Без поправки клетка была
+   * 36–64 CSS-точки, то есть при зуме страницы 150% на большом экране мир
+   * вырастал вместе с кнопками. zoomK = 1 — прежний счёт, байт в байт.
+   */
+  const k = viewport.zoomK > 0 ? viewport.zoomK : 1;
+  const cssWidth = viewport.cssWidth * k, cssHeight = viewport.cssHeight * k;
+  const short = Math.min(cssWidth, cssHeight);
   /*
    * portraitTiles (игра, igra.js; пилот — без него): на телефоне стоя
    * общий план считается от ширины — столько клеток поперёк. От короткой
    * стороны выходило 31 точка на клетку, упиралось в нижний порог 36, и
    * маг был 47–53 точки ростом при метках в 7–8 (приёмка Глаз 03.10).
    */
-  const portrait = mode.portraitTiles && viewport.cssHeight > viewport.cssWidth * 1.15;
-  const overview = portrait ? M.clamp(viewport.cssWidth / mode.portraitTiles, 36, 64) : M.clamp(short / 12.5, 36, 64);
-  const close = Math.max(viewport.cssWidth / (mode.closeTiles || 6.5), overview * 2);
-  return overview * Math.pow(close / overview, zoom);
+  const portrait = mode.portraitTiles && cssHeight > cssWidth * 1.15;
+  const overview = portrait ? M.clamp(cssWidth / mode.portraitTiles, 36, 64) : M.clamp(short / 12.5, 36, 64);
+  const close = Math.max(cssWidth / (mode.closeTiles || 6.5), overview * 2);
+  return overview * Math.pow(close / overview, zoom) / k;
 }
 
 /*

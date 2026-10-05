@@ -29,6 +29,7 @@
 import { sawCrime, residentOf, REPUTATION, WITNESS_PATIENCE } from './zhiteli.js';
 import { SPOTS } from './lestnica.js';
 import { TILE_SIZE } from './level.js';
+import { knowsBlood } from './karma.js';
 
 export const TALK_KEY = 'F';
 export const TALK_CODE = 'KeyF';
@@ -78,6 +79,7 @@ export function talkWhy(world, civ) {
   if (w && w.state === 'run') return null;
   if (sawCrime(civ)) return 'saw';
   if (w && w.state === 'hushed') return 'hushed';
+  if (knowsBlood(world, civ)) return 'karma';
   if (world.zhiteli.wanted && REPUTATION.wanted) return 'wanted';
   if (world.trevoga && world.trevoga.state === 'alert') return 'alarm';
   return null;
@@ -182,6 +184,8 @@ const WHY_FAILED = {
   dead: 'ТОТ, КТО ПРОСИЛ, ПОГИБ',
   down: 'ТОТ, КТО ПРОСИЛ, БЕЗ СОЗНАНИЯ',
   saw: 'ОН ВИДЕЛ ТВОЁ ПРЕСТУПЛЕНИЕ',
+  /* Карма (src/karma.js): знает, что ты убил своего, — видел или слышал. */
+  karma: 'ОН ЗНАЕТ, ЧТО ТЫ УБИЛ СВОЕГО',
   death: 'ТЫ ПОГИБ',
 };
 

@@ -65,6 +65,7 @@ import { blocksMove, TILE_SIZE } from './level.js';
 import { GROUND } from './field.js';
 import { hasSight, setCircuit } from './world.js';
 import { INVESTIGATE } from './vospriyatie/tuning.js';
+import { knowsBlood } from './karma.js';
 
 /* Дальность разговора: сквозь прутья клетки — две клетки с хвостом. */
 export const TALK_REACH = 2.25 * TILE_SIZE;
@@ -322,6 +323,8 @@ export const REFUSALS = {
   wanted: 'Тебя ищут. Иди отсюда.',
   alarm: 'Не сейчас — тревога!',
   hushed: 'Я ничего не видел. Иди.',
+  /* Карма (src/karma.js): видел или слышал, что ты убил своего. */
+  karma: 'Ты убил своего. Не подходи ко мне.',
 };
 
 
@@ -624,6 +627,7 @@ function startTalk(world, id) {
   if (!running) {
     if (sawCrime(civ)) return refuse(world, civ, 'saw');
     if (w && w.state === 'hushed') return refuse(world, civ, 'hushed');
+    if (knowsBlood(world, civ)) return refuse(world, civ, 'karma');
     if (zh.wanted && REPUTATION.wanted) return refuse(world, civ, 'wanted');
     if (world.trevoga && world.trevoga.state === 'alert') return refuse(world, civ, 'alarm');
   }
@@ -821,6 +825,8 @@ export function updateResidents(world, dt, intent) {
     if (!giver || !giver.alive) questStep(world, { type: 'fail', id: def.id, why: 'dead' });
     else if (giver.downed > 0) questStep(world, { type: 'fail', id: def.id, why: 'down' });
     else if (sawCrime(giver)) questStep(world, { type: 'fail', id: def.id, why: 'saw' });
+    /* Карма: дающий знает, что на тебе кровь хорошего, — дела с тобой нет. */
+    else if (knowsBlood(world, giver)) questStep(world, { type: 'fail', id: def.id, why: 'karma' });
   }
   const denis = residentOf(world, 'denis');
   if (denis && !denis.alive) questStep(world, { type: 'fail', id: 'kletka', why: 'dead' });

@@ -368,7 +368,9 @@ void main(){
     float f = fbm(xz * 2.4 + vec2(0., -u_time * 1.2));
     float edge = 1. - smoothstep(.3, .72, length(fract(xz) - .5));
     base = mix(vec3(.18, .03, .0), base, f);
-    emissive += .25 + 1.1 * f * f;
+    /* Было .25 + 1.1·f²: прожилки уходили в белое и под горящим стогом
+       пол сливался в одно пятно (отзыв 04.10, п.14). */
+    emissive += .2 + .8 * f * f;
     alpha *= edge * (.35 + .65 * f);
   } else if (surf > 11.5 && surf < 12.5) {  /* лёд */
     /*

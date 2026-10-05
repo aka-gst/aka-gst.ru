@@ -19,6 +19,8 @@ import { colourOf } from '../magic.js';
 import * as M from './math.js';
 import { Builder, Geo, Node, SURF, STRIDE } from './engine.js';
 import { WALL_H, cutAmount } from './camera.js';
+import { createGait, stepGait } from './hodba.js';
+import { spellLook, lookByColour, trailParticles, burstParticles } from './vid-zaklinaniy.js';
 
 export { WALL_H };
 const T = TILE_SIZE;
@@ -587,10 +589,24 @@ export function makeFigure(kind, element = null) {
   part(body, 'taper', C(robe.robe), [0, h / 2, 0], [0.27, h, 0.27], skin);
   part(body, 'torus', C(robe.trim), [0, 0.05, 0], [0.27, 0.35, 0.27], { emissive: kind === 'player' ? 0.9 : 0.35 });
   part(body, 'sphere', C(robe.robeLit), [0, h - 0.02, 0], [0.21, 0.15, 0.17], skin);
-  /* Руки — рукава балахона: без них фигура читается пешкой, а не человеком. */
+  /* Руки — рукава балахона: без них фигура читается пешкой, а не человеком.
+     Каждая — на шарнире в плече (hodba.js машет ими навстречу ногам); в
+     покое положение то же, что до шарниров, точка в точку. */
+  root.arms = [];
   for (const side of [-1, 1]) {
-    part(body, 'cylinder', C(robe.robeLit), [side * 0.2, h - 0.2, 0.06], [0.055, 0.34, 0.055], { ...skin, rot: [0.45, 0, side * 0.18] });
-    part(body, 'sphere', SKIN, [side * 0.22, h - 0.36, 0.15], [0.045, 0.045, 0.045], skin);
+    const shoulder = body.add(new Node());
+    shoulder.position = [side * 0.2, h - 0.04, 0];
+    part(shoulder, 'cylinder', C(robe.robeLit), [0, -0.16, 0.06], [0.055, 0.34, 0.055], { ...skin, rot: [0.45, 0, side * 0.18] });
+    part(shoulder, 'sphere', SKIN, [side * 0.02, -0.32, 0.15], [0.045, 0.045, 0.045], skin);
+    root.arms.push(shoulder);
+  }
+  /* Ступни под балахоном: в покое спрятаны, на ходу носок по очереди
+     выходит из-под подола — по нему и читается шаг (отзыв 04.10, п.6). */
+  root.feet = [];
+  if (!kneel) {
+    for (const side of [-1, 1]) {
+      root.feet.push(part(body, 'sphere', [0.04, 0.035, 0.035], [side * 0.09, 0.035, 0.08], [0.08, 0.05, 0.12], skin));
+    }
   }
   part(body, 'sphere', SKIN, [0, h + 0.17, 0.02], [0.115, 0.125, 0.115], skin);
 
@@ -636,6 +652,37 @@ export function makeFigure(kind, element = null) {
   return root;
 }
 
+/*
+ * Шаг и дыхание (hodba.js) — после lay(), только стоящим. Поза из мира
+ * не читается: она — из того, сколько фигура прошла между кадрами.
+ */
+function animate(node, pose) {
+  node.body.position = [0, pose.bob, 0];
+  node.body.rotation = [pose.lean, 0, pose.roll];
+  node.body.scale = [1 - pose.breathe / 2, 1 + pose.breathe, 1 - pose.breathe / 2];
+  if (node.arms) {
+    node.arms[0].rotation = [pose.armL, 0, 0];
+    node.arms[1].rotation = [pose.armR, 0, 0];
+  }
+  if (node.feet && node.feet.length === 2) {
+    const [l, r] = node.feet;
+    l.position = [-0.09, 0.035 + pose.liftL, 0.08 + pose.footL];
+    r.position = [0.09, 0.035 + pose.liftR, 0.08 + pose.footR];
+  }
+}
+
+/*
+ * Тон пожара (отзыв 04.10, п.14). До 05.10: свет 1.8 на КАЖДУЮ клетку,
+ * радиус 4.4, языки 0.42, искры 0.9. Числа «после» подобраны замером
+ * засветки у горящего стога (pilot-vid/dym-v9.mjs), а не на глаз:
+ * первый заход (свет 0.95, языки 0.36, угли пола как были) снял засветку
+ * только с 29.8% до 22.7% пикселей, и кадр ЖАРА по коридору всё равно
+ * был белым пятном. Второй: свет 0.45·√n и выше (1.2 кл., под ним пол
+ * не выгорает), языки 0.22, угли пола ×0.55 (floor).
+ */
+/* 05.10: Сергей «огонь — чуток тусклее» — всё, кроме радиуса, на пятую часть ниже. */
+export const FIRE_TONE = { light: 0.36, lightY: 1.2, range: 3.2, tongue: 0.18, crowd: 0.12, ember: 0.4, floor: 0.45 };
+
 /* Лежащий: тот же маг, опрокинутый на спину. */
 function lay(node, angle, down) {
   node.body.rotation = down ? [-Math.PI / 2, 0, 0] : [0, 0, 0];
@@ -650,6 +697,14 @@ function lay(node, angle, down) {
 
 export function createLiveScene(renderer) {
   const nodes = new WeakMap();
+  /* Шаг каждой фигуры (hodba.js): у кого сколько пройдено. */
+  const gaits = new WeakMap();
+  let gaitSeed = 0;
+  const gaitOf = (obj) => {
+    let g = gaits.get(obj);
+    if (!g) { g = createGait((gaitSeed += 1.7)); gaits.set(obj, g); }
+    return g;
+  };
   const corpseNodes = new WeakMap();
   const ring = new Node('ring', { color: C('#4fe8ff'), emissive: 0.7, alpha: 0.85, additive: true, unlit: 1 });
   const flames = new Map();
@@ -816,18 +871,39 @@ export function createLiveScene(renderer) {
         }
       }
 
-      /* Вещество на полу: пожар светит сам и дымит искрами. */
+      /*
+       * Вещество на полу: пожар светит сам и дымит искрами.
+       *
+       * Отзыв Сергея 04.10, п.14: «горящие предметы слишком яркие — ничего
+       * не видно». Горящий стог — это 15–25 клеток пожара разом, и до 05.10
+       * каждая несла свой свет 1.8 и три сложением-ярких языка: свет
+       * складывался в белое пятно, а 12 мест под свет (engine.js,
+       * MAX_LIGHTS) занимал пожар — лампы и посох героя рядом гасли.
+       * Теперь (FIRE_TONE): свет — один на квадрат 2×2 клетки, сила растёт
+       * с числом горящих в нём, но медленнее (√n); языки у клетки внутри
+       * пожара тусклее, чем на краю, — край читается, середина не слепит.
+       * Мера — доля пикселей с каналом 255 в трёх клетках от стога
+       * (pilot-vid/dym-v9.mjs): цель меньше 5%.
+       */
       if (world.ground) {
+        const bins = new Map();
+        const burning = (tx, ty) => tx >= 0 && ty >= 0 && tx < world.w && ty < world.h && world.ground[ty * world.w + tx] === GROUND.FIRE;
         for (let i = 0; i < world.ground.length; i += 1) {
           if (world.ground[i] !== GROUND.FIRE) continue;
-          const x = (i % world.w) + 0.5, z = Math.floor(i / world.w) + 0.5;
-          const k = flick(i * 1.3, 0.4);
-          lights.push({ pos: [x, 0.7, z], color: [1, 0.45, 0.14], power: 1.8 * k, range: 4.4 });
+          const tx = i % world.w, ty = Math.floor(i / world.w);
+          const x = tx + 0.5, z = ty + 0.5;
+          const key = `${tx >> 1},${ty >> 1}`;
+          const bin = bins.get(key) || { x: 0, z: 0, n: 0, seed: i };
+          bin.x += x; bin.z += z; bin.n += 1;
+          bins.set(key, bin);
+          let around = 0;
+          for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) if ((dx || dy) && burning(tx + dx, ty + dy)) around += 1;
+          const dim = FIRE_TONE.tongue / (1 + FIRE_TONE.crowd * around);
           /* Языки пламени: три конуса на клетку, каждый дышит своим темпом. */
           for (let j = 0; j < 3; j += 1) {
             const a = j * 2.1 + i, r = 0.18 + 0.1 * M.hash2(i, j);
             const hgt = 0.35 + 0.35 * M.hash2(j, i) + 0.12 * Math.sin(time * (7 + j) + i);
-            const tongue = new Node('cone', { color: j ? [0.95, 0.32, 0.05] : [1, 0.62, 0.2], emissive: 0.15, alpha: 0.42, additive: true, unlit: 1 });
+            const tongue = new Node('cone', { color: j ? [0.95, 0.32, 0.05] : [1, 0.62, 0.2], emissive: 0.15, alpha: dim, additive: true, unlit: 1 });
             tongue.position = [x + Math.cos(a) * r, hgt * 0.6, z + Math.sin(a) * r];
             tongue.scale = [0.08 + 0.04 * j, hgt * 1.2, 0.08 + 0.04 * j];
             root.add(tongue);
@@ -836,8 +912,12 @@ export function createLiveScene(renderer) {
             const ph = (time * 0.9 + j / 4 + M.hash2(i, j)) % 1;
             const ox = (M.hash2(i, j + Math.floor(time * 0.9 + j / 4)) - 0.5) * 0.8;
             const oz = (M.hash2(j, i + Math.floor(time * 0.9 + j / 4)) - 0.5) * 0.8;
-            particles.push(x + ox, 0.1 + ph * 1.4, z + oz, 1, 0.5 + 0.3 * (1 - ph), 0.15, 0.9 * (1 - ph), 0.16 * (1 - ph * 0.5));
+            particles.push(x + ox, 0.1 + ph * 1.4, z + oz, 1, 0.5 + 0.3 * (1 - ph), 0.15, FIRE_TONE.ember * (1 - ph), 0.16 * (1 - ph * 0.5));
           }
+        }
+        for (const bin of bins.values()) {
+          const k = flick(bin.seed * 1.3, 0.4);
+          lights.push({ pos: [bin.x / bin.n, FIRE_TONE.lightY, bin.z / bin.n], color: [1, 0.45, 0.14], power: FIRE_TONE.light * Math.sqrt(bin.n) * k, range: FIRE_TONE.range });
         }
       }
 
@@ -878,6 +958,7 @@ export function createLiveScene(renderer) {
         }
         n.position = [obj.x / T, 0, obj.y / T];
         lay(n, obj.angle || 0, (obj.downed || 0) > 0);
+        if (!((obj.downed || 0) > 0)) animate(n, stepGait(gaitOf(obj), obj.x / T, obj.y / T, time));
         /* Щуп замера: фигура героя не рисуется, кольцо и тень остаются. */
         if (!(kind === 'player' && options.hide && options.hide.has('hero'))) root.add(n);
         n.shadow.position = [obj.x / T, 0.008, obj.y / T];
@@ -941,23 +1022,105 @@ function wedgeKey(renderer, arc) {
 
 let spellRenderer = null;
 
+/*
+ * Ядро снаряда — фигурой своего вещества (vid-zaklinaniy.js, отзыв 04.10,
+ * п.17): угли — вытянутое пламя, вода — капля, ветер — крутящиеся
+ * кольца, земля — кувыркающийся ком, молния — трескучий крест, стужа —
+ * льдинка, пар — клуб, грязь — шлепок, песок — сечка, магнит — кольцо.
+ * holder смотрит по полёту: локальный x — вперёд (как у луча ниже).
+ */
+function spellCore(look, x, y, z, dx, dz, time, seed, root) {
+  const c = look ? look.colour : [1, 1, 1];
+  const holder = new Node();
+  holder.position = [x, y, z];
+  holder.rotation = [0, -Math.atan2(dz, dx), 0];
+  root.add(holder);
+  const add = (geo, mat, pos, scale, rot) => {
+    const n = holder.add(new Node(geo, mat));
+    n.position = pos; n.scale = scale;
+    if (rot) n.rotation = rot;
+    return n;
+  };
+  const glowMat = (col, e = 2.2, a = 0.9) => ({ color: col, emissive: e, alpha: a, additive: true });
+  const spin = time * 9 + seed;
+  switch (look ? look.primary : 'spark') {
+    case 'ember':
+      add('sphere', glowMat(c), [-0.06, 0, 0], [0.22, 0.13, 0.13]);
+      add('sphere', glowMat([1, 0.95, 0.7], 1.6, 0.85), [0.02, 0, 0], [0.07, 0.07, 0.07]);
+      break;
+    case 'magma':
+      add('sphere', { color: c, emissive: 1.6, alpha: 1 }, [0, -0.02, 0], [0.15, 0.12, 0.15]);
+      add('sphere', { color: [0.22, 0.07, 0.03], emissive: 0, alpha: 1 }, [-0.05, 0.05, 0], [0.1, 0.06, 0.1]);
+      break;
+    case 'drop':
+      add('sphere', { color: mixRgb(c, [0.2, 0.5, 1], 0.4), emissive: 0.9, alpha: 0.85 }, [0, 0, 0], [0.18, 0.1, 0.1]);
+      add('sphere', glowMat([1, 1, 1], 1.4, 0.7), [0.05, 0.04, 0], [0.03, 0.03, 0.03]);
+      break;
+    case 'swirl':
+      add('torus', glowMat(c, 1.5, 0.9), [0, 0, 0], [0.16, 0.6, 0.16], [spin, 0, Math.PI / 2]);
+      add('torus', glowMat(c, 1.5, 0.7), [-0.08, 0, 0], [0.11, 0.6, 0.11], [-spin * 1.3, 0, Math.PI / 2]);
+      break;
+    case 'rock':
+      add('shard', { color: mixRgb(c, [0.35, 0.27, 0.2], 0.6), emissive: 0.15, alpha: 1 }, [0, 0, 0], [0.16, 0.16, 0.16], [spin * 0.8, spin * 0.6, 0]);
+      break;
+    case 'zigzag':
+      add('sphere', glowMat([1, 1, 0.85], 2.6, 0.95), [0, 0, 0], [0.08, 0.08, 0.08]);
+      for (const k of [0, 1]) add('cylinder', glowMat(c, 2.2, 0.9), [0, 0, 0], [0.015, 0.36, 0.015], [Math.floor(time * 30 + seed) * 1.7 + k * 1.3, 0, 0.8 + k * 1.4]);
+      break;
+    case 'flake':
+      add('shard', { color: [0.86, 0.96, 1], emissive: 0.9, alpha: 0.95 }, [0, 0, 0], [0.11, 0.15, 0.11], [0, spin * 0.5, 0.4]);
+      add('sphere', glowMat(c, 1.2, 0.35), [0, 0, 0], [0.16, 0.16, 0.16]);
+      break;
+    case 'puff':
+      add('sphere', { color: [0.86, 0.89, 0.93], emissive: 0.35, alpha: 0.55 }, [0, 0, 0], [0.17, 0.15, 0.17]);
+      break;
+    case 'blob':
+      add('sphere', { color: mixRgb(c, [0.25, 0.18, 0.1], 0.5), emissive: 0.1, alpha: 1 }, [0, -0.02, 0], [0.16 + 0.02 * Math.sin(time * 18), 0.1, 0.15]);
+      break;
+    case 'grain':
+      add('sphere', glowMat(c, 1.4, 0.8), [0, 0, 0], [0.08, 0.08, 0.08]);
+      break;
+    case 'ring':
+      add('torus', glowMat(c, 1.8, 0.9), [0, 0, 0], [0.12 + 0.05 * Math.sin(time * 12), 0.6, 0.12 + 0.05 * Math.sin(time * 12)], [0, 0, Math.PI / 2]);
+      add('sphere', glowMat(c, 2, 0.9), [0, 0, 0], [0.06, 0.06, 0.06]);
+      break;
+    default:
+      /* Прежний вид (чужие снаряды, неизвестное вещество): шар и белая сердцевина. */
+      add('sphere', glowMat(c), [0, 0, 0], [0.14, 0.14, 0.14]);
+      add('sphere', { color: [1, 1, 1], emissive: 1.5, alpha: 0.8, additive: true, unlit: 1 }, [0, 0, 0], [0.06, 0.06, 0.06]);
+  }
+}
+
+const mixRgb = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const DARK_SHAPES = new Set(['rock', 'blob', 'puff']);
+const pushAll = (dst, src) => { for (let i = 0; i < src.length; i += 1) dst.push(src[i]); };
+
 function spellLayer(world, root, lights, particles, soft, time) {
-  /* Снаряд: светящийся шар, за ним хвост искр по скорости, вокруг свет. */
+  /*
+   * Снаряд: ядро фигурой вещества, хвост его формой и движением
+   * (vid-zaklinaniy.js), свет его цвета. Чужие снаряды (стрелки) и
+   * снаряды без вещества — прежним шаром с шестью искрами.
+   */
   for (const bullet of world.bullets || []) {
     const c = rgbOf(bullet.colour);
     const x = bullet.x / T, z = bullet.y / T;
-    const n = new Node('sphere', { color: c, emissive: 2.2, alpha: 0.9, additive: true });
-    n.position = [x, 0.7, z]; n.scale = [0.14, 0.14, 0.14];
-    root.add(n);
-    const core = new Node('sphere', { color: [1, 1, 1], emissive: 1.5, alpha: 0.8, additive: true, unlit: 1 });
-    core.position = [x, 0.7, z]; core.scale = [0.06, 0.06, 0.06];
-    root.add(core);
-    const vx = (bullet.vx || 0) / T, vz = (bullet.vy || 0) / T;
-    for (let k = 1; k <= 6; k += 1) {
-      const back = k * 0.014;
-      particles.push(x - vx * back, 0.7, z - vz * back, c[0], c[1], c[2], 0.75 * (1 - k / 7), 0.11 * (1 - k / 9));
+    const look = bullet.from === 'player' && bullet.substance ? spellLook(bullet.substance) : null;
+    const v = Math.hypot(bullet.vx || 0, bullet.vy || 0) || 1;
+    const dx = (bullet.vx || 0) / v, dz = (bullet.vy || 0) / v;
+    const seed = ((bullet.ox || 0) * 0.13 + (bullet.oy || 0) * 0.07) % 97;
+    spellCore(look, x, 0.7, z, dx, dz, time, seed, root);
+    if (look) {
+      const tp = trailParticles(look, x, 0.7, z, dx, dz, time, seed);
+      pushAll(particles, tp.glow);
+      pushAll(soft, tp.soft);
+    } else {
+      const vx = (bullet.vx || 0) / T, vz = (bullet.vy || 0) / T;
+      for (let k = 1; k <= 6; k += 1) {
+        const back = k * 0.014;
+        particles.push(x - vx * back, 0.7, z - vz * back, c[0], c[1], c[2], 0.75 * (1 - k / 7), 0.11 * (1 - k / 9));
+      }
     }
-    lights.push({ pos: [x, 0.8, z], color: c, power: 1.5, range: 3.8 });
+    lights.push({ pos: [x, 0.8, z], color: c, power: look && DARK_SHAPES.has(look.primary) ? 0.7 : 1.5, range: 3.8 });
   }
 
   for (const blast of world.blasts || []) {
@@ -972,15 +1135,29 @@ function spellLayer(world, root, lights, particles, soft, time) {
       holder.position = [blast.x / T, 0, blast.y / T];
       holder.rotation = [0, Math.PI / 2 - (blast.angle || 0) - arc / 2, 0];
       const key = wedgeKey(spellRenderer, arc);
-      for (const [y, a] of [[0.05, 0.5], [0.55, 0.28]]) {
+      /* Клин был 0.5 / 0.28 сложением — ЖАР по коридору выжигал кадр
+         добела (дым v9); 0.34 / 0.18 — клин виден, пол под ним тоже. */
+      for (const [y, a] of [[0.05, 0.34], [0.55, 0.18]]) {
         const w = holder.add(new Node(key, { color: c, emissive: 1.2, alpha: a * fade, additive: true, unlit: 1 }));
         w.position = [0, y, 0]; w.scale = [reach, 1, reach];
       }
       root.add(holder);
-      for (let i = 0; i < 10; i += 1) {
-        const a = (blast.angle || 0) + (M.hash2(i, 7) - 0.5) * arc;
-        const r = reach * (0.3 + 0.7 * M.hash2(i, 3));
-        particles.push(blast.x / T + Math.cos(a) * r, 0.25 + 0.6 * M.hash2(3, i), blast.y / T + Math.sin(a) * r, c[0], c[1], c[2], 0.8 * fade, 0.12);
+      /* Внутри клина — разлёт формой вещества (угли вверх, капли вниз…),
+         три очага вдоль конуса; вещество не узнано — прежние искры. */
+      const look = lookByColour(blast.colour);
+      if (look) {
+        for (let i = 0; i < 3; i += 1) {
+          const a = (blast.angle || 0) + (i - 1) * arc * 0.3;
+          const r = reach * (0.35 + 0.25 * i);
+          const b = burstParticles(look, blast.x / T + Math.cos(a) * r, 0.35, blast.y / T + Math.sin(a) * r, t, i * 5.1, reach * 0.22);
+          pushAll(particles, b.glow); pushAll(soft, b.soft);
+        }
+      } else {
+        for (let i = 0; i < 10; i += 1) {
+          const a = (blast.angle || 0) + (M.hash2(i, 7) - 0.5) * arc;
+          const r = reach * (0.3 + 0.7 * M.hash2(i, 3));
+          particles.push(blast.x / T + Math.cos(a) * r, 0.25 + 0.6 * M.hash2(3, i), blast.y / T + Math.sin(a) * r, c[0], c[1], c[2], 0.8 * fade, 0.12);
+        }
       }
       lights.push({ pos: [blast.x / T + Math.cos(blast.angle || 0) * reach * 0.5, 0.6, blast.y / T + Math.sin(blast.angle || 0) * reach * 0.5], color: c, power: 2.2 * fade, range: 4.5 });
     } else if (blast.kind === 'beam') {
@@ -1004,6 +1181,14 @@ function spellLayer(world, root, lights, particles, soft, time) {
         const s = M.hash2(i, 11) * len;
         particles.push(x1 + Math.cos(a) * s, 0.75 + (M.hash2(i, 5) - 0.5) * 0.3, z1 + Math.sin(a) * s, c[0], c[1], c[2], fade, 0.09);
       }
+      /* Вдоль луча — его вещество: огонь сыплет углями, вода каплет. */
+      const look = lookByColour(blast.colour);
+      if (look) {
+        for (let s = 1; s <= len; s += 2) {
+          const b = burstParticles(look, x1 + Math.cos(a) * s, 0.7, z1 + Math.sin(a) * s, t, s * 1.7, 0.45);
+          pushAll(particles, b.glow); pushAll(soft, b.soft);
+        }
+      }
     } else if (blast.kind === 'nova') {
       /* Вспышка: кольцо по полу расходится до радиуса, шар света гаснет. */
       const tint = rgbOf(blast.tint || blast.colour);
@@ -1018,6 +1203,11 @@ function spellLayer(world, root, lights, particles, soft, time) {
       flash.scale = [r * 0.8, r * 0.55, r * 0.8];
       root.add(flash);
       lights.push({ pos: [blast.x / T, 0.9, blast.y / T], color: tint, power: 3 * fade, range: R + 2.5 });
+      const look = lookByColour(blast.tint || blast.colour);
+      if (look) {
+        const b = burstParticles(look, blast.x / T, 0.4, blast.y / T, t, 3.3, r);
+        pushAll(particles, b.glow); pushAll(soft, b.soft);
+      }
     }
   }
 
@@ -1064,6 +1254,12 @@ function spellLayer(world, root, lights, particles, soft, time) {
     const r = (ring.r + (ring.max - ring.r) * t) / T;
     n.position = [ring.x / T, 0.5, ring.y / T]; n.scale = [r, 1, r];
     root.add(n);
+    /* Попадание — разлётом формы вещества: что прилетело, видно и по удару. */
+    const look = lookByColour(ring.colour);
+    if (look) {
+      const b = burstParticles(look, ring.x / T, 0.5, ring.y / T, t, (ring.x * 0.3 + ring.y * 0.7) % 31, 0.7);
+      pushAll(particles, b.glow); pushAll(soft, b.soft);
+    }
   }
 
   /* Искры мира (удары, брызги) — точками на высоте пояса. */
@@ -1254,7 +1450,8 @@ export function bakeGround(world) {
     const y = levelOf(world.tiles[i]) + 0.018;
     /* Высыхает — бледнеет: последние полторы секунды жизни лужа уходит. */
     const life = world.groundLife ? M.clamp(world.groundLife[i] / 1.5, 0.25, 1) : 1;
-    const c = look.color;
+    /* Пожар — с поправкой тона (FIRE_TONE.floor, отзыв 04.10, п.14). */
+    const c = g === GROUND.FIRE ? look.color.map((v) => v * FIRE_TONE.floor) : look.color;
     if (!look.soft) {
       b.floorQuad(tx, ty, y, [c, c, c, c], { surf: look.surf, alpha: look.alpha * life });
       continue;

@@ -22,7 +22,7 @@ import {
   conductedTiles, conducts, cloudsBlock, addCloud,
   SPILL, JOLT, FLARE, BURN_TIME, WET_TIME, CHAIN_HOP, FIRE_CATCH,
 } from './field.js';
-import { spellOf, STACK_LIMIT, CHARGE_STEP, colourOf, ELEMENT_ORDER } from './magic.js';
+import { spellOf, STACK_LIMIT, CHARGE_STEP, colourOf, ELEMENT_ORDER, ELEMENTS } from './magic.js';
 import { createOperation, updateOperation } from './operation.js';
 /* Зрение и тревога МГС — дословно (src/vospriyatie/). Работают только на
    этажах с флагом `watchful`; остальные этажи их не видят вовсе. */
@@ -32,13 +32,14 @@ import { canSee } from './vospriyatie/vision.js';
    назвал свои лампы («Башня»); остальные этажи света не получают вовсе. */
 import { createLighting, updateLighting, lampsTouched, lampHit, seen as litTarget } from './vospriyatie/svet.js';
 /* Монета МГС — только на этаже, который назвал число монет. */
-import { createCoins, throwCoin, stepCoins } from './vospriyatie/moneta.js';
+import { createCoins, layCoins, throwCoin, stepCoins } from './vospriyatie/moneta.js';
 /* «Толкнул стражника — ударит»: только на этаже с дозором. */
 import { bumpGuards, stunnedStep } from './vospriyatie/tolchok.js';
 /* Свидетели, донос, кража ядра (слой «в») — только на этаже с дозором. */
 import { initWitnesses, updateWitnesses } from './vospriyatie/svideteli.js';
 /* Слой «г»: жители, разговоры, задания «Башни» (src/zhiteli.js). */
 import { initResidents, updateResidents } from './zhiteli.js';
+import { createKarma, stepKarma } from './karma.js';
 
 export { TILE_SIZE };
 
@@ -478,7 +479,11 @@ function killNeutral(world, body, angle, cause) {
     twitch: 0, fall: 0.34, sheet: body.kind, lean: 0,
     vx: body.vx || 0, vy: body.vy || 0, shove: 0, alive: false,
   });
-  world.events.push({ type: 'neutral-death', kind: body.kind, cause, x: body.x, y: body.y });
+  world.events.push({
+    type: 'neutral-death', kind: body.kind, cause, x: body.x, y: body.y,
+    /* Кто именно — для кармы (src/karma.js): у жителя «Башни» есть имя. */
+    id: body.resident ? body.resident.id : null,
+  });
 }
 
 function neutralBodies(world) {
@@ -953,7 +958,8 @@ export function createWorld(level) {
   createField(world);
   buildCircuits(world, level);
   if (Array.isArray(level.lamps)) createLighting(world, level);
-  if (level.coins) createCoins(world, level.coins);
+  if (level.coins || level.coinSpots) createCoins(world, level.coins || 0);
+  if (level.coinSpots) layCoins(world, level.coinSpots);
 
   /*
    * Огонь, который горит, пока его не зальют. Обычный пожар гаснет сам
@@ -970,6 +976,8 @@ export function createWorld(level) {
 
   /* Жители «Башни» (слой «г»): у кого какие слова и задания. Этаж без
      `residents` — как был. */
+  /* Карма (src/karma.js): на любом этаже, пусть пустая, — экран читает её всегда. */
+  world.karma = createKarma();
   if (level.residents) initResidents(world);
 
   world.flow = buildFlowField(world, world.player.x, world.player.y);
@@ -1113,33 +1121,63 @@ function swingMelee(world, attacker, from) {
 const WITNESS_SIGHT = 300;
 const WITNESS_HEAR = 130;
 
+/* Один страж и одно тело: заметил ли он, что тело упало. Вынесено из
+   witnessed() 04.10, чтобы тот же ответ брала и выучка (adaptKin ниже):
+   «увидел, как своего свалили огнём» и «заметил смерть» — один вопрос. */
+function sawFall(world, enemy, victim) {
+  if (!enemy.alive || enemy === victim) return false;
+
+  const dist = Math.hypot(enemy.x - victim.x, enemy.y - victim.y);
+  if (dist < WITNESS_HEAR) return true;
+  if (world.trevoga) {
+    /* На этаже с дозором «видел» значит то же, что для игрока: конус
+       МГС, а не круг в триста пикселей. Прежняя проверка смотрела во
+       все стороны сразу — страж спиной к убийству «видел» его. Лежачий
+       и оглушённый не видит ничего. */
+    return !(enemy.downed > 0)
+      && canSee(world, enemy, litTarget(world, victim), sightMul(world.trevoga));
+  }
+  return dist < WITNESS_SIGHT && hasSight(world, enemy.x, enemy.y, victim.x, victim.y);
+}
+
 function witnessed(world, victim) {
   for (const enemy of world.enemies) {
-    if (!enemy.alive || enemy === victim) continue;
-
-    const dist = Math.hypot(enemy.x - victim.x, enemy.y - victim.y);
-    if (dist < WITNESS_HEAR) return true;
-    if (world.trevoga) {
-      /* На этаже с дозором «видел» значит то же, что для игрока: конус
-         МГС, а не круг в триста пикселей. Прежняя проверка смотрела во
-         все стороны сразу — страж спиной к убийству «видел» его. Лежачий
-         и оглушённый не видит ничего. */
-      if (!(enemy.downed > 0)
-        && canSee(world, enemy, litTarget(world, victim), sightMul(world.trevoga))) return true;
-      continue;
-    }
-    if (dist < WITNESS_SIGHT && hasSight(world, enemy.x, enemy.y, victim.x, victim.y)) {
-      return true;
-    }
+    if (sawFall(world, enemy, victim)) return true;
   }
 
   return false;
 }
 
+/*
+ * ЗАЩИТЫ ВРАГА (отзыв Сергея 04.10, п.18: «непонятно, какие заклинания
+ * против каких противников: показывать защиты. Один гоблин убит огнём —
+ * второй уже защищён от огня, надо придумать новый способ»).
+ *
+ * У врага две части защиты:
+ *   resist   своя стихия с рождения (щит носителя, цвет заклинателя) —
+ *            как было, строкой;
+ *   learned  выученные: стихии, которыми при нём свалили СВОЕГО (того же
+ *            kind) — adaptKin ниже. Массив, по порядку выучки.
+ * Полный список для экрана — resistList(enemy). Если своей стихии нет, а
+ * выучка есть, resist становится первой выученной: кольцо защиты в обоих
+ * видах (render.js, view3d/igra.js читают enemy.resist) появляется без
+ * правки отрисовки.
+ *
+ * Правило одно на обе части: удар не проходит, если ВСЕ стихии удара в
+ * защите. Огнеупорного берёт ПАР (огонь+вода): вода не выучена.
+ */
+export function resistList(enemy) {
+  const out = [];
+  if (enemy.resist) out.push(enemy.resist);
+  for (const element of enemy.learned || []) if (!out.includes(element)) out.push(element);
+  return out;
+}
+
 export function resists(enemy, elements) {
-  if (!enemy.resist) return false;
+  if (!enemy.resist && !(enemy.learned && enemy.learned.length)) return false;
   if (!elements || !elements.length) return false; /* железо стойкость не разбирает */
-  return elements.every((element) => element === enemy.resist);
+  const list = resistList(enemy);
+  return elements.every((element) => list.includes(element));
 }
 
 export function resisted(world, enemy, angle, source = {}) {
@@ -1148,9 +1186,95 @@ export function resisted(world, enemy, angle, source = {}) {
   enemy.hitFlash = 0.12;
   enemy.blocked = 0.3;
   pop(world, enemy.x, enemy.y, 15, '255,255,255');
-  spark(world, enemy.x, enemy.y, angle + Math.PI, 1.4, 8, colourOf(enemy.resist), 160);
-  world.events.push({ type: 'resist', element: enemy.resist });
+  /* Стихия в событии — та, что ударила и не прошла: у выучившего огонь
+     «ОГОНЬ ЕГО НЕ БЕРЁТ», а не цвет его родного щита. */
+  const element = source.elements[0];
+  spark(world, enemy.x, enemy.y, angle + Math.PI, 1.4, 8, colourOf(element), 160);
+  world.events.push({
+    type: 'resist', element,
+    learned: (enemy.learned || []).includes(element),
+    kind: enemy.kind,
+  });
   return true;
+}
+
+/*
+ * ВЫУЧКА СВОИХ. Свалили врага стихией — и это ВИДЕЛИ другие того же рода
+ * (sawFall: тот же конус МГС со светом, что у «заметил смерть», или
+ * вплотную слышал), — они выучивают эти стихии: в следующий раз то же
+ * самое по ним не пройдёт.
+ *
+ * Почему «на глазах», а не всем на этаже сразу (решение 04.10): канон
+ * «Глубины» §12 — «репутация не должна изменяться магически глобально:
+ * событие увидел NPC → … → конкретные люди начали реагировать». Знание
+ * врагов — та же репутация, только у врагов. И это даёт стелсу цену:
+ * свалил одного без свидетелей — остальные не готовы.
+ *
+ * «Свалили» — и убит, и усыплён одиночной стихией, и заморожен: на этаже
+ * с дозором одиночная стихия не убивает (killEnemy), и без этого огонь в
+ * руке с порога не учил бы никого ничему. Учат только удары игрока:
+ * чужая пуля в спину товарища — не наука.
+ *
+ * Выучка не мгновенная: LEARN_DELAY ниже. Событие `adapt` — для экрана:
+ * кто, сколько их, какие стихии теперь не берут.
+ */
+/* Сколько секунд уходит у видевшего на то, чтобы понять, чем свалили
+   своего. Не ноль по делу: удар, который уже летит, — цепь по луже,
+   веер, выдох по двоим — бьёт всех, кого застал, и не должен
+   останавливаться о «выученное» посреди себя. Замер на «Ядре»
+   (tests/evgeny-sandbox.mjs, бочка под молнией): плевок усыпил первого
+   на 0.33 с, цепь по разлитой воде добила последнего на 1.07 с — 0.74 с
+   одного и того же выпуска. С задержкой 0.6 второй успевал выучить
+   молнию посреди цепи и устоять; с 1.0 — нет. Человек между двумя
+   своими выпусками тратит больше секунды (набор, откат, прицел), так
+   что «второй огонь не берёт» он видит. */
+export const LEARN_DELAY = 1.0;
+
+function adaptKin(world, victim, source) {
+  /* Флаг этажа, как дозор: «Башня» учит врагов, восемь этажей кампании —
+     как были (старые уровни не трогаем: там бот кампании с двумя
+     стихиями на этаже упирался бы в выучку и погибал — tests/sim.mjs,
+     «ВХОД В ПАРК», 1/8 вместо 8/8). */
+  if (!world.level || !world.level.adaptive) return;
+  if (!source || source.by !== 'player' || !source.elements || !source.elements.length) return;
+  const elements = [...new Set(source.elements)];
+  for (const other of world.enemies) {
+    if (other === victim || other.kind !== victim.kind || !other.alive || other.downed > 0) continue;
+    if (!sawFall(world, other, victim)) continue;
+    const fresh = elements.filter((element) => !resistList(other).includes(element)
+      && !(other.pendingLearn || []).some((p) => p.element === element));
+    if (!fresh.length) continue;
+    other.pendingLearn = [...(other.pendingLearn || []),
+      ...fresh.map((element) => ({ element, at: world.time + LEARN_DELAY, kind: victim.kind, x: victim.x, y: victim.y }))];
+  }
+}
+
+/* Понял — выучил: отложенная выучка становится защитой. Одно событие
+   `adapt` на кадр и вид — для экрана («ГРОМИЛЫ ЗАЩИТИЛИСЬ ОТ ОГНЯ»). */
+function ripenLearning(world) {
+  const out = new Map();
+  for (const enemy of world.enemies) {
+    if (!enemy.pendingLearn || !enemy.pendingLearn.length) continue;
+    const ready = enemy.pendingLearn.filter((p) => world.time >= p.at);
+    if (!ready.length) continue;
+    enemy.pendingLearn = enemy.pendingLearn.filter((p) => world.time < p.at);
+    if (!enemy.alive) continue;
+    for (const p of ready) {
+      if (resistList(enemy).includes(p.element)) continue;
+      enemy.learned = [...(enemy.learned || []), p.element];
+      const key = `${p.kind}`;
+      const entry = out.get(key) || { kind: p.kind, elements: [], learners: new Set(), x: p.x, y: p.y };
+      if (!entry.elements.includes(p.element)) entry.elements.push(p.element);
+      entry.learners.add(enemy);
+      out.set(key, entry);
+    }
+    if (!enemy.resist && enemy.learned && enemy.learned.length) enemy.resist = enemy.learned[0];
+  }
+  for (const entry of out.values()) {
+    world.events.push({
+      type: 'adapt', kind: entry.kind, elements: entry.elements, learners: entry.learners.size, x: entry.x, y: entry.y,
+    });
+  }
 }
 
 export function knockDown(world, enemy, angle, срок = DOWN_TIME) {
@@ -1244,6 +1368,7 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
     enemy.brittle = 3;
     knockDown(world, enemy, angle);
     world.events.push({ type: 'frozen', x: enemy.x, y: enemy.y });
+    adaptKin(world, enemy, source);
     return;
   }
 
@@ -1299,12 +1424,14 @@ export function killEnemy(world, enemy, angle, cause, source = {}) {
       by: source.by || 'player',
       permanent: Boolean(enemy.unconscious),
     });
+    adaptKin(world, enemy, source);
     return;
   }
 
   enemy.alive = false;
   enemy.unconscious = false;
   world.kills += 1;
+  adaptKin(world, enemy, source);
 
   /*
    * Тело падает — и это слышно. Шум идёт всегда, даже когда тревоги нет:
@@ -2140,6 +2267,26 @@ function shatter(world, at, substance) {
     return true;
   }
 
+  if (tile === TILE.HAY && !substance.traits.burn) {
+    /*
+     * ВЕТЕР СОЛОМУ РАЗНОСИТ, А НЕ ПОДЖИГАЕТ (отзыв Сергея 04.10, п.14:
+     * «баг: ветер в сено поджигает его»). До этой ветки любая черта из
+     * списка слабостей соломы — и `gust` тоже — шла в пожар ниже: ветер
+     * без огня давал тот же костёр, что огонь. Огня в ветре нет, значит
+     * и пожару взяться неоткуда: клетка разлетается клочьями — облачко
+     * пыли на миг, шорох, — и всё. Соседняя солома не занимается: цепь
+     * «солома поджигает солому» — свойство огня, а не ветра.
+     *
+     * Черта проверяется, а не стихия: ЖАР (огонь+ветер) жжёт — он идёт в
+     * пожар, как и шёл; ПЕСОК и ГРОМ без огня — разносят.
+     */
+    addCloud(world, x, y, TILE_SIZE * 0.9, 'dust');
+    spark(world, x, y, 0, 3.2, 10, '#d9c27a', 150);
+    emitNoise(world, x, y, 110, 'hay-scatter');
+    world.events.push({ type: 'hay-scatter', x, y });
+    return true;
+  }
+
   if (tile === TILE.HAY) {
     /*
      * Стог не просто исчезает — он загорается, и вместе с ним всё вокруг.
@@ -2629,6 +2776,10 @@ export function update(world, dt, intent) {
   noticeBodies(world);
   updateWitnesses(world, dt);
   /* Разговоры и задания — после свидетелей: донос этого кадра уже виден. */
+  /* Карма — до жителей: убийство этого кадра уже знают те, кто видел,
+     и жители в этом же кадре отвечают на него отказом и провалом. */
+  stepKarma(world);
+  ripenLearning(world);
   updateResidents(world, dt, intent);
   maybeSlow(world);
 
@@ -2646,10 +2797,20 @@ export function update(world, dt, intent) {
  * Выдача — функции, а не запись в поле: их же зовут и прогоны, и
  * событие должно уйти в обоих случаях одинаково.
  */
+/*
+ * `banner` — строка для крупной плашки (отзыв 04.10, п.16: «ТЫ УЗНАЛ
+ * НОВЫЙ НАВЫК — большими буквами»). Мир её только кладёт в событие;
+ * рисует экран (main.js), и не обязан ею пользоваться.
+ */
+const STACK_BANNER = { 2: 'ДВЕ РУКИ — СМЕШИВАЙ ДВЕ СТИХИИ', 3: 'ТРИ РУКИ — ЛУЧ, ПРОБОЙ, ВСПЫШКА' };
+
 export function grantElement(world, element, trigger = null) {
   if (world.elements.includes(element)) return false;
   world.elements.push(element);
-  world.events.push({ type: 'unlock', kind: 'element', element, trigger });
+  world.events.push({
+    type: 'unlock', kind: 'element', element, trigger,
+    banner: `ТЫ УЗНАЛ НОВЫЙ НАВЫК: ${ELEMENTS[element].name} ${ELEMENTS[element].key}`,
+  });
   return true;
 }
 
@@ -2657,7 +2818,10 @@ export function raiseStack(world, size, trigger = null) {
   const next = Math.min(STACK_LIMIT, size);
   if (next <= world.stackLimit) return false;
   world.stackLimit = next;
-  world.events.push({ type: 'unlock', kind: 'stack', size: next, trigger });
+  world.events.push({
+    type: 'unlock', kind: 'stack', size: next, trigger,
+    banner: `ТЫ УЗНАЛ НОВЫЙ НАВЫК: ${STACK_BANNER[next] || `${next} РУКИ`}`,
+  });
   return true;
 }
 
@@ -3071,6 +3235,24 @@ function updateBullets(world, dt) {
         }
         spark(world, bullet.x, bullet.y, Math.atan2(-sy, -sx), 1.1, 5, '#ffe06b', 150);
         pop(world, bullet.x, bullet.y, 5, bullet.colour ? '255,255,255' : '255,224,107');
+        bullet.life = 0;
+        break;
+      }
+
+      /*
+       * ВОДА, ВЛЕТЕВШАЯ В ОГОНЬ, В НЁМ И ГАСНЕТ (04.10, лестница: огонь в
+       * проходе к мастерской стал шириной в три клетки, п.5 отзыва). До
+       * этого плевок воды пролетал над горящим полом и ложился там, где
+       * кончалась его дальность, — залить огонь в открытом проходе можно
+       * было, только угадав дальность полёта, которую глазом не прочесть.
+       * Теперь снаряд, в котором есть «гасит» и нет «жжёт», садится в
+       * первую горящую клетку на пути — и гасит её своим пятном. Своя
+       * клетка не в счёт: под ногами горящего вода ляжет, как ложилась.
+       */
+      if (bullet.from === 'player' && bullet.substance && bullet.substance.traits.douse
+        && !bullet.substance.traits.burn
+        && Math.hypot(bullet.x - bullet.ox, bullet.y - bullet.oy) > TILE_SIZE * 0.75
+        && world.ground[tileIndex(world, bullet.x, bullet.y)] === GROUND.FIRE) {
         bullet.life = 0;
         break;
       }

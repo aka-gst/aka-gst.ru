@@ -29,9 +29,12 @@ import { pickEntry, entryLevel } from './entry.js';
 import { createGuide, stepOfUnlock, ladderPulses, ladderTick, createLadderMeter, ROUTE_NAMES } from './lestnica.js';
 import { createRing, ringTick, ringRewind } from './kolco.js';
 import { dryHint, lockedHint, stackFullHint, COIN_KEY } from './hints.js';
+import { unlockBanner } from './znamya.js';
+import { trackerView, trackerKey } from './treker.js';
+import { castLabel } from './view3d/vid-zaklinaniy.js';
 import { createNeeds, needNow } from './nuzhda.js';
 import { createIsoRenderer } from './view3d/igra.js';
-import { pickView, CAMERA_KEYS } from './view3d/vvod.js';
+import { pickView, CAMERA_KEYS, pageZoom } from './view3d/vvod.js';
 import { lightLevel, coinTarget, coinLanding } from './vidimost.js';
 import { ALARM_NAMES } from './vospriyatie/alarm.js';
 import { talkTarget, talkNow, questLog, NAMES as RESIDENT_NAMES } from './zhiteli.js';
@@ -126,6 +129,13 @@ const ui = {
   daemons: $('daemons'),
   /* Слой «г»: разговор и журнал заданий. */
   talkBtn: $('btn-talk'),
+  /* Сброс очереди (отзыв 04.10, п.9) — то же, что Q. */
+  dump: $('btn-dump'),
+  dumpShelf: $('btn-dump-shelf'),
+  /* Задания слева (отзыв 04.10, п.20). */
+  treker: $('treker'),
+  trekerHead: $('trekerHead'),
+  trekerList: $('trekerList'),
   talk: $('talk'),
   talkName: $('talkName'),
   talkWait: $('talkWait'),
@@ -474,6 +484,27 @@ function markCharging() {
     const button = $(`btn-${id}`);
     if (button) button.dataset.active = id === charging ? '1' : '0';
   }
+  syncDump();
+}
+
+/*
+ * СБРОС (отзыв Сергея 04.10, п.9 «нет кнопки сбросить очередь»). Только в
+ * объёмном виде («Башня»): в плоской кампании ряд из пяти принят и на
+ * телефоне шестой кнопке места нет (свод, п.15). На месте всегда, пустая
+ * очередь — тусклая: ряд не перестраивается под пальцем.
+ */
+function syncDump() {
+  const show = Boolean(renderer.iso && world);
+  const p = show ? world.player : null;
+  const flag = p && p.alive && (p.stack.length || p.chargeLeft > 0 || p.charging) ? '0' : '1';
+  /* Две кнопки, одно действие: в ряду стихий и в полке телефона стоя —
+     какую видно, решает style.css. */
+  for (const button of [ui.dump, ui.dumpShelf]) {
+    if (!button) continue;
+    if (button.hidden === show) button.hidden = !show;
+    if (show && button.dataset.empty !== flag) button.dataset.empty = flag;
+  }
+  if (show && ui.daemons.dataset.dump !== '1') ui.daemons.dataset.dump = '1';
 }
 
 /*
@@ -481,7 +512,9 @@ function markCharging() {
  * прочитать потом в книге; новое заклинание — единственное, что надо
  * заметить сейчас, иначе игрок так и не узнает, что нашёл его.
  */
-function showFound(kicker, name, note, colour) {
+function showFound(kicker, name, note, colour, options = {}) {
+  /* Знамя навыка (znamya.js): крупное «ТЫ УЗНАЛ НОВЫЙ НАВЫК» и короче. */
+  ui.found.dataset.big = options.big ? '1' : '0';
   ui.foundKicker.textContent = kicker;
   ui.foundName.textContent = name;
   ui.foundName.style.color = colour;
@@ -493,7 +526,7 @@ function showFound(kicker, name, note, colour) {
   void ui.found.offsetWidth;
   ui.found.style.animation = '';
 
-  foundTimer = 2.6;
+  foundTimer = options.seconds || 2.6;
 }
 
 
@@ -795,7 +828,7 @@ function buildIntent(raw) {
     attack: false,
     charge: null,
     /* Сброс набранного: время потрачено, но выпустить не туда — хуже. */
-    dump: input.tookKey('KeyQ') || input.tookKey('Backspace'),
+    dump: input.tookKey('KeyQ') || input.tookKey('Backspace') || input.tookKey('Dump'),
   };
 
   /*
@@ -1069,6 +1102,69 @@ function syncTalk() {
 
   renderTalk(view);
   world.questPin = tracked ? questTarget(world, tracked) : null;
+}
+
+/* =========================================================
+   ЗАДАНИЯ НА ЭКРАНЕ СЛЕВА (отзыв Сергея 04.10, п.20; src/treker.js)
+   =========================================================
+   Перерисовка — только когда сменился отпечаток (trackerKey): DOM не
+   трогается каждый кадр. Шапка сворачивает список, свёрнутость помнит
+   браузер (удобство одного человека, не данные: нет хранилища — открыт).
+   Строка — «вести стрелкой» (как ВЕСТИ в журнале). */
+const TREKER_KEY = 'technomagic.treker';
+let trekerDrawn = null;
+let trekerOpen = (() => {
+  try {
+    const saved = localStorage.getItem(TREKER_KEY);
+    if (saved === '0' || saved === '1') return saved === '1';
+  } catch { /* хранилища нет — по умолчанию */ }
+  /* Телефон боком: высоты мало — свёрнут с начала. */
+  return !matchMedia('(pointer: coarse) and (orientation: landscape)').matches;
+})();
+
+function syncTracker() {
+  const box = ui.treker;
+  if (!box) return;
+  const view = world && scene !== 'call' ? trackerView(world, tracked) : null;
+  const show = Boolean(view && view.known);
+  if (box.hidden === show) box.hidden = !show;
+  if (!show) { trekerDrawn = null; return; }
+  const key = `${trekerOpen ? 1 : 0}${trackerKey(view)}`;
+  if (key === trekerDrawn) return;
+  trekerDrawn = key;
+  box.dataset.open = trekerOpen ? '1' : '0';
+  ui.trekerHead.setAttribute('aria-expanded', trekerOpen ? 'true' : 'false');
+  ui.trekerHead.textContent = `ЗАДАНИЯ ${view.done}/${view.known} ${trekerOpen ? '▾' : '▸'}`;
+  ui.trekerList.textContent = '';
+  if (!trekerOpen) return;
+  for (const row of view.rows) {
+    const li = document.createElement('li');
+    li.dataset.id = row.id;
+    li.dataset.tracked = row.tracked ? '1' : '0';
+    const title = document.createElement('b');
+    title.textContent = `${row.tracked ? '➤ ' : ''}${row.title}`;
+    const next = document.createElement('span');
+    next.textContent = row.next;
+    li.append(title, next);
+    li.addEventListener('click', () => {
+      tracked = tracked === row.id ? null : row.id;
+      audio.sfx('ui');
+      trekerDrawn = null;
+    });
+    ui.trekerList.append(li);
+  }
+  if (!view.rows.length) {
+    const li = document.createElement('li');
+    li.className = 'treker-empty';
+    li.textContent = view.done ? 'ВСЁ ВЗЯТОЕ СДЕЛАНО' : 'НЕТ ВЗЯТЫХ — ЖИТЕЛИ С «…»';
+    ui.trekerList.append(li);
+  }
+  if (view.more) {
+    const li = document.createElement('li');
+    li.className = 'treker-empty';
+    li.textContent = `ЕЩЁ ${view.more} — В ЖУРНАЛЕ`;
+    ui.trekerList.append(li);
+  }
 }
 
 function choiceButton(key, label, onPress, leave = false) {
@@ -1696,6 +1792,9 @@ function drainEvents() {
       landed = 0;
 
       audio.sfx(event.form === 'beam' ? 'beam' : event.form === 'nova' ? 'nova' : 'zap', event);
+      /* Что выпущено — словом над героем 1.2 с (отзыв 04.10, п.17;
+         vid-zaklinaniy.js). Только в объёмном виде: плоский принят. */
+      if (renderer.castLabel) renderer.castLabel(castLabel(event));
       if (event.form === 'nova') vibrate(30);
 
       /*
@@ -1773,13 +1872,10 @@ function drainEvents() {
        */
       syncElementButtons();
       updateHud(true);
-      if (event.kind === 'element') {
-        const element = ELEMENTS[event.element];
-        showFound('ОТКРЫТА СТИХИЯ', element.name, `КЛАВИША ${element.key}`, element.colour);
-      } else {
-        showFound('ОТКРЫТА РУКА', event.size === 2 ? 'ДВЕ СТИХИИ' : 'ТРИ СТИХИИ',
-          event.size === 2 ? 'ТЕПЕРЬ ИХ МОЖНО СМЕШАТЬ' : 'ЛУЧ, ПРОБОЙ, ВСПЫШКА', '#ffe14d');
-      }
+      /* Отзыв 04.10, п.16: «ТЫ УЗНАЛ НОВЫЙ НАВЫК» большими буквами на
+         каждую ступень, 1.8 с, сквозь знамя нажимается (znamya.js). */
+      const banner = unlockBanner(event, ELEMENTS, byTouch());
+      if (banner) showFound(banner.kicker, banner.name, banner.note, banner.colour, { big: true, seconds: banner.seconds });
       audio.sfx('pickup');
       const start = guide.start(stepOfUnlock(event), world);
       if (start) setToast(start, 5);
@@ -2100,6 +2196,7 @@ function step(now) {
   /* Разговор на экране (слой «г») — каждый кадр и в любой сцене, до
      отрисовки: подпись у героя и цель задания она читает из мира. */
   if (world) syncTalk();
+  syncTracker();
 
   if (world) {
     /* Камера смотрит чуть вперёд по прицелу и догоняет быстро: на этой
@@ -2213,6 +2310,9 @@ function toggleMute() {
  * адресная строка меняет высоту окна без события, а в фоновой вкладке
  * окно какое-то время сообщает нули.
  */
+/* Плотность точек при загрузке: от неё считается зум страницы. */
+const BASE_DPR = window.devicePixelRatio || 1;
+
 function resize() {
   /*
    * Размер берётся у самого холста, а не у окна. На телефоне холст занимает
@@ -2222,8 +2322,11 @@ function resize() {
   const width = canvas.clientWidth || window.innerWidth || document.documentElement.clientWidth;
   const height = canvas.clientHeight || window.innerHeight || document.documentElement.clientHeight;
   if (width < 1 || height < 1) return;
-  /* Повтор ничего не стоит: холст сам отбросит вызов, если размер тот же. */
-  renderer.resize(width, height, window.devicePixelRatio || 1);
+  /* Повтор ничего не стоит: холст сам отбросит вызов, если размер тот же.
+     Четвёртое — зум страницы относительно загрузки: изометрия держит мир
+     того же размера в точках экрана (отзыв 04.10, п.8; vvod.js). */
+  const dpr = window.devicePixelRatio || 1;
+  renderer.resize(width, height, dpr, pageZoom(dpr, BASE_DPR));
 }
 
 window.addEventListener('resize', resize);
@@ -2334,6 +2437,13 @@ input.bindButton($('btnAttack'), 'attack');
 input.bindButton($('btn-coin'), 'Coin');
 /* ГОВОРИТЬ (слой «г»): нажатие приходит как 'Talk' — та же дверь, что F. */
 input.bindButton($('btn-talk'), 'Talk');
+input.bindButton($('btn-dump'), 'Dump');
+input.bindButton($('btn-dump-shelf'), 'Dump');
+ui.trekerHead.addEventListener('click', () => {
+  trekerOpen = !trekerOpen;
+  try { localStorage.setItem(TREKER_KEY, trekerOpen ? '1' : '0'); } catch { /* без хранилища — только до перезагрузки */ }
+  trekerDrawn = null;
+});
 ui.questOpen.addEventListener('click', () => { toggleLog(); ui.questOpen.blur(); });
 ui.zhurnalClose.addEventListener('click', hideLog);
 ui.zhurnal.addEventListener('click', (event) => { if (event.target === ui.zhurnal) hideLog(); });
@@ -2548,7 +2658,10 @@ if (entry) {
   if (fromHash) { level = fromHash; custom = true; }
 }
 
-loadArt();
+/* Картинки art/ рисует только плоский вид (render.js). Изометрия их не
+   зовёт ни разу — в «Башне» это было 26 запросов и 197 КБ впустую на
+   каждом телефоне (отзыв 04.10, п.3; замер — NEXT-WORK, 05.10). */
+if (!renderer.iso) loadArt();
 
 /*
  * ВЫХОД С НАЧАТОЙ ПАРТИИ СПРАШИВАЕТ

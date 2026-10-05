@@ -288,6 +288,30 @@ export function thinkEnemy(world, enemy, dt, speed) {
         result.vy = step.y * speed.walk * 1.25;
         enemy.angle = turnToward(enemy.angle, Math.atan2(step.y, step.x), dt * 6);
         enemy.search = watch ? INVESTIGATE : 2.6;
+
+        /*
+         * Застрял по дороге на шум — осматривается оттуда (04.10). Шаг на
+         * шум сбрасывал отсчёт осмотра каждый кадр, и дозорный, упёршийся
+         * в напарника у угла, стоял «настороже» до конца этажа: так двое
+         * из подвала «Башни» сошлись у смятого стока и не вернулись на
+         * посты за 70 с (tests/lestnica.mjs, «тихо», зерно 12). Три
+         * секунды без сближения с местом шума — значит, дальше не пройти.
+         */
+        if (watch && enemy.heard) {
+          if (enemy.stallFor !== enemy.heard || gap < (enemy.stallGap ?? Infinity) - 2) {
+            enemy.stallFor = enemy.heard;
+            enemy.stallGap = gap;
+            enemy.stall = 0;
+          } else {
+            enemy.stall = (enemy.stall || 0) + dt;
+            if (enemy.stall > 3) {
+              enemy.heard = null;
+              enemy.search = INVESTIGATE;
+              enemy.stall = 0;
+              enemy.stallGap = Infinity;
+            }
+          }
+        }
       } else if (watch) {
         /* Дошёл до места шума — осматривается (МГС: investigate 2.8 с) и
            возвращается на пост: heard гаснет, и та же ветка ведёт домой. */

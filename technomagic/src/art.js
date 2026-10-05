@@ -23,7 +23,16 @@
  *                У лужи и льда цвет свой и навсегда — их красить нечем.
  */
 
-const IMAGES = [
+/*
+ * Только те файлы, что лежат в art/ на самом деле. До 05.10 здесь стояли
+ * ещё 24 имени (prop-*-broken, prop-junk, mage-player-walk, mage-punk-*,
+ * mage-sparker-*, mage-warden-*, mage-corpse…), которых нет ни в
+ * репозитории, ни на сайте: каждый телефон слал 24 запроса с 404 на каждой
+ * загрузке (NEXT-WORK, находка 03.10; отзыв Сергея 04.10, п.3 «картинки
+ * грузятся долго»). Дорисуют — вписать сюда; tests/zagruzka.mjs краснеет,
+ * если имя есть в списке, а файла нет.
+ */
+export const IMAGES = [
   'icon-fire', 'icon-water', 'icon-wind', 'icon-earth', 'icon-bolt',
 
   'wall-fence', 'wall-concrete',
@@ -34,16 +43,9 @@ const IMAGES = [
 
   'field-water', 'field-ice', 'field-mud', 'field-fire',
 
-  'prop-barrel', 'prop-barrel-broken', 'prop-canister', 'prop-canister-broken',
-  'prop-junk', 'prop-junk-broken', 'prop-block', 'prop-block-broken',
-  'prop-neon', 'prop-neon-broken', 'prop-fridge', 'prop-fridge-broken',
-  'prop-wreck', 'prop-wreck-broken', 'prop-bench',
+  'prop-barrel', 'prop-canister',
 
-  'mage-player-idle', 'mage-player-walk', 'mage-player-cast',
-  'mage-punk-idle', 'mage-punk-walk', 'mage-punk-swing',
-  'mage-sparker-idle', 'mage-sparker-walk', 'mage-sparker-cast',
-  'mage-warden-idle', 'mage-warden-walk',
-  'mage-corpse',
+  'mage-player-idle',
 
   'field-flame', 'fx-spark', 'fx-smoke', 'fx-ring',
 ];

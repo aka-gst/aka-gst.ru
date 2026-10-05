@@ -15,7 +15,71 @@
   <title>ТЕХНОМАГИЯ</title>
 
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
+  <!--
+    Все модули игры — одной волной, а не пятью-шестью (отзыв 04.10, п.3).
+    Блок пишет tools/modulepreload.mjs по графу импорта; руками не править,
+    tests/zagruzka.mjs сверяет его с кодом.
+  -->
+<!-- modulepreload: начало (tools/modulepreload.mjs) -->
+<link rel="modulepreload" href="src/levels.js">
+<link rel="modulepreload" href="src/systemic-room.js">
+<link rel="modulepreload" href="src/level.js">
+<link rel="modulepreload" href="src/world.js">
+<link rel="modulepreload" href="src/aim.js">
+<link rel="modulepreload" href="src/render.js">
+<link rel="modulepreload" href="src/input.js">
+<link rel="modulepreload" href="src/audio.js">
+<link rel="modulepreload" href="src/score.js">
+<link rel="modulepreload" href="src/magic.js">
+<link rel="modulepreload" href="src/challenge.js">
+<link rel="modulepreload" href="src/book.js">
+<link rel="modulepreload" href="src/icons.js">
+<link rel="modulepreload" href="src/pulse.js">
+<link rel="modulepreload" href="src/trace.js">
+<link rel="modulepreload" href="src/showcase.js">
+<link rel="modulepreload" href="src/art.js">
+<link rel="modulepreload" href="src/operation.js">
+<link rel="modulepreload" href="src/observations.js">
+<link rel="modulepreload" href="src/entry.js">
+<link rel="modulepreload" href="src/lestnica.js">
+<link rel="modulepreload" href="src/kolco.js">
+<link rel="modulepreload" href="src/hints.js">
+<link rel="modulepreload" href="src/znamya.js">
+<link rel="modulepreload" href="src/treker.js">
+<link rel="modulepreload" href="src/view3d/vid-zaklinaniy.js">
+<link rel="modulepreload" href="src/nuzhda.js">
+<link rel="modulepreload" href="src/view3d/igra.js">
+<link rel="modulepreload" href="src/view3d/vvod.js">
+<link rel="modulepreload" href="src/vidimost.js">
+<link rel="modulepreload" href="src/vospriyatie/alarm.js">
+<link rel="modulepreload" href="src/zhiteli.js">
+<link rel="modulepreload" href="src/zhiteli-vid.js">
+<link rel="modulepreload" href="src/evgeny-sandbox.js">
+<link rel="modulepreload" href="src/operation-fork.js">
+<link rel="modulepreload" href="src/ai.js">
+<link rel="modulepreload" href="src/field.js">
+<link rel="modulepreload" href="src/vospriyatie/vision.js">
+<link rel="modulepreload" href="src/vospriyatie/svet.js">
+<link rel="modulepreload" href="src/vospriyatie/moneta.js">
+<link rel="modulepreload" href="src/vospriyatie/tolchok.js">
+<link rel="modulepreload" href="src/vospriyatie/svideteli.js">
+<link rel="modulepreload" href="src/vospriyatie/light.js">
+<link rel="modulepreload" href="src/ukazatel.js">
+<link rel="modulepreload" href="src/opasnost.js">
+<link rel="modulepreload" href="src/element-sandbox.js">
+<link rel="modulepreload" href="src/zadaniya.js">
+<link rel="modulepreload" href="src/vospriyatie/tuning.js">
+<link rel="modulepreload" href="src/zashchity.js">
+<link rel="modulepreload" href="src/view3d/engine.js">
+<link rel="modulepreload" href="src/view3d/scene.js">
+<link rel="modulepreload" href="src/view3d/camera.js">
+<link rel="modulepreload" href="src/view3d/math.js">
+<link rel="modulepreload" href="src/vospriyatie/level.js">
+<link rel="modulepreload" href="src/razgovory.js">
+<link rel="modulepreload" href="src/view3d/hodba.js">
+<link rel="modulepreload" href="src/karma.js">
+<!-- modulepreload: конец -->
 
   <!--
     Счётчик посещений, тот же, что на всех страницах сайта. Путь обязан
@@ -93,12 +157,26 @@
 </div>
 
 <div id="physicalObservation" class="physical-observation" hidden></div>
+<!-- Задания на экране слева (отзыв Сергея 04.10, п.20; src/treker.js):
+     взятые задания и следующий шаг, не больше трёх. Шапка сворачивает
+     список (на телефоне боком свёрнут с начала: там мало высоты); строка —
+     «вести стрелкой», как кнопка ВЕСТИ в журнале. Только на этаже с
+     жителями («Башня»). -->
+<aside id="treker" class="treker" data-open="1" hidden>
+  <button type="button" id="trekerHead" class="treker-head" aria-expanded="true"></button>
+  <ol id="trekerList" class="treker-list"></ol>
+</aside>
 
 <button type="button" id="mute" class="mute" data-off="0">ЗВУК ВКЛ</button>
 <button type="button" id="tomeOpen" class="mute mute-second">КНИГА · B</button>
 <!-- Журнал заданий (слой «г»): того же вида и размера, что КНИГА, — по
      классу mute-second, место — mute-third. Только на этаже с жителями. -->
 <button type="button" id="questOpen" class="mute mute-second mute-third" hidden>ЗАДАНИЯ<span class="key-hint"> · L</span></button>
+<!-- СБРОС на телефоне стоя (отзыв 04.10, п.9): в ряду стихий восьмой
+     кнопке не хватает 44 точек, поэтому здесь — третьей в строке КНИГА ·
+     ЗАДАНИЯ, того же размера. На остальных экранах спрятана: там СБРОС —
+     в ряду стихий (#btn-dump). Действие одно — как Q. -->
+<button type="button" id="btn-dump-shelf" class="mute dump-shelf" data-empty="1" hidden>✕ СБРОС</button>
 
 <div id="toast" class="toast" hidden></div>
 
@@ -132,6 +210,13 @@
        под пальцем, когда подходишь к жителю, сдвинул бы ОГОНЬ под ветер.
        Клавиша F. -->
   <button type="button" id="btn-talk" class="daemon-key" data-element="talk" hidden></button>
+  <!-- Сброс очереди (отзыв Сергея 04.10, п.9): то же, что Q и Backspace.
+       Последней в ряду и на месте всегда (в объёмном виде), а не
+       «появляется при наборе»: ряд, который перестраивается под пальцем,
+       сдвинул бы кнопки под ним. Пустая очередь — кнопка тусклая
+       (data-empty). На телефоне стоя в ряду восьми не хватает места на
+       44 точки — там она третьей в строке КНИГА · ЗАДАНИЯ (style.css). -->
+  <button type="button" id="btn-dump" class="daemon-key" data-element="dump" data-glyph="✕" hidden><b>Q</b><i>СБРОС</i></button>
 </div>
 
 <!-- Полоса разговора (слой «г»). Мир при ней не стоит — как в Ultima
@@ -281,7 +366,7 @@
 
 <a class="game-home-menu" href="https://aka-gst.ru/#games">НА САЙТ</a>
 
-<script type="module" src="src/main.js?v=7"></script>
+<script type="module" src="src/main.js?v=8"></script>
 
 </body>
 </html>

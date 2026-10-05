@@ -66,6 +66,14 @@ export function createInput(surface) {
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
       || target.isContentEditable)) return;
 
+    /*
+     * Ctrl/Cmd с клавишей — дело браузера: Ctrl/Cmd + «=» и «−» — зум
+     * страницы, и до 05.10 игра ловила тот же Equal и приближала камеру —
+     * росло всё сразу (отзыв 04.10, п.8). Заодно Cmd+R больше не
+     * перезапускает этаж клавишей R до перезагрузки страницы.
+     */
+    if (event.ctrlKey || event.metaKey) return;
+
     /* Код клавиши, а не символ: на русской раскладке WASD остаётся WASD. */
     if (!event.repeat) pressed.add(event.code);
     keys.add(event.code);
