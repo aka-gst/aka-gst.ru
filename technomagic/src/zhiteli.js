@@ -361,6 +361,37 @@ export const QUESTS = [
 /* Путь «Башни» → вид решения обязательного задания. */
 export const ROUTE_KIND = { boi: 'boi', tiho: 'skrytnost', hitrost: 'hitrost' };
 
+/*
+ * «ЧЬЁ КОЛЬЦО?» (05.10, src/kolco.js). Обязательное и пока бесконечное:
+ * Сергей хочет длинный квест-загадку («как личинка в BG3»), и развязки у
+ * него нет нарочно — это крючок для сюжетного слоя. Взято с той секунды,
+ * как кольцо нашло героя (takeRingQuest); сдать его пока нечем. Не в
+ * QUESTS: три задания жителей — своё число (tests/sloy-g.mjs), а это
+ * задание не жителя, а этажа с кольцом.
+ * Крючок к «Близорукому торопыге» (~/.claude/mir-rasskazov.md): на той
+ * стороне — исполнитель с ограниченным запасом (Мефодий I), а «откаты»
+ * герой там себе выдумал. Здесь откат настоящий — и кто-то за него платит.
+ */
+export const KOLCO_QUEST = quest({
+  id: 'kolco', title: 'ЧЬЁ КОЛЬЦО?', must: true,
+  brief: 'Кольцо нашло тебя само. Умрёшь — отмотает на несколько секунд. Кто платит за откат — неизвестно.',
+  approaches: [
+    approach('razgovor', 'Расспросить тех, кто старше башни'),
+    approach('hitrost', 'Понять, чем кольцо платит за откат'),
+  ],
+});
+
+/* Кольцо нашло героя — задание «Чьё кольцо?» взято (событие → счётчик). */
+export function takeRingQuest(world) {
+  const zh = world.zhiteli;
+  if (!zh || zh.log.entries.kolco) return false;
+  zh.log = { entries: { ...zh.log.entries, kolco: { state: STATE.taken, solution: null, at: world.time, why: null } } };
+  world.events.push({ type: 'quest', id: 'kolco', state: STATE.taken, solution: null });
+  return true;
+}
+
+const questDefs = (zh) => (zh.log.entries.kolco ? [...QUESTS, KOLCO_QUEST] : QUESTS);
+
 
 /* =========================================================
    МИР
@@ -553,7 +584,7 @@ export function talkNow(world) {
 
 /* Журнал для экрана. */
 export function questLog(world) {
-  return world.zhiteli ? questsView(world.zhiteli.log, QUESTS) : [];
+  return world.zhiteli ? questsView(world.zhiteli.log, questDefs(world.zhiteli)) : [];
 }
 
 function refuse(world, civ, why) {
@@ -774,7 +805,11 @@ export function updateResidents(world, dt, intent) {
     if (event.type === 'exit' && world.operation && world.operation.coreTaken) {
       questStep(world, { type: 'done', id: 'yadro', solution: ROUTE_KIND[world.route] || 'boi' });
     }
-    if (event.type === 'death') questStep(world, { type: 'fail', id: 'yadro', why: 'death' });
+    /* Смерть, которую кольцо отмотает (src/kolco.js: есть точка не моложе
+       трёх секунд), — не провал: мир вернётся в миг, где задание взято. */
+    if (event.type === 'death' && !(world.kolco && world.kolco.ready)) {
+      questStep(world, { type: 'fail', id: 'yadro', why: 'death' });
+    }
   }
 
   /* 2. Провалы: дающий умер, уснул навсегда или видел твоё преступление. */

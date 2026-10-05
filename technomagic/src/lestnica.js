@@ -287,6 +287,8 @@ export const LESTNICA = fromAscii(LESTNICA_ROWS, {
 });
 
 LESTNICA.ladder = true;
+/* Кольцо возрождения (src/kolco.js, 05.10): только «Башня», старые этажи без него. */
+LESTNICA.kolco = true;
 LESTNICA.shareable = false;
 
 /*
@@ -679,6 +681,11 @@ export function ladderPulses(meter, world, event) {
   if (event.type === 'quest') {
     const sent = questPulse(event);
     if (sent) out.push(sent);
+  }
+  /* Кольцо вернуло (src/kolco.js): какой раз за попытку и на сколько
+     секунд назад. Только числа. */
+  if (event.type === 'ring-rewind') {
+    out.push(['lestnica_ring_rewind', { n: event.n || 0, seconds_back: event.back || 0 }]);
   }
   if (event.type === 'exit' && world.operation && world.operation.coreTaken) {
     out.push(['lestnica_core_out', { route: world.route || 'none', seconds: sekund }]);

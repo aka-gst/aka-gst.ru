@@ -51,7 +51,7 @@ export const KINDS = {
  * Номер значит одно и то же навсегда — новые задания дописываются в
  * конец, старые номера не переезжают.
  */
-export const QUEST_CODE = { yadro: 1, molot: 2, kletka: 3 };
+export const QUEST_CODE = { yadro: 1, molot: 2, kletka: 3, kolco: 4 };
 export const STATE_CODE = { 'ne-vzyato': 0, vzyato: 1, sdelano: 2, provaleno: 3 };
 export const SOLUTION_CODE = { boi: 1, skrytnost: 2, hitrost: 3, razgovor: 4 };
 

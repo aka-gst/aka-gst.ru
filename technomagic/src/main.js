@@ -27,6 +27,7 @@ import { operationResult, operationGrade } from './operation.js';
 import { physicalHint } from './observations.js';
 import { pickEntry, entryLevel } from './entry.js';
 import { createGuide, stepOfUnlock, ladderPulses, ladderTick, createLadderMeter, ROUTE_NAMES } from './lestnica.js';
+import { createRing, ringTick, ringRewind } from './kolco.js';
 import { dryHint, lockedHint, stackFullHint, COIN_KEY } from './hints.js';
 import { createNeeds, needNow } from './nuzhda.js';
 import { createIsoRenderer } from './view3d/igra.js';
@@ -217,6 +218,9 @@ let toastTimer = 0;
 let tomeVisible = false;
 let foundTimer = 0;
 let deathHold = 0;
+/* Кольцо возрождения «Башни» (src/kolco.js): запись точек и откат. На
+   старых этажах null — смерть как раньше. */
+let ring = null;
 let attempts = 0;
 
 /* «Лестница»: подсказка, которая идёт за руками, и что уже ушло в
@@ -503,6 +507,7 @@ function startLevel(next, { silent } = {}) {
   if (changed || !levelCode) levelCode = encode(level);
 
   world = createWorld(level);
+  ring = createRing(world);
   syncElementButtons();
   tutorStart();
   view = { x: world.player.x, y: world.player.y };
@@ -559,6 +564,36 @@ function callScreen() {
       + (audio.isMuted() ? '<span data-warn="1">ЗВУК ВЫКЛЮЧЕН — КЛАВИША M ВКЛЮЧАЕТ</span>' : ''),
     action: 'ВЗЯТЬ КЛЮЧИ',
   });
+}
+
+/*
+ * Смерть с кольцом: мир возвращается в последнюю безопасную точку (не
+ * ближе трёх секунд, src/kolco.js) — партия продолжается, экрана смерти
+ * нет. Точки нет — false, и дальше обычный экран смерти.
+ */
+function ringBack() {
+  if (!ring || !world || world.state !== 'dead') return false;
+  const back = ringRewind(ring, world);
+  if (!back) return false;
+  scene = 'play';
+  deathHold = 0;
+  /* Цели прицела указывали на тела до отката — их больше нет. */
+  locked = null;
+  picked = null;
+  coinArmed = false;
+  coinPoint = null;
+  view = { x: world.player.x, y: world.player.y };
+  renderer.invalidate();
+  /* Стихии и руки — как в точке: выданное после неё ещё не выдано
+     (кадр дыма 05.10: кнопка ВЕТРА горела при «СТИХИИ 1/5»). И плашка
+     «ОТКРЫТА СТИХИЯ», если висит, — про отменённое будущее. */
+  syncElementButtons();
+  ui.found.hidden = true;
+  foundTimer = 0;
+  drainEvents();
+  updateHud(true);
+  syncTalk();
+  return true;
 }
 
 function deathScreen() {
@@ -1874,6 +1909,16 @@ function drainEvents() {
     } else if (event.type === 'death') {
       vibrate([40, 30, 90]);
       deathHold = 0.32;
+    } else if (event.type === 'ring-found') {
+      /* Кольцо нашло героя (src/kolco.js): своей плашкой находки, а не
+         тостом — тост в эти секунды говорит первую ступень лестницы. */
+      showFound('КОЛЬЦО ВОЗРОЖДЕНИЯ', 'ОНО НАШЛО ТЕБЯ', 'НА ПАЛЬЦЕ ТЁПЛОЕ КОЛЬЦО. ТЫ ЕГО НЕ НАДЕВАЛ. ЗАДАНИЕ «ЧЬЁ КОЛЬЦО?» — В ЖУРНАЛЕ', '#ffd27a');
+      foundTimer = 5;
+      audio.sfx('pickup');
+    } else if (event.type === 'ring-rewind') {
+      setToast(`КОЛЬЦО ВЕРНУЛО ТЕБЯ · ${event.back} С НАЗАД`, 2.6);
+      audio.sfx('beamup');
+      vibrate([20, 40, 20]);
     } else if (event.type === 'cleared') {
       setToast('ЭТАЖ ЧИСТ — К ВЫХОДУ', 3);
     } else if (event.type === 'dry') {
@@ -1973,6 +2018,9 @@ function step(now) {
   if (scene === 'play' && !tomeVisible && !logVisible) {
     const intent = buildIntent(raw);
     update(world, dt, intent);
+    /* Кольцо — до разбора событий: «нашлось» и «задание взято» разбирает
+       тот же drainEvents (тост, счётчик). */
+    if (ring) ringTick(ring, world, dt);
     /*
      * Плата за способ показывается сразу и на месте. До сих пор весь счёт
      * игрок видел только в конце этажа — то есть узнавал, что его ход
@@ -2023,7 +2071,7 @@ function step(now) {
     update(world, dt, { moveX: 0, moveY: 0, aimAngle: null, attack: false });
     drainEvents();
     deathHold -= dt;
-    if (deathHold <= 0) deathScreen();
+    if (deathHold <= 0 && !ringBack()) deathScreen();
   } else if (world && (scene !== 'call' || tomeVisible || logVisible)) {
     /* На паузе, в книге и после смерти мир не двигается, но кадр рисуем. */
     update(world, 0, { moveX: 0, moveY: 0, aimAngle: null, attack: false });
@@ -2031,9 +2079,12 @@ function step(now) {
 
   /* R перезапускает этаж откуда угодно, кроме экрана звонка. */
   const restart = input.tookKey('KeyR');
+  /* Кольцо вот-вот вернёт: удар и пробел в эти 0.32 с не должны
+     перезапустить этаж вместо отката (R — по-прежнему перезапуск). */
+  const ringWillCatch = scene === 'dying' && ring && world.kolco && world.kolco.ready;
   if (scene === 'dead' || scene === 'dying') {
     /* После смерти перезапускает всё, что под рукой: R, пробел, удар. */
-    if (restart || input.tookKey('Fire') || input.tookKey('Enter') || input.tookKey('Space')) {
+    if (restart || (!ringWillCatch && (input.tookKey('Fire') || input.tookKey('Enter') || input.tookKey('Space')))) {
       startLevel(level, { silent: true });
     }
   } else if (restart && (scene === 'play' || scene === 'pause')) {
@@ -2368,6 +2419,12 @@ window.technomagic = {
          У старых этажей — null. */
       ladder: world?.level?.ladder
         ? { stack: world.stackLimit, elements: [...world.elements], route: world.route }
+        : null,
+      /* Кольцо: нашлось ли, сколько раз вернуло, на сколько секунд назад
+         в последний раз, сколько точек в запасе. Только чтение. */
+      kolco: world?.kolco
+        ? { ...world.kolco, points: ring ? ring.points.length : 0,
+          player: { x: Math.round(world.player.x), y: Math.round(world.player.y), alive: world.player.alive } }
         : null,
     };
   },

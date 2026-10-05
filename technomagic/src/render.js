@@ -2590,6 +2590,13 @@ const DARKNESS = false;
       ctx.fillStyle = `rgba(120,255,214,${world.fx.flash * 0.2})`;
       ctx.fillRect(0, 0, viewW, viewH);
     }
+    /* Откат кольца (src/kolco.js): золотая вспышка, гаснет за ~0.7 с.
+       Свой цвет — не бирюза удара: игрок должен отличить «вернуло» от
+       «попал». */
+    if (world.fx && world.fx.ring > 0.01) {
+      ctx.fillStyle = `rgba(255,206,110,${world.fx.ring * 0.5})`;
+      ctx.fillRect(0, 0, viewW, viewH);
+    }
 
     vignette(ctx, theme);
     drawHintPointer(world, camX, camY, zoom * punch);

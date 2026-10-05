@@ -746,6 +746,13 @@ export function createIsoRenderer(surface, options = {}) {
       g.fillStyle = `rgba(120,255,214,${world.fx.flash * 0.2})`;
       g.fillRect(0, 0, W, H);
     }
+    /* Откат кольца (src/kolco.js): золотая вспышка, гаснет за ~0.7 с.
+       Свой цвет — не бирюза удара: игрок должен отличить «вернуло» от
+       «попал». */
+    if (world.fx && world.fx.ring > 0.01) {
+      g.fillStyle = `rgba(255,206,110,${world.fx.ring * 0.5})`;
+      g.fillRect(0, 0, W, H);
+    }
 
     g.textAlign = 'center';
     g.textBaseline = 'middle';
