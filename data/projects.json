@@ -350,12 +350,12 @@
         {
           "type": "demo",
           "label": "Открыть квест",
-          "url": "/qa-quest/"
+          "url": "/quequest/"
         },
         {
           "type": "repo",
           "label": "Исходный код",
-          "url": "https://github.com/aka-gst/qa-quest"
+          "url": "https://github.com/aka-gst/QueQuest"
         }
       ],
       "shots": [
@@ -367,8 +367,9 @@
       ],
       "deploy": {
         "state": "live",
-        "target": "/qa-quest/",
-        "source": "/Users/gst/dev/QA Quest"
+        "target": "/quequest/",
+        "source": "/Users/gst/dev/_games/QueQuest",
+        "version": "18.1"
       },
       "accent": "paper",
       "analytics": {

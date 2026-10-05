@@ -1,0 +1,48 @@
+/* JUMP KILL · Лабиринт inside the dive: the same "inside the program" frame as
+   Pythonio (pythonio-bridge.css), warmer — amber/red over the neon grid. */
+.bi-dive{position:fixed;inset:0;z-index:120;display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:12px;box-sizing:border-box;background:radial-gradient(circle at 50% 120%,#6b1d2a88,transparent 55%),repeating-linear-gradient(90deg,#ff9a6410 0 1px,transparent 1px 48px),repeating-linear-gradient(0deg,#ff9a6410 0 1px,transparent 1px 48px),linear-gradient(180deg,#0b0406,#140810);color:#ffe2cf;font:12px ui-monospace,monospace}
+.bi-dive[hidden]{display:none!important}
+.bi-dive__bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;min-width:0}
+.bi-dive__surface{min-height:44px;padding:0 16px;border:1px solid #ff9a64;border-radius:6px;background:#2e1208;color:#ffe2cf;font:900 11px ui-monospace,monospace;letter-spacing:.06em;cursor:pointer}
+.bi-dive__surface[hidden]{display:none}
+.bi-dive__surface:hover,.bi-dive__surface:focus-visible{background:#45200d;outline:2px solid #ff9a64;outline-offset:2px}
+.bi-dive__title{display:grid;gap:2px;min-width:0}
+.bi-dive__title small{color:#e6a07f;letter-spacing:.12em;font-size:10px}
+.bi-dive__title b{font-size:15px;letter-spacing:.08em;color:#fff}
+.bi-dive__stat{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px 14px;color:#f2c19f}
+.bi-dive__stat b{color:#fff}
+.bi-dive__lobby{min-height:0;display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:12px;overflow:hidden}
+.bi-dive__lobby[hidden],.bi-dive__frame[hidden]{display:none}
+.bi-ladder{margin:0;padding:0;list-style:none;overflow:auto;display:grid;gap:4px;align-content:start}
+.bi-ladder button{width:100%;min-height:44px;display:grid;grid-template-columns:auto 1fr;gap:0 10px;align-items:center;text-align:left;padding:6px 10px;border:1px solid #ff9a6440;border-radius:6px;background:#1d0b08cc;color:#ffe2cf;font:inherit;cursor:pointer}
+.bi-ladder button kbd{grid-row:span 2;font:900 15px ui-monospace,monospace;color:#ff9a64}
+.bi-ladder button b{letter-spacing:.05em}
+.bi-ladder button small{color:#d9a88a}
+.bi-ladder button[data-state="clear"]{border-color:#7dff9a88}
+.bi-ladder button[data-state="clear"] kbd{color:#7dff9a}
+.bi-ladder button[data-state="locked"]{opacity:.5}
+.bi-ladder button[aria-pressed="true"]{background:#45200d;outline:2px solid #ff9a64}
+.bi-floor{overflow:auto;padding:14px 16px;border:1px solid #ff9a6444;border-radius:8px;background:#12060599}
+.bi-floor header small{color:#e6a07f;letter-spacing:.1em}
+.bi-floor h3{margin:4px 0 8px;font-size:22px;letter-spacing:.06em;color:#fff}
+.bi-floor h4{margin:14px 0 6px;color:#e6a07f;letter-spacing:.1em;font-size:11px}
+.bi-floor p{margin:6px 0;line-height:1.45}
+.bi-floor__intro{color:#fff;font-style:italic}
+.bi-floor__mut span{display:inline-block;margin:0 6px 4px 0;padding:2px 8px;border:1px solid #ff5a5a;border-radius:4px;color:#ffb0b0;font-weight:900}
+.bi-floor__roster,.bi-floor__board{margin:0;padding-left:18px;display:grid;gap:3px}
+.bi-floor__roster small,.bi-floor__board small{color:#d9a88a}
+.bi-floor__board li{display:grid;grid-template-columns:1fr auto auto;gap:10px}
+.bi-floor__board li[data-npc="false"] b{color:#7dff9a}
+.bi-floor__reward{color:#ffd27d}
+.bi-floor__go{margin-top:10px;min-height:48px;padding:0 20px;border:1px solid #ff9a64;border-radius:6px;background:#7a2a10;color:#fff;font:900 13px ui-monospace,monospace;letter-spacing:.06em;cursor:pointer}
+.bi-floor__go:disabled{opacity:.5;cursor:not-allowed}
+.bi-floor__go:hover:not(:disabled),.bi-floor__go:focus-visible{background:#9a3a18;outline:2px solid #ff9a64;outline-offset:2px}
+.bi-floor__err{color:#ff8a8a}
+.bi-dive__frame{min-height:0;border:1px solid #ff9a6444;border-radius:8px;box-shadow:0 0 80px #ff9a641c;overflow:hidden;background:#000;animation:biDiveIn .6s ease-out}
+.bi-dive__frame iframe{display:block;width:100%;height:100%;border:0;background:#05040a}
+.bi-dive__toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);max-width:min(620px,calc(100vw - 32px));margin:0;padding:12px 16px;border:1px solid #7dff9a;border-radius:6px;background:#06210fee;color:#dcffe4;font:700 13px ui-monospace,monospace;box-shadow:0 0 30px #7dff9a33;z-index:3}
+.bi-dive__toast[data-ok="false"]{border-color:#ffcf6a;background:#2a1d05ee;color:#ffeac0}
+.bi-dive__toast[hidden]{display:none}
+@keyframes biDiveIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.bi-dive__frame{animation:none}}
+@media(max-width:700px){.bi-dive{padding:8px;gap:6px}.bi-dive__stat{margin-left:0;font-size:11px}.bi-dive__lobby{grid-template-columns:1fr;grid-template-rows:minmax(120px,38%) minmax(0,1fr)}}
