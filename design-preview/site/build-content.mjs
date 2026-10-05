@@ -55,7 +55,14 @@ const card=(p,section,kind='')=>{
  const k=kind||(!src&&section==='work'?'compact':'');
  // Большой карточке сбоку есть место: описание проекта и роль из data/projects.json (тексты сайта, не новые).
  const extra=k==='wide'?`${!q&&p.summary?`<p class="card-more">${esc(bezTochkiK(p.summary))}</p>`:''}${p.role?`<p class="card-role"><span>Моя роль</span>${esc(bezTochkiK(p.role))}</p>`:''}`:'';
- return `<${tag} class="project-card ${p.pending?'is-pending':''}${k?` is-${k}`:''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${href?.startsWith('http')?'target="_blank" rel="noopener"':''}><div class="project-image">${media}</div><div class="project-copy"><small>${esc(p.kicker)}</small><h3>${esc(title)}</h3>${q&&!isGame?`<p class="tagline-lead">${esc(strokaQ)}</p>`:''}<p class="tagline">${esc(String(description??'').replace(/(?<!\.)\.$/,''))}</p>${extra}<span class="card-action">${label}</span></div></${tag}>`;
+ // Карточка с двумя адресами (Psy AI Admin: сайт центра, где стоит помощник, и наше демо /psy-admin/) —
+ // <article> с двумя ссылками, а не <a> в <a>: иначе со витрины пропадает путь на /psy-admin/ (свод п.30д,
+ // verify.sh это ловит). Слово Сергея 03.10: карточка ведёт на сайт Ориона — первая кнопка; демо — вторая.
+ const demo=href&&!p.pending?p.links?.find(l=>l.type==='demo'&&url(l.url)!==href):null;
+ const ext=href?.startsWith('http')?'target="_blank" rel="noopener"':'';
+ const copy=`<small>${esc(p.kicker)}</small><h3>${demo?`<a href="${esc(href)}" ${ext}>${esc(title)}</a>`:esc(title)}</h3>${q&&!isGame?`<p class="tagline-lead">${esc(strokaQ)}</p>`:''}<p class="tagline">${esc(String(description??'').replace(/(?<!\.)\.$/,''))}</p>${extra}`;
+ if(demo) return `<article class="project-card${k?` is-${k}`:''}" data-project="${esc(p.id)}"><a class="project-image" href="${esc(href)}" ${ext} aria-label="${esc(title)}">${media}</a><div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a><a href="${esc(url(demo.url))}">Демо ↗</a></span></div></article>`;
+ return `<${tag} class="project-card ${p.pending?'is-pending':''}${k?` is-${k}`:''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${ext}><div class="project-image">${media}</div><div class="project-copy">${copy}<span class="card-action">${label}</span></div></${tag}>`;
 };
 const work=selectProjects(projects,'work');
 // Размеры карточек — слово Сергея 03.10 06:25 (после утренних «3/4»): «всё крупное уменьшить»:
