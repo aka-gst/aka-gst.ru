@@ -65,6 +65,7 @@ praktikum
 rasskazy
 technomagic
 qa-quest
+quequest
 psy-admin
 ysi
 photodata
@@ -142,7 +143,7 @@ if [ ! -f "$VENDOR/pyodide.mjs" ]; then
   # не заводим: разъехавшиеся суммы хуже отсутствующих. Путь ищем перебором,
   # потому что каталоги уже дважды переезжали.
   quest=""
-  for candidate in "$HOME/dev/QA Quest" "$HOME/dev/qa-quest" "$HOME/dev/Zakriva/QA Quest"; do
+  for candidate in "$HOME/dev/_games/QA Quest" "$HOME/dev/QA Quest" "$HOME/dev/qa-quest" "$HOME/dev/Zakriva/QA Quest"; do
     if [ -f "$candidate/tools/fetch-pyodide.sh" ]; then quest="$candidate"; break; fi
   done
   if [ -z "$quest" ]; then
@@ -167,6 +168,15 @@ if [ -n "$vendor_missing" ]; then
   echo "ОШИБКА: в $VENDOR не хватает:$vendor_missing" >&2
   exit 1
 fi
+
+# quequest/ (новый QueQuest, репозиторий aka-gst/QueQuest) берёт тот же
+# Pyodide 314.0.6, что и QA Quest: склад первого часа без него, но поздние
+# лаборатории его грузят из quequest/vendor/pyodide. Копия, не вторые суммы.
+QQ_VENDOR="quequest/vendor/pyodide"
+mkdir -p "$QQ_VENDOR"
+for file in $VENDOR_FILES; do
+  cmp -s "$VENDOR/$file" "$QQ_VENDOR/$file" 2>/dev/null || cp "$VENDOR/$file" "$QQ_VENDOR/$file"
+done
 
 echo
 echo "== Caddyfile: сверка с живым =="

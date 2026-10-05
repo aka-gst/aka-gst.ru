@@ -1,0 +1,9 @@
+Black Ice NIGHTFALL 3.0 (OVERDRIVE 3.0 · Ghost District 09) + QueQuest host bridge (protocol 1)
+source: https://github.com/aka-gst/jump-kill — folder "BLACK_ICE_NIGHTFALL - трюки показываются - добить до буллетшторм"
+branch: claude/quequest-bridge
+commit: c99042e (on top of main 8b33d44)
+vendored: index.html (one-file build from build.py, bridge included), LICENSE (MIT)
+test-only (not deployed): src/quequest_core.mjs, src/quequest_level.mjs and their deps core/world/renderer/arena_world.mjs
+QueQuest-own: levels/NN.json — Labyrinth level layouts, loaded lazily per level
+update: rebuild in jump-kill (python3 build.py), copy index.html + those src files, change this note;
+        tools/labyrinth.test.mjs checks hello/result against the vendored bridge

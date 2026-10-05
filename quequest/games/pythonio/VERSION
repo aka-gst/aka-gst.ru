@@ -1,0 +1,8 @@
+Pythonio 1.9.0 RC1 + QueQuest host bridge (protocol 1)
+source: https://github.com/aka-gst/pythonio
+branch: claude/quequest-bridge
+commit: 565fa30 (on top of main 5260302)
+vendored: Game/index.html, Game/style.css, Game/src/*.js, LICENSE (MIT)
+not vendored: docs, tests, tools, ИГРАТЬ.html (standalone build), preview images
+update: copy the same files from a newer Pythonio commit and change this note;
+        tools/pythonio-bridge.test.mjs checks the reward table against src/data.js
