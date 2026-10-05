@@ -280,12 +280,19 @@ aka-gst.ru, www.aka-gst.ru {
   redir /acid /acid/ 308
   # Строку запроса надо переносить руками: явный redir её выбрасывает,
   # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  # QueQuest переехал на /quequest/ (QueQuest 18.1–18.2, 05.10.2026). Старый адрес ведёт на
+  # новый с сохранением пути и строки запроса: /qa-quest/x?y → /quequest/x?y — «да» Сергея
+  # 05.10 через Рта. Папка qa-quest на сервере не удаляется (его же слово).
   @slash_qa_quest_q {
     path /qa-quest
     expression {query} != ""
   }
-  redir @slash_qa_quest_q /qa-quest/?{query} 308
-  redir /qa-quest /qa-quest/ 308
+  redir @slash_qa_quest_q /quequest/?{query} 301
+  redir /qa-quest /quequest/ 301
+  handle /qa-quest/* {
+    uri replace /qa-quest/ /quequest/
+    redir * {uri} 301
+  }
   # Строку запроса надо переносить руками: явный redir её выбрасывает,
   # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
   @slash_praktikum_q {
@@ -529,4 +536,15 @@ meet.aka-gst.ru {
   # поэтому по имени контейнера он недоступен.
   header X-Robots-Tag "noindex, nofollow"
   reverse_proxy 172.18.0.1:7880
+}
+
+# Две изолированные демо-версии Ориона 2 для показа организациям (Кодекс 04.10, «да» Сергея 05.10).
+# Контейнеры orion2-company-demo (сеть zakriva-net), код /opt/zakriva/orion2-demo/apps/orion2.
+# Демо само проверяет точный Host и Origin; DNS имён — в Beget.
+demo-company-a.aka-gst.ru {
+	reverse_proxy company-a:4280
+}
+
+demo-company-b.aka-gst.ru {
+	reverse_proxy company-b:4280
 }
