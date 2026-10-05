@@ -289,7 +289,7 @@ aka-gst.ru, www.aka-gst.ru {
   }
   redir @slash_qa_quest_q /quequest/?{query} 301
   redir /qa-quest /quequest/ 301
-  handle /qa-quest/* {
+  route /qa-quest/* {
     uri replace /qa-quest/ /quequest/
     redir * {uri} 301
   }

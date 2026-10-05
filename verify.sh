@@ -51,7 +51,7 @@ expect() {
 }
 
 echo "== страницы =="
-for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /qa-quest/ /acid/ \
+for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /quequest/ /acid/ \
          /psy-admin/ /photodata/ /tetcolor/ /stihii/ /lines/ /coin/ \
          /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
   expect "$p" 200
@@ -82,6 +82,9 @@ moved() {
 }
 moved /knb/ /stihii/
 moved /tetris/ /tetcolor/
+# QueQuest переехал на /quequest/ 05.10.2026; старый адрес ведёт туда с сохранением пути (301).
+moved /qa-quest/ /quequest/
+moved /qa-quest/src/game/main.js /quequest/src/game/main.js
 
 echo
 echo "== опечатка в адресе даёт страницу, а не пустоту =="
@@ -168,7 +171,7 @@ same() {
 }
 
 for f in /technomagic/index.html /technomagic/src/main.js /technomagic/src/world.js \
-         /qa-quest/index.html /psy-admin/index.html /photodata/index.html \
+         /quequest/index.html /psy-admin/index.html /photodata/index.html \
          /praktikum/index.html /praktikum/llm/index.html /praktikum/testirovanie/index.html \
          /rasskazy/index.html /game-menu.css /player-name.js; do
   same "$f"
