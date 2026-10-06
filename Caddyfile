@@ -422,8 +422,14 @@ aka-gst.ru, www.aka-gst.ru {
   # (/opt/zakriva/ashennote, сеть zakriva-net). Вход /ashennote/ (префикс срезается), а ссылки на заметки,
   # статика и API у приложения от корня (/n/<id>, /static/*, /api/v1/*) — проксируются как есть.
   # Админ-API и метрики наружу не отдаются (404), как в deploy/Caddyfile самого AshenNote.
-  @ashennote_zakryto path /api/v1/admin/* /metrics
-  respond @ashennote_zakryto 404
+  # 404 внутри handle: голый respond Caddy ставит после handle, и admin-путь уезжал в приложение (405).
+  # Более длинный матчер /api/v1/admin/* побеждает /api/v1/* — проверено curl после выкладки.
+  handle /api/v1/admin/* {
+    respond 404
+  }
+  handle /metrics {
+    respond 404
+  }
   redir /ashennote /ashennote/ 308
   handle_path /ashennote/* {
     request_body {
