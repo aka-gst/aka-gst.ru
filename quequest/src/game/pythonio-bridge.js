@@ -19,6 +19,7 @@
 // ключ `pythonio:order-NN` в skillLedger профиля (ветка AUTO) и в awards (XP).
 
 import { awardCampusXp } from './campus-profile.js';
+import { pythonioStory, ENGINEER_QUESTS, MEGACORP } from './career-story.js';
 
 export const PYTHONIO_PROTOCOL = 1;
 export const PYTHONIO_SRC = 'games/pythonio/index.html';
@@ -41,8 +42,11 @@ export function knownMoves(learning = {}) {
   return LEARNED.filter(([flag]) => Boolean(learning?.[flag])).flatMap(([, moves]) => moves);
 }
 
-export function helloMessage({ learning = {}, player = null } = {}) {
-  return { source: 'quequest', type: 'hello', protocol: PYTHONIO_PROTOCOL, player: player ? String(player).slice(0, 32) : '', known: knownMoves(learning) };
+// 19.0 · story: the engineer quests (career-story.js) reframe Pythonio's
+// first orders as people «ТИСКИ-Маркет» squeezes. Optional for Pythonio:
+// an older build simply ignores the field.
+export function helloMessage({ learning = {}, player = null, story = pythonioStory() } = {}) {
+  return { source: 'quequest', type: 'hello', protocol: PYTHONIO_PROTOCOL, player: player ? String(player).slice(0, 32) : '', known: knownMoves(learning), story };
 }
 
 // Anything that is not exactly one of our two messages is dropped.
@@ -94,12 +98,13 @@ export function createPythonioBridge(host = globalThis.document?.body, {
   }
   const root = doc.createElement('section');
   root.id = 'pythonioDive'; root.className = 'pyio-dive'; root.hidden = true;
-  root.setAttribute('aria-label', 'Pythonio — мастерская AUTO');
-  root.innerHTML = `<header class="pyio-dive__bar"><button type="button" class="pyio-dive__surface" data-pyio-surface>↑ ВЫНЫРНУТЬ · Esc</button>
-    <div class="pyio-dive__title"><small>AUTO · ГЛУБИНА ПРОФЕССИИ</small><b>ПИТОНИО · МАСТЕРСКАЯ</b></div>
+  root.setAttribute('aria-label', 'Питонио — мастерская инженера');
+  root.innerHTML = `<header class="pyio-dive__bar"><button type="button" class="pyio-dive__surface" data-pyio-surface>↑ ВЫНЫРНУТЬ</button>
+    <div class="pyio-dive__title"><small>ИНЖЕНЕР · СВОЙ ЦЕХ ВМЕСТО «ТИСКИ-МАРКЕТА»</small><b>ПИТОНИО · МАСТЕРСКАЯ</b></div>
     <div class="pyio-dive__stat" data-pyio-stat aria-live="polite"></div></header>
     <div class="pyio-dive__frame"><iframe title="Pythonio" data-pyio-frame></iframe></div>
-    <p class="pyio-dive__toast" data-pyio-toast role="status" hidden></p>`;
+    <p class="pyio-dive__toast" data-pyio-toast role="status" hidden></p>
+    <div class="pyio-dive__pause" data-pyio-pause role="dialog" aria-label="Пауза" hidden><b>ПАУЗА</b><button type="button" data-pyio-resume>ПРОДОЛЖИТЬ · Esc</button><button type="button" data-pyio-leave>↑ ВЫНЫРНУТЬ</button></div>`;
   host.append(root);
   const frame = root.querySelector('[data-pyio-frame]');
   const stat = root.querySelector('[data-pyio-stat]');
@@ -108,7 +113,7 @@ export function createPythonioBridge(host = globalThis.document?.body, {
 
   function renderStat() {
     const done = pythonioDone(getProfile()).length;
-    stat.innerHTML = `<span>ЗАКАЗЫ <b>${done}/${PYTHONIO_ORDERS.length}</b></span><span>AUTO <b>ур. ${esc(getLevel())}</b></span><span><b>${Number(getWallet() || 0).toLocaleString('ru-RU')}</b> ₽</span>`;
+    stat.innerHTML = `<span>ЗАКАЗЫ <b>${done}/${PYTHONIO_ORDERS.length}</b></span><span>ИНЖЕНЕР <b>ур. ${esc(getLevel())}</b></span><span><b>${Number(getWallet() || 0).toLocaleString('ru-RU')}</b> ₽</span>`;
   }
   function toast(text, ok = true) {
     toastEl.textContent = text; toastEl.dataset.ok = String(ok); toastEl.hidden = false;
@@ -125,7 +130,8 @@ export function createPythonioBridge(host = globalThis.document?.body, {
     const res = onOrder(msg) ?? { first: false };
     if (res.first) {
       earned.push(msg.id);
-      toast(`«${msg.order.name}» сдан: +${res.pay} ₽ · +${res.xp} XP · ветка AUTO +${res.skillGain}`);
+      const q = ENGINEER_QUESTS.find((x) => x.order === msg.id);
+      toast(q ? `${q.victim}: «${q.thanks}» +${res.pay} ₽ · +${res.xp} XP · ветка ИНЖЕНЕР +${res.skillGain}` : `«${msg.order.name}» сдан: +${res.pay} ₽ · +${res.xp} XP · ветка ИНЖЕНЕР +${res.skillGain}`);
     } else toast(`«${msg.order.name}» уже засчитан в QueQuest — награда один раз.`, false);
     renderStat();
   }
@@ -141,12 +147,25 @@ export function createPythonioBridge(host = globalThis.document?.body, {
     if (ev.key !== 'Escape' || !active) return;
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(ev.target?.tagName)) return;
     if (pyioWantsEsc(frame.contentDocument)) return;
-    ev.preventDefault(); close();
+    ev.preventDefault(); setPause(!paused);
   }
   function onHostKey(ev) {
     if (ev.key !== 'Escape' || !active) return;
-    ev.preventDefault(); ev.stopImmediatePropagation(); close();
+    ev.preventDefault(); ev.stopImmediatePropagation(); setPause(!paused);
   }
+  // 19.0: Esc pauses (Esc again resumes); leaving is the explicit button.
+  const pauseEl = root.querySelector('[data-pyio-pause]');
+  let paused = false; let pausedSpeed = 1;
+  function setPause(on) {
+    paused = Boolean(on) && active;
+    pauseEl.hidden = !paused;
+    try { const S = frame.contentWindow?.Workshop?.state; if (S) { if (paused) { pausedSpeed = S.speed; S.speed = 0; } else if (S.speed === 0) S.speed = pausedSpeed || 1; } } catch { /* not ready */ }
+    if (paused) pauseEl.querySelector('[data-pyio-resume]')?.focus({ preventScroll: true });
+    else { try { frame.focus(); } catch { /* ignore */ } }
+    onSound('ui-click');
+  }
+  pauseEl.querySelector('[data-pyio-resume]').addEventListener('click', () => setPause(false));
+  pauseEl.querySelector('[data-pyio-leave]').addEventListener('click', () => { setPause(false); close(); });
   frame.addEventListener('load', () => {
     try { frame.contentWindow?.addEventListener('keydown', onFrameKey); } catch { /* not same-origin: no Esc hook */ }
   });
@@ -165,7 +184,7 @@ export function createPythonioBridge(host = globalThis.document?.body, {
   }
   function close() {
     if (!active) return false;
-    active = false; root.hidden = true; toastEl.hidden = true;
+    active = false; paused = false; pauseEl.hidden = true; root.hidden = true; toastEl.hidden = true;
     globalThis.removeEventListener?.('keydown', onHostKey, true);
     frame.src = 'about:blank'; // Pythonio saves on unload; stop its loop.
     onSound('whoosh');

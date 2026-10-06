@@ -7,7 +7,7 @@
 // because a stranger's command really crossed the gateway.
 import { rgb } from './raycaster.js';
 import { textWidth } from './pixel-font.js';
-import { GARAGE, shouldPass } from './garage-night.js';
+import { GARAGE, shouldPass, garageDay } from './garage-night.js';
 
 const W = 320, TOP = 14, BOTTOM = 160, FLOOR = 122, BUS = 142;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -22,7 +22,7 @@ export const GC = Object.freeze({
   orange: rgb(255, 150, 40), blue: rgb(60, 112, 214), steel: rgb(110, 118, 130),
 });
 const WHO_COLOR = { owner: GC.green, radio: GC.cyan, stranger: rgb(196, 196, 204), red: GC.red };
-const CMD_LABEL = { unlock: 'UNLOCK', start: 'START', lights: 'LIGHTS', volume: 'VOLUME' };
+const CMD_LABEL = { unlock: 'ОТКРЫТЬ', start: 'ЗАВЕСТИ', lights: 'ФАРЫ', volume: 'ГРОМКОСТЬ' };
 
 // Emitters on the bench and the routes their packets take to the gateway.
 export const GATE = Object.freeze([128, BUS]);
@@ -81,14 +81,14 @@ function room(P, sim, time, art) {
   // Antenna lead: a mast outside with a blinking tip -- the "air" source.
   P.rect(56, 30, 1, 30, rgb(120, 124, 132)); P.rect(53, 34, 7, 1, rgb(120, 124, 132));
   P.disc(56, 29, 1, Math.floor(time * 2) % 2 ? GC.red : shade(GC.red, 0.4));
-  P.text(18, 66, 'AIR', GC.dim);
+  P.text(18, 66, 'ЭФИР', GC.dim);
   // Bench: phone (app), radio module, laptop sniffing the bus.
   P.rect(4, 104, 84, 4, rgb(96, 70, 44)); P.rect(4, 108, 84, 2, rgb(60, 42, 26));
   P.rect(8, 110, 3, 12, rgb(60, 42, 26)); P.rect(80, 110, 3, 12, rgb(60, 42, 26));
   P.rect(16, 88, 12, 16, rgb(20, 22, 30)); P.box(16, 88, 12, 16, rgb(130, 134, 150)); P.rect(18, 90, 8, 11, rgb(36, 90, 150));
-  P.text(10, 80, 'APP', GC.dim);
+  P.text(1, 79, 'ТЕЛЕФОН', GC.dim);
   P.rect(36, 94, 24, 10, rgb(34, 30, 30)); P.box(36, 94, 24, 10, rgb(110, 100, 96)); P.disc(42, 99, 2, rgb(70, 64, 60)); P.rect(48, 97, 9, 2, rgb(255, 170, 60));
-  P.text(32, 84, 'RADIO', GC.dim);
+  P.text(34, 86, 'РАДИО', GC.dim);
   P.rect(62, 96, 20, 8, rgb(30, 34, 40)); P.rect(64, 86, 16, 10, rgb(26, 30, 36)); P.rect(65, 87, 14, 8, rgb(12, 40, 48));
   for (let i = 0; i < 3; i++) P.rect(66, 88 + i * 2, 4 + ((Math.floor(time * 6) + i * 5) % 9), 1, GC.cyan);
   // Work lamp on its cord, swinging a little, warm cone over the car.
@@ -179,7 +179,7 @@ function gateway(P, sim, time, art) {
   P.rect(gx - 11, gy - 9, 10, 6, rgb(16, 42, 50)); P.text(gx - 11, gy - 9, 'PY', GC.cyan);
   P.disc(gx + 7, gy - 6, 2, lamp);
   if (recent) glow(P, gx, gy - 4, 22, recent.verdict === 'pass' ? [96, 230, 124] : [240, 58, 44], 0.45);
-  P.text(gx - 14, gy + 8, 'ШЛЮЗ', GC.gold);
+  P.text(gx - 17, gy + 8, 'СТОРОЖ', GC.gold);
 }
 
 function packets(P, sim, time) {
@@ -209,7 +209,7 @@ function packets(P, sim, time) {
       const word = p.verdict === 'error' ? 'ОШИБКА' : p.denied ? 'СВОЙ!' : 'БЛОК';
       P.text(gx - textWidth(word) / 2, gy - 26 - u * 14, word, p.denied || p.verdict === 'error' ? GC.gold : GC.red);
     } else if (p.verdict === 'pass' && t >= p.atCar && t < p.atCar + 1.0 && !p.leak) {
-      const u = t - p.atCar, word = p.who === 'radio' ? 'МУЗЫКА' : p.cmd === 'start' ? 'ВЛАДЕЛЕЦ ЗАВЁЛ' : 'ВЛАДЕЛЕЦ';
+      const owner = garageDay(sim.day).owner, u = t - p.atCar, word = p.who === 'radio' ? 'МУЗЫКА' : p.cmd === 'start' ? `${owner} · МОТОР` : owner;
       if (!(p.harmless)) P.text(LOCK[0] - textWidth(word) / 2, LOCK[1] - 22 - u * 8, word, GC.green);
     }
   }
@@ -225,13 +225,13 @@ export function paintGarage(P, sim, time, art = {}) {
   // Red-team phase: the room goes red, a label says whose attack this is.
   if (sim.phase === 'red' && t < sim.night.end) {
     P.tint(0, TOP, W, BOTTOM - TOP, [200, 20, 30], 0.07 + 0.03 * Math.sin(time * 8));
-    P.text(160 - textWidth('RED-TEAM · ТВОЙ ШТУРМ') / 2, 27, 'RED-TEAM · ТВОЙ ШТУРМ', GC.red);
+    P.text(160 - textWidth('ЗАПАСНЫЕ ТРЮКИ «ТИСКОВ»') / 2, 27, 'ЗАПАСНЫЕ ТРЮКИ «ТИСКОВ»', GC.red);
   }
   // Alarm: hazards, red pulse, siren rings.
   if (alarmOn) {
     P.tint(0, TOP, W, BOTTOM - TOP, [255, 30, 20], blink ? 0.3 : 0.12);
     for (let r = 0; r < 3; r++) { const rr = ((time * 60 + r * 20) % 60) + 8; for (let a = 0; a < 40; a++) { const an = (a / 40) * Math.PI * 2; P.put(240 + Math.cos(an) * rr, 104 + Math.sin(an) * rr * 0.6, GC.red); } }
-    const msg = sim.lastLeak?.cmd === 'start' ? 'УГОН! МОТОР ЗАВЁЛ ЧУЖОЙ' : 'ТРЕВОГА! ОТКРЫЛ ЧУЖОЙ';
+    const msg = sim.lastLeak?.cmd === 'start' ? 'УГОН! МОТОР ЗАВЕЛИ «ТИСКИ»' : 'ТРЕВОГА! ОТКРЫЛИ «ТИСКИ»';
     P.text(160 - textWidth(msg, 1) / 2, 38, msg, blink ? GC.white : GC.red);
   }
   // Slow motion: letterbox bars and a label.

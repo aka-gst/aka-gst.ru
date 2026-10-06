@@ -25,8 +25,10 @@ import {
   THREATS_TO_COLLAPSE,
   WAKE_REVEAL_DURATION,
   WAREHOUSE_INTRO_DURATION,
+  WEEK_LINE_LAYOUT,
   WORLD,
-} from './config.js?v=novice-1';
+} from './config.js?v=game-190';
+import { PAY_RULES, payOf, nextWorkAfter, wageBefore, wageAfter, weekDayOf, WEEK_PAY_CHECKPOINTS } from './week.js';
 
 const DEFAULT_STATE = Object.freeze({
   scene: 'prologue',
@@ -76,6 +78,9 @@ const DEFAULT_STATE = Object.freeze({
     ruleStage: null,
     // 18.1: floors of the for / while / def lessons: 'tap' → 'knobs' → 'code' (→ 'combo').
     lessonStage: null,
+    // 19.0 · the first week (week.js): 'button' | 'copy' | 'assemble' | 'hand' | 'auto'.
+    week: null,
+    day: 0,
   }),
   arm: Object.freeze({ awake: false, blocked: false, chip: 'missing', queue: [], active: null, failure: null, wakeRevealRemaining: 0, returnTo: null }),
   otherMind: Object.freeze({ phase: 'sleeping', line: '' }),
@@ -186,6 +191,45 @@ export function createCheckpointState(checkpoint = 'start') {
           if (crate.id === 'red-01') return { ...crate, status: checkpoint === 'red-crate' ? 'blocked' : 'hidden', x: 720, y: 575 };
           return { ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y };
         }),
+      },
+    });
+  }
+  // 19.0 · the first week (week.js). Every day starts from its own state, so
+  // a reload lands on the same day with the same money.
+  const weekDay = weekDayOf(checkpoint);
+  if (weekDay) {
+    const onPallet = (crate) => ({ ...crate, status: 'pallet', x: PALLET.x, y: PALLET.y });
+    const STEP = { 1: 'button', 2: 'copy', 3: 'assemble', 4: 'hand', 5: 'auto' }[weekDay];
+    const LAYOUT = { 1: CRATE_LAYOUT.map((c) => (['box-01', 'box-02', 'box-03'].includes(c.id) ? onPallet(c) : c)), 2: SECOND_SHIFT_LAYOUT, 3: CONDITION_LAYOUT, 4: CONDITION_LAYOUT_B, 5: WEEK_LINE_LAYOUT }[weekDay];
+    const LEARN = {
+      1: { chapter: 1 },
+      2: { chapter: 2 },
+      3: { chapter: 2, printUnlocked: true },
+      4: { chapter: 2, printUnlocked: true, rulesBuilt: true },
+      5: { chapter: 2, printUnlocked: true, rulesBuilt: true, ifUnlocked: true, botUnlocked: true },
+    }[weekDay];
+    const paid = WEEK_PAY_CHECKPOINTS.includes(checkpoint);
+    const learnedToday = { 1: {}, 2: { printUnlocked: true }, 3: { rulesBuilt: true }, 4: { ifUnlocked: true, botUnlocked: true }, 5: { forUnlocked: true } }[weekDay];
+    const learning = paid ? { ...LEARN, ...learnedToday } : LEARN;
+    const startWage = wageBefore(weekDay) + (weekDay === 1 ? 3 * CRATE_PAY : 0);
+    return createGameState({
+      scene: paid ? 'reward' : (weekDay <= 2 ? 'machine' : 'condition'),
+      checkpoint,
+      powers,
+      player: paid ? { x: 800, y: 580 } : (weekDay === 1 ? { x: MACHINE.x + 110, y: MACHINE.y + 300 } : { x: MACHINE.x - 95, y: MACHINE.y + 215 }),
+      arm: { chip: 'installed', awake: paid || weekDay >= 3, blocked: false, startSource: paid ? 'week' : null },
+      otherMind: { phase: 'awake', line: RESTORED_OTHER_MIND_LINE },
+      learning,
+      warehouse: {
+        day: weekDay,
+        week: paid ? null : STEP,
+        button: weekDay === 1 ? 'mounted' : 'torn',
+        manualDelivered: weekDay === 1 ? 3 : 0,
+        autoDelivered: 0,
+        autoTarget: LAYOUT.filter((c) => c.kind === 'normal' && c.status === 'queued').length,
+        wage: paid ? wageAfter(weekDay) : startWage,
+        freeTime: 0,
+        crates: paid ? LAYOUT.map((c) => (c.kind === 'normal' ? onPallet(c) : c)) : LAYOUT,
       },
     });
   }
@@ -734,7 +778,17 @@ export function applyGameAction(state, action) {
       };
     }
     // 18.0 day 2, floor 1: the green button still works -- one crate.
+    // 19.0 day 1: the button sends the arm through the whole pile.
     case 'press-start-button': {
+      if (state.scene === 'machine' && state.warehouse.week === 'button') {
+        const queue = state.warehouse.crates.filter((c) => c.kind === 'normal' && c.status === 'queued').map((c) => ({ type: 'arm.move', boxId: c.id, targetId: PALLET.id }));
+        if (!queue.length) return state;
+        return {
+          ...state, scene: 'automation', sceneTime: 0,
+          warehouse: { ...state.warehouse, looseButtonTried: true, autoDelivered: 0, autoTarget: queue.length },
+          arm: { ...state.arm, awake: true, blocked: false, active: null, failure: null, startSource: 'week', returnTo: null, queue, wakeRevealRemaining: WAKE_REVEAL_DURATION * .6 },
+        };
+      }
       if (state.scene !== 'machine' || state.checkpoint !== 'shift2' || state.warehouse.day2 !== 'button') return state;
       return runArmBatch({ ...state, warehouse: { ...state.warehouse, day2: 'print', looseButtonTried: true } }, 1, 'button', 'machine');
     }
@@ -746,6 +800,7 @@ export function applyGameAction(state, action) {
     }
     case 'pick-torn-button': {
       if (state.warehouse.button !== 'torn') return state;
+      if (state.warehouse.week && !['machine', 'condition'].includes(state.scene)) return state;
       return { ...state, warehouse: { ...state.warehouse, button: 'pocket' } };
     }
     case 'condition-rules-accepted': {
@@ -780,6 +835,29 @@ export function applyGameAction(state, action) {
         warehouse: state.warehouse.day2 ? { ...state.warehouse, day2: 'done' } : state.warehouse,
         learning: { ...state.learning, chapter: Math.max(2, state.learning.chapter), printUnlocked: true },
       };
+    }
+    // 19.0: days 2–5 — the terminal accepted what you copied / assembled /
+    // wrote; the arm takes exactly these crates.
+    case 'week-command-accepted': {
+      const step = state.warehouse.week;
+      if (!['copy', 'assemble', 'hand', 'auto'].includes(step) || !['machine', 'condition'].includes(state.scene)) return state;
+      const events = Array.isArray(action.events) ? action.events : [];
+      if (!events.length) return state;
+      const learned = { copy: { printUnlocked: true }, assemble: { printUnlocked: true, rulesBuilt: true }, hand: { ifUnlocked: true, botUnlocked: true }, auto: { forUnlocked: true } }[step];
+      return {
+        ...state, scene: 'automation', sceneTime: 0,
+        warehouse: { ...state.warehouse, autoDelivered: 0, autoTarget: events.length },
+        arm: { ...state.arm, awake: true, blocked: false, active: null, failure: null, startSource: 'week', returnTo: null, queue: events.map((e) => ({ ...e })), wakeRevealRemaining: WAKE_REVEAL_DURATION * .5 },
+        learning: { ...state.learning, ...learned },
+      };
+    }
+    // The pay card is read: the next morning.
+    case 'week-next': {
+      if (state.scene !== 'reward' || !WEEK_PAY_CHECKPOINTS.includes(state.checkpoint)) return state;
+      const next = nextWorkAfter(state.checkpoint);
+      if (!next) return state;
+      const fresh = createCheckpointState(next);
+      return { ...fresh, warehouse: { ...fresh.warehouse, wage: state.warehouse.wage, button: state.warehouse.button === 'pocket' ? 'pocket' : fresh.warehouse.button } };
     }
     case 'start-second-shift': {
       if (state.scene !== 'reward') return state;
@@ -973,16 +1051,20 @@ export function applyGameAction(state, action) {
       const queueFinished = finished && state.arm.startSource === 'queue';
       const functionFinished = finished && state.arm.startSource === 'function';
       const forFinished = finished && state.arm.startSource === 'for';
-      const anyReward = episodeFinished || conditionFinished || queueFinished || functionFinished || forFinished;
+      const weekFinished = finished && state.arm.startSource === 'week';
+      const weekPay = weekFinished ? payOf(state.checkpoint) : null;
+      const anyReward = episodeFinished || conditionFinished || queueFinished || functionFinished || forFinished || weekFinished;
       return {
         ...state,
         scene: anyReward ? 'reward' : state.scene,
         sceneTime: anyReward ? 0 : state.sceneTime,
-        checkpoint: forFinished ? 'reward-for' : (functionFinished ? 'reward4' : (queueFinished ? 'reward3' : (conditionFinished ? 'reward2' : (episodeFinished ? 'reward' : state.checkpoint)))),
+        checkpoint: weekPay ? weekPay : forFinished ? 'reward-for' : (functionFinished ? 'reward4' : (queueFinished ? 'reward3' : (conditionFinished ? 'reward2' : (episodeFinished ? 'reward' : state.checkpoint)))),
         warehouse: {
           ...state.warehouse,
           autoDelivered,
-          wage: state.warehouse.wage + CRATE_PAY,
+          // 19.0: the boss's money trick lands with the last crate of the day.
+          wage: state.warehouse.wage + CRATE_PAY + (weekPay ? (PAY_RULES[weekDayOf(state.checkpoint)]?.delta ?? 0) : 0),
+          week: weekPay ? null : state.warehouse.week,
           incomeAt: state.elapsed,
           incomeSource: 'robot',
           freeTime: state.warehouse.freeTime + 4,
@@ -1056,6 +1138,18 @@ export function getNearbyAction(state) {
     return red && distance(state.player, red) <= INTERACTION_RADIUS + 25
       ? { type: 'inspect-red-crate', label: 'ПРОВЕРИТЬ ЯЩИК' }
       : null;
+  }
+  // 19.0 · the first week: one thing to do per day.
+  if (state.warehouse.week && ['machine', 'condition'].includes(state.scene)) {
+    const step = state.warehouse.week;
+    const nearButton = distance(state.player, LOOSE_START_BUTTON) <= INTERACTION_RADIUS + 25;
+    const nearTerminal = distance(state.player, MACHINE_TERMINAL) <= INTERACTION_RADIUS + 70;
+    if (step === 'button') return nearButton ? { type: 'press-start-button', label: 'НАЖАТЬ ЗЕЛЁНУЮ КНОПКУ «ПУСК»' } : null;
+    if (state.warehouse.button === 'torn' && nearButton && (!nearTerminal || distance(state.player, LOOSE_START_BUTTON) < distance(state.player, MACHINE_TERMINAL))) {
+      return { type: 'pick-torn-button', label: 'ПОДНЯТЬ ОТОРВАННУЮ КНОПКУ' };
+    }
+    const label = { copy: 'ТЕРМИНАЛ РУКИ · СКОПИРОВАТЬ СТРОЧКУ', assemble: 'ТЕРМИНАЛ РУКИ · СОБРАТЬ СТРОЧКУ', hand: 'ТЕРМИНАЛ РУКИ · НАПИСАТЬ ПРАВИЛО', auto: 'ТЕРМИНАЛ РУКИ · ЗАПУСТИТЬ ВСЮ ЛИНИЮ' }[step];
+    return nearTerminal ? { type: 'open-machine', label } : null;
   }
   if (state.scene === 'machine') {
     const day2 = state.warehouse.day2;
@@ -1216,7 +1310,10 @@ export function stepGame(state, input = {}, rawDt, options = {}) {
   }
 
   if (next.scene === 'chip' && next.arm.chip === 'inserting' && next.sceneTime >= CHIP_INSERT_DURATION) {
-    next = startChipAutomation(next);
+    // 19.0: the chip goes in, the arm gets power — and waits for the button.
+    next = next.checkpoint === 'd1-button'
+      ? { ...next, scene: 'machine', sceneTime: 0, arm: { ...next.arm, chip: 'installed', awake: false } }
+      : startChipAutomation(next);
   }
 
   if (next.scene === 'automation' && next.arm.awake) {

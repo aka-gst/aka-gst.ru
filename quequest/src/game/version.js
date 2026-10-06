@@ -1,6 +1,6 @@
 // One build label for the whole game. Every visible "СБОРКА …" / "QUEQUEST …"
 // eyebrow reads it, so old screens can't keep showing a previous build.
-export const BUILD = '18.2';
+export const BUILD = '19.0';
 export const BUILD_LABEL = `СБОРКА ${BUILD}`;
 
 // Fills [data-build] (just the number) and [data-build-label] ("СБОРКА 17.0").

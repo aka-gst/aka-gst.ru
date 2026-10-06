@@ -81,7 +81,7 @@ export const WORLD_CHATTER = Object.freeze({
   'night-ok': { cooldown: 1, priority: 3, lines: [['neighbor', 'О, машина подмигнула и молчит. Сделал?'], ['radio', 'Хорошие новости: синюю машину этой ночью никто не открыл.'], ['me', 'Шлюз держит. Можно спать. Нет — дальше интереснее.']] },
   'night-fail': { cooldown: 1, priority: 3, lines: [['neighbor', 'ОПЯТЬ ОРЁТ! Выключи свою сигналку!'], ['radio', 'Слышите? Чья-то машина орёт. Кто-то плохо написал правило.'], ['me', 'Чужая команда прошла. Ныряй обратно и чини.']] },
   upgrade: { cooldown: 1, priority: 3, lines: [['radio', 'Говорят, у кого-то обновился движок. Мир стал резче.'], ['me', 'Ого. Текстуры стали… текстуристей.'], ['cat', 'Мяу. (кот теперь в высоком разрешении)']] },
-  'enter-garage': { cooldown: 1, priority: 2, lines: [['me', 'Гараж. Ноутбук на верстаке, машина ждёт.'], ['neighbor', 'О, сосед! Опять ночью со своим шлюзом?']] },
+  'enter-garage': { cooldown: 1, priority: 2, lines: [['me', 'Гараж. Ноутбук на верстаке, машина ждёт.'], ['neighbor', 'О, сосед! Опять ночью с ноутбуком против «ТИСКОВ»?']] },
   'enter-home': { cooldown: 1, priority: 2, lines: [['me', 'Дом. Комп на столе, кот на диване.'], ['cat', 'Мяу. (кот встречает)']] },
   'no-jump-look': { cooldown: 30, lines: [['me', 'Вверх-вниз не смотрится. Это Вольфенштейн: у него горизонт гвоздями прибит.']] },
   // 17.4 · the AR headset.
@@ -98,8 +98,8 @@ export const WORLD_CHATTER = Object.freeze({
 });
 
 const PROGRAMS = Object.freeze([
-  Object.freeze({ id: 'garage', key: '1', title: 'ШЛЮЗ СИНЕЙ МАШИНЫ', sub: 'VEH · Python-правило против ночи и своего red-team' }),
-  Object.freeze({ id: 'automation', key: '2', title: 'ЛИНИЯ 03 · AUTO', sub: 'Мост в Pythonio: линия, буфер, рабочие' }),
+  Object.freeze({ id: 'garage', key: '1', title: 'ХАКЕР · СТОРОЖ МАШИНЫ', sub: 'Ночи против «ТИСКОВ»: машина Вити, магнитола Дины, замок Сани' }),
+  Object.freeze({ id: 'automation', key: '2', title: 'ИНЖЕНЕР · ЗАКАЗЫ ЛЮДЕЙ', sub: 'Лида, Марк, Ася: свой цех вместо «ТИСКИ-Маркета»' }),
   Object.freeze({ id: 'engine', key: '3', title: 'ДВИЖОК.EXE', sub: 'Прокачка движка: эпохи шутеров от Wolfenstein до Half-Life' }),
   Object.freeze({ id: 'pythonio', key: '4', title: 'ПИТОНИО', sub: 'Мастерская AUTO: 22 настоящих заказа — файлы, таблицы, API' }),
   Object.freeze({ id: 'blackice', key: '5', title: 'JUMP KILL', sub: 'Лабиринт: 13 уровней — прыжки, рельса, ракеты; Витя, рабочие, начальник' }),
@@ -321,6 +321,10 @@ export function createFpWorld(root, {
     if (!active) return;
     if (ev.target?.closest?.('textarea, input')) return;
     const code = ev.code;
+    if (paused) {
+      if (code === 'Escape') { ev.preventDefault(); setPaused(false); }
+      return;
+    }
     if (screen.phase === 'menu') {
       const pick = PROGRAMS.find((p) => `Digit${p.key}` === code || `Numpad${p.key}` === code);
       if (pick) { ev.preventDefault(); choose(pick.id); return; }
@@ -351,7 +355,9 @@ export function createFpWorld(root, {
       if (nextL > from) startUpgrade(from, nextL, null, performance.now());
       return;
     }
-    if (code === 'Escape' && document.pointerLockElement !== canvas) { ev.preventDefault(); leave(); }
+    // 19.0: Esc never leaves silently. With the mouse captured the browser
+    // just releases it; without, Esc opens a pause with an explicit way out.
+    if (code === 'Escape' && document.pointerLockElement !== canvas) { ev.preventDefault(); setPaused(true); }
   }
   function keyUp(ev) { held.delete(ev.code); }
   function mouseMove(ev) {
@@ -364,7 +370,7 @@ export function createFpWorld(root, {
     if (lim <= 0) { if (Math.abs(dy) > 0.02) comment('no-jump-look'); pitch = 0; return; }
     pitch = clampPitch(pitch - dy, lim);
   }
-  canvas.addEventListener('click', () => { if (active && screen.phase === 'walk') canvas.requestPointerLock?.(); });
+  canvas.addEventListener('click', () => { if (active && screen.phase === 'walk' && !paused) canvas.requestPointerLock?.(); });
   window.addEventListener('keydown', keyDown, { passive: false });
   window.addEventListener('keyup', keyUp);
   window.addEventListener('mousemove', mouseMove);
@@ -372,6 +378,24 @@ export function createFpWorld(root, {
   // 18.0: touch look (touch-controls.js).
   window.addEventListener('qq:look', (ev) => { if (!active || screen.phase !== 'walk') return; yaw = wrapYaw(yaw + ev.detail.dx); look(ev.detail.dy); });
   leaveBtn?.addEventListener('click', () => leave());
+  // 19.0 · the pause strip (Esc): resume, or leave on purpose.
+  let paused = false;
+  const pauseEl = root.ownerDocument?.createElement?.('div') ?? null;
+  if (pauseEl) {
+    pauseEl.className = 'fp-world__pause'; pauseEl.hidden = true; pauseEl.setAttribute('role', 'dialog'); pauseEl.setAttribute('aria-label', 'Пауза');
+    pauseEl.innerHTML = '<b>ПАУЗА</b><button type="button" data-fp-pause="resume">ПРОДОЛЖИТЬ · Esc</button><button type="button" data-fp-pause="leave">← ВЫЙТИ</button>';
+    root.append(pauseEl);
+    pauseEl.addEventListener('click', (ev) => { const b = ev.target.closest?.('[data-fp-pause]'); if (!b) return; setPaused(false); if (b.dataset.fpPause === 'leave') leave(); });
+  }
+  function setPaused(on) {
+    paused = Boolean(on) && active;
+    if (pauseEl) pauseEl.hidden = !paused;
+    root.dataset.paused = String(paused);
+    held.clear();
+    if (paused) pauseEl?.querySelector('[data-fp-pause="resume"]')?.focus({ preventScroll: true });
+    else canvas.focus({ preventScroll: true });
+    onSound('ui-click');
+  }
   arBtn?.addEventListener('click', () => { if (active && screen.phase === 'walk') toggleHeadset(); });
   menuEl?.addEventListener('click', (ev) => {
     const b = ev.target.closest?.('[data-program]');
@@ -514,7 +538,7 @@ export function createFpWorld(root, {
   }
 
   function update(dt, now) {
-    const walking = screen.phase === 'walk' && hs.phase !== 'edit';
+    const walking = screen.phase === 'walk' && hs.phase !== 'edit' && !paused;
     wt += dt * (hs.phase === 'edit' && gw?.mode !== 'run' ? 0.35 : 1);
     updateAr(dt, now);
     let moving = false;
@@ -586,7 +610,7 @@ export function createFpWorld(root, {
       if (target.kind === 'fridge') label = ws.fridge ? 'ЗАКРЫТЬ ХОЛОДИЛЬНИК' : 'ОТКРЫТЬ ХОЛОДИЛЬНИК';
       if (target.kind === 'radio') label = ws.radio ? 'ВЫКЛЮЧИТЬ МАГНИТОЛУ' : 'ВКЛЮЧИТЬ МАГНИТОЛУ';
       const tag = headsetWorn(hs) ? tagFor(levelId, target.id) : null;
-      if (tag?.edit) label = `ГОЛО-РЕДАКТОР · ${tag.edit === 'gateway' ? 'ПРАВИЛО ШЛЮЗА' : AR_TASKS[tag.edit].title}`;
+      if (tag?.edit) label = `ГОЛО-РЕДАКТОР · ${tag.edit === 'gateway' ? 'ПРАВИЛО СТОРОЖА' : AR_TASKS[tag.edit].title}`;
       promptEl.textContent = `E · ${label}`;
       promptEl.dataset.hot = 'true';
     } else {
@@ -729,7 +753,7 @@ export function createFpWorld(root, {
     const dev = deviceNow();
     if (tag.edit === 'gateway') {
       const day = gatewayDay(), d = garageDay(day);
-      editor.open({ kind: 'gateway', title: `ШЛЮЗ · ДЕНЬ ${day} · ${d.title}`, brief: `${d.brief}${d.factory && !gatewayPicklock(day) ? ' (Отмычку для дня 3 собирают в ноутбуке — шлем гонит ночь без неё.)' : ''}`, code: gatewayRule(day), starter: d.starter, chips: d.chips, runLabel: '▶ ПРОГНАТЬ НОЧЬ ИЗ ШЛЕМА', rows: 9, device: dev.name });
+      editor.open({ kind: 'gateway', title: `СТОРОЖ · НОЧЬ ${day} · ${d.title}`, brief: `${d.brief}${d.factory && !gatewayPicklock(day) ? ' (Приём «ТИСКОВ» для ночи 3 собирают в ноутбуке — шлем гонит ночь без него.)' : ''}`, code: gatewayRule(day), starter: d.starter, chips: d.chips, runLabel: '▶ ПРОВЕРИТЬ НОЧЬЮ ИЗ ШЛЕМА', rows: 9, device: dev.name });
     } else {
       const task = AR_TASKS[tag.edit];
       editor.open({ kind: 'task', title: fixed.has(task.id) ? `${task.title} · ПОЧИНЕНО` : task.title, brief: `${task.brief} Переменные: ${task.vars}.`, code: taskCode(task.id), starter: task.starter, chips: task.chips, runLabel: '▶ ПРОВЕРИТЬ И ЗАЛИТЬ', rows: 8, device: dev.name });
@@ -1159,6 +1183,16 @@ export function createFpWorld(root, {
     relight();
     held.clear();
     enterLine(level);
+    // 19.0 · the story can bring you in with a line (career-worlds.js
+    // enterGarageQuest): Витя at the door says why you came tonight.
+    // The §17 meaning line (if Витя just said one) plays first, then this.
+    if (opts.say?.text) {
+      const who = opts.say.who ?? 'neighbor', text = String(opts.say.text);
+      const say = () => { if (!active) return; const now = performance.now(); speech = { who, name: WORLD_SPEAKERS[who], text, until: now + 4000 + text.length * 45 }; };
+      const wait = speech ? Math.max(0, speech.until - performance.now()) : 0;
+      clearTimeout(open.sayTimer);
+      if (wait) open.sayTimer = setTimeout(say, Math.min(wait, 6000)); else say();
+    }
     if (arWantWorn && headsetOwned(hs) && !headsetWorn(hs)) { hs = { ...headsetStep(hs, 'toggle', performance.now(), { reduced: true }), phase: 'on' }; arWantWorn = false; }
     renderArButton();
     last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
@@ -1169,6 +1203,7 @@ export function createFpWorld(root, {
     if (bench?.active) bench.close();
     if (gw?.mode === 'run') gw = null;
     active = false; root.hidden = true; cancelAnimationFrame(raf); raf = 0; held.clear();
+    paused = false; if (pauseEl) pauseEl.hidden = true;
     if (document.pointerLockElement === canvas) document.exitPointerLock?.();
     if (upgradeEl) upgradeEl.hidden = true;
   }
@@ -1215,6 +1250,7 @@ export function createFpWorld(root, {
   }
   return {
     open, close, surface, debug, state: snapshot,
+    get paused() { return paused; },
     get locks() { return bench; },
     get phase() { return screen.phase; },
     setEra(n) { forcedLevel = n === null ? null : levelForEra(n); setLvl(currentLevel()); lightKey = ''; renderEraLabel(); },
@@ -1245,6 +1281,9 @@ function injectEngineStyles() {
 .fp-menu__features{columns:2;column-gap:18px;font-size:11px;line-height:1.5}
 .fp-menu__features li[data-on="true"]{color:#9fe8ff}.fp-menu__features li[data-on="false"]{opacity:.45}
 .fp-menu__learn code{color:#9fe8ff;font:700 12px ui-monospace,monospace;white-space:pre-wrap}
-@media(max-width:760px){.fp-menu__features{columns:1}}`;
+@media(max-width:760px){.fp-menu__features{columns:1}}
+/* 19.0 C · phone: the touch stick and buttons own the bottom of the screen;
+   the speech line (Витя at the door) goes to the top so nothing overlaps. */
+@media(orientation:portrait){[data-touch="true"] .fp-world__bottom{top:calc(env(safe-area-inset-top) + 64px);bottom:auto}}`;
   document.head.appendChild(st);
 }

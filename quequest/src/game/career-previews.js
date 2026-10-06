@@ -20,7 +20,7 @@ const C = {
   yellow: rgb(240, 214, 80), orange: rgb(240, 140, 50), blue: rgb(70, 130, 230),
 };
 const TONE = { bad: C.red, good: C.green, neutral: C.white };
-const SHORT = { automation: 'AUTO', vehicle: 'VEH', security: 'SEC', web: 'WEB', ai: 'AI', systems: 'SYS', lowlevel: 'LOW' };
+const SHORT = { automation: 'ИНЖЕНЕР', vehicle: 'ХАКЕР', security: 'ЗАЩИТА', web: 'САЙТЫ', ai: 'ИИ', systems: 'СИСТЕМЫ', lowlevel: 'ЖЕЛЕЗО' };
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const lerp = (a, b, k) => a + (b - a) * k;

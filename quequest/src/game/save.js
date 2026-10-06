@@ -1,4 +1,4 @@
-import { CHECKPOINTS, GAME_VERSION, STORAGE_KEY } from './config.js';
+import { CHECKPOINTS, GAME_VERSION, STORAGE_KEY } from './config.js?v=game-190';
 
 const FALLBACK = Object.freeze({ checkpoint: 'start' });
 

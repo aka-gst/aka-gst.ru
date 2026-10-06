@@ -11,6 +11,8 @@
 import { createCodeEditor } from './code-editor.js';
 import { checkWake, runRule } from './mini-python.js';
 import { FOR_PANEL, WHILE_PANEL, DEF_PANEL, judgeForPanel, judgeWhilePanel, judgeDefPanel, runForLesson, runWhileLesson, runDefLesson } from './lessons.js';
+import { ASSEMBLE, judgeAssemble, SHEET_LINE, HAND_RULE, WEEK } from './week.js';
+import { createPieceLine } from './piece-line.js';
 
 export const DESK_STEPS = Object.freeze({
   print: { floor: 'СЛОВА → КОД', title: 'Скажи руке словами', paste: true },
@@ -28,6 +30,42 @@ export const DESK_STEPS = Object.freeze({
   'def-tap': { floor: 'ТЫК · КНОПКА', title: 'Две линии, одно правило', kind: 'button', button: '▶ ПОДКЛЮЧИТЬ ОДНО ПРАВИЛО К ДВУМ ЛИНИЯМ', f: 'tap' },
   'def-knobs': { floor: 'РУЧКИ · ПАНЕЛЬ', title: 'Копия или имя?', kind: 'choice', panel: 'def', f: 'knobs' },
   'def-code': { floor: 'КОД · БЕЗ ВСТАВКИ', title: 'Свой навык с именем', kind: 'code', paste: false, f: 'code' },
+  // 19.0 · the first week (week.js): one terminal visit a day.
+  copy: { floor: 'ДЕНЬ 2 · КОПИЯ', title: 'Листок электрика', kind: 'week', week: 2, paste: true },
+  assemble: { floor: 'ДЕНЬ 3 · СБОРКА', title: 'Порванный листок', kind: 'week', week: 3 },
+  hand: { floor: 'ДЕНЬ 4 · РУКАМИ', title: 'Без листка', kind: 'week', week: 4, paste: false },
+  auto: { floor: 'ДЕНЬ 5 · АВТОМАТ', title: 'Вся линия — сама', kind: 'week', week: 5, paste: false },
+});
+
+// Long text for a computer screen, short for a phone (week.css picks one).
+const WEEK_STORY = Object.freeze({
+  copy: {
+    long: `<p>Электрик переписал на листок, что сидело внутри кнопки: <b>одну строчку</b>. Рука слушает эту строчку, а не кнопку.</p>
+    <p>Перенеси её в терминал: <b>выдели → скопируй → вставь</b>. Потом «▶ ОТПРАВИТЬ РУКЕ».</p>`,
+    short: '<p>На листке — строчка, что сидела в кнопке. <b>Скопируй</b> её и <b>вставь</b> в терминал.</p>',
+  },
+  assemble: {
+    long: `<p>Начальник порвал листок. На ленте белые и красные ящики — брать можно <b>только белые</b>.</p>
+    <p>Сложи куски по русским словам над клетками. Одно слово оторвано совсем — впиши его сам: <b>на белых ящиках штамп WHITE</b>.</p>`,
+    short: '<p>Брать <b>только белые</b>. Сложи куски по русским словам, оторванное слово впиши сам: на белых ящиках штамп <b>WHITE</b>.</p>',
+  },
+  hand: {
+    long: `<p>Листка нет. Вчера ты собрал фразу: <b>«если ящик белый — рука, возьми ящик»</b>.</p>
+    <p>Напиши её сам, две строчки. Вставка выключена: в этот раз — только твои руки.</p>`,
+    short: '<p>Листка нет. Напиши сам: <b>«если ящик белый — рука, возьми ящик»</b>. Две строчки.</p>',
+  },
+  auto: {
+    long: `<p>Фура: в линии <b>9 ящиков</b>, белые и красные вперемешку. Твоё правило уже в терминале — но оно про <b>один</b> ящик.</p>
+    <table class="desk__map"><tr><td>для каждого ящика в линии</td><td><code>for box in boxes:</code></td></tr><tr><td>…делай моё правило</td><td>твои две строчки — уже <b>сдвинуты вправо</b>, внутрь</td></tr></table>
+    <p>Над правилом пустая строчка — напиши там <code>for box in boxes:</code></p>
+    <p>Это и есть программирование: ты пишешь один раз — машина повторяет сколько угодно.</p>`,
+    short: '<p>Твоё правило уже внутри. В пустой верхней строчке напиши <code>for box in boxes:</code> — «для каждого ящика». Пишешь раз — машина повторяет. Это и есть программирование.</p>',
+  },
+});
+const WEEK_HINTS = Object.freeze({
+  copy: ['Щёлкни по строчке на листке, нажми Ctrl+A (Mac: Cmd+A), потом Ctrl+C. Щёлкни в поле ниже — Ctrl+V.', 'Или просто: кнопка «КОПИРОВАТЬ», потом «ВСТАВИТЬ».'],
+  hand: ['Первая строчка: if box == "white":   (двоеточие в конце!)', 'Вторая — с 4 пробелами в начале:     arm.take(box)'],
+  auto: ['В самой первой строчке: for box in boxes:   (двоеточие в конце!)', 'Под ней твоё правило, сдвинутое вправо: if… на 4 пробела, arm.take(box) — на 8. Сбилось — кнопки «⇥ / ⇤».'],
 });
 
 const PANELS = { for: FOR_PANEL, while: WHILE_PANEL, def: DEF_PANEL };
@@ -63,7 +101,7 @@ export function judgeRules(rules) {
 
 const PASTE_WHY = 'Вставка выключена: это экзамен смены. Руки должны запомнить сами — набери строку, это 2 строчки.';
 
-export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, onRule = () => {}, onLesson = () => {}, getColors = () => [], getLines = () => ({ a: [], b: [] }), onClose = () => {}, sound = () => {} } = {}) {
+export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, onRule = () => {}, onLesson = () => {}, onWeek = () => {}, getColors = () => [], getLines = () => ({ a: [], b: [] }), onClose = () => {}, sound = () => {} } = {}) {
   if (!root) return { open() {}, close() {}, isOpen: () => false, step: () => null };
   root.innerHTML = `
     <div class="desk__card" role="dialog" aria-modal="true" aria-labelledby="deskTitle">
@@ -72,7 +110,16 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
         <button class="desk__close" type="button" aria-label="Закрыть терминал">×</button>
       </header>
       <ol class="desk__floors" aria-label="Этажи навыка"><li data-f="tap">КНОПКА</li><li data-f="knobs">СЛОВА / ПРАВИЛА</li><li data-f="code">КОД</li></ol>
+      <ol class="desk__week" id="deskWeek" aria-label="Неделя на заводе" hidden>${WEEK.map((d) => `<li data-day="${d.day}"><b>${d.day}</b> <span>${d.way}</span></li>`).join('')}</ol>
       <div class="desk__story" id="deskStory"></div>
+      <div class="desk__sheet" id="deskSheet" hidden>
+        <small>ЛИСТОК ЭЛЕКТРИКА · НА СКОТЧЕ</small>
+        <code id="deskSheetLine" tabindex="0">${SHEET_LINE.replace(/"/g, '&quot;')}</code>
+        <ol class="desk__steps" id="deskSteps"><li data-k="select">ВЫДЕЛИ</li><li data-k="copy">СКОПИРУЙ</li><li data-k="paste">ВСТАВЬ</li></ol>
+        <p class="desk__keys">Мышью: выдели строчку (или щёлкни по ней и <kbd>Ctrl</kbd>+<kbd>A</kbd>), <kbd>Ctrl</kbd>+<kbd>C</kbd>, щёлкни в поле ниже и <kbd>Ctrl</kbd>+<kbd>V</kbd>. На Mac — <kbd>Cmd</kbd>. На телефоне — кнопки:</p>
+        <div class="desk__clip"><button type="button" id="deskCopy">⧉ КОПИРОВАТЬ</button><button type="button" id="deskPaste">⎘ ВСТАВИТЬ</button></div>
+      </div>
+      <div class="desk__torn" id="deskTorn" hidden></div>
       <div class="desk__rules" id="deskRules" hidden>
         <div class="desk__rule" data-color="white"><i class="desk__crate" data-c="white"></i><b>БЕЛЫЙ</b><span>→</span>
           <button type="button" data-set="take">ВЗЯТЬ</button><button type="button" data-set="leave">ОСТАВИТЬ</button></div>
@@ -82,6 +129,7 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
       </div>
       <div class="desk__choice" id="deskChoice" hidden><p id="deskQuestion"></p><div id="deskOptions"></div></div>
       <div class="desk__bridge" id="deskBridge" hidden></div>
+      <div class="desk__tools" id="deskTools" hidden><button type="button" data-shift="all">⇥ ВСЁ ВПРАВО</button><button type="button" data-shift="line">⇥ СТРОЧКУ</button><button type="button" data-shift="back">⇤ СТРОЧКУ</button><span class="desk__tab">или Tab / Shift+Tab</span></div>
       <div class="desk__editor" id="deskEditor" hidden></div>
       <div class="desk__feedback" id="deskFeedback" role="status"></div>
       <div class="desk__actions"><button class="desk__hint" type="button" id="deskHint">ПОДСКАЗКА</button><button class="desk__run" type="button" id="deskRun">▶ ЗАПУСТИТЬ</button></div>
@@ -89,6 +137,142 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
   const $ = (s) => root.querySelector(s);
   const editor = createCodeEditor($('#deskEditor'), { label: 'Терминал руки 07', onRun: () => run(), onInput: () => { feedback(''); } });
   let step = null; let rules = { white: null, red: null }; let fails = 0; let hintLevel = 0; let busy = false; let choice = null;
+
+  // 19.0 · week steps: the copy sheet, the torn sheet, by hand, the whole line.
+  let pieceLine = null; let clip = ''; let marks = {}; let pasted = false;
+  const sheetLine = root.querySelector('#deskSheetLine');
+  function markStep(k) {
+    if (k) marks[k] = true;
+    for (const li of root.querySelectorAll('#deskSteps li')) li.dataset.done = String(Boolean(marks[li.dataset.k]));
+  }
+  function selectSheet() {
+    try { const r = document.createRange(); r.selectNodeContents(sheetLine); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch { /* old browsers */ }
+    markStep('select');
+  }
+  sheetLine.addEventListener('keydown', (ev) => { if ((ev.ctrlKey || ev.metaKey) && ev.code === 'KeyA') { ev.preventDefault(); selectSheet(); } });
+  sheetLine.addEventListener('click', () => { if (step === 'copy' && getSelection()?.isCollapsed) sheetLine.focus({ preventScroll: true }); });
+  document.addEventListener('selectionchange', () => {
+    if (step !== 'copy') return;
+    const sel = getSelection();
+    if (sel && !sel.isCollapsed && sheetLine.contains(sel.anchorNode) && sel.toString().includes('print')) markStep('select');
+  });
+  root.addEventListener('copy', () => {
+    if (step !== 'copy') return;
+    const sel = getSelection();
+    if (sel && sheetLine.contains(sel.anchorNode)) { clip = sel.toString() || SHEET_LINE; markStep('select'); markStep('copy'); }
+  });
+  root.querySelector('#deskCopy').addEventListener('click', () => {
+    selectSheet(); clip = SHEET_LINE;
+    try { navigator.clipboard?.writeText(SHEET_LINE)?.catch?.(() => {}); } catch { /* no clipboard: our own buffer works */ }
+    markStep('copy'); sound('ui-click');
+    feedback('Скопировано. Теперь «ВСТАВИТЬ» — или Ctrl+V в поле ниже.', 'ok');
+  });
+  root.querySelector('#deskPaste').addEventListener('click', () => {
+    if (!clip) { feedback('Сначала скопируй строчку с листка.', 'hint'); sound('blocked'); return; }
+    const inp = editor.input; const a = inp.selectionStart ?? inp.value.length; const b = inp.selectionEnd ?? a;
+    inp.value = inp.value.slice(0, a) + clip + inp.value.slice(b);
+    inp.selectionStart = inp.selectionEnd = a + clip.length;
+    inp.dispatchEvent(new Event('input'));
+    pasted = true; markStep('paste'); sound('ui-click');
+    feedback('Вставлено. Жми «▶ ОТПРАВИТЬ РУКЕ».', 'ok');
+  });
+  editor.input.addEventListener('paste', () => { if (step === 'copy') { pasted = true; markStep('paste'); } });
+
+  for (const b of root.querySelectorAll('#deskTools [data-shift]')) {
+    b.addEventListener('click', () => {
+      const inp = editor.input;
+      if (b.dataset.shift === 'all') { inp.selectionStart = 0; inp.selectionEnd = inp.value.length; }
+      editor.shiftLines(b.dataset.shift === 'back');
+      inp.focus({ preventScroll: true }); sound('ui-click');
+    });
+  }
+  function openWeek(meta) {
+    root.querySelector('.desk__floors').hidden = true;
+    const wk = root.querySelector('#deskWeek'); wk.hidden = false;
+    for (const li of wk.children) { const d = Number(li.dataset.day); li.dataset.state = d < meta.week ? 'done' : (d === meta.week ? 'now' : 'next'); }
+    const story = WEEK_STORY[step];
+    root.querySelector('#deskStory').innerHTML = story ? `<div class="desk__long">${story.long}</div><div class="desk__short">${story.short}</div>` : '';
+    for (const id of ['#deskRules', '#deskBridge', '#deskChoice']) root.querySelector(id).hidden = true;
+    root.querySelector('#deskSheet').hidden = step !== 'copy';
+    root.querySelector('#deskTorn').hidden = step !== 'assemble';
+    root.querySelector('#deskEditor').hidden = step === 'assemble';
+    root.querySelector('#deskHint').hidden = step === 'assemble';
+    root.querySelector('#deskTools').hidden = step !== 'auto';
+    marks = {}; pasted = false; markStep(null);
+    const run = root.querySelector('#deskRun');
+    run.disabled = false;
+    run.textContent = { copy: '▶ ОТПРАВИТЬ РУКЕ', assemble: '▶ ЗАПУСТИТЬ', hand: '▶ ЗАПУСТИТЬ ПРАВИЛО', auto: '▶ ЗАПУСТИТЬ ВСЮ ЛИНИЮ' }[step];
+    if (step === 'assemble') {
+      if (!pieceLine) pieceLine = createPieceLine(root.querySelector('#deskTorn'), { slots: ASSEMBLE.slots, pieces: ASSEMBLE.pieces, sound, onChange: () => feedback('') });
+      else pieceLine.reset();
+      return;
+    }
+    editor.setPasteAllowed(meta.paste !== false, 'Вставка выключена: сегодня — только твои руки. Это две строчки.');
+    editor.input.placeholder = { copy: 'Сюда вставь строчку с листка: Ctrl+V или «ВСТАВИТЬ»', hand: 'Пиши здесь: две строчки', auto: '' }[step] ?? '';
+    // Day 5: yesterday's rule is already inside (4 spaces right), with an
+    // empty line above it for the one new line.
+    editor.value = step === 'auto' ? `\n${HAND_RULE.split('\n').map((l) => `    ${l}`).join('\n')}` : '';
+    setTimeout(() => {
+      if (step === 'copy') sheetLine.focus({ preventScroll: true });
+      else { editor.focus(); try { editor.input.setSelectionRange(0, 0); } catch { /* hidden */ } }
+    }, 30);
+  }
+  function weekDone(result) {
+    busy = true; sound('power');
+    onWeek({ step, result, hints: hintLevel, fails });
+    setTimeout(close, 900);
+  }
+  function runWeek() {
+    const source = editor.value;
+    if (step === 'copy') {
+      const r = checkWake(source);
+      editor.setDiagnostics(r.ok ? [] : r.diagnostics);
+      if (!r.ok) {
+        fails += 1; sound('blocked');
+        feedback(fails >= 2 ? 'Строчка должна быть точь-в-точь как на листке. Скопируй её целиком ещё раз и вставь.' : 'Рука не поняла. Сверь с листком — подчёркнуто, где не так.', 'error');
+        return;
+      }
+      feedback('Терминал: wake · рука проснулась', 'ok');
+      weekDone({ source, pasted });
+      return;
+    }
+    const colors = getColors();
+    if (step === 'assemble') {
+      const st = pieceLine.state();
+      const v = judgeAssemble(st.placed, st.typed);
+      if (!v.ok) { fails += 1; pieceLine.mark(v.wrong); sound('blocked'); feedback(v.text, v.code === 'typed-red' ? 'fine' : 'error'); return; }
+      const r = runRule(v.source, colors.length ? colors : ['white', 'red', 'white']);
+      if (!r.ok) { fails += 1; sound('blocked'); feedback(r.diagnostics[0]?.message ?? 'Не сработало.', 'error'); return; }
+      feedback(v.text, 'ok');
+      weekDone({ decisions: r.decisions, source: v.source });
+      return;
+    }
+    if (step === 'hand') {
+      const r = runRule(source, colors.length ? colors : ['white', 'red', 'white']);
+      editor.setDiagnostics(r.ok ? [] : r.diagnostics);
+      if (!r.ok) {
+        fails += 1; sound('blocked');
+        const code = r.diagnostics[0]?.code;
+        feedback(code === 'took-red' ? 'ШТРАФ на словах: рука взяла бы красный. Проверь слово в кавычках.' : (fails >= 2 ? 'Не вышло. Смотри подчёркнутое или нажми «ПОДСКАЗКА».' : 'Правило не сработало. Смотри подчёркнутое.'), code === 'took-red' ? 'fine' : 'error');
+        return;
+      }
+      feedback('Правило принято: белые — на ленту, красные — стоят.', 'ok');
+      weekDone({ decisions: r.decisions, source });
+      return;
+    }
+    if (step === 'auto') {
+      const r = runForLesson(source, colors, { needIf: true });
+      editor.setDiagnostics(r.ok ? [] : r.diagnostics);
+      if (!r.ok) {
+        fails += 1; sound('blocked');
+        const code = r.diagnostics[0]?.code;
+        feedback(code === 'took-red' ? 'ШТРАФ на словах: рука унесла бы красный.' : (fails >= 2 ? 'Не вышло. Смотри подчёркнутое или нажми «ПОДСКАЗКА».' : 'Линия не пошла. Смотри подчёркнутое.'), code === 'took-red' ? 'fine' : 'error');
+        return;
+      }
+      feedback('Линия пошла. Смотри на руку.', 'ok');
+      weekDone({ taken: r.taken, source });
+    }
+  }
 
   function feedback(text, tone = '') { const f = $('#deskFeedback'); f.textContent = text; f.dataset.tone = tone; }
   function setFloors(active) {
@@ -123,7 +307,13 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
       <p class="desk__said">Твоё правило: ${sentence}</p>`;
   }
 
+  function plainView() {
+    root.querySelector('.desk__floors').hidden = false;
+    for (const id of ['#deskWeek', '#deskSheet', '#deskTorn', '#deskTools']) root.querySelector(id).hidden = true;
+    editor.input.placeholder = '';
+  }
   function openLesson(meta) {
+    plainView();
     $('#deskStory').innerHTML = LESSON_STORY[step] ?? '';
     $('#deskRules').hidden = true; $('#deskBridge').hidden = true;
     $('#deskEditor').hidden = meta.kind !== 'code';
@@ -154,6 +344,15 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
     step = nextStep; fails = 0; hintLevel = 0; busy = false;
     const meta = DESK_STEPS[step];
     if (!meta) return;
+    if (meta.kind === 'week') {
+      root.hidden = false; root.dataset.step = step;
+      $('#deskTitle').textContent = meta.title;
+      $('#deskFloor').textContent = `ТЕРМИНАЛ РУКИ 07 · ${meta.floor}`;
+      feedback('');
+      openWeek(meta);
+      root.querySelector('.desk__card').scrollTop = 0;
+      return;
+    }
     if (meta.kind) {
       root.hidden = false; root.dataset.step = step;
       $('#deskTitle').textContent = meta.title;
@@ -164,6 +363,7 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
       return;
     }
     $('#deskChoice').hidden = true;
+    plainView();
     root.hidden = false; root.dataset.step = step;
     $('#deskTitle').textContent = meta.title;
     $('#deskFloor').textContent = `ТЕРМИНАЛ РУКИ 07 · ${meta.floor}`;
@@ -190,6 +390,7 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
   function hint() {
     hintLevel += 1;
     sound('poster');
+    if (WEEK_HINTS[step]) { feedback(WEEK_HINTS[step][Math.min(WEEK_HINTS[step].length - 1, hintLevel - 1)], 'hint'); return; }
     if (step === 'print' || step === 'print2') feedback(hintLevel === 1 ? 'Слово — wake. Команда «напечатать» — print. Слово берут в кавычки и скобки.' : 'Вот целиком: print("wake")', 'hint');
     else if (step === 'if') feedback(hintLevel === 1 ? 'Первая строка: if box == "white":   (двоеточие в конце!)' : 'Вторая строка с 4 пробелами в начале:     arm.take()', 'hint');
     else if (step === 'for-code') feedback(hintLevel === 1 ? 'Первая строка: for box in boxes:' : 'Вторая, с отступом:     arm.take(box)', 'hint');
@@ -208,6 +409,7 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
   async function run() {
     if (busy || !step) return;
     const meta = DESK_STEPS[step];
+    if (meta?.kind === 'week') { runWeek(); return; }
     if (meta?.kind === 'button') { feedback('Рука пошла по партии.', 'ok'); lessonDone({}); return; }
     if (meta?.kind === 'choice') {
       if (!choice) return;

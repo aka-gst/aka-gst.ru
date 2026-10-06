@@ -1,0 +1,143 @@
+/* QueQuest 19.0 · the first week: pay card, week ladder, copy sheet, torn
+   sheet, quest pin. Loaded after v18.css. Minimum text 14px on cards. */
+
+/* ------------------------------------------------ pay card */
+.pay { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: radial-gradient(circle at 50% 40%, #0b1a14cc, #020403f2 70%); overflow: hidden; }
+.pay[hidden] { display: none !important; }
+.pay__card { width: min(560px, 100%); max-height: calc(100dvh - 32px); overflow: auto; padding: clamp(16px, 3vw, 26px); border: 1px solid #64ffad55; border-radius: 14px; background: linear-gradient(180deg, #08130f, #050a08); color: #eef1ed; box-shadow: 0 30px 90px #000d; font: 16px/1.45 system-ui, sans-serif; }
+.pay[data-fired="true"] .pay__card { border-color: #ff5a5277; background: linear-gradient(180deg, #160a09, #080404); }
+.pay__kicker { margin: 0; color: #9fe8c0; font: 800 14px ui-monospace, monospace; letter-spacing: .1em; }
+.pay[data-fired="true"] .pay__kicker { color: #ffb0a8; }
+.pay__card h2 { margin: 4px 0 10px; font-size: clamp(26px, 4.4vw, 34px); line-height: 1.05; }
+.pay__week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 0 0 12px; padding: 0; list-style: none; }
+.pay__week li { padding: 5px 2px; border: 1px solid #ffffff1c; border-radius: 6px; color: #8a9491; font: 800 14px/1.2 system-ui, sans-serif; text-align: center; }
+.pay__week li b { display: block; font-size: 16px; }
+.pay__week li[data-state="done"] { border-color: #4fae7488; color: #8fe0ad; }
+.pay__week li[data-state="now"] { border-color: #ffc857; background: #21190b; color: #ffc857; }
+.pay__quote { margin: 0 0 12px; padding: 10px 12px; border-left: 3px solid #ffc857; background: #120f08; color: #ffe7a6; font: 700 17px/1.4 system-ui, sans-serif; }
+.pay__quote small { display: block; margin-bottom: 2px; color: #c9a75a; font: 800 14px ui-monospace, monospace; letter-spacing: .08em; }
+.pay__quote em { display: block; margin-top: 6px; color: #d6dcd9; font: italic 600 16px system-ui, sans-serif; }
+.pay__rows { width: 100%; border-collapse: collapse; font-size: 16px; }
+.pay__rows td { padding: 6px 2px; border-bottom: 1px solid #ffffff14; }
+.pay__rows td:last-child { text-align: right; white-space: nowrap; font: 800 17px ui-monospace, monospace; }
+.pay__rows small { color: #93a19c; font-size: 14px; white-space: nowrap; }
+.pay__rows tr[data-tone="cut"] td { color: #ff9b92; }
+.pay__rows tr[data-tone="bonus"] td, .pay__rows tr[data-tone="payoff"] td { color: #8fe0ad; }
+.pay__total { display: flex; justify-content: space-between; align-items: baseline; margin: 10px 0 0; font: 800 15px ui-monospace, monospace; color: #9fe8c0; letter-spacing: .06em; }
+.pay__total b { color: #64ffad; font-size: 28px; letter-spacing: 0; }
+.pay__wallet { margin: 2px 0 0; color: #a9b3b0; font-size: 15px; text-align: right; }
+.pay__wallet b { color: #eef1ed; }
+.pay__chip { margin: 12px 0 0; padding: 10px 12px; border: 1px dashed #64e9ff77; border-radius: 8px; background: #031015; color: #bff6ff; font: 600 16px/1.4 system-ui, sans-serif; }
+.pay__next { width: 100%; min-height: 52px; margin-top: 14px; font-size: 16px !important; }
+@media (max-height: 560px) {
+  .pay__card { padding: 12px 16px; font-size: 15px; }
+  .pay__card h2 { margin-bottom: 6px; font-size: 24px; }
+  .pay__week { margin-bottom: 8px; }
+  .pay__week li { padding: 3px 2px; }
+  .pay__quote { padding: 6px 10px; font-size: 15px; margin-bottom: 8px; }
+  .pay__rows td { padding: 3px 2px; }
+  .pay__next { min-height: 46px; margin-top: 8px; }
+}
+
+/* ------------------------------------------------ quest pin over the garage / apartment */
+.week-pin { position: absolute; z-index: 125; left: 50%; top: 14px; transform: translateX(-50%); max-width: min(560px, calc(100% - 32px)); margin: 0; padding: 8px 14px; border: 1px solid #ffc85788; border-radius: 6px; background: #080a0ce6; color: #eef1ed; font: 700 15px/1.3 system-ui, sans-serif; text-align: center; pointer-events: none; }
+.week-pin b { color: #ffc857; }
+.week-pin[data-tone="done"] b { color: #8fe0ad; }
+.week-pin[hidden] { display: none !important; }
+
+/* ------------------------------------------------ terminal: the week ladder */
+.desk__week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0; padding: 0; list-style: none; }
+.desk__week[hidden] { display: none; }
+.desk__week li { padding: 6px 4px; border: 1px solid var(--q-line); border-radius: 6px; color: #8a9491; font: 800 14px/1.15 system-ui, sans-serif; text-align: center; }
+.desk__week li b { display: block; font-size: 15px; }
+.desk__week li[data-state="done"] { border-color: #4fae7499; color: #8fe0ad; }
+.desk__week li[data-state="now"] { border-color: var(--q-gold); color: var(--q-gold); background: #21190b; }
+
+/* ------------------------------------------------ day 2: the electrician's sheet */
+.desk__sheet { margin: 10px 0; padding: 12px 14px; border-radius: 4px; background: #efe9d6; color: #1c2230; box-shadow: 0 6px 18px #0008; transform: rotate(-.6deg); }
+.desk__sheet[hidden] { display: none; }
+.desk__sheet > small { display: block; color: #6b6249; font: 800 14px ui-monospace, monospace; letter-spacing: .06em; }
+.desk__sheet > code { display: block; margin: 8px 0; padding: 8px 10px; border: 2px dashed #8a7f62; border-radius: 4px; background: #fffaf0; color: #10204a; font: 800 26px ui-monospace, monospace; user-select: all; -webkit-user-select: all; cursor: text; outline: none; }
+.desk__sheet > code:focus { border-color: #1f6feb; box-shadow: 0 0 0 3px #1f6feb44; }
+.desk__steps { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.desk__steps li { flex: 1; padding: 5px 4px; border: 1px solid #8a7f6277; border-radius: 6px; color: #4a4434; font: 800 14px system-ui, sans-serif; text-align: center; counter-increment: step; }
+.desk__steps li::before { content: counter(step) ". "; }
+.desk__steps li[data-done="true"] { border-color: #2f8a4f; background: #d6f0dc; color: #1d5b33; }
+.desk__steps li[data-done="true"]::before { content: "✓ "; }
+.desk__keys { margin: 8px 0 6px; color: #3a3a3a; font: 15px/1.45 system-ui, sans-serif; }
+.desk__keys kbd { padding: 0 5px; border: 1px solid #8a7f62; border-bottom-width: 2px; border-radius: 4px; background: #fff; font: 700 14px ui-monospace, monospace; }
+.desk__clip { display: flex; gap: 8px; }
+.desk__clip button { flex: 1; min-height: 48px; border: 1px solid #1c2230; border-radius: 8px; background: #1c2230; color: #fff; font: 800 16px system-ui, sans-serif; cursor: pointer; }
+.desk__clip button:last-child { background: #fff; color: #1c2230; }
+
+/* ------------------------------------------------ day 5: indent tools */
+.desk__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.desk__tools[hidden] { display: none; }
+.desk__tools button { min-height: 44px; padding: 0 12px; border: 1px solid var(--q-line); border-radius: 8px; background: #121a1e; color: var(--q-text); font: 800 15px system-ui, sans-serif; cursor: pointer; }
+.desk__tools span { color: var(--q-dim); font-size: 14px; }
+
+/* ------------------------------------------------ day 3: the torn sheet (piece-line.js) */
+.desk__torn[hidden] { display: none; }
+.pl { margin: 10px 0; }
+.pl__sheet { display: grid; gap: 8px; padding: 12px; border-radius: 4px; background: #efe9d6; box-shadow: 0 6px 18px #0008; clip-path: polygon(0 0, 100% 2%, 98% 100%, 60% 96%, 40% 100%, 2% 97%); }
+.pl__line { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.pl__line[data-line="2"] { padding-left: clamp(18px, 6vw, 48px); }
+.pl__slot { display: grid; grid-template-rows: auto 1fr; justify-items: center; align-content: start; gap: 2px; min-width: 64px; min-height: 64px; padding: 4px 6px; border: 2px dashed #8a7f62; border-radius: 6px; background: #fffaf0; color: #10204a; cursor: pointer; font: inherit; }
+.pl__slot small { color: #6b6249; font: 800 14px system-ui, sans-serif; letter-spacing: .02em; }
+.pl__slot code, .pl__q { font: 800 20px ui-monospace, monospace; color: #10204a; }
+.pl__slot[data-full="true"] { border-style: solid; border-color: #3a5bb0; background: #e7eefc; }
+.pl__slot[data-picked="true"] { border-color: #1f6feb; box-shadow: 0 0 0 3px #1f6feb44; }
+.pl__slot[data-over="true"] { border-color: #1f6feb; background: #dbe7ff; }
+.pl__slot[data-bad="true"] { border-color: #c0392b; background: #ffe2de; }
+.pl__slot--typed { cursor: text; }
+.pl__q { display: flex; align-items: center; gap: 1px; }
+.pl__input { width: 7.5ch; min-height: 36px; padding: 2px 4px; border: 0; border-bottom: 2px solid #10204a; background: #fff; color: #10204a; font: 800 20px ui-monospace, monospace; outline: none; }
+.pl__input:focus { border-bottom-color: #1f6feb; background: #f2f7ff; }
+.pl__tray { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 64px; }
+.pl__piece { display: grid; justify-items: center; gap: 2px; min-width: 64px; min-height: 60px; padding: 6px 10px; border: 1px solid #ffffff33; border-radius: 8px; background: #1a232a; color: var(--q-cyan); cursor: grab; touch-action: manipulation; }
+.pl__piece code { font: 800 20px ui-monospace, monospace; }
+.pl__piece small { color: #c9d3d0; font: 700 14px system-ui, sans-serif; }
+.pl__piece:hover, .pl__piece:focus-visible { border-color: var(--q-gold); }
+.pl__empty { margin: 0; color: var(--q-dim); font-size: 15px; }
+
+/* ------------------------------------------------ phones */
+@media (max-width: 760px) {
+  .desk__week li { font-size: 14px; padding: 4px 2px; }
+  .desk__week li b { font-size: 14px; }
+  .desk__sheet > code { font-size: 20px; }
+  .desk__keys { font-size: 14px; }
+  .pl__slot { min-width: 52px; min-height: 58px; padding: 3px 4px; }
+  .pl__slot code, .pl__q, .pl__piece code { font-size: 17px; }
+  .pl__input { font-size: 17px; width: 6.5ch; }
+  .pay__week li { font-size: 14px; }
+  .pay__week li b { font-size: 14px; }
+}
+/* Phones: short story, compact ladder (numbers; the current day keeps its
+   word), no keyboard help on touch screens. */
+.desk__short { display: none; }
+@media (max-width: 480px) {
+  .desk__long { display: none; }
+  .desk__short { display: block; }
+  .desk__short p { margin: 4px 0; }
+  .desk__tab { display: none; }
+  .desk__card { padding: 14px 14px; }
+  .desk__head h2 { font-size: 22px; }
+  .pay__week, .desk__week { display: flex; }
+  .pay__week li, .desk__week li { flex: 1 1 0; min-width: 0; }
+  .pay__week li[data-state="now"], .desk__week li[data-state="now"] { flex: 0 0 auto; padding: 4px 8px; }
+  .pay__week li:not([data-state="now"]) span, .desk__week li:not([data-state="now"]) span { display: none; }
+  .desk__week { margin: 8px 0; }
+  .desk__sheet { padding: 10px 12px; }
+  .desk__steps li { padding: 4px 2px; }
+}
+@media (hover: none) and (pointer: coarse), (max-width: 480px) { .game[data-touch="true"] .desk__keys { display: none; } }
+@media (max-width: 420px) {
+  .pay { padding: 10px; }
+  .pay__card { padding: 14px 12px; }
+}
+.ce__input::placeholder { color: #6f8a93; font: italic 600 16px system-ui, sans-serif; opacity: 1; }
+@media (max-width: 480px) {
+  .desk__actions button { padding: 0 12px; font-size: 15px; }
+  .desk__tools button { padding: 0 10px; }
+}
+@media (max-width: 760px) { .week-pin { top: 62px; font-size: 14px; max-width: calc(100% - 24px); } }

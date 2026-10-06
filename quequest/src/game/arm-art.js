@@ -179,3 +179,25 @@ export function paintButton(tried = false) {
   g.outline();
   return { w, h, data: g.data, ppm: 40 };
 }
+
+// 19.0: the electrician's sheet on the wall by the terminal (day 2: one
+// line in big letters; day 3: torn into pieces). 28 x 36 px at 40 px/m.
+export function paintSheet(torn = false) {
+  const w = 28, h = 36;
+  const g = painter(w, h);
+  const paper = [236, 232, 214], ink = [30, 40, 60], tape = [210, 190, 120];
+  if (!torn) {
+    g.rect(2, 3, 24, 31, paper);
+    g.rect(10, 1, 8, 4, tape);
+    g.rect(5, 10, 18, 2, ink); g.rect(5, 14, 12, 2, ink);
+    g.rect(5, 20, 16, 1, [120, 120, 130]); g.rect(5, 23, 10, 1, [120, 120, 130]);
+  } else {
+    g.poly([[2, 3], [13, 3], [11, 16], [2, 14]], paper);
+    g.poly([[16, 4], [26, 3], [26, 18], [14, 15]], paper);
+    g.poly([[4, 22], [12, 20], [13, 33], [3, 34]], paper);
+    g.rect(10, 1, 8, 4, tape);
+    g.rect(4, 8, 6, 2, ink); g.rect(17, 9, 7, 2, ink); g.rect(5, 26, 6, 2, ink);
+  }
+  g.outline();
+  return { w, h, data: g.data, ppm: 40 };
+}
