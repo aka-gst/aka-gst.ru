@@ -97,6 +97,14 @@ export const BADGES = freeze([
   { id: 'reflex-pattern', title: 'Паттерн босса', how: 'Увидеть такт босса 1·2·3·БАМ и толкнуть вовремя.', glyph: '⦿', rarity: 'rare',
     check: (p, f) => Boolean(f.reflexes?.pattern) },
 
+  // ---- §21 the hands on the factory (19.4) ----
+  { id: 'beaten-hall', title: 'Огрёб от всего цеха', how: 'Полезть с кулаками на каждого в цеху: сварщик, слесарь, электрик, грузчик — все тебя отделали.', glyph: '✕', rarity: 'rare',
+    check: (p, f) => Boolean(f.fists?.beatenAll) },
+  { id: 'anger-fuel', title: 'Злость — топливо', how: 'Три ящика — полная злость — и начальник на полу.', glyph: '✷', rarity: 'epic',
+    check: (p, f) => Boolean(f.fists?.angerWin) },
+  { id: 'hands-for-work', title: 'Руки для дела', how: 'Перенести три ящика и ни разу ни на кого не замахнуться.', glyph: '▣', rarity: 'common',
+    check: (p, f) => Boolean(f.fists?.cleanHands) },
+
   // ---- §17 meaning layers ----
   { id: 'meaning-seam', title: 'Старое звучит иначе', how: 'Услышать знакомую фразу в новом слое — мигнул шов.', glyph: '⌇', rarity: 'rare',
     check: (p, f) => Boolean(f.meaningHeard) },

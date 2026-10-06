@@ -5,13 +5,14 @@
 // buttons: E (use / talk / pick up) and jump.
 const DEAD = 0.28;
 
-export function createTouchControls(root, { isActive = () => false, sendKey, onLook = (dx, dy) => window.dispatchEvent(new CustomEvent('qq:look', { detail: { dx, dy } })) } = {}) {
+export function createTouchControls(root, { isActive = () => false, showPunch = () => false, sendKey, onLook = (dx, dy) => window.dispatchEvent(new CustomEvent('qq:look', { detail: { dx, dy } })) } = {}) {
   if (!root) return { update() {} };
   root.innerHTML = `
     <div class="touch__stick" aria-label="Ходить"><i class="touch__knob"></i></div>
     <div class="touch__look" aria-label="Смотреть"></div>
     <button type="button" class="touch__btn touch__jump" aria-label="Прыжок">⤒<small>ПРЫЖОК</small></button>
-    <button type="button" class="touch__btn touch__use" aria-label="Действие">E<small>ВЗЯТЬ</small></button>`;
+    <button type="button" class="touch__btn touch__use" aria-label="Взять или положить">E<small>ВЗЯТЬ</small></button>
+    <button type="button" class="touch__btn touch__punch" aria-label="Удар" hidden><svg viewBox="0 0 8 7" width="30" height="26" aria-hidden="true" shape-rendering="crispEdges"><path d="M1 1h6v1h1v3h-1v1h-5v-1h-1v-1h-1v-2h1z" fill="currentColor"/></svg><small>УДАР</small></button>`;
   const stick = root.querySelector('.touch__stick');
   const knob = root.querySelector('.touch__knob');
   const look = root.querySelector('.touch__look');
@@ -57,10 +58,15 @@ export function createTouchControls(root, { isActive = () => false, sendKey, onL
   const tapKey = (code) => (e) => { e.preventDefault(); key('keydown', code); setTimeout(() => key('keyup', code), 60); };
   root.querySelector('.touch__jump').addEventListener('pointerdown', tapKey('Space'));
   root.querySelector('.touch__use').addEventListener('pointerdown', tapKey('KeyE'));
+  // 19.4 (§21): the fists -- УДАР sends F, like the keyboard.
+  const punchBtn = root.querySelector('.touch__punch');
+  punchBtn.addEventListener('pointerdown', tapKey('KeyF'));
 
   let shown = false;
   function update() {
     const on = Boolean(isActive());
+    const fists = on && Boolean(showPunch());
+    if (punchBtn.hidden === fists) punchBtn.hidden = !fists;
     if (on !== shown) {
       shown = on; root.hidden = !on;
       if (!on) { setHeld(new Set()); stickId = null; lookId = null; knob.style.transform = ''; }

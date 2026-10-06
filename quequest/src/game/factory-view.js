@@ -12,8 +12,11 @@
 // (fp-body.js), and the people in the hall comment (npc-chatter.js).
 import { createRenderer, bakeLightmap, rgb, cellAt } from './raycaster.js';
 import {
-  buildFactoryMap, SPOTS, WORKER_SPOTS, LAMPS, EYE, CRATE_H, BELT_H, HALL_CEIL, viewIndex, nearBossDoor,
+  buildFactoryMap, SPOTS, WORKER_SPOTS, LAMPS, EYE, CRATE_H, BELT_H, HALL_CEIL, viewIndex, nearBossDoor, castCenter,
 } from './first-shift-map.js';
+// 19.4 (§21): the same two fists as in Shift 1.
+import { createHands, handsPose, drawHands, swing } from './fp-hands.js';
+import { WORKER_FISTS, PUNCH_REACH } from './fists.js';
 import { loadAtlas } from './first-shift-atlas.js';
 import { drawText, textWidth } from './pixel-font.js';
 import { dressHall, drawSpeech, surfaceOf, subtitleFloorRow } from './fp-overlay.js';
@@ -142,6 +145,7 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
   // NPC subtitle stays above it. main.js sets it every frame.
   let promptBox = null;
   let gagReadyAt = 0; let pushUntil = 0;
+  let hands = createHands(-1e9); let lastYaw = 0;
   let lastWage = null; let lastScene = null; let lastFailure = null; let lastChip = null; let lastDelivered = null;
 
   const present = () => new Set(['welder', 'fitter', 'electrician', 'lunch', 'radio']);
@@ -223,6 +227,7 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
   // One frame of walking/jumping. forward/strafe in -1..1, yaw from main.js.
   // Returns the player's new model position.
   function step(state, dt, { forward = 0, strafe = 0, yaw = 0, paused = false } = {}, now = performance.now()) {
+    lastYaw = yaw;
     syncPile(state);
     if (teleported(state.player, lastPx)) place(state);
     let moving = false;
@@ -284,6 +289,30 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
     onSound('jump');
     comment(state.player.carrying ? 'carry-jump' : moments.jumped(now / 1000), now);
     return true;
+  }
+  // 19.4 (§21): F in the hall. The fists swing; whoever is in reach says so,
+  // crates and walls thud. (The real beating lesson was in Shift 1.)
+  function punch(state, now = performance.now()) {
+    if (state?.player?.carrying || now - hands.punchAt < 240) return null;
+    hands = swing(hands, now);
+    onSound('fist-swing');
+    const sin = Math.sin(lastYaw), cos = Math.cos(lastYaw);
+    let best = null;
+    for (const [id, w] of Object.entries(WORKER_SPOTS)) {
+      const dx = w.x - body.x, dz = w.z - body.z; const dist = Math.hypot(dx, dz);
+      const fwd = dx * sin - dz * cos; const side = dx * cos + dz * sin;
+      if (fwd <= 0.05 || dist > PUNCH_REACH + 0.62 || Math.abs(Math.atan2(side, fwd)) > 0.42) continue;
+      if (!best || dist < best.dist) best = { id, dist };
+    }
+    if (best) {
+      onSound('fist-hit');
+      speech = { who: best.id, name: SPEAKERS[best.id] ?? best.id, text: WORKER_FISTS[best.id]?.warn ?? 'Эй!', until: now + 2600 };
+      onSound('chatter');
+      return best.id;
+    }
+    const hit = castCenter(map, body.x, body.z, lastYaw, PUNCH_REACH, EYE);
+    onSound(hit ? 'fist-thud' : 'whoosh');
+    return hit ? (hit.cell.kind === 'c' ? 'crate' : 'wall') : 'air';
   }
   function look(dx, dy) { pitch = clampPitch(pitch - dy); return pitch; }
   function tilt(dir, dt) { pitch = clampPitch(pitch + dir * dt * 1.8); }
@@ -409,7 +438,12 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
 
     const k = viewH / 240;
     if (chipHeld) chipInHand(buf, viewH, now);
-    if (state.player?.carrying && atlas.carry) renderer.blit(atlas.carry, Math.round(W / 2 - atlas.carry.w * k / 2), Math.round(viewH - 70 * k + bob * 1.5 * k), { clipBottom: viewH, scale: k });
+    // 19.4 (§21): fists (or the crate in both hands), unless the chip is held up.
+    if (!chipHeld) {
+      if (hands.spawnAt < 0) hands = createHands(now);
+      const pose = handsPose(hands, now, { W: W / k, viewH: viewH / k, walkPhase, carrying: Boolean(state.player?.carrying), reduceMotion: reducedMotion });
+      drawHands(renderer, atlas, pose, { W, viewH, scale: k });
+    }
     if (moment && now - moment.at < 6000) {
       const f = moment.feature;
       banner(buf, viewH, moment.era ? `ДВИЖОК +${moment.gained.length} · ЭПОХА ${moment.era.name}` : `ДВИЖОК +${moment.gained.length} · ${ERA_NAMES[eraOfLevel(moment.to)]} ${moment.to + 1}/${FEATURES.length}`, f.name, GOLD);
@@ -472,7 +506,8 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
 
   return {
     ready: () => Boolean(atlas && arms),
-    step, draw, jump: doJump, look, tilt, comment, place,
+    step, draw, jump: doJump, look, tilt, comment, place, punch,
+    hands: () => ({ ...hands }),
     setPromptBox(box) { promptBox = box && box.canvas && box.prompt ? box : null; },
     body: () => ({ ...body, pitch }),
     engine: () => ({ level, feature: FEATURES[level ?? 0].id, path: core.stats.path, ms: Math.round(core.stats.ms * 10) / 10, tris: core.stats.tris }),

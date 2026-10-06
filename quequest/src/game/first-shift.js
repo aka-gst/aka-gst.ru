@@ -13,6 +13,8 @@ import { drawSpeech, surfaceOf, dressHall, subtitleFloorRow } from './fp-overlay
 import { onReleaseKeys } from './key-guard.js';
 import { drawFace, faceIdFor } from './faces.js';
 import { REFLEXES, fightBeat, BAR_BEATS } from './gamer-reflex.js';
+import { ANGER_FULL, PUNCH_PHASES, PUNCHES_TO_BEATING, WORKER_FISTS, BOSS_FISTS, fightGain, FIGHT_MISS, angerFull, angerLabel, PUNCH_REACH, THUD_LINES, FIST_FLAGS } from './fists.js';
+import { createHands, drawHands, handsPose, swing, CRACK_AT_MS, KO_MS } from './fp-hands.js';
 
 // One price for a crate across the whole game; the first shift pays the same piece rate.
 export const FIRST_SHIFT_PAY = CRATE_PAY;
@@ -28,8 +30,9 @@ const wrapAngle = (value) => {
 
 const FIGHT_WIN_METER = 100;
 const FIGHT_LOSE_METER = 0;
-const FIGHT_HIT_GAIN = 14;
-const FIGHT_MISS_LOSS = 9;
+// 19.4 (§21): the push gain comes from anger (fists.js fightGain): three
+// crates = full anger = two clean hits after БАМ put him down.
+const FIGHT_MISS_LOSS = FIGHT_MISS;
 
 // 29.09: Сергей's script -- "ты три ящика таскаешь под его надзором", THEN
 // he gets bored and leaves, dropping the chip. The pile is 9 (PILE in
@@ -50,6 +53,9 @@ export function createFirstShiftState() {
   return {
     phase: 'briefing', delivered: 0, carrying: null, bossBeat: 0, chipVisible: false, chipFound: false, complete: false,
     fightMeter: 50, fightWon: null, asks: {}, lastAsk: null,
+    // 19.4 (§21) the hands: anger from delivered crates, who you punched, who
+    // laid you out, and whether you are on the floor right now.
+    anger: 0, hits: {}, beatenBy: {}, punchedPeople: 0, bossSwats: 0, ko: null, lastPunch: null, angerWin: false, cleanHands: false, fightOnAnger: false,
     player: { x: SPOTS.spawn.x, z: SPOTS.spawn.z, yaw: SPOTS.spawn.yaw },
     crates: crateStack(),
   };
@@ -112,11 +118,59 @@ export function firstShiftWorkerLine(worker, topic, n = 0) {
 export function stepFirstShift(state, action) {
   const s = { ...state, player: { ...state.player }, crates: state.crates.map((c) => ({ ...c })) };
   if (action === 'briefing-done' && s.phase === 'briefing') { s.phase = 'manual'; return s; }
-  if (action?.type === 'pick' && s.phase === 'manual' && !s.carrying) { s.carrying = action.id; return s; }
+  if (action?.type === 'pick' && s.phase === 'manual' && !s.carrying && !s.ko) { s.carrying = action.id; return s; }
   if (action === 'drop' && s.phase === 'manual' && s.carrying) {
     const crate = s.crates.find((c) => c.id === s.carrying); if (crate) crate.delivered = true;
     s.carrying = null; s.delivered = s.crates.filter((c) => c.delivered).length;
-    if (s.delivered >= MANUAL_DELIVERY_TARGET) { s.phase = 'report'; s.bossBeat = 0; }
+    // 19.4 (§21): every crate you carried makes you angrier.
+    s.anger = Math.min(ANGER_FULL, (s.anger ?? 0) + 1);
+    if (s.delivered >= MANUAL_DELIVERY_TARGET) {
+      s.phase = 'report'; s.bossBeat = 0;
+      if (!(s.punchedPeople > 0)) s.cleanHands = true;
+    }
+    return s;
+  }
+  // 19.4 (§21): the fists. Punch whoever (or whatever) is in front of you.
+  // A worker warns you once, then lays you out (ko); you wake at the spawn.
+  // The boss swats you away -- unless the three crates made you angry enough
+  // and the work is done: then the fight starts right there, on anger.
+  if (action?.type === 'punch') {
+    if (s.carrying || s.ko || !PUNCH_PHASES.includes(s.phase)) { s.lastPunch = { who: action.who ?? 'air', kind: s.carrying ? 'busy' : 'blocked' }; return s; }
+    const who = action.who ?? 'air';
+    if (WORKER_FISTS[who]) {
+      const n = (state.hits?.[who] ?? 0) + 1;
+      s.punchedPeople = (s.punchedPeople ?? 0) + 1;
+      if (n >= PUNCHES_TO_BEATING) {
+        s.hits = { ...(state.hits || {}), [who]: 0 };
+        s.beatenBy = { ...(state.beatenBy || {}), [who]: true };
+        s.ko = { by: who };
+        s.lastPunch = { who, kind: 'beat', line: WORKER_FISTS[who].beat };
+      } else {
+        s.hits = { ...(state.hits || {}), [who]: n };
+        s.lastPunch = { who, kind: 'warn', line: WORKER_FISTS[who].warn };
+      }
+      return s;
+    }
+    if (who === 'boss') {
+      s.punchedPeople = (s.punchedPeople ?? 0) + 1;
+      if (s.phase === 'report' && angerFull(s.anger)) {
+        s.phase = 'fight'; s.fightMeter = 50; s.fightWon = null; s.fightOnAnger = true;
+        s.lastPunch = { who, kind: 'start', line: BOSS_FISTS.angry };
+        return s;
+      }
+      s.bossSwats = (s.bossSwats ?? 0) + 1;
+      s.lastPunch = { who, kind: 'swat', line: s.bossSwats > 1 ? BOSS_FISTS.swatAgain : BOSS_FISTS.swat };
+      return s;
+    }
+    s.lastPunch = { who, kind: 'thud' };
+    return s;
+  }
+  // Back on your feet at the spawn, a coworker standing over you.
+  if (action === 'wake' && s.ko) {
+    const by = s.ko.by; const f = WORKER_FISTS[by];
+    s.ko = null;
+    s.player = { x: SPOTS.spawn.x, z: SPOTS.spawn.z, yaw: SPOTS.spawn.yaw };
+    s.lastPunch = { who: f?.waker ?? 'lunch', kind: 'wake', line: f?.wake ?? 'Новенький, ты чего?', by };
     return s;
   }
   // Asking a worker for help: allowed while the arm is dead (before the chip),
@@ -133,10 +187,10 @@ export function stepFirstShift(state, action) {
   // поговорить можно было". Talk keeps the original one-line handoff.
   if (action === 'report-boss' && s.phase === 'report') { s.phase = 'confront'; return s; }
   if (action === 'talk' && s.phase === 'confront') { s.phase = 'payday'; return s; }
-  if (action === 'fight-start' && s.phase === 'confront') { s.phase = 'fight'; s.fightMeter = 50; s.fightWon = null; return s; }
+  if (action === 'fight-start' && s.phase === 'confront') { s.phase = 'fight'; s.fightMeter = 50; s.fightWon = null; s.fightOnAnger = angerFull(s.anger); return s; }
   if (action?.type === 'push' && s.phase === 'fight') {
-    s.fightMeter = Math.max(FIGHT_LOSE_METER, Math.min(FIGHT_WIN_METER, s.fightMeter + (action.hit ? FIGHT_HIT_GAIN : -FIGHT_MISS_LOSS)));
-    if (s.fightMeter >= FIGHT_WIN_METER) { s.phase = 'fight-result'; s.fightWon = true; }
+    s.fightMeter = Math.max(FIGHT_LOSE_METER, Math.min(FIGHT_WIN_METER, s.fightMeter + (action.hit ? fightGain(s.anger) : -FIGHT_MISS_LOSS)));
+    if (s.fightMeter >= FIGHT_WIN_METER) { s.phase = 'fight-result'; s.fightWon = true; if (angerFull(s.anger)) s.angerWin = true; }
     else if (s.fightMeter <= FIGHT_LOSE_METER) { s.phase = 'fight-result'; s.fightWon = false; }
     return s;
   }
@@ -148,11 +202,16 @@ export function stepFirstShift(state, action) {
   return s;
 }
 
-export function firstShiftBossLine(phase = 'briefing', fightWon = null) {
+export function firstShiftBossLine(phase = 'briefing', fightWon = null, onAnger = false) {
   if (phase === 'confront') return [
     'НАЧАЛЬНИК',
     'Три готово. Ну, чего встал. Говорить будем или?..',
     'ПОНЯЛ',
+  ];
+  if (phase === 'fight-result' && fightWon && onAnger) return [
+    'НАЧАЛЬНИК',
+    'Всё! Всё, понял! Злой ты, новенький… Рука 07 правда мёртвая — глянь давай.',
+    'ХОРОШО',
   ];
   if (phase === 'fight-result') return fightWon ? [
     'НАЧАЛЬНИК',
@@ -201,6 +260,10 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   const beatPips = [...root.querySelectorAll('#firstShiftBeats li')];
   const status = root.querySelector('#firstShiftStatus'); const wallet = root.querySelector('#firstShiftPay'); const prompt = root.querySelector('#firstShiftPrompt');
   const reduceMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  // 19.4 (§21): the anger meter next to the hands, and the phone's E label.
+  const angerEl = root.querySelector('#firstShiftAnger'); const angerText = root.querySelector('#firstShiftAngerText');
+  const touchUseEl = () => document.querySelector('#touchPad .touch__use small');
+  let touchUse = null;
 
   let state = createFirstShiftState(); let active = false; let raf = 0; let last = performance.now();
   const held = new Set(); let target = null; let fightClockStart = 0;
@@ -213,6 +276,13 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   let message = ''; let messageUntil = 0;
   let walkPhase = 0; let stepAcc = 0; let shakeUntil = 0; let punchAt = -1e9; let bossHitUntil = 0; let bossAngryUntil = 0; let faceOuchUntil = 0;
   let turnTo = null;
+  // 19.4 (§21): the hands. Their own clock (spawn clench, punches, grab,
+  // place, going down), the blackout after a beating, the boss knocked back.
+  let hands = createHands(performance.now());
+  let koAt = -1e9; let wakeAt = -1e9; let bossKnockAt = -1e9; let crateWobbleAt = -1e9; let swatAt = -1e9; let swatDir = null;
+  const hitFlash = {};
+  const KO_TOTAL_MS = 2000; // laid out: hit, drop to the floor, blackout
+  const fistsVisible = () => !dive && state.phase !== 'done';
   // 18.1: look assist — when you walk up to someone or something you can use,
   // the view eases down so the target is in sight (unless you are aiming yourself).
   let manualLookAt = -1e9;
@@ -350,7 +420,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     bossNext.hidden = !single;
     if (choices) choices.hidden = !confront;
     if (single || confront) {
-      const [speaker, line, button] = firstShiftBossLine(state.phase, state.fightWon);
+      const [speaker, line, button] = firstShiftBossLine(state.phase, state.fightWon, state.angerWin);
       root.querySelector('#firstShiftSpeaker').textContent = speaker; paintFace(speaker); root.querySelector('#firstShiftLine').textContent = line;
       if (single) bossNext.textContent = button;
     }
@@ -443,10 +513,16 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (state.phase === 'fight') {
       const hit = fightHot(now);
       state = stepFirstShift(state, { type: 'push', hit });
-      punchAt = now;
-      if (hit) { onSound('impact'); bossHitUntil = now + 320; shakeUntil = now + 120; }
+      punchAt = now; hands = swing(hands, now);
+      if (hit && angerFull(state.anger)) {
+        // 19.4 (§21): on anger the punch lands for real -- he flies back.
+        onSound('impact'); onSound('fist-hit'); bossHitUntil = now + 420; bossKnockAt = now; shakeUntil = now + 200;
+        for (let i = 0; i < 12; i++) particles.push({ x: boss.x + (Math.random() - 0.5) * 0.3, z: boss.z + (Math.random() - 0.5) * 0.3, y: 1.4 + Math.random() * 0.3, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, vy: Math.random() * 2, life: 0.4 + Math.random() * 0.3, color: rgb(255, 230, 200), size: 0.03 });
+        if (state.phase === 'fight') speech = { who: 'boss', name: 'НАЧАЛЬНИК', text: BOSS_FISTS.knocked, until: now + 1600 };
+      } else if (hit) { onSound('impact'); bossHitUntil = now + 320; shakeUntil = now + 120; }
       else { onSound('whoosh'); setTimeout(() => { if (active) { onSound('hit'); faceOuchUntil = performance.now() + 500; flashUntil = performance.now() + 140; flashColor = 'red'; shakeUntil = performance.now() + 200; bossAngryUntil = performance.now() + 380; } }, 160); }
       if (state.phase === 'fight-result') {
+        if (state.angerWin) onFlag(FIST_FLAGS.angerWin);
         // Сергей: "победишь или проиграешь, в конце это такая типа дымка, и
         // такой эх, мечты, мечты" -- hold the boss's line back behind a
         // brief haze instead of popping the dialogue box immediately.
@@ -463,10 +539,15 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       const id = topCrateId(state, target.cx, target.cz);
       if (!id) return;
       state = stepFirstShift(state, { type: 'pick', id });
+      hands = { ...hands, grabAt: now };
       onSound('pickup'); say('ЯЩИК. ТЯЖЁЛЫЙ.');
       comment('pick');
     } else if (target.kind === 'belt') {
+      const angerBefore = state.anger;
       state = stepFirstShift(state, 'drop');
+      hands = { ...hands, placeAt: now };
+      if (state.anger > angerBefore) onSound(angerFull(state.anger) ? 'anger-full' : 'anger');
+      if (state.cleanHands) onFlag(FIST_FLAGS.cleanHands);
       beltCrates.push({ x: clamp(target.cx + 0.5, SPOTS.beltDrop.x, 15.5), z: SPOTS.beltDrop.z });
       onSound('drop'); onSound('cash');
       say(state.phase === 'report' ? `+${FIRST_SHIFT_PAY} ₽ · ТРИ ГОТОВО` : `+${FIRST_SHIFT_PAY} ₽`, 2200);
@@ -482,6 +563,106 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       if (state.phase === 'done') { chip = null; startDive(now); }
     }
     renderText(); setDialogue();
+  }
+
+  // 19.4 (§21): what the fist would hit -- a person within reach and in
+  // front, else a crate or a wall straight ahead, else air.
+  function punchTarget() {
+    const p = state.player;
+    const sin = Math.sin(p.yaw), cos = Math.cos(p.yaw);
+    let best = null;
+    const consider = (who, x, z, r) => {
+      const dx = x - p.x, dz = z - p.z;
+      const fwd = dx * sin - dz * cos; const side = dx * cos + dz * sin;
+      const dist = Math.hypot(dx, dz);
+      if (fwd <= 0.05 || dist > PUNCH_REACH + r) return;
+      if (Math.abs(Math.atan2(side, fwd)) > 0.42) return;
+      if (!best || dist < best.dist) best = { who, x, z, dist };
+    };
+    for (const [id, w] of Object.entries(WORKER_SPOTS)) consider(id, w.x, w.z, 0.62);
+    if (bossPresent() && boss.mode === 'stand') consider('boss', boss.x, boss.z, 0.64);
+    if (best) return best;
+    const c = crateAt(); consider('crate', c.x, c.z, 0.42);
+    if (best) return best;
+    const hit = castCenter(map, p.x, p.z, p.yaw, PUNCH_REACH, EYE);
+    if (hit) return { who: hit.cell.kind === 'c' ? 'crate' : 'wall', dist: hit.dist, cx: hit.cx, cz: hit.cz };
+    return { who: 'air' };
+  }
+
+  function punch() {
+    if (!active || dive || talk) return;
+    const now = performance.now();
+    if (state.phase === 'fight') { if (dialogue.hidden) action(); return; }
+    if (!dialogue.hidden || state.ko || now - hands.punchAt < 240) return;
+    if (state.carrying) { say(THUD_LINES.busy, 1200); onSound('blocked'); return; }
+    if (!PUNCH_PHASES.includes(state.phase)) return;
+    const t = punchTarget();
+    hands = swing(hands, now); punchAt = now;
+    onSound('fist-swing');
+    state = stepFirstShift(state, { type: 'punch', who: t.who });
+    const lp = state.lastPunch;
+    if (!lp) return;
+    if (lp.kind === 'warn' || lp.kind === 'beat') {
+      const w = WORKER_SPOTS[lp.who];
+      onSound('fist-hit'); shakeUntil = now + 140; hitFlash[lp.who] = now + 200;
+      talkedUntil[lp.who] = Math.max(talkedUntil[lp.who] ?? 0, now + (lp.kind === 'beat' ? KO_TOTAL_MS + 400 : 2600));
+      speech = { who: lp.who, name: FIRST_SHIFT_WORKERS[lp.who].title, text: lp.line, until: now + (lp.kind === 'beat' ? 1500 : 2800) };
+      onSound('chatter');
+      if (lp.kind === 'beat') {
+        // He answers. Hard. The view goes to the floor, then black.
+        koAt = now + 260; hands = { ...hands, koAt };
+        held.clear();
+        turnTo = Math.atan2(w.x - state.player.x, -(w.z - state.player.z));
+        setTimeout(() => {
+          if (!active || !state.ko) return;
+          onSound('impact'); onSound('fist-hit'); setTimeout(() => active && onSound('collapse'), 380);
+          shakeUntil = performance.now() + 520; flashUntil = performance.now() + 260; flashColor = 'red'; faceOuchUntil = performance.now() + 1800;
+        }, 260);
+        onFlag(FIST_FLAGS.beatenBy(lp.who));
+      }
+    } else if (lp.kind === 'swat') {
+      // The boss swats you off like a fly, and laughs.
+      onSound('fist-hit'); setTimeout(() => active && onSound('hit'), 120);
+      shakeUntil = now + 300; flashUntil = now + 120; flashColor = 'white'; faceOuchUntil = now + 900; bossAngryUntil = now + 900;
+      swatAt = now; const dx = state.player.x - boss.x, dz = state.player.z - boss.z; const len = Math.hypot(dx, dz) || 1; swatDir = { x: dx / len, z: dz / len };
+      speech = { who: 'boss', name: 'НАЧАЛЬНИК', text: lp.line, until: now + 2600 };
+      onSound('chatter');
+    } else if (lp.kind === 'start') {
+      // Three crates of anger: the fight starts right here.
+      onSound('fist-hit'); shakeUntil = now + 160; bossAngryUntil = now + 900;
+      startFight(now);
+      say('НА ЗЛОСТИ!', 1600);
+    } else if (lp.kind === 'thud') {
+      onSound(t.who === 'air' ? 'whoosh' : 'fist-thud');
+      if (t.who !== 'air') shakeUntil = now + 90;
+      if (t.who === 'crate') { crateWobbleAt = now; say(THUD_LINES.crate, 1600); }
+      else if (t.who === 'wall') say(THUD_LINES.wall, 1400);
+    }
+    renderText(); setDialogue();
+  }
+
+  // The fight with the boss, from the dialogue's «ПОДРАТЬСЯ» or a punch on anger.
+  function startFight(now) {
+    fightClockStart = now; onSound('door');
+    // 18.2 (§16): before the first slam the hand already knows the rhythm.
+    lastBeat = -1;
+    speech = { who: 'me', name: 'ТЫ', text: REFLEXES.pattern.thought, until: now + 3600 };
+    onSound(REFLEXES.pattern.sound); onReflex('pattern');
+    turnTo = Math.atan2(boss.x - state.player.x, -(boss.z - state.player.z));
+  }
+
+  // Back at the spawn after a beating, someone from the hall standing over you.
+  function wakeUp(now) {
+    state = stepFirstShift(state, 'wake');
+    body = createBody(state.player.x, state.player.z); pitch = 0; turnTo = null;
+    wakeAt = now; hands = { ...createHands(now), punchSide: hands.punchSide };
+    const lp = state.lastPunch;
+    if (lp?.kind === 'wake') {
+      speech = { who: lp.who, name: FIRST_SHIFT_WORKERS[lp.who]?.title ?? 'ГОЛОС', text: lp.line, until: now + 3600 };
+      talkedUntil[lp.who] = Math.max(talkedUntil[lp.who] ?? 0, now + 3000);
+      onSound('wake'); onSound('chatter');
+    }
+    renderText();
   }
 
   // 18.2 (§16): the hand looks behind the crate by itself. A lean round its
@@ -527,6 +708,8 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   }
   function finishDive() {
     dive = null; active = false; root.hidden = true; cancelAnimationFrame(raf);
+    root.dataset.dive = '';
+    if (touchUse) touchUse.textContent = 'ВЗЯТЬ';
     if (document.pointerLockElement === canvas) document.exitPointerLock?.();
     onComplete({ delivered: state.delivered, extra: 0, player: { x: body.x, z: body.z, yaw: state.player.yaw } });
   }
@@ -571,6 +754,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   function renderText() {
     if (wallet) wallet.textContent = `НАЧИСЛЕНО · ${(state.delivered * FIRST_SHIFT_PAY).toLocaleString('ru-RU')} ₽`;
     if (state.phase === 'briefing') status.textContent = 'Начальник ждёт у стола.';
+    else if (state.ko) status.textContent = 'Тебя отделали. Лежи, отдыхай.';
     else if (state.phase === 'manual') status.textContent = state.carrying ? 'Ящик в руках, тяжёлый. Лента — за рукой 07. Положи на неё.' : `Осталось перенести: ${MANUAL_DELIVERY_TARGET - state.delivered}. Ящики — в куче слева.`;
     else if (state.phase === 'report') status.textContent = 'Три ящика на ленте. Вернись к начальнику.';
     else if (state.phase === 'confront') status.textContent = 'Выбирай: поговорить или толкнуть его.';
@@ -585,14 +769,28 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (performance.now() < nudgeUntil) status.textContent = nudgeText;
     if (dive) status.textContent = dive.after ? 'Чип в руке. Рука 07 ждёт.' : 'Чип в руке. Что-то происходит…';
     root.dataset.dive = dive ? (dive.after ? 'after' : diveStage(performance.now()).stage) : '';
-    const blocked = ['confront', 'fight', 'fight-result'].includes(state.phase) || !!talk || !!dive;
+    root.dataset.anger = String(state.anger ?? 0);
+    root.dataset.ko = String(Boolean(state.ko));
+    root.dataset.hands = fistsVisible() ? (state.carrying ? 'crate' : 'fists') : 'none';
+    if (angerEl) {
+      angerEl.hidden = !fistsVisible() || Boolean(state.ko) || ['fight', 'fight-result'].includes(state.phase) && !dialogue.hidden;
+      angerEl.dataset.level = String(state.anger ?? 0);
+      angerEl.dataset.full = String(angerFull(state.anger));
+      if (angerText) angerText.textContent = angerLabel(state.anger);
+    }
+    touchUse ??= touchUseEl();
+    if (touchUse) { const t = state.carrying ? 'ПОЛОЖИТЬ' : 'ВЗЯТЬ'; if (touchUse.textContent !== t) touchUse.textContent = t; }
+    const blocked = ['confront', 'fight', 'fight-result'].includes(state.phase) || !!talk || !!dive || !!state.ko;
     if (prompt) prompt.hidden = blocked;
     if (prompt && !blocked) {
-      let text = document.querySelector('#game')?.dataset.touch === 'true' ? 'ДЖОЙСТИК — ИДТИ · ВЕДИ ПАЛЬЦЕМ СПРАВА — СМОТРЕТЬ' : 'WASD · ИДТИ · МЫШЬ · СМОТРЕТЬ · ПРОБЕЛ · ПРЫЖОК';
+      const touch = document.querySelector('#game')?.dataset.touch === 'true';
+      let text = touch ? 'ДЖОЙСТИК — ИДТИ · ВЕДИ ПАЛЬЦЕМ СПРАВА — СМОТРЕТЬ' : 'WASD · ИДТИ · МЫШЬ · СМОТРЕТЬ · F / КЛИК · УДАР';
+      const fist = touch ? 'УДАР' : 'F';
       if (target?.kind === 'crate') text = 'E · ВЗЯТЬ ЯЩИК';
       else if (target?.kind === 'belt') text = 'E · ПОЛОЖИТЬ НА ЛЕНТУ';
-      else if (target?.kind === 'boss') text = 'E · К НАЧАЛЬНИКУ';
-      else if (target?.kind === 'worker') text = `E · ${FIRST_SHIFT_WORKERS[target.id].title}: ПОПРОСИТЬ`;
+      else if (target?.kind === 'boss') text = angerFull(state.anger) ? `E · К НАЧАЛЬНИКУ · ${fist} · НА ЗЛОСТИ` : 'E · К НАЧАЛЬНИКУ';
+      else if (target?.kind === 'worker') text = `E · ${FIRST_SHIFT_WORKERS[target.id].title}: ПОПРОСИТЬ · ${fist} · УДАРИТЬ`;
+      else if (state.carrying) text = touch ? 'НЕСИ К ЛЕНТЕ ЗА РУКОЙ 07' : 'НЕСИ К ЛЕНТЕ ЗА РУКОЙ 07 · РУКИ ЗАНЯТЫ';
       else if (target?.kind === 'peek') text = 'E · ЗАГЛЯНУТЬ ЗА ЯЩИК';
       else if (target?.kind === 'chip') text = 'E · ПОДНЯТЬ';
       prompt.textContent = text; prompt.dataset.hot = String(Boolean(target));
@@ -753,14 +951,18 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   function update(now) {
     if (!active) return;
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    const blocked = !dialogue.hidden || ['confront', 'fight', 'fight-result'].includes(state.phase) || !!dive;
+    const blocked = !dialogue.hidden || ['confront', 'fight', 'fight-result'].includes(state.phase) || !!dive || !!state.ko;
     if (blocked) held.clear();
     if (dive) updateDive(now);
+    // 19.4 (§21): the knuckle crack on spawn; a beating ends at the spawn.
+    if (!hands.cracked && now - hands.spawnAt > CRACK_AT_MS && fistsVisible()) { hands.cracked = true; onSound('knuckles'); }
+    if (state.ko && now - koAt >= KO_TOTAL_MS - 260) wakeUp(now);
+    if (now - swatAt < 320 && swatDir) { moveBody(map, body, swatDir.x * dt * 4.5, swatDir.z * dt * 4.5, { circles: circles() }); state.player.x = body.x; state.player.z = body.z; }
     const forward = (held.has('KeyW') || held.has('ArrowUp') ? 1 : 0) - (held.has('KeyS') || held.has('ArrowDown') ? 1 : 0);
     const strafe = (held.has('KeyD') ? 1 : 0) - (held.has('KeyA') ? 1 : 0);
     const turn = (held.has('ArrowRight') ? 1 : 0) - (held.has('ArrowLeft') ? 1 : 0);
     state.player.yaw = wrapAngle(state.player.yaw + turn * dt * 2.2);
-    const tilt = (held.has('KeyR') || held.has('PageUp') ? 1 : 0) - (held.has('KeyF') || held.has('PageDown') ? 1 : 0);
+    const tilt = (held.has('KeyR') || held.has('PageUp') ? 1 : 0) - (held.has('KeyV') || held.has('PageDown') ? 1 : 0);
     if (tilt) { pitch = clampPitch(pitch + tilt * dt * 1.8); manualLookAt = now; }
     if (turnTo !== null) {
       const diff = wrapAngle(turnTo - state.player.yaw);
@@ -933,10 +1135,13 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     const shake = now < shakeUntil && !reduceMotion ? (Math.random() - 0.5) * 4 : 0;
     const bob = reduceMotion ? 0 : Math.sin(walkPhase * 2) * 1.6;
     const dip = reduceMotion ? 0 : landingDip(dipImpact, (now - dipAt) / 320);
-    const viewEye = body.y + EYE - dip * 0.22;
+    // 19.4 (§21): laid out -- the view drops to the floor and tips up.
+    const kd = state.ko ? Math.min(1, Math.max(0, (now - koAt) / 640)) : 0;
+    const fallK = kd * kd;
+    const viewEye = body.y + EYE - dip * 0.22 - fallK * (EYE - 0.22);
     // 18.2: the peek behind the crate -- lean out and back, ~1.6 s.
     const lean = peek && !reduceMotion ? Math.sin(Math.min(1, (now - peek.at) / 1600) * Math.PI) : 0;
-    const cam = { x: state.player.x + (peek?.dx ?? 0) * lean, z: state.player.z + (peek?.dz ?? 0) * lean, yaw: state.player.yaw + shake * 0.004, eye: viewEye - lean * 0.25, bob: (body.grounded ? bob : 0) + shake + dip * 6, pitch: pitchShear(pitch, viewH) };
+    const cam = { x: state.player.x + (peek?.dx ?? 0) * lean, z: state.player.z + (peek?.dz ?? 0) * lean, yaw: state.player.yaw + shake * 0.004, eye: viewEye - lean * 0.25, bob: (body.grounded ? bob : 0) + shake + dip * 6, pitch: pitchShear(clampPitch(pitch + fallK * 0.35), viewH) };
 
     const sprites = [];
     const push = (s) => { if (s) sprites.push(s); };
@@ -948,6 +1153,9 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     // loops, or turned to you and waving you off.
     const person = (name, x, z, face, y = 0) => {
       const sp = sprite(`${name}_r${viewIndex(face, cam.x, cam.z, x, z)}`, x, z, y);
+      // 19.4: the one you just punched flashes.
+      const who = name.split('_')[0];
+      if (sp && now < (hitFlash[who] ?? 0)) return { ...sp, fullbright: true, glow: 1.7 };
       // 18.1: whoever E would talk to glows a little — no more pressing blind.
       const hot = sp && target && ((target.kind === 'worker' && Math.hypot(WORKER_SPOTS[target.id].x - x, WORKER_SPOTS[target.id].z - z) < 0.05) || (target.kind === 'boss' && name.startsWith('boss_')));
       return hot ? { ...sp, fullbright: true, glow: 1.3 } : sp;
@@ -969,10 +1177,15 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       if (boss.mode === 'bang') pose = boss.t > 0.3 && boss.t < 0.8 ? 'bang' : 'angry';
       if (boss.mode === 'walk') pose = `walk${Math.floor(boss.t * 6) % 4}`;
       const sway = state.phase === 'fight' ? Math.sin(now * 0.011) * 0.08 : 0;
-      push(person(`boss_${pose}`, boss.x + sway, boss.z, boss.facing));
+      // 19.4 (§21): on anger a landed punch knocks him back a step.
+      const kk = (now - bossKnockAt) / 450;
+      let kx = 0, kz = 0;
+      if (kk >= 0 && kk < 1) { const dx = boss.x - state.player.x, dz = boss.z - state.player.z; const len = Math.hypot(dx, dz) || 1; const off = Math.sin(kk * Math.PI) * 0.6; kx = dx / len * off; kz = dz / len * off; }
+      push(person(`boss_${pose}`, boss.x + sway + kx, boss.z + kz, boss.facing));
     }
     const lone = crateAt();
-    push(sprite('crate3q', lone.x, lone.z, 0, target?.kind === 'peek' ? { fullbright: true, glow: 1.15 } : {}));
+    const wob = now - crateWobbleAt < 500 ? Math.sin((now - crateWobbleAt) / 35) * 0.04 * (1 - (now - crateWobbleAt) / 500) : 0;
+    push(sprite('crate3q', lone.x + wob, lone.z, 0, target?.kind === 'peek' ? { fullbright: true, glow: 1.15 } : {}));
     if (chip) push(sprite('chip', chip.x, chip.z, chip.y, { ppm: 48, fullbright: true, glow: 1.2 }));
     for (const c of beltCrates) push(sprite('crate3q', c.x, c.z, BELT_H));
 
@@ -986,18 +1199,11 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
 
     const view = renderer.render({ map, cam, lightmap, dynLights, sprites, particles, time: t, viewH });
 
-    // Weapon layer: the carried crate, or fists in the fight.
-    if (state.carrying) {
-      const img = atlas.carry;
-      renderer.blit(img, Math.round(W / 2 - img.w / 2), viewH - 70 + Math.round(bob * 1.5), { clipBottom: viewH });
-    } else if (state.phase === 'fight' || state.phase === 'fight-result') {
-      const e = now - punchAt;
-      let name = 'punga0', fx = W / 2 + 12, fy = viewH - 39;
-      if (e < 70) { name = 'pungb0'; fx = W / 2 - 110; fy = viewH - 39; }
-      else if (e < 160) { name = 'pungc0'; fx = W / 2 - 60; fy = viewH - 75; }
-      else if (e < 260) { name = 'pungd0'; fx = W / 2 - 96; fy = viewH - 88; }
-      else if (e < 340) { name = 'pungc0'; fx = W / 2 - 60; fy = viewH - 75; }
-      renderer.blit(atlas[name], Math.round(fx), Math.round(fy + bob), { clipBottom: viewH });
+    // Weapon layer (19.4, §21): the two fists from the first frame, or the
+    // crate in both hands; they glow as the anger fills.
+    if (fistsVisible()) {
+      const pose = handsPose(hands, now, { W, viewH, walkPhase, carrying: Boolean(state.carrying), anger: state.anger ?? 0, full: ANGER_FULL, reduceMotion, ko: Boolean(state.ko) });
+      drawHands(renderer, atlas, pose, { W, viewH });
     }
 
     // Screen effects: smack flash, miss flash, the daydream haze.
@@ -1010,6 +1216,12 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
       }
     };
     if (now < flashUntil) blend(flashColor === 'red' ? [200, 20, 10] : [255, 255, 255], flashColor === 'red' ? 0.35 : 0.5);
+    // 19.4 (§21): the blackout after a beating, and coming to at the spawn.
+    const black = state.ko ? Math.min(1, Math.max(0, (now - koAt - 640) / 520)) : Math.max(0, 1 - (now - wakeAt) / 900);
+    if (black > 0) {
+      blend([0, 0, 0], black);
+      if (state.ko && black > 0.7) headline(buf, 'ОГРЁБ.', Math.round(viewH / 2 - 7), rgb(200, 40, 30), 2);
+    }
     if (now < daydreamUntil) {
       const k = Math.min(1, 1 - (daydreamUntil - now) / 1500);
       blend([214, 226, 255], Math.sin(k * Math.PI) * 0.6);
@@ -1154,8 +1366,10 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
 
   function keyDown(event) {
     if (!active) return;
-    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyR', 'KeyF', 'PageUp', 'PageDown'].includes(event.code)) { held.add(event.code); event.preventDefault(); }
+    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyR', 'KeyV', 'PageUp', 'PageDown'].includes(event.code)) { held.add(event.code); event.preventDefault(); }
     if (event.repeat) return;
+    // 19.4 (§21): F punches (the phone's УДАР sends F too).
+    if (event.code === 'KeyF') { event.preventDefault(); if (!(dive && !dive.after) && !talk) punch(); return; }
     if (dive && !dive.after) {
       if (['Space', 'KeyE', 'Enter', 'Escape'].includes(event.code)) { event.preventDefault(); skipDive(); }
       return;
@@ -1169,7 +1383,11 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (state.phase === 'confront' && event.code === 'Digit1') { event.preventDefault(); bossTalk?.click(); return; }
     if (state.phase === 'confront' && event.code === 'Digit2') { event.preventDefault(); bossFightBtn?.click(); return; }
     if (!dialogue.hidden) {
-      if (['Space', 'KeyE', 'Enter'].includes(event.code) && !bossNext.hidden && (choices?.hidden ?? true) && performance.now() - dialogueOpenedAt > 450) {
+      // 19.4: a key pressed BEFORE this dialogue opened (a Space meant to
+      // skip the dive, delivered late by a busy frame) must not confirm it.
+      // event.timeStamp is when the key was pressed, not when we got it.
+      const pressedBefore = event.timeStamp > 0 && event.timeStamp < dialogueOpenedAt + 120;
+      if (['Space', 'KeyE', 'Enter'].includes(event.code) && !bossNext.hidden && (choices?.hidden ?? true) && performance.now() - dialogueOpenedAt > 450 && !pressedBefore) {
         event.preventDefault(); bossNext.click();
       }
       return;
@@ -1196,6 +1414,8 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   }
   canvas?.addEventListener('click', () => {
     if (active && dive && !dive.after) { skipDive(); return; }
+    // 19.4 (§21): with the mouse captured, a click is a punch.
+    if (active && dialogue.hidden && document.pointerLockElement === canvas) { punch(); return; }
     if (active && dialogue.hidden) canvas.requestPointerLock?.();
   });
   window.addEventListener('keydown', keyDown, { passive: false }); window.addEventListener('keyup', keyUp); window.addEventListener('mousemove', mouseMove);
@@ -1217,12 +1437,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   bossFightBtn?.addEventListener('click', () => {
     if (talk) { ask('fix'); return; }
     if (state.phase !== 'confront') return;
-    state = stepFirstShift(state, 'fight-start'); fightClockStart = performance.now(); onSound('door');
-    // 18.2 (§16): before the first slam the hand already knows the rhythm.
-    lastBeat = -1;
-    speech = { who: 'me', name: 'ТЫ', text: REFLEXES.pattern.thought, until: performance.now() + 3600 };
-    onSound(REFLEXES.pattern.sound); onReflex('pattern');
-    turnTo = Math.atan2(boss.x - state.player.x, -(boss.z - state.player.z));
+    state = stepFirstShift(state, 'fight-start'); startFight(performance.now());
     setDialogue(); renderText(); canvas?.focus({ preventScroll: true }); canvas?.requestPointerLock?.();
   });
   window.addEventListener('resize', resize);
@@ -1231,12 +1446,13 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     state = createFirstShiftState(); active = true; root.hidden = false;
     idleSeconds = 0; idleStage = 0; nudgeUntil = 0; flashUntil = 0; daydreamUntil = 0; talk = null; message = ''; messageUntil = 0;
     boss = { x: SPOTS.boss.x, z: SPOTS.boss.z, mode: 'stand', t: 0, leg: 0, facing: Math.PI }; bossPath = SPOTS.bossExit; chip = null; door = 0; doorWanted = 0; resetFacing();
+    hands = createHands(performance.now()); koAt = -1e9; wakeAt = -1e9; bossKnockAt = -1e9; crateWobbleAt = -1e9; swatAt = -1e9; swatDir = null;
     beltCrates.length = 0; particles.length = 0; turnTo = null; dive = null; peek = null; lastBeat = -1; slamAt = -1e9; slipScenes.clear(); clearTimeout(slipTimer); manualSince = 0;
     body = createBody(state.player.x, state.player.z); pitch = 0; dipAt = -1e9; speech = null; chatter.reset();
     diveFx.load();
     resize(); setDialogue(); renderText(); last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(update); bossNext.focus({ preventScroll: true });
   }
-  function close() { active = false; dive = null; root.hidden = true; cancelAnimationFrame(raf); held.clear(); if (document.pointerLockElement === canvas) document.exitPointerLock?.(); }
+  function close() { if (touchUse) touchUse.textContent = 'ВЗЯТЬ'; active = false; dive = null; root.hidden = true; cancelAnimationFrame(raf); held.clear(); if (document.pointerLockElement === canvas) document.exitPointerLock?.(); }
   // Test/debug hook: lets the screenshot script stand the player somewhere.
   function debug(patch = {}) {
     if (patch.player?.yaw !== undefined) turnTo = null;
@@ -1250,7 +1466,9 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (patch.peek) peekBehind(performance.now());
     if (patch.door !== undefined) { door = patch.door; doorWanted = patch.door; }
     if (patch.talk !== undefined) { talk = patch.talk; }
-    if (patch.punch) punchAt = performance.now();
+    if (patch.punch) { punchAt = performance.now(); hands = swing(hands, punchAt); }
+    // 19.4: punch / fistPunch -- throw a real punch at whatever is in front.
+    if (patch.fist) punch();
     if (patch.holdBeat !== undefined) { holdBeat = patch.holdBeat; lastBeat = -1; }
     if (patch.fightClock) { fightClockStart = performance.now() - (Number(patch.fightClock) || 0); lastBeat = -1; }
     // dive: milliseconds into the dive (null ends it), for screenshots.

@@ -44,7 +44,7 @@ import { markLockReward } from './locks/rewards.js';
 import { engineProgress, eraFromProgress, engineStatus, buyUpgrade, levelFromProgress } from './engine-eras.js';
 import { levelFromQuery } from './engine-ladder.js';
 import { getCampusRank } from './campus-profile.js?v=campus-profile-7';
-import { createFirstShift } from './first-shift.js?v=first-shift-182';
+import { createFirstShift } from './first-shift.js?v=first-shift-194';
 import { REFLEXES, gamerLine, hearMeaning, knowledgeFrom, homeChanges, saveSnapshot, saveReport, saveWords, loadRecord, saveRecord, mark } from './gamer-reflex.js';
 import { createHourDesk, ruleSentence } from './hour-desk.js';
 import { showSeam, confirmInPage } from './hour-ui.js';
@@ -56,6 +56,7 @@ import { drawFace, faceIdFor } from './faces.js';
 import { masteryEvent, listenForSkills, pythonioWay } from './mastery.js';
 import { consoleGreeting, sideCheck, impossibleReasons, isAutomationContext, duelLooksAutomated, isHonestSpeedrun, MESSAGES } from './tamper.js';
 import { evaluateBadges, earnBadge, badgeById, badgeGrid, RARITY } from './achievements.js';
+import { beatenByAll, FIST_FLAGS } from './fists.js';
 import { createHackPolygon } from './hack-ui.js';
 import { pythonioDone } from './pythonio-bridge.js';
 import { tasterFinished } from './career-tasters.js';
@@ -197,13 +198,17 @@ const factoryView = createFactoryView({ onSound: name => audio.play(name), onFla
 const lookKeys = new Set();
 window.addEventListener('keydown', (event) => {
   if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) return;
-  if (['KeyR', 'KeyF', 'PageUp', 'PageDown'].includes(event.code)) lookKeys.add(event.code);
+  if (['KeyR', 'KeyV', 'PageUp', 'PageDown'].includes(event.code)) lookKeys.add(event.code);
+  // 19.4 (§21): the fists in the hall -- F swings (a thud, a word from whoever you hit).
+  if (event.code === 'KeyF' && !event.repeat && document.querySelector('#firstShift')?.hidden && firstPersonScene() && firstPersonActive()) { event.preventDefault(); factoryView.punch(state); }
 });
 window.addEventListener('keyup', (event) => lookKeys.delete(event.code));
 window.addEventListener('blur', () => lookKeys.clear());
 onReleaseKeys(() => lookKeys.clear());
 const firstShift = createFirstShift(document.querySelector('#firstShift'), {
-  onFlag: (name) => setFlag(name),
+  // 19.4 (§21): fist deeds (beaten by each worker, boss on anger, clean
+  // hands) are flags too; a new one may earn a badge right away.
+  onFlag: (name) => { setFlag(name); if (/^(beatenBy-|angerBossWin|cleanHands)/.test(name)) maybeEarnBadges(); },
   onSound: name => audio.play(name),
   // 18.2 (§16): the hand remembered something; one gamer slip per scene.
   onReflex: (id) => reflexFired(id),
@@ -958,6 +963,7 @@ function badgeFacts() {
     tasters: Object.fromEntries(['security', 'web', 'ai', 'systems', 'lowlevel'].map((id) => [id, tasterFinished(campusProfile, id)])),
     reflexes: { save: Boolean(rr.reflexes?.save), crate: Boolean(rr.reflexes?.crate), pattern: Boolean(rr.reflexes?.pattern) },
     meaningHeard: Object.values(rr.heard ?? {}).some((l) => Number(l) > 0),
+    fists: { beatenAll: beatenByAll(flags), angerWin: Boolean(flags[FIST_FLAGS.angerWin]), cleanHands: Boolean(flags[FIST_FLAGS.cleanHands]) },
     classJoined: Boolean(currentPlayer()?.classId || flags.classJoined),
     cardPublished: Boolean(profileStore.account?.showCard?.()),
   };
@@ -2164,7 +2170,7 @@ function frame(now) {
   if (firstPersonScene()) {
     // The hall owns walking: walls, crates, jumping. model.js keeps the rules.
     const paused = !firstPersonActive();
-    const tilt = (lookKeys.has('KeyR') || lookKeys.has('PageUp') ? 1 : 0) - (lookKeys.has('KeyF') || lookKeys.has('PageDown') ? 1 : 0);
+    const tilt = (lookKeys.has('KeyR') || lookKeys.has('PageUp') ? 1 : 0) - (lookKeys.has('KeyV') || lookKeys.has('PageDown') ? 1 : 0);
     if (!paused && tilt) factoryView.tilt(tilt, frameDt);
     const pos = factoryView.step(state, frameDt, { forward: -(input.state.moveY ?? 0), strafe: input.state.moveX ?? 0, yaw: warehouseYaw, paused });
     state = { ...state, player: { ...state.player, x: pos.x, y: pos.y } };
@@ -2499,7 +2505,7 @@ if (isLocal) {
       }
       requestAnimationFrame(count);
     }),
-    hall: { debug: (patch) => { const pos = factoryView.debug(patch); state = { ...state, player: { ...state.player, ...pos } }; return pos; }, body: () => factoryView.body(), engine: () => factoryView.engine(), speech: () => factoryView.speech(), setYaw: (yaw) => { warehouseYaw = yaw; } },
+    hall: { debug: (patch) => { const pos = factoryView.debug(patch); state = { ...state, player: { ...state.player, ...pos } }; return pos; }, body: () => factoryView.body(), engine: () => factoryView.engine(), speech: () => factoryView.speech(), setYaw: (yaw) => { warehouseYaw = yaw; }, punch: () => factoryView.punch(state), hands: () => factoryView.hands() },
     ring: { open: (view = 'card', opts = {}) => openRing(view, opts), close: () => ring.close(), state: () => ring.state(), fast: (on = true) => ring.fast(on), start: (opts) => ring.start(opts), snapshot: () => profileSnapshot(campusProfile, { player: currentPlayer() }), store: () => profileStore.kind, account: () => profileStore.account?.status?.() ?? null, sync: () => syncAccountOnce() },
     world: { open: (level = 'garage', opts = {}) => fpWorld.open(level, opts), debug: (patch) => fpWorld.debug(patch), state: () => fpWorld.state(), surface: (r) => careerWorlds.surface(r), engine: () => engineStatus(engineNow()) },
     pythonio: { open: (opts) => pythonio.open(opts), close: () => pythonio.close(), active: () => pythonio.active, ready: () => pythonio.ready },
@@ -2569,6 +2575,13 @@ const touchControls = createTouchControls(document.querySelector('#touchPad'), {
     const fs = document.querySelector('#firstShift');
     if (!fs.hidden) return document.querySelector('#firstShiftDialogue').hidden && fs.dataset.dive !== 'enter' && !['confront', 'fight-result', 'payday', 'briefing'].includes(fs.dataset.phase);
     if (fpWorldEl && !fpWorldEl.hidden) return true;
+    return firstPersonActive();
+  },
+  // 19.4 (§21): УДАР in Shift 1 and in the hall, not at home or in the garage.
+  showPunch: () => {
+    const fs = document.querySelector('#firstShift');
+    if (!fs.hidden) return fs.dataset.hands === 'fists' || fs.dataset.phase === 'fight';
+    if (fpWorldEl && !fpWorldEl.hidden) return false;
     return firstPersonActive();
   },
 });
