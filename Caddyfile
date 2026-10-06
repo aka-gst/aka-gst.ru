@@ -418,6 +418,26 @@ aka-gst.ru, www.aka-gst.ru {
     }
   }
 
+  # AshenNote — одноразовые шифрованные заметки (слово Сергея 05–06.10.2026). Контейнер ashennote-app
+  # (/opt/zakriva/ashennote, сеть zakriva-net). Вход /ashennote/ (префикс срезается), а ссылки на заметки,
+  # статика и API у приложения от корня (/n/<id>, /static/*, /api/v1/*) — проксируются как есть.
+  # Админ-API и метрики наружу не отдаются (404), как в deploy/Caddyfile самого AshenNote.
+  @ashennote_zakryto path /api/v1/admin/* /metrics
+  respond @ashennote_zakryto 404
+  redir /ashennote /ashennote/ 308
+  handle_path /ashennote/* {
+    request_body {
+      max_size 1600000
+    }
+    reverse_proxy ashennote-app:8000
+  }
+  @ashennote_koren path /n/* /static/* /api/v1/*
+  handle @ashennote_koren {
+    request_body {
+      max_size 1600000
+    }
+    reverse_proxy ashennote-app:8000
+  }
   # Booking is a separate service, not static content: the prefix is stripped
   # so V2 can keep its own small application routes and SQLite data volume.
   redir /psy-admin/booking /psy-admin/booking/ 308
