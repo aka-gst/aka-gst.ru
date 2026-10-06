@@ -8,7 +8,7 @@ execFileSync(process.execPath, ['build.mjs'], { stdio: 'pipe' });
 const put = JSON.parse(readFileSync('data/put.json', 'utf8'));
 const home = readFileSync('index.html', 'utf8');
 
-test('главная показывает одну полноширинную сцену Пути перед двумя проектами', () => {
+test('главная показывает одну полноширинную сцену Пути перед двумя проектами', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const sceneStart = home.indexOf('<article class="work-path"');
   const duetStart = home.indexOf('<div class="work-duet">');
 
@@ -18,7 +18,7 @@ test('главная показывает одну полноширинную с
   assert.doesNotMatch(home, /class="work-put\b/, 'старая вложенная карточка Пути осталась в duet');
 });
 
-test('семь точек маршрута приходят из data/put.json в исходном порядке', () => {
+test('семь точек маршрута приходят из data/put.json в исходном порядке', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   assert.equal(put.chapters.length, 7, 'каноническая история должна содержать семь глав');
 
   const ids = [...home.matchAll(/data-work-path-chapter="([^"]+)"/g)].map((match) => match[1]);
@@ -28,7 +28,7 @@ test('семь точек маршрута приходят из data/put.json �
   }
 });
 
-test('сцена использует утверждённый тезис, один CTA и размеренный реальный кадр', () => {
+test('сцена использует утверждённый тезис, один CTA и размеренный реальный кадр', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const visibleThesis = put.subtitle.replace(/\.$/, '');
   assert.match(home, new RegExp(`<p class="work-path-thesis">${visibleThesis.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</p>`));
   assert.match(home, /<a class="work-path-cta" href="\/put\/comic\/">Комикс: как я дошёл до жизни такой/);
@@ -37,7 +37,7 @@ test('сцена использует утверждённый тезис, од�
   assert.match(home, /<span>желание<\/span><span>ошибка<\/span><span>проверка<\/span><span>следующая вещь<\/span>/);
 });
 
-test('homepage-only стиль не меняет generated страницы рассказов', () => {
+test('homepage-only стиль не меняет generated страницы рассказов', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   assert.match(home, /<link rel="stylesheet" href="\/assets\/work-path\.css\?v=[0-9a-f]+">/);
   assert.doesNotMatch(readFileSync('rasskazy/index.html', 'utf8'), /work-path\.css/);
 });

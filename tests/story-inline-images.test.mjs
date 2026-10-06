@@ -23,7 +23,7 @@ const stories = book.сборники.flatMap((collection) =>
   collection.stories.map((story) => ({ collection, story }))
 );
 
-test('inline reader reuses the effective image and accessible alt from every standalone story page', () => {
+test('inline reader reuses the effective image and accessible alt from every standalone story page', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   assert.equal(stories.length, 23, 'проверка должна охватывать все рассказы');
 
   for (const { collection, story } of stories) {

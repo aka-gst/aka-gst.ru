@@ -1,0 +1,68 @@
+/* 19.3 · «Взломай меня» polygon overlay (canon §20). One overlay, no page
+   scroll at 1280×800 and 375×812, nothing under 14px, QueQuest's look. */
+.hk{--h-gold:var(--q-gold,#ffc857);--h-cyan:var(--q-cyan,#64e9ff);--h-red:var(--q-red,#ff5a52);--h-green:#8ff0a6;--h-line:var(--q-line,#ffffff1f);--h-panel:#0b1013;--h-text:var(--q-text,#eef1ed);--h-dim:var(--q-dim,#a9b3b0);
+  position:fixed;inset:0;z-index:216;display:flex;flex-direction:column;gap:10px;padding:12px clamp(12px,2.4vw,32px) calc(12px + var(--safe-bottom,0px));background:linear-gradient(180deg,#0b141a,#05080a);color:var(--h-text);font:15px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;box-sizing:border-box}
+.hk[hidden]{display:none}
+.hk *{box-sizing:border-box}
+.hk button{font:inherit;color:inherit;cursor:pointer}
+.hk__top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex:0 0 auto}
+.hk__top small{display:block;color:var(--h-gold);font:800 14px/1.2 ui-monospace,monospace;letter-spacing:.08em}
+.hk__top h2{margin:2px 0 0;font:900 clamp(20px,2.4vw,28px)/1.1 system-ui,sans-serif;color:#fff}
+.hk__actions{display:flex;gap:8px;align-items:center}
+.hk__close,.hk__back{min-height:44px;padding:0 14px;border:1px solid var(--h-line);border-radius:8px;background:#0f1519;font-weight:800;font-size:15px;white-space:nowrap}
+.hk__close{min-width:44px;font-size:24px;padding:0}
+.hk__body{flex:1 1 auto;min-height:0;width:100%;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.hk-intro,.hk-ethics__win{margin:0;padding:8px 12px;border:1px solid var(--h-line);border-radius:10px;background:#0e1620;font-size:15px}
+.hk-intro b{color:var(--h-gold)}
+.hk-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px}
+.hk-flags{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0}
+.hk-flags button{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:6px 10px;border:1px solid var(--h-line);border-radius:10px;background:var(--h-panel);text-align:left}
+.hk-flags button[aria-pressed="true"]{border-color:var(--h-cyan);background:#0f1a1f}
+.hk-flags button[data-done="true"] b{color:var(--h-green)}
+.hk-flags b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#161d21;color:var(--h-cyan);font:900 15px ui-monospace,monospace}
+.hk-flags span{font-size:15px;font-weight:700}
+.hk-stage{min-height:0;overflow:auto}
+.hk-flag{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;height:100%}
+.hk-flag__sys,.hk-flag__tools{border:1px solid var(--h-line);border-radius:12px;background:var(--h-panel);padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto}
+.hk-flag__tools b{color:var(--h-gold);font:800 14px ui-monospace,monospace;letter-spacing:.06em}
+.hk-flag__tools p{margin:0;font-size:14px;color:#c8d1ce}
+.hk-shop h4{margin:0 0 4px;font:900 18px system-ui,sans-serif;color:#fff}
+.hk-shop p,.hk-note{margin:0;font-size:15px;color:#c8d1ce}
+.hk-shop label{display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--h-dim)}
+.hk input,.hk textarea{min-height:40px;padding:6px 10px;border:1px solid var(--h-line);border-radius:8px;background:#060a0c;color:#fff;font:15px ui-monospace,monospace}
+.hk textarea{font-family:system-ui,sans-serif}
+.hk code{font:14px ui-monospace,monospace;color:var(--h-cyan);word-break:break-all}
+.hk-go{min-height:44px;padding:8px 14px;border:1px solid var(--h-cyan);border-radius:8px;background:#0b1316;color:var(--h-cyan);font:800 15px system-ui,sans-serif;letter-spacing:.03em}
+.hk-tool{align-self:flex-start;min-height:40px;padding:6px 12px;border:1px dashed var(--h-gold);border-radius:8px;background:#17130a;color:var(--h-gold);font:800 14px system-ui,sans-serif}
+.hk-admin{min-height:44px;padding:8px 14px;border:1px solid var(--h-line);border-radius:8px;background:#20242c;color:#9aa4a1;font:800 15px system-ui,sans-serif}
+.hk-admin:not([disabled]){border-color:var(--h-red);color:#fff;background:#3a1416}
+.hk-msg{margin:0;font-size:14px;color:var(--h-gold);min-height:18px}
+.hk-lesson{margin-top:auto;padding:8px 10px;border:1px solid #8ff0a655;border-radius:8px;background:#0d1a12}
+.hk-lesson b{color:var(--h-green)}
+.hk-lesson p{margin:3px 0 0;font-size:14px;color:#cfe8d6}
+.hk-def{color:#a9b3b0!important}
+.hk-nav{display:flex;gap:10px;align-items:center;flex:0 0 auto;flex-wrap:wrap}
+.hk-nav span{font-size:15px;color:var(--h-gold);font-weight:800}
+.hk-link{min-height:40px;padding:4px 12px;border:1px solid var(--h-line);border-radius:8px;background:#0f1519;color:var(--h-cyan);font:800 14px system-ui,sans-serif}
+.hk-ethics ul,.hk-hall__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0}
+.hk-ethics li{padding:8px 12px;border-left:3px solid var(--h-gold);background:#0e1620;border-radius:0 8px 8px 0;font-size:15px}
+.hk-ethics{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
+.hk-report,.hk-hall{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto}
+.hk-report label,.hk-hall__add{display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--h-dim)}
+.hk-report__out{margin:0;padding:10px;border:1px solid var(--h-line);border-radius:8px;background:#060a0c;color:#cfe8d6;font:13.5px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word}
+.hk-report__row{display:flex;gap:10px;align-items:center}
+.hk-report__row button{min-height:40px;padding:4px 12px;border:1px solid var(--h-cyan);border-radius:8px;background:#0b1316;color:var(--h-cyan);font:800 14px system-ui,sans-serif}
+.hk-report__row span{font-size:14px;color:var(--h-green)}
+.hk-hall__list li{display:flex;justify-content:space-between;gap:10px;padding:6px 12px;border:1px solid var(--h-line);border-radius:8px;background:var(--h-panel);font-size:15px}
+.hk-hall__list b{color:var(--h-gold)}
+.hk-hall__list span{color:var(--h-dim);font-size:14px;text-align:right}
+
+@media (max-width:760px){
+  .hk{padding:8px 16px calc(8px + var(--safe-bottom,0px));gap:6px}
+  .hk__top h2{font-size:20px}
+  .hk-grid{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .hk-flags{flex-direction:row;overflow-x:auto;padding-bottom:2px}
+  .hk-flags button{min-width:150px}
+  .hk-flag{grid-template-columns:1fr;grid-template-rows:auto auto;overflow:auto}
+  .hk__back{font-size:14px;padding:0 10px}
+}

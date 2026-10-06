@@ -29,6 +29,7 @@
 import { fromAscii } from './level.js';
 import { SYSTEMIC_ROOM } from './systemic-room.js';
 import { EVGENY_SANDBOX } from './evgeny-sandbox.js';
+import { OPERATION_FORK } from './operation-fork.js';
 
 const FLOORS = [
   {
@@ -232,4 +233,4 @@ export const CAMPAIGN = [EVGENY_SANDBOX, ...FLOORS.map((floor) => {
      не несёт, и чужой этаж по ссылке никогда не станет обучалкой. */
   level.tutorial = Boolean(floor.tutorial);
   return level;
-}), SYSTEMIC_ROOM];
+}), SYSTEMIC_ROOM, OPERATION_FORK];

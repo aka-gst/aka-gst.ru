@@ -16,20 +16,23 @@ const рядом = (path) => new URL(`../../${path}`, import.meta.url);
 // ровно один раз: переименует папку — правится одна строка.
 const ОБЩАЯ = 'Zakriva';
 const site = (path) => readFileSync(тут(path), 'utf8');
-const read = (path) => readFileSync(рядом(path), 'utf8');
+const read = (path) => внутри(path); // те же места поиска, что и у «внутри»
 // Игры переезжают из общей папки в dev/ по одной: neon-lines уехал
 // 31 августа, и пять проверок разом покраснели на несуществующем пути.
 // Поэтому ищем в обоих местах, а не в одном: тест должен падать, когда
 // сломана игра, а не когда её перенесли.
+// 05.10.2026: репозитории разложены по ~/dev/_sites, ~/dev/_games, ~/dev/_progs — сайт теперь в _sites,
+// игры в _games; ищем и там (от tests/ это ../../../_games), иначе восемь проверок красные на переезде.
+const дев = (path) => new URL(`../../../${path}`, import.meta.url);
 const внутри = (path) => {
-  for (const где of [рядом(path), рядом(`${ОБЩАЯ}/${path}`)]) {
+  for (const где of [рядом(path), рядом(`${ОБЩАЯ}/${path}`), дев(`_games/${path}`), дев(`_progs/${path}`), дев(path)]) {
     try {
       return readFileSync(где, 'utf8');
     } catch (e) {
       if (e.code !== 'ENOENT') throw e;
     }
   }
-  throw new Error(`не найдено ни в dev/, ни в ${ОБЩАЯ}/: ${path}`);
+  throw new Error(`не найдено ни в dev/, ни в ${ОБЩАЯ}/, ни в dev/_games|_progs: ${path}`);
 };
 const json = (path) => JSON.parse(site(path));
 
@@ -48,7 +51,7 @@ test('портфолио адаптируется под узкий экран �
   assert.equal((css.match(/max-width: var\(--maxw\)/g) || []).length, 3);
 });
 
-test('две оболочки переключаются одним атрибутом и не показываются вместе', () => {
+test('две оболочки переключаются одним атрибутом и не показываются вместе', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const css = site('assets/site.css');
   const html = site('index.html');
   assert.match(css, /\.panel \{ display: none; \}/);
@@ -70,7 +73,7 @@ test('шапка не расходует место на тестовый пул
   assert.match(html, /href="\/en\/"/);
 });
 
-test('каждый проект из базы попадает на страницу', () => {
+test('каждый проект из базы попадает на страницу', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const html = site('index.html');
   const { projects } = json('data/projects.json');
   assert.ok(projects.length >= 14, `проектов в базе: ${projects.length}`);
@@ -82,7 +85,7 @@ test('каждый проект из базы попадает на страни
   }
 });
 
-test('рабочие карточки и вкладки практикумов ведут к своим проектам', () => {
+test('рабочие карточки и вкладки практикумов ведут к своим проектам', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const html = site('index.html');
   const { projects } = json('data/projects.json');
   // Кликают по названию раньше, чем ищут строку со ссылками внизу.
@@ -115,7 +118,7 @@ test('рабочие карточки и вкладки практикумов �
   }
 });
 
-test('первый экран берёт число проверок из фида CI, не превращая его в панель метрик', () => {
+test('первый экран берёт число проверок из фида CI, не превращая его в панель метрик', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const html = site('index.html');
   const feed = json('data/qa-metrics.json');
   assert.equal(feed.schema, 'aka-gst.qa-metrics/1');
@@ -155,7 +158,7 @@ const imageSize = bytes => {
   throw new Error('размер картинки не прочитан');
 };
 
-test('снимки экрана лежат на месте, подписаны и не двигают вёрстку', () => {
+test('снимки экрана лежат на месте, подписаны и не двигают вёрстку', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const db = json('data/projects.json');
   const html = site('index.html');
   // Снимки живут в двух базах: у проектов и в строках опыта (там лежит
@@ -252,7 +255,7 @@ test('снимки экрана лежат на месте, подписаны �
   }
 });
 
-test('ролик не грузится при загрузке страницы, а только когда до него дошли', () => {
+test('ролик не грузится при загрузке страницы, а только когда до него дошли', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const html = site('index.html');
   const tags = html.match(/<video[^>]*>/g) || [];
   // Ролик есть не у каждой игры — как и кадр у «Одного удара». Проверяем не
@@ -348,7 +351,20 @@ test('боковое оглавление явно разделяет три с�
   assert.match(правилоЗаголовка, /border-bottom:\s*1px solid var\(--rule\)/);
   assert.match(css, /\.reader-side-group:nth-child\(2\)\s*\{[^}]*--group-accent:\s*var\(--accent-read-alt\)/);
   assert.match(css, /\.reader-side-group:nth-child\(3\)\s*\{[^}]*--group-accent:\s*var\(--accent-read-third\)/);
-  assert.match(css, /--accent-read:\s*#ff72b8/, 'отдельная читалка должна быть в палитре раздела рассказов');
+  // С 02.10.2026 «палитра раздела рассказов» — это раздел «Рассказы» новой
+  // главной (правка Сергея №14: «в том же странном цвете, не в духе нашего
+  // нового сайта»). Акцент берётся из .page-stories в site.css, корешки — из
+  // акцентов её разделов; прежней ночной палитры в читалке быть не должно.
+  const siteCss = site('site.css');
+  assert.match(css, /\.reader\s*\{[^}]*--accent-read:\s*var\(--accent\)/, 'акцент читалки — акцент раздела «Рассказы» новой главной');
+  assert.match(page, /<body class="reader page-stories">/, 'страница рассказа должна быть в разделе «Рассказы» новой главной');
+  assert.match(siteCss, /\.page-stories\{--accent:#[0-9a-f]{6}\}/);
+  for (const корешок of css.match(/--accent-read-(?:alt|third):\s*#[0-9a-f]{6}/g).slice(0, 2)) {
+    assert.ok(siteCss.includes(корешок.split(/:\s*/)[1]), `${корешок}: корешок не из палитры новой главной`);
+  }
+  for (const старый of ['#ff72b8', '#a77bff', '#70e0b1', '#0b0911', '#15101d', '#f0ebf3', '#352c46', '#aaa3b3']) {
+    assert.ok(!css.toLowerCase().includes(старый), `в читалке осталась старая ночная палитра: ${старый}`);
+  }
   assert.match(css, /html\[data-ground="paper"\] \.reader\s*\{[^}]*--accent-read-alt:\s*#6842a4[^}]*--accent-read-third:\s*#1f7658/s,
     'у трёх корешков должны оставаться контрастные варианты на бумажном фоне');
 
@@ -362,7 +378,7 @@ test('боковое оглавление явно разделяет три с�
   assert.equal((старыйHtml.match(/class="reader-side-meta"/g) || []).length, 0);
 });
 
-test('на главной обложка раскрывает один сборник, затем рассказ', () => {
+test('на главной обложка раскрывает один сборник, затем рассказ', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const html = site('index.html');
   const js = site('assets/app.js');
   const css = site('assets/site.css');
@@ -492,7 +508,7 @@ test('единое меню и форма имени используются в
   // чужое устройство — нет.
 });
 
-test('игровые названия и анимации на месте', () => {
+test('игровые названия и анимации на месте', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); карточки игр на index.html больше нет, витрина игр — games.html по списку Сергея (content-policy.mjs)' }, () => {
   // Карточка КНБ на сайте теперь называется полным именем прототипа,
   // а не «КНБ 2»: слаг лидерборда knb-2 при этом не менялся.
   const html = site('index.html');
@@ -563,7 +579,7 @@ test('поддерживаемые телефоны получают такти�
   assert.match(read('bitva-stihiy/src/audio.js'), /navigator\.vibrate/);
 });
 
-test('Орёл-решка подключена к сайту, аналитике и глобальному топу', () => {
+test('Орёл-решка подключена к сайту, аналитике и глобальному топу', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); карточки игр на index.html больше нет, витрина игр — games.html по списку Сергея (content-policy.mjs)' }, () => {
   const home = site('index.html');
   const game = read('orel-reshka/orel-reshka.html');
   assert.match(home, /href="\/coin\/"/);

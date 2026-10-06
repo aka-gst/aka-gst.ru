@@ -42,6 +42,13 @@ done
 # часов. Не вписывать обратно.
 PAYLOAD="
 index.html
+games.html
+stories.html
+site.css
+site.js
+phrases.js
+fonts
+game-design
 en
 404.html
 503.html
@@ -58,6 +65,7 @@ praktikum
 rasskazy
 technomagic
 qa-quest
+quequest
 psy-admin
 ysi
 photodata
@@ -135,7 +143,7 @@ if [ ! -f "$VENDOR/pyodide.mjs" ]; then
   # не заводим: разъехавшиеся суммы хуже отсутствующих. Путь ищем перебором,
   # потому что каталоги уже дважды переезжали.
   quest=""
-  for candidate in "$HOME/dev/QA Quest" "$HOME/dev/qa-quest" "$HOME/dev/Zakriva/QA Quest"; do
+  for candidate in "$HOME/dev/_games/QA Quest" "$HOME/dev/QA Quest" "$HOME/dev/qa-quest" "$HOME/dev/Zakriva/QA Quest"; do
     if [ -f "$candidate/tools/fetch-pyodide.sh" ]; then quest="$candidate"; break; fi
   done
   if [ -z "$quest" ]; then
@@ -161,6 +169,15 @@ if [ -n "$vendor_missing" ]; then
   exit 1
 fi
 
+# quequest/ (новый QueQuest, репозиторий aka-gst/QueQuest) берёт тот же
+# Pyodide 314.0.6, что и QA Quest: склад первого часа без него, но поздние
+# лаборатории его грузят из quequest/vendor/pyodide. Копия, не вторые суммы.
+QQ_VENDOR="quequest/vendor/pyodide"
+mkdir -p "$QQ_VENDOR"
+for file in $VENDOR_FILES; do
+  cmp -s "$VENDOR/$file" "$QQ_VENDOR/$file" 2>/dev/null || cp "$VENDOR/$file" "$QQ_VENDOR/$file"
+done
+
 echo
 echo "== Caddyfile: сверка с живым =="
 # Конфиг правят несколько проектов. Выложить собранный у себя — значит
@@ -174,10 +191,15 @@ if scp -q $SSHOPTS "$HOST:/opt/zakriva/caddy/Caddyfile" "$tmp" 2>/dev/null; then
   # со статусом. Страж, который ругается по пустякам, начнут обходить, и он
   # промолчит там, где важно. Опасна ровно одна пропажа: адрес или апстрим,
   # который есть на сервере и которого нет у нас. Так уехали звонки.
-  routes() {
-    grep -oE '^[[:space:]]*(redir|handle|handle_path|reverse_proxy|root)[[:space:]]+[^{]*|^[a-z0-9_.*-]+([[:space:]]*,[[:space:]]*[a-z0-9_.*-]+)*[[:space:]]*\{' "$1" \
-      | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; s/[[:space:]]\{1,\}/ /g' | sort -u
-  }
+  # 05.10.2026: ключи — хосты, пути и апстримы, а не целые строки: замена цели redir
+  # или handle→route не считается потерей (страж ложно останавливал /qa-quest → /quequest/,
+  # и конфиг клали руками в обход). Оба исхода — sh tools/proverka-storozha-caddy.sh.
+  . "$HERE/tools/marshruty-caddy.sh"
+  routes() { klyuchi_marshrutov "$1"; }
+  # Сам страж проверяется поломкой перед каждой выкладкой конфига: сломанный страж молчит.
+  if $caddy && ! sh "$HERE/tools/proverka-storozha-caddy.sh" >/dev/null 2>&1; then
+    echo "  страж Caddy не проходит свою проверку (sh tools/proverka-storozha-caddy.sh) — --caddy отменён" >&2; exit 1
+  fi
   # Через временные файлы, а не подстановкой процессов: sh её не умеет,
   # и «sh deploy.sh» падал бы на ней с кодом 0 — вызывающий решил бы,
   # что выкладка удалась.

@@ -1,0 +1,21 @@
+{
+  "name": "stels-ii",
+  "version": "1.0.0",
+  "source": "aka-gst/stealth@6fda077 (src/vision.js, src/alarm.js, src/light.js), побайтно",
+  "needs": {
+    "./tuning.js": [
+      "ALARM",
+      "GUARD",
+      "LIGHT"
+    ],
+    "./level.js": [
+      "rayBlocked",
+      "rayReach"
+    ]
+  },
+  "files": {
+    "src/vision.js": "a880c60d7b6de65c7d5619a861f1d8cbe5bd3dcf5e45134ae687ad91a9a86944",
+    "src/alarm.js": "798b6c20b8df176b88e8966a4b5e74133bfafd3c04b956ed3d6af06142c4ba3e",
+    "src/light.js": "9fda04c766122bd1264c5433b5a139587d643550df4aa35cc709fe5f846e0b2f"
+  }
+}

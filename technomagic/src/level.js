@@ -22,9 +22,11 @@
  *   старт X       6    клетка, откуда входит игрок
  *   старт Y       6
  *   старт угол    3    шаг 45°
- *   тайлы       RLE    пары (тип 3 или 4, длина-1 6), пока не наберётся w*h
+ *   тайлы       RLE    пары (тип 3, 4 или 5, длина-1 6), пока не наберётся w*h
  *                      с версии 3 тип занимает 4 бита: предметов стало
- *                      больше восьми, и трёх бит перестало хватать
+ *                      больше восьми, и трёх бит перестало хватать;
+ *                      с версии 6 — 5 бит: ров, пропасть и то, во что
+ *                      смеси превращают ров, не влезли в шестнадцать номеров
  *   сущностей     7    0..127
  *   сущность     19    тип 4, X 6, Y 6, угол 3
  *   контроль      8    хвостовой байт: битый код должен падать сразу
@@ -33,7 +35,18 @@
  * можно, менять номера существующих — нет, иначе чужие коды поедут.
  */
 
-export const FORMAT_VERSION = 5;
+/*
+ * ВЕРСИЯ ПИШЕТСЯ ПО НАДОБНОСТИ, А НЕ ПО ПОСЛЕДНЕЙ
+ * ---------------------------------------------------------
+ * Читается всё до шестой включительно. Пишется пятая — всегда, когда
+ * этаж в неё влезает, то есть когда на нём нет клеток с номером от
+ * шестнадцати. Так код любого старого этажа остаётся побуквенно тем же,
+ * каким его уже переслали: поднятая для всех версия поменяла бы каждую
+ * ссылку, ничего в ней не изменив. Шестая — только для этажей с рвом и
+ * пропастью, которым четырёх бит на тип клетки не хватает физически.
+ */
+export const FORMAT_VERSION = 6;
+const LEGACY_VERSION = 5;
 
 /*
  * Порядок битов маски стихий заморожен навсегда — как номера тайлов.
@@ -46,8 +59,9 @@ export const FORMAT_VERSION = 5;
 export const ELEMENT_BITS = ['fire', 'water', 'wind', 'earth', 'bolt'];
 
 /* Ширина типа клетки в потоке. Версии 1 и 2 писали три бита и читаются
-   как есть: там предметов ещё не было. */
+   как есть: там предметов ещё не было. Шестая пишет пять. */
 const TILE_BITS = 4;
+const WIDE_TILE_BITS = 5;
 const V1_ELEMENTS = ['fire', 'water', 'wind'];
 
 export function elementMask(elements) {
@@ -125,6 +139,37 @@ export const TILE = {
   FORCE: 13,      /* под напряжением: не пройти, не прострелить */
   FORCE_OFF: 14,  /* обесточена: пустое место */     /* стог соломы: сквозь него не видно, и он горит */
   WOOD: 15,       /* настоящая деревянная створка: держит проход и горит */
+
+  /*
+   * РОВ И ПРОПАСТЬ (с версии 6, «Лестница» 03.10)
+   * -------------------------------------------------------
+   * Обе клетки держат тело и не держат ни взгляда, ни снаряда: через ров
+   * видно и простреливается, через пропасть — тоже. Разница одна, и она
+   * весь смысл: ров — вода, и смесь умеет сделать из неё дорогу, а
+   * пропасть — пустота, с ней не делает ничего никакое вещество.
+   *
+   * Чистая стихия рва не берёт, как не оставляет своего и на полу
+   * (field.js, groundFor): одна стихия — удар, две — вещество. Поэтому
+   * ров и есть то препятствие, ради которого выдаётся вторая рука.
+   */
+  DEEP: 16,       /* ров: глубокая вода */
+  PIT: 17,        /* пропасть: туда не ходят и оттуда не возвращаются */
+
+  /* Во что смесь превращает ров. Это не пол с лужей поверх, а сам ров в
+     новом состоянии — иначе лужа высохла бы через двенадцать секунд и
+     мост исчез бы под ногами без единой причины. */
+  FROZEN: 18,     /* ров подо льдом: держит, скользко, тает от огня обратно в ров */
+  MIRE: 19,       /* ров, заваленный грязью: брод, вязко, не горит */
+  STONE: 20,      /* лава, застывшая в воде: камень навсегда */
+
+  /*
+   * Нанос сажи. Единственная клетка, которую берёт только ветер: огню в
+   * ней гореть нечему, вода и земля делают её только тяжелее, молния
+   * уходит в неё, как в землю. До неё у ветра не было ни одной своей
+   * преграды — солому берёт и огонь, — и станция ветра в «Лестнице»
+   * держалась бы на дальности полёта, которую глазом не прочитать.
+   */
+  DRIFT: 21,
 };
 
 /*
@@ -143,7 +188,14 @@ export const TILE_WEAKNESS = {
   [TILE.BARREL]: ['burn', 'shock', 'crush'],
   [TILE.BOULDER]: ['crush'],
   [TILE.CRYSTAL]: ['shock'],
-  [TILE.HAY]: ['burn'],
+  /*
+   * 22.09: Сергей — "ветер пока ни на что не влиял". `gust` (стихия
+   * ветра) был в traits спелла с самого начала, но ни одна клетка на
+   * него не отвечала — единственная стихия из пяти без единого следствия
+   * в мире. Солома — то же самое, что уже разлетается от огня: ветер
+   * разносит рыхлый материал так же честно, как огонь его сжигает.
+   */
+  [TILE.HAY]: ['burn', 'gust'],
 
   /*
    * Дерево горит. Всё дерево, а не только солома.
@@ -168,7 +220,55 @@ export const TILE_WEAKNESS = {
 
   /* Металлическая дверь не горит и не бьётся — её только гнут. */
   [TILE.METAL]: ['crush'],
+
+  /* Сажу сдувает только ветер. Смеси с ветром (жар, песок, гром) её тоже
+     сдувают — черта проверяется, а не стихия. */
+  [TILE.DRIFT]: ['gust'],
 };
+
+/*
+ * РОВ ОТВЕЧАЕТ НА СМЕСЬ
+ * =========================================================
+ * Во что превращается клетка рва, когда на неё ложится вещество, или null,
+ * если не превращается. Таблица встреч та же, что у поля (field.js,
+ * meet), только про сам ров, а не про то, что лежит на полу:
+ *
+ *   ров  + мороз смеси   → лёд        (СТУЖА, МЕТЕЛЬ)
+ *   ров  + вязь смеси    → брод       (ГРЯЗЬ, ЗЫБУН)
+ *   ров  + жар с тяжестью → камень    (ЛАВА, ВУЛКАН, ПЕПЕЛ) — с паром
+ *   лёд  + жар с тяжестью → камень    лава топит лёд и застывает в воде
+ *   лёд  + любой огонь    → снова ров  огонь топит лёд, и одной стихии
+ *                                     для этого хватает: менять уже
+ *                                     лежащее одиночная умеет (field.js)
+ *
+ * Чистая стихия рва не трогает. Проверка идёт по `pure`, а не по числу
+ * стихий в очереди: две одинаковые — тоже чистая (substanceOf схлопывает
+ * повтор), и сгусток воды рва не замораживает, как и плевок.
+ *
+ * В weakTo ров не попадает намеренно: оттуда читает прицел, и каждая
+ * клетка рва стала бы целью для автонаводки.
+ */
+export function moatAfter(tile, substance) {
+  if (!substance || !substance.traits) return null;
+  const t = substance.traits;
+  const mixed = !substance.pure;
+
+  if (tile === TILE.DEEP) {
+    if (!mixed) return null;
+    if (t.freeze) return TILE.FROZEN;
+    if (t.mire) return TILE.MIRE;
+    if (t.burn && t.crush) return TILE.STONE;
+    return null;
+  }
+
+  if (tile === TILE.FROZEN) {
+    if (t.burn && t.crush && mixed) return TILE.STONE;
+    if (t.burn) return TILE.DEEP;
+    return null;
+  }
+
+  return null;
+}
 
 export const ENTITY = {
   THUG: 0,      /* с битой, идёт в лоб */
@@ -210,6 +310,9 @@ const CHAR_TILE = {
   'M': TILE.METAL,
   'F': TILE.FORCE,
   'W': TILE.WOOD,
+  '~': TILE.DEEP,
+  '_': TILE.PIT,
+  '%': TILE.DRIFT,
 };
 
 const CHAR_ENTITY = {
@@ -231,7 +334,8 @@ const CHAR_ENTITY = {
 export function blocksMove(tile) {
   return tile === TILE.WALL || tile === TILE.WOOD || tile === TILE.GLASS || tile === TILE.TABLE
     || tile === TILE.BARREL || tile === TILE.BOULDER || tile === TILE.CRYSTAL
-    || tile === TILE.METAL || tile === TILE.FORCE;
+    || tile === TILE.METAL || tile === TILE.FORCE
+    || tile === TILE.DEEP || tile === TILE.PIT || tile === TILE.DRIFT;
 }
 
 /*
@@ -243,7 +347,8 @@ export function blocksMove(tile) {
    Это и есть её обещание: видишь, куда идти, и не можешь. */
 export function blocksSight(tile) {
   return tile === TILE.WALL || tile === TILE.DOOR || tile === TILE.BOULDER
-    || tile === TILE.HAY || tile === TILE.METAL || tile === TILE.WOOD;
+    || tile === TILE.HAY || tile === TILE.METAL || tile === TILE.WOOD
+    || tile === TILE.DRIFT;
 }
 
 export function blocksShot(tile) {
@@ -254,7 +359,11 @@ export function blocksShot(tile) {
        он пролетал насквозь, а замыкание срабатывало случайно: от брызг
        вещества, легшего на стену позади. То есть попасть в него нарочно
        было нельзя, а получалось само. */
-    || tile === TILE.PANEL;
+    || tile === TILE.PANEL
+    /* Куча сажи ловит плевок, как ловит его валун: иначе снаряд пролетал
+       бы насквозь и сдувал нанос мимоходом, не долетев до цели. Ров и
+       пропасть снаряд не держат — над водой и над пустотой летят. */
+    || tile === TILE.DRIFT;
 }
 
 /* Стекло не останавливает пулю — оно от неё рассыпается. */
@@ -353,7 +462,15 @@ function fromBase64Url(code) {
 export function encode(level) {
   const bits = writer();
 
-  bits.write(FORMAT_VERSION, 4);
+  /* Пятая, пока этаж в неё влезает: см. FORMAT_VERSION. */
+  let wide = false;
+  for (let i = 0; i < level.tiles.length; i += 1) {
+    if (level.tiles[i] >= 1 << TILE_BITS) { wide = true; break; }
+  }
+  const version = wide ? FORMAT_VERSION : LEGACY_VERSION;
+  const tileBits = wide ? WIDE_TILE_BITS : TILE_BITS;
+
+  bits.write(version, 4);
   bits.write(elementMask(level.elements || ELEMENT_BITS), 5);
   bits.write(level.w - 1, 6);
   bits.write(level.h - 1, 6);
@@ -371,7 +488,7 @@ export function encode(level) {
   for (let i = 0; i <= level.tiles.length; i += 1) {
     const tile = level.tiles[i];
     if (tile === value && run < 64 && i < level.tiles.length) { run += 1; continue; }
-    bits.write(value, TILE_BITS);
+    bits.write(value, tileBits);
     bits.write(run - 1, 6);
     value = tile;
     run = 1;
@@ -422,7 +539,7 @@ export function decode(code) {
   const spawn = { x: bits.read(6), y: bits.read(6), angle: bits.read(3) };
 
   const tiles = new Uint8Array(w * h);
-  const tileBits = version >= 3 ? TILE_BITS : 3;
+  const tileBits = version >= 6 ? WIDE_TILE_BITS : version >= 3 ? TILE_BITS : 3;
   let filled = 0;
   while (filled < tiles.length) {
     const tile = bits.read(tileBits);
@@ -499,5 +616,22 @@ export function fromAscii(rows, meta = {}) {
     elements: meta.elements || [...ELEMENT_BITS],
     title: meta.title || '',
     call: meta.call || '',
+
+    /*
+     * Лестница внутри этажа (с 03.10). Всё необязательное: этаж, который
+     * об этом молчит, ведёт себя ровно как раньше — три руки и все свои
+     * стихии с первой секунды. В код комнаты эти поля не уходят: правила
+     * этажа «Лестница» живут в игре, а не в ссылке (см. src/lestnica.js).
+     *
+     *   stack     сколько рук дано на старте (по умолчанию STACK_LIMIT);
+     *   triggers  прямоугольники, которые срабатывают один раз при входе
+     *             игрока: выдают стихию, руку или метят маршрут;
+     *   circuits  отдельные цепи питания: свой щиток — свои силовые;
+     *   fires     клетки, где огонь горит, пока его не зальют.
+     */
+    stack: meta.stack ?? null,
+    triggers: meta.triggers || null,
+    circuits: meta.circuits || null,
+    fires: meta.fires || null,
   };
 }

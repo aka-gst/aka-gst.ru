@@ -5,9 +5,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  auditLoader,
   auditPageReleases,
   auditRelease,
   compareReleaseVersions,
+  extractAppRelease,
   extractRelease,
   fetchTextWithRetry,
 } from "./tools/release-guard.mjs";
@@ -75,6 +77,18 @@ assert.match(
       : page),
   }).join("\n"),
   /index.html/,
+);
+// Раскладка с 29.09: загрузчик подключает модуль; метка модуля — в импорте загрузчика.
+const appRelease = "psy-widget-20261003-1";
+const loader = `await import(new URL("./psy-widget-app.js?v=${appRelease}", import.meta.url).href);`;
+assert.equal(extractAppRelease(loader, "кандидат"), appRelease);
+assert.throws(() => extractAppRelease("await import('./psy-widget-app.js');", "кандидат"), /загрузчик не подключает/);
+assert.deepEqual(auditLoader({ loader, appRelease }), []);
+assert.match(auditLoader({ loader: `${loader}\n${loader}`, appRelease }).join("\n"), /2 раз/);
+assert.match(auditLoader({ loader, appRelease: "psy-widget-20261003-2" }).join("\n"), /не совпадает/);
+assert.match(
+  auditRelease({ release, widget: `${widget}\nimport { x } from "./router.js?v=psy-widget-20260903-15";`, contract, css }).join("\n"),
+  /router в виджете/,
 );
 assert.equal(compareReleaseVersions("psy-widget-20260905-02", "psy-widget-20260904-17"), 1);
 assert.equal(compareReleaseVersions("psy-widget-20260904-17", "psy-widget-20260905-02"), -1);

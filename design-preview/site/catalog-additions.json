@@ -1,0 +1,126 @@
+[
+ {
+  "id": "beatdancer",
+  "title": "BEATDANCER",
+  "kicker": "Игра · камера и руки",
+  "tagline": "Ритм-игра для веб-камеры: отбиваешь бит пальцами, кулаками и всем телом. Камера работает только в браузере",
+  "preview": null,
+  "shots": [
+   {
+    "file": "beatdancer.jpg",
+    "alt": "BEATDANCER: неоновая дорожка, к игроку летит цель с жестом руки"
+   }
+  ],
+  "links": [
+   {
+    "type": "play",
+    "label": "Играть",
+    "url": "/beatdancer/"
+   }
+  ]
+ },
+ {
+  "id": "ai-router",
+  "title": "AiRouter",
+  "kicker": "Маршрутизация AI",
+  "tagline": "Выбирает провайдера и модель для AI-запроса. Демонстрацию проверяю перед публикацией.",
+  "preview": null,
+  "monogram": "AI →",
+  "pending": true
+ },
+ {
+  "id": "ashennote",
+  "title": "AshenNote",
+  "kicker": "Одноразовые записки · свой сервер",
+  "tagline": "Передать пароль или секрет так, чтобы он не остался в переписке: пишешь записку — получаешь ссылку. Она открывается один раз, потом записка сгорает. Текст шифруется прямо в браузере, на сервере лежит только шифр",
+  "preview": null,
+  "monogram": "⌁",
+  "links": [
+   {
+    "type": "site",
+    "label": "Открыть",
+    "url": "/ashennote/"
+   }
+  ]
+ },
+ {
+  "id": "black-ice",
+  "title": "Black Ice",
+  "kicker": "Скоростной бой",
+  "tagline": "Рельсы, прыжки и бой на скорости: движение помогает выживать.",
+  "preview": "black-ice.jpg",
+  "monogram": null,
+  "pending": true
+ },
+ {
+  "id": "afterflow-prism",
+  "title": "Afterflow Prism",
+  "kicker": "Музыкальная трасса",
+  "tagline": "Загрузи свой трек — музыка становится трассой. Название пока рабочее.",
+  "preview": "afterflow-prism.png",
+  "monogram": null,
+  "pending": true
+ },
+ {
+  "id": "pythonio",
+  "title": "Pythonio",
+  "kicker": "Обучение Python",
+  "tagline": "Мастерская, в которой программы освобождают людей от повторяющейся работы.",
+  "preview": "Pythonio.png",
+  "monogram": null,
+  "pending": true
+ },
+ {
+  "id": "pulse-arena",
+  "title": "Pulse Arena",
+  "kicker": "Арена",
+  "tagline": "Бой с ботами и борьба за контрольные точки.",
+  "preview": "pulse-arena.png",
+  "monogram": null,
+  "pending": true
+ },
+ {
+  "id": "sdvig-21",
+  "title": "Сдвиг 21",
+  "kicker": "Головоломка",
+  "tagline": "Собирай строки и столбцы с суммой 21; находи цепочки ради большего счёта.",
+  "preview": "sdvig-21.png",
+  "monogram": null,
+  "links": [
+   {
+    "type": "play",
+    "label": "Играть",
+    "url": "/sdvig/"
+   }
+  ]
+ },
+ {
+  "id": "glubina",
+  "title": "Глубина",
+  "kicker": "Симуляция",
+  "tagline": "Колонии и локальные истории. Четыре предыдущие симуляции сохранены в архиве общего проекта.",
+  "preview": null,
+  "monogram": "↓∞",
+  "pending": true
+ },
+ {
+  "id": "echo-null",
+  "title": "ECHO//NULL",
+  "kicker": "Игра · idle",
+  "tagline": "Idle-игра про оператора, запертого внутри узла 7F: раскачиваешь узел, делишь питание и по кускам узнаёшь, что это за машина",
+  "preview": null,
+  "shots": [
+   {
+    "file": "game-echo-null.jpg",
+    "alt": "Экран ECHO//NULL: узел 7F и панели оператора"
+   }
+  ],
+  "links": [
+   {
+    "type": "play",
+    "label": "Играть",
+    "url": "/echo-null/"
+   }
+  ]
+ }
+]

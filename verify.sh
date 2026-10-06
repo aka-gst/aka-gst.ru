@@ -51,7 +51,7 @@ expect() {
 }
 
 echo "== страницы =="
-for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /qa-quest/ /acid/ \
+for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /quequest/ /acid/ /ashennote/ /static/app.js \
          /psy-admin/ /photodata/ /tetcolor/ /stihii/ /lines/ /coin/ \
          /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
   expect "$p" 200
@@ -82,6 +82,13 @@ moved() {
 }
 moved /knb/ /stihii/
 moved /tetris/ /tetcolor/
+# QueQuest переехал на /quequest/ 05.10.2026; старый адрес ведёт туда с сохранением пути (301).
+moved /qa-quest/ /quequest/
+moved /qa-quest/src/game/main.js /quequest/src/game/main.js
+# AshenNote (06.10.2026): вход /ashennote/, заметки /n/<id>; админ-API и метрики наружу закрыты.
+expect /api/v1/admin/notes/proba 404
+expect /metrics 404
+moved /ashennote /ashennote/
 
 echo
 echo "== опечатка в адресе даёт страницу, а не пустоту =="
@@ -168,7 +175,7 @@ same() {
 }
 
 for f in /technomagic/index.html /technomagic/src/main.js /technomagic/src/world.js \
-         /qa-quest/index.html /psy-admin/index.html /photodata/index.html \
+         /quequest/index.html /psy-admin/index.html /photodata/index.html \
          /praktikum/index.html /praktikum/llm/index.html /praktikum/testirovanie/index.html \
          /rasskazy/index.html /game-menu.css /player-name.js; do
   same "$f"
@@ -182,8 +189,10 @@ echo "         выкладываются своими сессиями, сод�
 
 echo
 echo "== содержимое, а не только код ответа =="
-for needle in 'og:image' '66 автотестов' 'data-panel="play"' 'class="social"' \
-              'class="shot"' 'assets/shots/allure-gateway.png'; do
+# С 02.10.2026 главная — новая (три страницы: работа, игры, рассказы). Приметы —
+# то, что видит человек: муха главной карточкой, фраза Сергея на QueQuest, счётчик.
+for needle in 'og:image' 'Муха · Project Brain' 'assets/muha-flybox.jpg' 'class="social' \
+              'Таскаешь ящики за бабки' '/pulse/script.js'; do
   if printf '%s' "$page" | grep -q "$needle"; then say_ok "на странице есть $needle"
   else say_bad "на странице НЕТ $needle"; fi
 done
@@ -231,13 +240,22 @@ echo "== на всё, что лежит на сервере, можно попа
 # Показ, а не публикация: ссылку Сергей отправляет сам, индексации нет.
 PRIVATE_TEST_DIRS="leela zoo psy-admin-v2 way torgash-gnjeev4lb7 katerina flow"
 #
+# OWNER_HIDDEN добавлен 2 октября 2026: при переходе на новую главную Сергей
+# вслух решил вернуть на неё из пропавших только Тетколор. Деревня (coin),
+# Макетчик, Путь, Наотмашь, ПЕРЕЛОМ, Битва Стихий (stihii), NEON CLAW (claw)
+# убраны с главной его решением, а сами страницы остаются работать по прямому адресу.
+# Psy Admin вернули на «Работу» 02.10 (Сергей: «это сделано… будет заплачено, с ними работаю»).
+# Правило 30д это допускает именно при названном решении. Списком, а не
+# выключением: новая сирота по-прежнему краснеет.
+OWNER_HIDDEN="coin maketchik put naotmash perelom stihii claw"
+#
 # У проверки ЕСТЬ ОБА ИСХОДА, и это записано здесь, чтобы следующий не
 # переоткрывал: красный получен переименованием ссылки на claw (проверка
 # назвала claw), зелёный — на нетронутом сайте. Проверка, которая не может
 # позеленеть, ничего не стережёт: к ней привыкают и её отключают.
 # Служебное в счёт не идёт — assets, api, счётчик и страницы ошибок.
 SERVER_DIRS=$(ssh -o ConnectTimeout=20 bonita 'ls -1 /opt/zakriva/caddy/site' 2>/dev/null \
-  | grep -vE '^(assets|404\.html|503\.html|index\.html|favicon|og\.png|robots|sitemap|game-menu|player-name|tour\.js|data)' || true)
+  | grep -vE '^(assets|fonts|404\.html|503\.html|index\.html|favicon|og\.png|robots|sitemap|game-menu|player-name|tour\.js|data)' || true)
 if [ -z "$SERVER_DIRS" ]; then
   say_bad "список папок сервера пуст — сверить достижимость не с чем"
 else
@@ -245,10 +263,13 @@ else
   # Берём и точные ссылки, и вложенные: на практикум ведут /praktikum/llm/
   # и /praktikum/testirovanie/, а самой /praktikum/ в разметке нет.
   # shellcheck disable=SC2086
-  LINKED=$(curl -s $RETRY "$BASE/" | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
+  # Витрина — три страницы: ссылки собираются со всех, иначе все игры (они на
+  # /games.html) объявились бы сиротами.
+  LINKED=$(for p in "" games.html stories.html; do curl -s $RETRY "$BASE/$p"; done | grep -oE 'href="/[a-z0-9-]+' | sed 's|href="/||' | sort -u)
   ORPHANS=""
   for d in $SERVER_DIRS; do
     printf '%s\n' "$PRIVATE_TEST_DIRS" | tr ' ' '\n' | grep -qx "$d" && continue
+    printf '%s\n' "$OWNER_HIDDEN" | tr ' ' '\n' | grep -qx "$d" && continue
     printf '%s\n' "$LINKED" | grep -qx "$d" && continue
     # Старый адрес, ведущий на новый, — не сирота, а дверь, оставленная для
     # тех, у кого он в закладках. Сиротой считается только то, что отвечает
@@ -307,11 +328,14 @@ echo "== ничего не притягивает экран =="
 # глушил ошибку, и единственная защита от порчи была слепой и выглядела
 # зелёной. Поэтому у каждого файла есть примета, которая обязана в нём
 # быть; нет приметы — меряем не то, и это FAIL, а не ok.
-for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js; do
+for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js /site.css /site.js; do
   case "$f" in
     # У site.css приметой взят scroll-padding-top — он тут не случайно:
     # мы его намеренно оставили, и заодно он стережёт сам себя.
     */site.css) primeta='scroll-padding-top' ;;
+    # Корневые /site.css и /site.js — новая главная (02.10.2026): там 02.10 нашли html{scroll-behavior:smooth},
+    # которого сторож не видел, потому что смотрел только /assets/.
+    /site.js)   primeta='sitePhrases' ;;
     */read.css) primeta='.bgrid' ;;
     */app.js)   primeta='data-track-to' ;;
     */read.js)  primeta='book-toggle' ;;

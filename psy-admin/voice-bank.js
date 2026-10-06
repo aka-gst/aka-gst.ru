@@ -1,4 +1,4 @@
-import { preparedQuestionCases, routeWidgetQuestion } from "./widget-contract.js?v=psy-widget-20260913-24";
+import { preparedQuestionCases, routeWidgetQuestion } from "./widget-contract.js?v=psy-widget-20260913-26";
 
 export const VOICE_BANK_VERSION = "orion-voice-a-20260909-01";
 
@@ -41,22 +41,34 @@ const genericById = new Map(genericEntries.map((entry) => [entry.id, entry]));
 
 export const voiceBankEntries = Object.freeze([...preparedEntries, ...genericEntries]);
 
-function genericClipId(question, answer) {
-  const text = `${question || ""} ${answer?.text || ""}`.toLowerCase();
-  if (/телеграм|telegram|почт|email|e-mail|телефон|контакт|написат|связат/.test(text)) return "generic-contacts";
-  if (/расписан|когда|дата|время|ближайш|мероприят|анонс|афиш/.test(text)) return "generic-schedule";
-  if (/онлайн|очно|формат|участи/.test(text)) return "generic-format";
-  if (/цен|стоим|оплат|тариф|рубл|возврат|деньг/.test(text)) return "generic-payment";
-  if (/запис|регистр|заявк|места/.test(text)) return "generic-signup";
-  if (/психолог|специалист|консультац|терап/.test(text)) return "generic-specialists";
-  if (/адрес|находит|добрат|проезд|метро/.test(text)) return "generic-location";
-  if (/аренд|зал|кабинет|помещен/.test(text)) return "generic-rental";
-  if (/программ|курс|обучен|семинар|мастер-класс/.test(text)) return "generic-programs";
-  return "generic-general";
+// Тема записанной фразы — только по вопросу и по порядку правил. Прежний подбор
+// склеивал вопрос с ответом и ловил подстроки: «цен» из «центр» давал фразу про
+// оплату на любой ответ со словом «центр», «стоит» не считалось ценой,
+// «психологический» уходил в специалистов (найдено 03.10.2026 на orion_2).
+// Цена раньше специалистов: «сколько стоит консультация» — про цену.
+const TOPIC_RULES = [
+  ["generic-payment", /сколько сто|стоимост|(^|[^а-яё])цен[аыуеой]|оплат|тариф|руб|деньг|возврат/],
+  ["generic-location", /где (вы|наход)|адрес|находит|добрат|проезд|метро/],
+  ["generic-contacts", /телефон|почт|e-?mail|связат|контакт|телеграм|telegram/],
+  ["generic-rental", /аренд|зал|кабинет|помещен/],
+  ["generic-schedule", /расписан|когда|ближайш|мероприят|анонс|афиш|свободн|время/],
+  ["generic-programs", /программ|курс|обучен|семинар|мастер-класс/],
+  ["generic-format", /онлайн|очно|формат|участи/],
+  ["generic-signup", /запис|регистр|заявк/],
+  ["generic-specialists", /специалист|консультац|терап|(^|[^а-яё])психолог(а|у|ом|ам|и|ов)?([^а-яё]|$)/],
+];
+
+export function topicClipId(question) {
+  const text = String(question || "").toLowerCase();
+  return TOPIC_RULES.find(([, rule]) => rule.test(text))?.[0] || null;
 }
 
+// null — записи нет: виджет читает сам ответ голосом браузера, а не общую заглушку.
+// Кризисный ответ — всегда своими словами (со 112), никогда общей фразой.
 export function resolveVoiceClip({ question = "", answer = {} } = {}) {
   const exact = preparedByText.get(String(answer?.spokenText || ""));
   if (exact) return exact;
-  return genericById.get(genericClipId(question, answer)) || genericById.get("generic-general");
+  if (answer?.kind === "crisis") return null;
+  const id = topicClipId(question);
+  return id ? genericById.get(id) || null : null;
 }

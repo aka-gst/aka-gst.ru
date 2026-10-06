@@ -48,8 +48,8 @@ window.ZOO_WORLD = {
     { id: 1, name: 'Порог', element: 'water', clean: true,
       art: { clean: 'assets/place-01-clean.jpg' },
       text: 'Здесь вы очнулись. Единственное место, куда грибница ещё не добралась.',
-      npcs: [{ id: 'mauri', name: 'Маури', element: 'wind',
-        line: 'Первую жизнь живёшь, что ли? Отсюда не выйти, пока не наберёшь кармы. Иди помогай — другого пути нет.',
+      npcs: [{ id: 'kamen', name: 'Надпись на камне', element: 'wind',
+        line: 'Отсюда не выйти, пока не наберёшь кармы. Иди помогай — другого пути нет.',
         quest: 'q-first' }],
       creatures: [] },
 
@@ -148,8 +148,8 @@ window.ZOO_WORLD = {
   ],
 
   quests: {
-    'q-first':  { title: 'Первый шаг', giver: 'mauri', cell: 1,
-      text: 'Маури говорит: очисти любое заражённое место, и станет понятнее.',
+    'q-first':  { title: 'Первый шаг', giver: 'kamen', cell: 1,
+      text: 'Надпись велит: очисти любое заражённое место, и станет понятнее.',
       need: { cleansed: 1 }, reward: { karma: 2, gold: 10 } },
     'q-water':  { title: 'Огород Зины', giver: 'zina', cell: 4,
       text: 'Принести Зине чистую воду с Мокрой тропы.',

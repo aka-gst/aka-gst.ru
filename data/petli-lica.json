@@ -1,5 +1,5 @@
 {
-  "kogda": "2026-09-07T22:49",
+  "kogda": "2026-10-03T03:21",
   "chem": "Vision VNDetectFaceRectanglesRequest, кадр раз в 0.5 с",
   "petli": [
     {"petlya": "clip-acid.mp4", "sha256": "750a39b94d94c20d", "kadrov": 11, "lic": 0},
@@ -14,7 +14,7 @@
     {"petlya": "clip-quequest-manual-to-ai.webm", "sha256": "f9cdfda2f1a4ce0c", "kadrov": 27, "lic": 0},
     {"petlya": "clip-stealth.mp4", "sha256": "935e7112e8bb31b2", "kadrov": 14, "lic": 0},
     {"petlya": "clip-stihii.mp4", "sha256": "cc386126a0dec146", "kadrov": 7, "lic": 0},
-    {"petlya": "clip-technomagic.mp4", "sha256": "92abe000ef1d9a03", "kadrov": 11, "lic": 0},
+    {"petlya": "clip-technomagic.mp4", "sha256": "2306db8c8d4d9b17", "kadrov": 11, "lic": 0},
     {"petlya": "clip-tetcolor.mp4", "sha256": "9e3cf75687f894f7", "kadrov": 16, "lic": 0},
     {"petlya": "clip-worm.mp4", "sha256": "58498945e1543e01", "kadrov": 12, "lic": 0}
   ]

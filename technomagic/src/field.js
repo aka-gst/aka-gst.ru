@@ -18,7 +18,7 @@
  * положили, — и потому им можно пользоваться как стеной.
  */
 
-import { TILE_SIZE, blocksMove } from './level.js';
+import { TILE, TILE_SIZE, blocksMove } from './level.js';
 
 export const GROUND = {
   NONE: 0,
@@ -26,6 +26,25 @@ export const GROUND = {
   FIRE: 2,   /* пожар: поджигает всех, кто в нём стоит */
   ICE: 3,    /* лёд: не убивает, но по нему разгоняет и заносит */
   MUD: 4,    /* грязь: вязнут все, зато не горит */
+};
+
+/*
+ * МОСТ ЧЕРЕЗ РОВ — ЭТО ТОТ ЖЕ ЛЁД И ТА ЖЕ ГРЯЗЬ
+ * ---------------------------------------------------------
+ * Замёрзший ров держит на себе лёд, заваленный — грязь, и держит их
+ * всегда, а не двенадцать секунд, как лужа: мост не имеет права высохнуть
+ * под ногами без причины. Зато всё остальное — скользит, вязнет, не
+ * горит, тушит горящего — делают уже существующие правила пола, без
+ * единой новой проверки в мире.
+ *
+ * Поверх такого пола ничего своего не ложится: лужа на льду рва высохла
+ * бы и унесла с собой лёд, огонь на грязевом броде загорелся бы там, где
+ * грязь обещает, что не горит. Убрать мост может только то, что меняет
+ * сам ров (level.js, moatAfter), — огонь, растопивший лёд.
+ */
+export const FIXED_GROUND = {
+  [TILE.FROZEN]: GROUND.ICE,
+  [TILE.MIRE]: GROUND.MUD,
 };
 
 export const GROUND_INFO = {
@@ -201,9 +220,14 @@ export function paint(world, tiles, substance, at = null, force = false) {
    * растопит — и потому до таблицы встреч он обязан дойти.
    */
   const reacts = t.burn || t.douse || t.wet || t.mire || t.freeze || t.steam;
-  if (laid === GROUND.NONE && !reacts) return;
+  if (laid === GROUND.NONE && !reacts) return { doused: 0 };
 
   let steamed = false;
+
+  /* Сколько горевших клеток погасло. Миру это нужно, чтобы сказать
+     «огонь залит» словом и звуком: до сих пор пожар гас молча, и вода,
+     залившая проход, выглядела промахом. */
+  let doused = 0;
 
   /* Мокрым становится не только пол, но и то, что на нём стоит. Дерево
      под водой не занимается, и это единственное, что вода умеет делать
@@ -217,8 +241,16 @@ export function paint(world, tiles, substance, at = null, force = false) {
 
     if (blocksMove(world.tiles[idx])) continue;
 
+    const fixed = FIXED_GROUND[world.tiles[idx]];
+    if (fixed !== undefined) {
+      world.ground[idx] = fixed;
+      world.groundLife[idx] = Number.POSITIVE_INFINITY;
+      continue;
+    }
+
     const result = meet(world.ground[idx], laid, substance);
     if (result.steam) steamed = true;
+    if (world.ground[idx] === GROUND.FIRE && result.ground !== GROUND.FIRE) doused += 1;
 
     if (result.ground === world.ground[idx] && result.ground !== GROUND.NONE) {
       /* Своё на своём — не новый слой, а продление: лужа поверх лужи
@@ -237,6 +269,8 @@ export function paint(world, tiles, substance, at = null, force = false) {
   } else if (t.shred && at) {
     addCloud(world, at.x, at.y, at.r || TILE_SIZE * 1.4, 'dust');
   }
+
+  return { doused };
 }
 
 function lifeOf(ground, substance) {

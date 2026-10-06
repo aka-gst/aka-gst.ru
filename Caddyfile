@@ -280,12 +280,19 @@ aka-gst.ru, www.aka-gst.ru {
   redir /acid /acid/ 308
   # Строку запроса надо переносить руками: явный redir её выбрасывает,
   # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  # QueQuest переехал на /quequest/ (QueQuest 18.1–18.2, 05.10.2026). Старый адрес ведёт на
+  # новый с сохранением пути и строки запроса: /qa-quest/x?y → /quequest/x?y — «да» Сергея
+  # 05.10 через Рта. Папка qa-quest на сервере не удаляется (его же слово).
   @slash_qa_quest_q {
     path /qa-quest
     expression {query} != ""
   }
-  redir @slash_qa_quest_q /qa-quest/?{query} 308
-  redir /qa-quest /qa-quest/ 308
+  redir @slash_qa_quest_q /quequest/?{query} 301
+  redir /qa-quest /quequest/ 301
+  route /qa-quest/* {
+    uri replace /qa-quest/ /quequest/
+    redir * {uri} 301
+  }
   # Строку запроса надо переносить руками: явный redir её выбрасывает,
   # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
   @slash_praktikum_q {
@@ -411,6 +418,32 @@ aka-gst.ru, www.aka-gst.ru {
     }
   }
 
+  # AshenNote — одноразовые шифрованные заметки (слово Сергея 05–06.10.2026). Контейнер ashennote-app
+  # (/opt/zakriva/ashennote, сеть zakriva-net). Вход /ashennote/ (префикс срезается), а ссылки на заметки,
+  # статика и API у приложения от корня (/n/<id>, /static/*, /api/v1/*) — проксируются как есть.
+  # Админ-API и метрики наружу не отдаются (404), как в deploy/Caddyfile самого AshenNote.
+  # 404 внутри handle: голый respond Caddy ставит после handle, и admin-путь уезжал в приложение (405).
+  # Более длинный матчер /api/v1/admin/* побеждает /api/v1/* — проверено curl после выкладки.
+  handle /api/v1/admin/* {
+    respond 404
+  }
+  handle /metrics {
+    respond 404
+  }
+  redir /ashennote /ashennote/ 308
+  handle_path /ashennote/* {
+    request_body {
+      max_size 1600000
+    }
+    reverse_proxy ashennote-app:8000
+  }
+  @ashennote_koren path /n/* /static/* /api/v1/*
+  handle @ashennote_koren {
+    request_body {
+      max_size 1600000
+    }
+    reverse_proxy ashennote-app:8000
+  }
   # Booking is a separate service, not static content: the prefix is stripped
   # so V2 can keep its own small application routes and SQLite data volume.
   redir /psy-admin/booking /psy-admin/booking/ 308
@@ -441,6 +474,21 @@ aka-gst.ru, www.aka-gst.ru {
   redir /orion-case-en /orion-case-en/ 308
   handle_path /orion-case-en/* {
     reverse_proxy orion-case-en:4180 {
+      header_up Host {host}
+      header_up X-Forwarded-Proto {scheme}
+    }
+  }
+
+  # Тестовый Орион (сессия Лапки, 02.10.2026, по слову владельца): второй сайт
+  # Ориона — контейнер orion2-site (лицо, статьи, админка сайта); запись идёт
+  # дальше в orion2-booking по внутренней сети (TEST-календари Google, своя база,
+  # события с меткой TEST). Закрыт от поиска; ссылки с витрины нет намеренно —
+  # это стенд для проверок. Админка — /orion_2/admin без слеша.
+  redir /orion_2 /orion_2/ 308
+  redir /orion_2/admin/ /orion_2/admin 308
+  handle_path /orion_2/* {
+    header X-Robots-Tag "noindex, nofollow, noarchive"
+    reverse_proxy orion2-site:4280 {
       header_up Host {host}
       header_up X-Forwarded-Proto {scheme}
     }
@@ -514,4 +562,15 @@ meet.aka-gst.ru {
   # поэтому по имени контейнера он недоступен.
   header X-Robots-Tag "noindex, nofollow"
   reverse_proxy 172.18.0.1:7880
+}
+
+# Две изолированные демо-версии Ориона 2 для показа организациям (Кодекс 04.10, «да» Сергея 05.10).
+# Контейнеры orion2-company-demo (сеть zakriva-net), код /opt/zakriva/orion2-demo/apps/orion2.
+# Демо само проверяет точный Host и Origin; DNS имён — в Beget.
+demo-company-a.aka-gst.ru {
+	reverse_proxy company-a:4280
+}
+
+demo-company-b.aka-gst.ru {
+	reverse_proxy company-b:4280
 }

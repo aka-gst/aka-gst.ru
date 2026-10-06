@@ -5,7 +5,9 @@ import { запуститьChrome, подключиться, sleep } from '../to
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const page = read('rasskazy/pulya-v-stakane/index.html');
-const siteCss = read('assets/site.css');
+// С 02.10.2026 страницы рассказов стоят на стилях новой главной (/site.css),
+// а не на старом assets/site.css — меряем в той же среде, что видит читатель.
+const siteCss = read('site.css');
 const css = process.env.STORY_VISUAL_NEGATIVE === 'transparent-summary'
   ? read('assets/read.css').replace('background: var(--group-summary);', 'background: transparent;')
   : read('assets/read.css');
@@ -15,7 +17,7 @@ assert.ok(sidebar, 'в собранной странице нет боковог
 
 const documentUrl = `data:text/html;charset=utf-8,${encodeURIComponent(`<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>${siteCss}\n${css}</style>${sidebar}`)}`;
+<style>${siteCss}\n${css}</style><body class="reader page-stories">${sidebar}</body>`)}`;
 
 test('сборники читаются как три отдельные секции на desktop и mobile', { timeout: 20_000 }, async () => {
   const port = 9495;

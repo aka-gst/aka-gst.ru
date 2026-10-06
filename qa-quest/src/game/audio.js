@@ -1,11 +1,22 @@
+export const EXTERNAL_SOUNDS = Object.freeze({
+  'ui-click': 'assets/audio/kenney/click.wav',
+});
+
 export const SOUND_RECIPES = Object.freeze({
+  'ui-click': Object.freeze({ frequency: 420, end: 300, duration: .045, gain: .025, type: 'triangle' }),
   cannon: Object.freeze({ frequency: 124, end: 58, duration: .09, gain: .095, type: 'sawtooth' }),
   impact: Object.freeze({ frequency: 76, end: 31, duration: .16, gain: .105, type: 'square' }),
   hit: Object.freeze({ frequency: 92, end: 48, duration: .13, gain: .08, type: 'square' }),
   dash: Object.freeze({ frequency: 180, end: 620, duration: .11, gain: .06, type: 'sawtooth' }),
   collapse: Object.freeze({ frequency: 74, end: 27, duration: .72, gain: .14, type: 'sawtooth' }),
   pickup: Object.freeze({ frequency: 290, end: 360, duration: .07, gain: .035, type: 'triangle' }),
+  scan: Object.freeze({ frequency: 520, end: 740, duration: .09, gain: .04, type: 'sine' }),
+  wire: Object.freeze({ frequency: 240, end: 680, duration: .15, gain: .05, type: 'triangle' }),
+  lock: Object.freeze({ frequency: 180, end: 110, duration: .18, gain: .065, type: 'square' }),
   drop: Object.freeze({ frequency: 130, end: 82, duration: .12, gain: .05, type: 'square' }),
+  step: Object.freeze({ frequency: 72, end: 54, duration: .045, gain: .018, type: 'triangle' }),
+  clank: Object.freeze({ frequency: 920, end: 610, duration: .08, gain: .022, type: 'square' }),
+  whoosh: Object.freeze({ frequency: 260, end: 120, duration: .09, gain: .03, type: 'sawtooth' }),
   cash: Object.freeze({ frequency: 1046, end: 1568, duration: .32, gain: .115, type: 'sine' }),
   wake: Object.freeze({ frequency: 210, end: 520, duration: .28, gain: .055, type: 'sine' }),
   arm: Object.freeze({ frequency: 118, end: 154, duration: .18, gain: .045, type: 'triangle' }),
@@ -39,6 +50,7 @@ export function createAudioBus({ search, hash } = {}) {
   let muted = false;
   let ambientNodes = null;
   let ambientName = null;
+  const samples = new Map();
 
   async function unlock() {
     if (quiet) return false;
@@ -58,6 +70,16 @@ export function createAudioBus({ search, hash } = {}) {
   }
 
   async function play(name) {
+    const external = EXTERNAL_SOUNDS[name];
+    if (external && !quiet && !muted && typeof globalThis.Audio === 'function') {
+      try {
+        let sample=samples.get(name);
+        if(!sample){sample=new globalThis.Audio(external);sample.preload='auto';sample.volume=.22;samples.set(name,sample);}
+        sample.currentTime=0;
+        const pending=sample.play(); if(pending?.catch) pending.catch(()=>{});
+        return true;
+      } catch { /* Fall through to synthesized offline-safe tone. */ }
+    }
     const recipe = SOUND_RECIPES[name];
     if (!recipe || !(await unlock())) return false;
     const started = context.currentTime;

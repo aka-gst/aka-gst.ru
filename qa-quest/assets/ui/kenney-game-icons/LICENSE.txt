@@ -1,0 +1,8 @@
+Kenney Game Icons
+Source: https://kenney.nl/assets/game-icons
+Repository mirror used for file retrieval: https://github.com/shorepine/kenney
+License: Creative Commons Zero (CC0 1.0)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Kenney states these Game Icons are CC0 and attribution is not required.
+QueQuest keeps this notice for provenance.

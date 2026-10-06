@@ -10,7 +10,7 @@ const sectionStart = html.indexOf('<section class="block practicum-switch"');
 const sectionEnd = html.indexOf('</section>', sectionStart);
 const section = html.slice(sectionStart, sectionEnd);
 
-test('обе кнопки QueQuest живут в одной нижней зоне карточки', () => {
+test('обе кнопки QueQuest живут в одной нижней зоне карточки', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   assert.ok(sectionStart >= 0, 'не найден блок практикумов');
   const articleEnd = section.indexOf('</article>');
   const moreButton = section.indexOf('class="practicum-more-btn"');
@@ -22,7 +22,7 @@ test('обе кнопки QueQuest живут в одной нижней зон�
   assert.doesNotMatch(section, /practicum-more-teaser/);
 });
 
-test('QueQuest читается как отдельный фиолетовый продукт, а не зелёная карточка раздела', () => {
+test('QueQuest читается как отдельный фиолетовый продукт, а не зелёная карточка раздела', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   const brand = section.match(/<h3 id="quequest-title">([\s\S]*?)<\/h3>/)?.[1] || '';
 
   assert.match(brand, /class="quequest-brand"/,
@@ -41,14 +41,14 @@ test('QueQuest читается как отдельный фиолетовый �
     'на ширинах до 900px название остаётся десктопным и режет правый край');
 });
 
-test('заголовок крупный, дополнительные карточки компактны и hidden не протекает', () => {
+test('заголовок крупный, дополнительные карточки компактны и hidden не протекает', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   assert.match(css, /\.quequest-copy h3\s*\{[^}]*font-size:\s*clamp\(48px,\s*6vw,\s*76px\)/s);
   assert.match(css, /\.practicum-more-body\[hidden\]\s*\{\s*display:\s*none/);
   assert.match(css, /\.practicum-more \.practicum-detail\s*\{[^}]*min-height:\s*76px/s);
   assert.match(css, /\.practicum-more \.practicum-detail-copy \.tagline\s*\{\s*display:\s*none/);
 });
 
-test('Живой цех скрыт с витрины, но его источник не удалён', () => {
+test('Живой цех скрыт с витрины, но его источник не удалён', { skip: 'старая главная заменена 02.10.2026 по решению Сергея (новая — design-preview/site → корень, tools/novaya-glavnaya.mjs); тест проверял устройство старой' }, () => {
   assert.doesNotMatch(html, /id="masterskaya"|>Живой цех</);
   assert.ok(readFileSync(new URL('data/tseh/zhivoy-tseh.html', root), 'utf8').includes('<h2>Живой цех</h2>'));
 });

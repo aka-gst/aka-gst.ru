@@ -1,0 +1,100 @@
+// 19.1 · «КЛАСС» — a MOCK of the teacher view (canon §19). No server, no
+// real children: ten made-up students («пример класса»), each with a §13
+// mastery grid built the same way the game builds it, shown through the same
+// diverCard() the player sees. It shows what accounts + a teacher dashboard
+// would give: ratings per area, proofs, who is stuck where, what to give next.
+
+import { AREAS, AREA_IDS, AREA_QUESTS, diverCard, powersOf } from './diver-card.js';
+import { badgeById } from './achievements.js';
+
+// Badge info for a class row (19.3): count + whether the pride badge «нашёл
+// шов» is among the ids the student opened to the class.
+export function classBadges(ids = []) {
+  const list = (Array.isArray(ids) ? ids : []).filter((id) => badgeById(id));
+  return { count: list.length, ids: list, seam: list.includes('seam-found') };
+}
+
+const W = ['tap', 'knobs', 'code', 'raw'];
+// [skill, way, stage, proofs] per student. misses: wrong duel answers by area.
+const STUDENTS = Object.freeze([
+  { id: 'ex-01', nick: 'Аня К.', xp: 820, grid: [['print', 2, 4, 3], ['if', 2, 3, 3], ['for', 2, 2, 2], ['site', 1, 3, 2]], misses: { loop: 1 }, badges: ['fired-honor', 'vitya-car', 'duel-first', 'taster-web'] },
+  { id: 'ex-02', nick: 'Боря Л.', xp: 310, grid: [['print', 2, 2, 2], ['if', 1, 2, 2], ['bits', 1, 4, 3]], misses: { if: 4, loop: 3 }, badges: ['no-button', 'taster-lowlevel'] },
+  { id: 'ex-03', nick: 'Вика М.', xp: 1460, grid: [['print', 2, 5, 4], ['if', 2, 4, 4], ['for', 2, 3, 3], ['def', 2, 2, 2], ['guard', 2, 3, 3], ['train', 1, 3, 2]], misses: {}, badges: ['fired-honor', 'hacker-pro', 'all-tasters', 'ladder-clear', 'seam-found', 'flag-price', 'flag-admin', 'polygon-clear'] },
+  { id: 'ex-04', nick: 'Гоша Н.', xp: 120, grid: [['print', 0, 2, 1], ['if', 0, 1, 1]], misses: { say: 2, if: 5 }, badges: [] },
+  { id: 'ex-05', nick: 'Даша О.', xp: 640, grid: [['print', 2, 3, 2], ['site', 1, 4, 3], ['train', 1, 4, 3], ['if', 1, 3, 2]], misses: { loop: 4 }, badges: ['vitya-car', 'taster-web', 'taster-ai'] },
+  { id: 'ex-06', nick: 'Егор П.', xp: 980, grid: [['print', 2, 3, 3], ['if', 2, 3, 3], ['lock', 2, 3, 2], ['guard', 1, 4, 3], ['bits', 1, 3, 2], ['cascade', 1, 2, 1]], misses: { web: 2 }, badges: ['sanya-lock', 'flag-input', 'flag-token', 'seam-found'] },
+  { id: 'ex-07', nick: 'Женя Р.', xp: 260, grid: [['print', 1, 3, 2], ['for', 1, 1, 1], ['cascade', 1, 3, 2]], misses: { loop: 6 }, badges: ['reflex-save'] },
+  { id: 'ex-08', nick: 'Зоя С.', xp: 1890, grid: [['print', 3, 3, 4], ['if', 2, 5, 5], ['for', 2, 4, 4], ['while', 2, 3, 2], ['def', 2, 3, 3], ['route', 2, 3, 2], ['bits', 1, 4, 2]], misses: {}, badges: ['fired-honor', 'self-automaton', 'engineer-pro', 'duel-clean', 'beat-spec', 'flag-sign', 'polygon-clear'] },
+  { id: 'ex-09', nick: 'Илья Т.', xp: 430, grid: [['print', 2, 2, 2], ['if', 2, 1, 1], ['guard', 1, 2, 2], ['bits', 1, 2, 1]], misses: { if: 3, guard: 2 }, badges: ['no-button', 'reflex-crate'] },
+  { id: 'ex-10', nick: 'Кира У.', xp: 700, grid: [['print', 2, 3, 2], ['site', 1, 3, 2], ['train', 1, 2, 2], ['cascade', 1, 4, 3], ['try', 1, 2, 1]], misses: { hw: 3 }, badges: ['taster-web', 'taster-systems', 'meaning-seam'] },
+]);
+
+function profileOf(s) {
+  const mastery = {};
+  for (const [skill, wi, stage, n] of s.grid) {
+    const ways = { tap: 0, knobs: 0, code: 0, raw: 0 };
+    for (let i = 0; i <= wi; i++) ways[W[i]] = i === wi ? stage : Math.max(ways[W[i]], Math.min(5, stage + 1));
+    const proofs = Array.from({ length: n }, (_, k) => ({ key: `ex:${skill}:${k}`, way: W[Math.min(wi, k)], stage: Math.max(1, stage - (n - 1 - k)), hints: 0, source: 'example' }));
+    mastery[skill] = { ways, best: W[wi], proofs };
+  }
+  return { xp: s.xp, mastery, duel: { nick: s.nick, avatar: (Number(s.id.slice(-2)) * 3) % 8 } };
+}
+
+// Stuck = the area with the most wrong duel answers (3+), else the weakest
+// area the student already touched. Suggest = the place in the game for it.
+export function studentView(s) {
+  const profile = profileOf(s);
+  const card = diverCard(profile);
+  const missTop = Object.entries(s.misses).sort((a, b) => b[1] - a[1])[0];
+  const stuckId = missTop && missTop[1] >= 3 ? missTop[0] : (card.weakest?.id ?? null);
+  const stuck = stuckId ? AREAS.find((a) => a.id === stuckId) : null;
+  return {
+    id: s.id, nick: s.nick, example: true, card, powers: powersOf(card), misses: { ...s.misses }, badges: classBadges(s.badges),
+    stuck: stuck ? { id: stuck.id, name: stuck.name, why: missTop && missTop[0] === stuck.id && missTop[1] >= 3 ? `${missTop[1]} ошибок подряд в дуэлях` : 'слабее всего из начатого' } : null,
+    suggest: stuck ? AREA_QUESTS[stuck.id] : null,
+  };
+}
+export function sampleClass() { return STUDENTS.map(studentView); }
+
+export function classSummary(list = sampleClass()) {
+  const avg = AREA_IDS.map((id, i) => ({ id, name: AREAS[i].name, short: AREAS[i].short, avg: Math.round(list.reduce((s, x) => s + x.powers[i], 0) / list.length), stuck: list.filter((x) => x.stuck?.id === id).length }));
+  const weakest = [...avg].sort((a, b) => a.avg - b.avg)[0];
+  const mostStuck = [...avg].sort((a, b) => b.stuck - a.stuck)[0];
+  const badges = list.reduce((s, x) => s + (x.badges?.count ?? 0), 0);
+  const seams = list.filter((x) => x.badges?.seam).length;
+  return { students: list.length, avg, weakest, mostStuck, proofs: list.reduce((s, x) => s + x.card.proofs, 0), badges, seams };
+}
+
+// A real class (accounts): one row per player snapshot from the adapter's
+// listPlayers({ classId }). Misses come from the duel history in the profile.
+export function studentFromSnapshot({ id, nick, snapshot } = {}) {
+  const profile = snapshot?.profile ?? {};
+  const misses = {};
+  for (const h of profile.duel?.history ?? []) for (const t of h.misses ?? []) { const area = String(t ?? '').split('.')[0]; if (area) misses[area] = (misses[area] ?? 0) + 1; }
+  const view = studentView({ id: String(id ?? 'x-00'), nick: nick ?? snapshot?.card?.nick ?? '—', xp: profile.xp ?? 0, grid: [], misses });
+  const card = diverCard(profile);
+  const missTop = Object.entries(misses).sort((a, b) => b[1] - a[1])[0];
+  const stuckId = missTop && missTop[1] >= 3 ? missTop[0] : (card.weakest?.id ?? null);
+  const stuck = stuckId ? AREAS.find((a) => a.id === stuckId) : null;
+  return { ...view, example: false, card, powers: powersOf(card), badges: classBadges(Object.keys(profile.badges ?? {})), stuck: stuck ? { id: stuck.id, name: stuck.name, why: missTop && missTop[0] === stuck.id && missTop[1] >= 3 ? `${missTop[1]} ошибок в дуэлях` : 'слабее всего из начатого' } : null, suggest: stuck ? AREA_QUESTS[stuck.id] : null };
+}
+
+// 19.2 · A classmate's PUBLIC card from the site's class service (opt-in:
+// nick, avatar, rank, 9 powers — nothing else). Same row shape as above, plus
+// a duel ghost built from the powers.
+export function studentFromCard({ id, nick, card = {} } = {}) {
+  const powers = AREA_IDS.map((_, i) => Math.max(0, Math.min(100, Math.round(Number(card.powers?.[i]) || 0))));
+  const areas = AREAS.map((a, i) => ({ id: a.id, name: a.name, power: powers[i] }));
+  const tried = areas.filter((a) => a.power > 0);
+  const strongest = tried.length ? [...tried].sort((x, y) => y.power - x.power)[0] : null;
+  const weakest = tried.length ? [...tried].sort((x, y) => x.power - y.power)[0] : null;
+  const name = String(nick ?? card.nick ?? '—');
+  const avatar = Math.max(0, Math.min(7, Number(card.avatar) || 0));
+  return {
+    id: String(id ?? 'class-x'), nick: name, example: false, public: true, powers, misses: {}, badges: classBadges(card.badges),
+    card: { rank: String(card.rank ?? ''), proofs: 0, strongest, avatar },
+    stuck: weakest ? { id: weakest.id, name: weakest.name, why: 'слабее всего из начатого' } : null,
+    suggest: weakest ? AREA_QUESTS[weakest.id] : null,
+    ghost: { id: String(id ?? 'class-x'), name, avatar, powers, classmate: true, hello: 'Я из твоего класса. Посмотрим, кто быстрее!', win: 'Ладно, сегодня ты сильнее.', lose: 'Мой призрак победил. Подтянись и вызови снова!' },
+  };
+}

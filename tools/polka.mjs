@@ -63,7 +63,7 @@ const проверить = (что, ладно, чем) => {
   if (!ладно) беды.push(что);
 };
 
-const открытые = `[...document.querySelectorAll('.book')]
+const открытые = `[...document.querySelectorAll('.sbornik')]
   .filter((b) => !b.querySelector('.book-body').hidden)
   .map((b) => b.querySelector('h2').textContent)`;
 

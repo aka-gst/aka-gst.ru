@@ -1,0 +1,61 @@
+/* 19.2 · Аккаунт сайта: «ВОЙТИ» / ник и окно входа. QueQuest's look
+   (ink panels, gold for actions, cyan for state), ≥14px, fits 375×812. */
+.akk-slot{display:flex;justify-content:center}
+.akk-slot[hidden]{display:none}
+.akk-slot--title{margin-top:10px}
+.akk-pill{display:inline-flex;align-items:baseline;gap:8px;min-height:40px;padding:6px 14px;border:1px solid #64e9ff66;border-radius:999px;background:#0b1013e6;color:#eef1ed;font:800 14px/1.2 ui-monospace,monospace;letter-spacing:.06em;cursor:pointer;white-space:nowrap;max-width:100%}
+.akk-pill[hidden]{display:none}
+.akk-pill b{color:#ffc857;font-weight:900}
+.akk-pill small{font-size:14px;color:#a9b3b0;letter-spacing:0;font-family:system-ui,sans-serif;font-weight:600}
+.akk-pill[data-user="true"] b{color:#fff}
+.akk-pill[data-user="true"] small{color:#8ff0a6}
+.akk-pill[data-warn="true"] small{color:#ffc857}
+.akk-pill:hover,.akk-pill:focus-visible{border-color:#ffc857;outline:none}
+
+.akk{position:fixed;inset:0;z-index:400;display:grid;place-items:center;padding:12px;background:#000a;backdrop-filter:blur(3px);box-sizing:border-box}
+.akk *{box-sizing:border-box}
+.akk__panel{width:min(440px,100%);max-height:calc(100dvh - 24px);overflow:auto;display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid #ffffff1f;border-radius:14px;background:linear-gradient(180deg,#0b141a,#05080a);color:#eef1ed;font:15px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 30px 80px -30px #000}
+.akk__top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.akk__top small{display:block;color:#ffc857;font:800 14px/1.2 ui-monospace,monospace;letter-spacing:.1em}
+.akk__top h2{margin:2px 0 0;font:900 24px/1.1 system-ui,sans-serif;color:#fff;word-break:break-word}
+.akk__close{min-width:44px;min-height:44px;border:1px solid #ffffff1f;border-radius:8px;background:#0f1519;color:#eef1ed;font-size:24px;cursor:pointer}
+.akk__lead{margin:0;color:#c9d1ce}
+.akk__save{margin:0;font-weight:800;color:#8ff0a6}
+.akk__save[data-warn="true"]{color:#ffc857}
+.akk__row{display:flex;flex-wrap:wrap;gap:8px}
+.akk__row>button{flex:1 1 160px}
+.akk button{font:inherit;cursor:pointer}
+.akk__row button,.akk__tabs button,.akk__out{min-height:44px;padding:0 12px;border:1px solid #ffffff2a;border-radius:8px;background:#0f1519;color:#eef1ed;font-weight:800;letter-spacing:.04em}
+.akk__row button:hover,.akk__tabs button:hover,.akk__out:hover{border-color:#64e9ff}
+.akk__google{display:flex;justify-content:center;min-height:0}
+.akk__google[hidden]{display:none}
+.akk__form{display:flex;flex-direction:column;gap:8px;padding-top:4px;border-top:1px solid #ffffff14}
+.akk__tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.akk__tabs button[aria-selected="true"]{border-color:#64e9ff;color:#64e9ff}
+.akk__field{display:flex;flex-direction:column;gap:4px;font-weight:700;color:#c9d1ce}
+.akk__field small{font-weight:500;color:#a9b3b0;font-size:14px}
+.akk__field input{min-height:44px;padding:0 12px;border:1px solid #ffffff2a;border-radius:8px;background:#05080a;color:#fff;font:16px system-ui,sans-serif}
+.akk__field input:focus{outline:none;border-color:#64e9ff;box-shadow:0 0 0 3px #64e9ff22}
+.akk__rule{color:#a9b3b0;font-size:14px}
+.akk__go{min-height:46px;border:0;border-radius:8px;background:#ffc857;color:#0b0d10;font-weight:900;letter-spacing:.06em}
+.akk__out{color:#ff8a84}
+.akk__note{color:#a9b3b0;font-size:14px}
+.akk__msg{margin:0;padding:8px 10px;border-radius:8px;background:#ffc85714;color:#ffc857;font-weight:700}
+.akk__msg[hidden]{display:none}
+
+/* ring: «мой класс» */
+.ring-myclass{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;align-content:start;max-height:100%;overflow:auto}
+.ring-myclass section{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--r-line,#ffffff1f);border-radius:12px;background:var(--r-panel,#0b1013)}
+.ring-myclass h3{margin:0;color:var(--r-gold,#ffc857);font:800 14px ui-monospace,monospace;letter-spacing:.08em}
+.ring-myclass p{margin:0}
+.ring-myclass input{min-height:44px;padding:0 12px;border:1px solid #ffffff2a;border-radius:8px;background:#05080a;color:#fff;font:16px system-ui,sans-serif}
+.ring-myclass button{min-height:44px;border:1px solid var(--r-line,#ffffff1f);border-radius:8px;background:#0f1519;font-weight:800}
+.ring-myclass button[aria-pressed="true"]{border-color:var(--r-cyan,#64e9ff);color:var(--r-cyan,#64e9ff)}
+.ring-myclass__code{font:900 22px ui-monospace,monospace;color:#fff;letter-spacing:.12em}
+.ring-myclass label.ring-toggle{display:flex;gap:10px;align-items:center;font-weight:700}
+.ring-myclass label.ring-toggle input{min-height:0;width:22px;height:22px}
+.ring-myclass small{font-size:14px;color:var(--r-dim,#a9b3b0)}
+.ring-ladder__head{list-style:none}
+.ring-ladder__head small{display:block;padding:6px 2px 0;font:800 14px ui-monospace,monospace;letter-spacing:.06em;color:var(--r-gold,#ffc857)}
+/* the title pill never sits on top of the ring or a dialog */
+body:has(#deepRing:not([hidden])) .akk-slot--title{display:none}

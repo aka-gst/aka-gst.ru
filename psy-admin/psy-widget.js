@@ -120,7 +120,7 @@ window.setTimeout(applyHostPagePolish, 800);
 window.setTimeout(applyHostPagePolish, 1800);
 
 try {
-  await import(new URL("./psy-widget-app.js?v=psy-widget-20260913-26", import.meta.url).href);
+  await import(new URL("./psy-widget-app.js?v=psy-widget-20261003-2", import.meta.url).href);
 } catch (error) {
   console.error("Голосовой помощник не загрузился, хедер и вёрстка страницы этим не затронуты:", error);
 }

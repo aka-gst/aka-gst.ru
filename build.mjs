@@ -54,7 +54,10 @@ const датаФайла = (relative) => {
 // читаются ОТСЮДА, а не переписываются руками: скопированное число живёт
 // своей жизнью и через месяц расходится с источником. Файл читается при
 // сборке, переменные уезжают в разметку — лишнего запроса из браузера нет.
-const АНИМАТЕКА = '/Users/gst/dev/animateka/animateka.json';
+// С сентября 2026 аниматека живёт в ~/dev/_services/animateka; старый путь — запасной.
+// Без этой поправки сборка тихо выпускала страницы с пустым <style> (найдено 02.10.2026).
+const АНИМАТЕКА = ['/Users/gst/dev/_services/animateka/animateka.json', '/Users/gst/dev/animateka/animateka.json']
+  .find(p => existsSync(p)) || '/Users/gst/dev/_services/animateka/animateka.json';
 const анимТокены = (() => {
   if (!existsSync(АНИМАТЕКА)) {
     console.warn('  ! аниматеки нет на месте — кривые останутся прежними');
@@ -1386,7 +1389,10 @@ const снятьТочки = (страница) => {
   return страница;
 };
 
-writeFileSync(join(root, 'index.html'), снятьТочки(html));
+// С 02.10.2026 старая главная в файл не пишется: новая (tools/novaya-glavnaya.mjs)
+// берёт из неё только значки. Запись старой и перезапись новой давали окно, в
+// котором параллельный тест читал старую главную и краснел (гонка).
+globalThis.__starayaGlavnaya = снятьТочки(html);
 
 // ── Индекс раздела практикумов ───────────────────────────────────────
 // Редирект /praktikum вёл в пустоту, пока этой страницы не было.
@@ -1631,32 +1637,25 @@ const readerHead = (title, description, canonical) => `
     <link rel="canonical" href="${esc(canonical)}">
     <link rel="icon" href="/assets/favicon-32.png?v=${assetVersion('assets/favicon-32.png')}" type="image/png" sizes="32x32">
     <link rel="icon" href="/assets/favicon-64.png?v=${assetVersion('assets/favicon-64.png')}" type="image/png" sizes="64x64">
-    <style>${анимТокены}</style>
-    <link rel="stylesheet" href="/assets/site.css?v=${cssVersion}">
+    ${ШАПКА_ГОЛОВА}
     <link rel="stylesheet" href="/assets/read.css?v=${assetVersion('assets/read.css')}">
     <script defer src="/assets/afterimage-scroll.js?v=${assetVersion('assets/afterimage-scroll.js')}"></script>
     <script defer src="/pulse/script.js" data-website-id="${esc(site.umamiId)}"></script>`;
 
 // Шапка сайта на страницах рассказов. Владелец: «почему рассказы не в стиле
 // сайта сделаны, хотя бы хэдер» — и он прав: без неё раздел читался как
-// чужой сайт. Переключатель здесь — ссылки, а не кнопки: панелей на этой
-// странице нет, переключать нечего, а увести на главную нужно.
+// чужой сайт. С 02.10.2026 это шапка новой главной (правка Сергея №14: «когда
+// читаешь — в том же странном цвете, не в духе нашего нового сайта»). Своей
+// копии шапки здесь нет: её и стили новой главной вставляет последним шагом
+// tools/shapka-rasskazov.mjs — ровно те, что в собранной stories.html, иначе
+// правка шапки на главной не доезжала бы до рассказов (правило 27).
+const ШАПКА_ГОЛОВА = '<!-- SHAPKA-RASSKAZOV:HEAD -->';
 const readerTopbar = `
-      <header class="topbar">
-        ${brand('stories')}
-        <div class="track-switch" role="group" aria-label="Разделы сайта">
-          <a href="/#work">${trackIcon('work')}<span>${esc(site.tracks.work.label)}</span></a>
-          <a href="/#games">${trackIcon('games')}<span>${esc(site.tracks.play.label)}</span></a>
-        </div>
-        <a class="topbar-link topbar-link--here" href="/rasskazy/" aria-current="page">Рассказы</a>
-        <nav class="socials" aria-label="Профили">
-${socialLinks('reader')}
-        </nav>
-      </header>`;
+    <!-- SHAPKA-RASSKAZOV:HEADER -->`;
 
-// Оглавление на больших экранах стоит сбоку, а на узких входит в общий поток.
-// Сборники сворачиваются, поэтому мобильный первый экран не занят всеми
-// двадцатью тремя ссылками сразу.
+// Оглавление на больших экранах стоит сбоку, а на узких входит в общий поток
+// ПОСЛЕ рассказа (порядок задаёт read.css, разметка та же). Сборники
+// сворачиваются, поэтому и там оно не тянется всеми двадцатью тремя ссылками.
 const readerSide = (current) => `
       <nav class="reader-side" aria-label="Все рассказы">
 ${сборникиПоказ
@@ -1744,7 +1743,7 @@ const storiesIndex = `<!doctype html>
     `${site.url}/rasskazy/`
   )}
   </head>
-  <body class="reader">
+  <body class="reader page-stories">
 ${readerTopbar}
     <header class="reader-top">
       <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
@@ -1802,7 +1801,7 @@ ${readerTopbar}
       <div class="bgrid">
 ${сборникиПоказ
   .map(
-    (c, ci) => `      <div class="book" id="book-${esc(c.id)}">
+    (c, ci) => `      <div class="sbornik" id="book-${esc(c.id)}">
         <article class="bcard">
           ${
             c.cover
@@ -1893,6 +1892,12 @@ ${book.напечатано.кадры
 mkdirSync(join(root, 'rasskazy'), { recursive: true });
 writeFileSync(join(root, 'rasskazy', 'index.html'), storiesIndex);
 
+// «Все рассказы» со страницы рассказа — раздел «Рассказы» новой главной, сразу
+// на его сборнике (решение Рота 02.10.2026 при приёмке правки №14). Якорь —
+// id сборника из stories.json: им же build-content.mjs подписывает секции
+// stories.html, и tests/story-reader-readability сверяет, что он там есть.
+const кОглавлению = (st) => `/stories.html#${st.book.id}`;
+
 for (const [i, st] of storyList.entries()) {
   const prev = storyList[i - 1];
   const next = storyList[i + 1];
@@ -1904,11 +1909,11 @@ for (const [i, st] of storyList.entries()) {
     `${site.url}/rasskazy/${st.slug}/`
   )}
   </head>
-  <body class="reader">
+  <body class="reader page-stories">
     <div class="reader-progress" aria-hidden="true"><i></i></div>
 ${readerTopbar}
     <header class="reader-top">
-      <a class="site-home" href="/rasskazy/">← Все рассказы</a>${readerBar}
+      <a class="site-home" href="${esc(кОглавлению(st))}">← Все рассказы</a>${readerBar}
     </header>
     <main id="main" class="reader-main reader-main--wide">
 ${readerSide(st.slug)}
@@ -1938,7 +1943,7 @@ ${readerSide(st.slug)}
       </p>
       <nav class="story-nav">
         ${prev ? `<a href="/rasskazy/${esc(prev.slug)}/">← ${esc(prev.title)}</a>` : '<span></span>'}
-        <a href="/rasskazy/">Оглавление</a>
+        <a href="${esc(кОглавлению(st))}">Оглавление</a>
         ${next ? `<a href="/rasskazy/${esc(next.slug)}/">${esc(next.title)} →</a>` : '<span></span>'}
       </nav>
       </div>
@@ -2209,3 +2214,10 @@ console.log(
     html.length
   } байт`
 );
+
+// Новая главная (решение Сергея 02.10.2026): три страницы кандидата из
+// design-preview/site кладутся в корень поверх старой главной. Откат — убрать строку.
+await import('./tools/novaya-glavnaya.mjs');
+// Страницы рассказов получают шапку и стили новой главной из только что
+// собранной stories.html — после неё, иначе взяли бы вчерашнюю.
+await import('./tools/shapka-rasskazov.mjs');

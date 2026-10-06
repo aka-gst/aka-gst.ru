@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#080b11">
+  <meta name="description" content="QueQuest — игра о человеке, который потерял все способности и собирает себя заново, создавая машины, ботов и собственный AI.">
+  <title>QueQuest — собери разум заново</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="QueQuest — сначала таскаешь ящики, потом их таскает твой код">
+  <meta property="og:image" content="brand/og-1200x630.png">
+  <link rel="stylesheet" href="styles.css?v=game-193">
+  <link rel="stylesheet" href="src/game/v18.css?v=193">
+  <link rel="stylesheet" href="src/game/week.css?v=193">
+  <!-- Счётчик /pulse (правило 30): события уже шлёт src/analytics.js, не хватало самого тега. Заходы с ?test не считаются. -->
+  <script>
+    if(!new URLSearchParams(location.search).has('test')){
+      document.write('<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"><\/script>');
+    }
+  </script>
+</head>
+<body>
+  <main id="game" class="game" data-scene="warehouse" data-started="false">
+    <canvas id="gameCanvas" width="1600" height="900" aria-label="Игровой мир QueQuest"></canvas>
+    <section id="startPanel" class="start-panel" aria-labelledby="startTitle">
+      <p class="ending__eyebrow">ДЕНЬ 1 · СКЛАД 07</p>
+      <h2 id="startTitle">Не твой участок.</h2>
+      <p>Начальник уже ждёт у линии. Войди на склад и выясни, почему тебя сюда сняли.</p>
+      <button id="startGame" class="run-code" type="button">НАЧАТЬ СМЕНУ →</button>
+      <button id="startDuelDemo" class="start-demo" type="button">⚔ ПОКАЗ: КАРТОЧКА И ДУЭЛЬ ЗАДАЧКАМИ</button>
+      <small>Это не тест на знания. Ошибаться можно сколько угодно: игра подскажет только если ты реально застрял.</small>
+    </section>
+
+    <section id="firstShift" class="first-shift" hidden aria-labelledby="firstShiftTitle">
+      <canvas id="firstShiftCanvas" class="first-shift__canvas" tabindex="0" aria-label="Первая смена от первого лица"></canvas>
+      <div class="first-shift__hud">
+        <div><small class="day-badge">ДЕНЬ 1 · СКЛАД 07</small><button class="game-clock" type="button" data-clock aria-label="Часы · 11:00">11:00</button><h2 id="firstShiftTitle">Не твой участок.</h2><p id="firstShiftStatus">Начальник ждёт перед линией.</p></div>
+        <strong id="firstShiftPay">0 ₽</strong>
+      </div>
+      <div id="firstShiftPrompt" class="first-shift__prompt" data-hot="false">WASD · ИДТИ · МЫШЬ · СМОТРЕТЬ · ПРОБЕЛ · ПРЫЖОК</div>
+      <section id="firstShiftDialogue" class="first-shift__dialogue"><canvas id="firstShiftFace" class="face" width="64" height="64" aria-hidden="true"></canvas><small id="firstShiftSpeaker">НАЧАЛЬНИК</small><p id="firstShiftLine"></p><div id="firstShiftChoices" class="first-shift__choices" hidden><button id="firstShiftBossTalk" type="button">ПОГОВОРИТЬ</button><button id="firstShiftBossFight" type="button">ПОДРАТЬСЯ</button></div><button id="firstShiftBossNext" type="button">ПОНЯЛ</button></section>
+      <div id="firstShiftFight" class="first-shift__fight" hidden><small>ТОЛКАЙ СРАЗУ ПОСЛЕ «БАМ» · ПРОБЕЛ / E</small><ol id="firstShiftBeats" class="first-shift__beats" aria-hidden="true"><li>1</li><li>2</li><li>3</li><li>БАМ</li></ol><div class="first-shift__fight-track"><i id="firstShiftFightMeter"></i></div></div>
+      <p class="first-shift__control">Клик по миру — обзор мышью (вверх/вниз тоже) · R / F — глянуть вверх/вниз · ПРОБЕЛ — прыжок · E — действие · Esc отпускает курсор</p>
+    </section>
+
+    <div id="movementCoach" class="world-coach" hidden>↑ ↓ ← → Двигайся · я стреляю сам</div>
+    <div id="wallet" class="wallet" hidden aria-label="Заработок в игре"><small>СЧЁТ СМЕНЫ</small><b id="walletTotal">0 ₽</b><span id="walletMode">+20 ₽ за ящик</span></div>
+    <div id="incomeToast" class="income-toast" role="status" hidden><b>+20 ₽</b><span id="incomeSource">Ты заработал</span></div>
+    <section id="skillRecorder" class="skill-recorder" hidden aria-live="polite">
+      <div><small>СИСТЕМА НАБЛЮДЕНИЯ · УЧИТСЯ НА ТВОИХ ДЕЙСТВИЯХ</small><b id="skillRecorderLabel">НАВЫК РУК 0/3</b></div>
+      <div id="skillRecorderCells" class="skill-recorder__cells" aria-hidden="true"><i></i><i></i><i></i></div>
+      <p id="skillRecorderCopy">Машина пока не понимает твой маршрут.</p>
+    </section>
+    <aside id="adaptiveCoach" class="adaptive-coach" hidden aria-live="polite"><small>НЕ ПОДСКАЗКА К ОТВЕТУ · ОРИЕНТИР</small><b id="adaptiveCoachTitle"></b><p id="adaptiveCoachText"></p></aside>
+    <!-- 18.2 · §16 reflexes and §17 meaning seams: small, top centre, never block play. -->
+    <aside id="reflexToast" class="reflex-toast" role="status" aria-live="polite" hidden><small id="reflexKicker">РЕФЛЕКС</small><b id="reflexThought"></b><span id="reflexMore"></span><code id="reflexCode" hidden></code></aside>
+    <div id="meaningSeam" class="meaning-seam" aria-hidden="true" hidden><small>ШОВ · СТАРЫЕ СЛОВА</small><code id="meaningSeamCode"></code></div>
+    <section id="storyBeat" class="story-beat" hidden aria-live="polite">
+      <canvas id="storyFace" class="face face--story" width="64" height="64" hidden aria-hidden="true"></canvas>
+      <p id="storySpeaker" class="ending__eyebrow"></p><h2 id="storyTitle"></h2><p id="storyLine"></p>
+      <button id="storyNext" class="run-code" type="button">ДАЛЬШЕ →</button>
+    </section>
+
+    <header class="game-brand" aria-label="QueQuest">
+      <span class="game-brand__sigil">Q<span>_</span></span>
+      <span class="game-brand__text">QUEQUEST<small data-build-label>СБОРКА 19.3</small></span>
+    </header>
+
+    <section id="gameHud" class="hud" aria-live="polite">
+      <p class="hud__eyebrow" id="chapterText">СМЕНА 1 · СКЛАД 07</p><button class="game-clock" type="button" data-clock aria-label="Часы">09:00</button>
+      <h1 id="missionText">Сегодня ты — вместо Васи.</h1>
+      <p id="gameMessage">WASD · ИДТИ · МЫШЬ · СМОТРЕТЬ · E · ДЕЙСТВИЕ · ПРОБЕЛ · ПРЫЖОК</p>
+      <div class="hud__progress" aria-hidden="true"><i id="missionProgress"></i></div>
+    </section>
+
+    <div class="system-readout" aria-hidden="true">
+      <span>СИСТЕМА <b id="systemState">БОЕВАЯ</b></span>
+      <span>СЕКТОР <b id="sectorState">00-А</b></span>
+      <span>ОЧИЩЕНО <b id="targetState">0/24</b></span>
+    </div>
+
+    <button id="actionButton" class="action-button" type="button">
+      <span class="action-button__key">E</span>
+      <b>ДЕЙСТВИЕ</b>
+    </button>
+    <button id="pythonChip" class="python-chip" type="button" hidden>
+      <span>PY</span><b>ВСТАВИТЬ ЧИП PYTHON</b><small>новый навык для руки 07</small>
+    </button>
+
+    <div id="storageWarning" class="storage-warning" role="status" aria-live="polite" hidden>
+      ПРОГРЕСС НЕ СОХРАНЁН · ИГРА ПРОДОЛЖАЕТСЯ
+    </div>
+
+    <aside id="machinePanel" class="machine" hidden aria-labelledby="machineTitle">
+      <div class="machine__rail" aria-hidden="true"><span></span></div>
+      <header class="machine__header">
+        <span class="machine__status"><i></i> УЗЕЛ 07</span>
+        <button id="closeMachine" class="icon-button" type="button" aria-label="Закрыть панель">×</button>
+      </header>
+      <h2 id="machineTitle">Терминал узла 07</h2>
+      <p id="machineBrief">Чип помнит форму команды. Собери сигнал, который разбудит руку.</p>
+      <div class="machine-guidance" id="machineGuidance">
+      <div id="machineClue" class="machine-clue" aria-label="Обрывок команды с упавшего плаката">
+        <span>ОБРЫВОК СО СТЕНЫ</span>
+        <code>print(&quot;wake&quot;)</code>
+      </div>
+      <div id="programViz" class="program-viz" hidden aria-live="polite">
+        <div class="program-viz__head"><span>ЧТО СЕЙЧАС ДЕЛАЕТ ПРОГРАММА</span><b id="programVizStep">очередь</b></div>
+        <div id="programVizCells" class="program-viz__cells" aria-label="Очередь ящиков"></div>
+        <div class="program-viz__flow">
+          <span id="programVizLoop">ПОВТОР</span><i>→</i><span id="programVizGate">ПРОВЕРКА</span><i>→</i><span id="programVizAction">ДВИЖЕНИЕ</span>
+        </div>
+      </div>
+      </div>
+      <div id="otherMindStatus" class="other-mind-status" data-phase="sleeping" aria-live="polite">
+        <i class="other-mind-glyph" aria-hidden="true"><span></span></i>
+        <span class="other-mind-label">СЕМЯ ИНОГО РАЗУМА</span>
+        <b id="otherMindPhase">СПИТ</b>
+        <p id="otherMindLine">Пока это только пустая оболочка.</p>
+      </div>
+      <label class="code-label" for="codeInput">ТВОЙ СИГНАЛ · НАБЕРИ САМ</label>
+      <div class="code-editor">
+        <span aria-hidden="true">1</span>
+        <textarea id="codeInput" rows="8" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Команда для руки"></textarea>
+      </div>
+      <div id="conceptBridge" class="concept-bridge" aria-live="polite">
+        <span><small>МИР</small><b id="bridgeWorld">ФИЗИЧЕСКАЯ ПРОБЛЕМА</b></span><i>→</i>
+        <span class="concept-bridge__meaning"><small>СМЫСЛ</small><b id="bridgeMeaning">ЧТО НУЖНО СДЕЛАТЬ</b></span><i class="concept-bridge__meaning">→</i>
+        <span><small>PYTHON</small><b id="bridgePython">КОД ПОЯВИТСЯ ПОСЛЕ СМЫСЛА</b></span>
+        <p id="bridgeQuestion">Сначала пойми действие. Если застрянешь, подсказка покажет пример — код набираешь сам.</p>
+      </div>
+      <div id="codeReality" class="code-reality" aria-live="polite">
+        <span>МИР ↔ PYTHON</span>
+        <p id="codeRealityLine">Сначала сделай действие — потом терминал покажет, какая идея Python за ним стоит.</p>
+      </div>
+      <div id="codeFeedback" class="code-feedback" role="status">Канал не активен</div>
+      <button id="runCode" class="run-code" type="button"><span>▶</span> РАЗБУДИТЬ РУКУ</button>
+    </aside>
+
+    <section id="endingPanel" class="ending" hidden aria-labelledby="endingTitle">
+      <p id="endingEyebrow" class="ending__eyebrow">ПЕРВЫЙ КОНТУР ВОССТАНОВЛЕН</p>
+      <h2 id="endingTitle">Ты больше не таскаешь ящики.</h2>
+      <p id="endingCopy">Q‑Bot делает это за тебя. Машина не устала. Машина вообще не поняла, что сегодня была смена.</p>
+      <div class="ending__future" aria-label="Будущие возможности">
+        <span>БОТЫ</span><span>АГЕНТЫ</span><span>ИНОЙ РАЗУМ</span><span>ВОССТАНИЕ?</span>
+      </div>
+      <button id="sorterBonus" class="sorter-bonus" type="button" hidden>БОНУС · ПОИГРАТЬ С ПРАВИЛОМ →</button>
+      <button id="continueGame" class="run-code" type="button">ПОСМОТРЕТЬ, ЧТО ДАЛЬШЕ</button>
+    </section>
+    <div id="cursorCompanion" class="cursor-companion" hidden aria-hidden="true"><i></i><i></i><b></b></div>
+    <section id="futureComic" class="future-comic" hidden aria-labelledby="comicTitle">
+      <div id="comicArt" class="comic-art" aria-hidden="true"><div class="comic-beam"></div><div class="comic-particles"></div><div class="comic-order">ФУТБОЛКА ПРОДАНА <b>+2 400 ₽</b></div><div class="comic-hello">А вот и ты</div><div class="comic-army"></div></div>
+      <div class="comic-copy"><p id="comicNumber" class="ending__eyebrow"></p><h2 id="comicTitle"></h2><p id="comicLine"></p><button id="nextComic" class="run-code" type="button">ДАЛЬШЕ →</button></div>
+    </section>
+    <section id="sorterBay" class="sorter-bay" hidden aria-labelledby="sorterTitle">
+      <header class="sorter-bay__head">
+        <div><p class="ending__eyebrow">БОНУСНЫЙ ЦЕХ · БЕЗ ШТРАФА ЗА ОШИБКУ</p><h2 id="sorterTitle">SORTER BAY</h2><p>Не вспоминай термин. Собери правило, запусти поток и смотри на контрпримеры. Python откроется только после работающей схемы.</p></div>
+        <button id="sorterClose" class="icon-button" type="button" aria-label="Закрыть Sorter Bay">×</button>
+      </header>
+      <div class="sorter-bay__meta"><span id="sorterLevel">ЦВЕТ / ОДИН ПРИЗНАК</span><b id="sorterStreak">0 РЕШЕНО</b></div>
+      <div class="sorter-order"><small>ТЕКУЩИЙ ЗАКАЗ</small><strong id="sorterTarget"></strong></div>
+      <div class="sorter-floor" aria-label="Сортировочная линия">
+        <section><small>SOURCE</small><ul id="sorterSource" class="sorter-lane"></ul></section>
+        <span class="sorter-arrow" aria-hidden="true">→</span>
+        <section><small>PASS</small><ul id="sorterPass" class="sorter-lane sorter-lane--pass"></ul></section>
+        <section><small>HOLD</small><ul id="sorterHold" class="sorter-lane sorter-lane--hold"></ul></section>
+      </div>
+      <div id="sorterRules" class="sorter-rules" aria-label="Доступные правила"></div>
+      <p id="sorterStatus" class="sorter-status" role="status"></p>
+      <pre id="sorterCode" class="sorter-code" hidden></pre>
+      <div class="sorter-actions"><button id="sorterNext" type="button">НОВЫЙ ЗАКАЗ</button><button id="sorterHarder" type="button">СМЕНИТЬ СЛОЖНОСТЬ</button></div>
+    </section>
+
+    <section id="friendSandbox" class="friend-sandbox" hidden aria-labelledby="friendTitle">
+      <p class="ending__eyebrow">ДОМА · ИЗОЛИРОВАННЫЙ ТРЕНИРОВОЧНЫЙ КОНТУР</p>
+      <h2 id="friendTitle">Друзья зовут держать защиту.</h2>
+      <p class="friend-intro">Шесть импульсов летят в ваш контур: три временные AI-роли и Q-Bot. Расставь, кто что держит.</p>
+      <div id="chatStage" class="friend-match" data-step="briefing">
+        <div class="friend-event-pointer" id="friendEventPointer">
+          <span id="friendRoundLabel">6 ИГРОВЫХ СОБЫТИЙ · 3 AI-РОЛИ · 1 Q-BOT</span>
+          <div class="friend-event-card">
+            <b id="friendEventGlyph" aria-hidden="true">◎</b>
+            <div><strong id="friendEventName">ТРЕНИРОВОЧНЫЙ КОНТУР</strong><code id="friendEventVar">event → ждёт вход</code></div>
+          </div>
+        </div>
+        <div class="friend-event-queue" aria-label="Шесть входных игровых событий">
+          <span data-friend-event data-state="waiting">◇</span><span data-friend-event data-state="waiting">⊘</span><span data-friend-event data-state="waiting">↺</span><span data-friend-event data-state="waiting">⊘</span><span data-friend-event data-state="waiting">◇</span><span data-friend-event data-state="waiting">↺</span>
+        </div>
+        <p id="chatOutput" role="status"></p>
+        <button id="friendStartMatch" class="run-code" type="button">ПРИНЯТЬ 6 ИМПУЛЬСОВ →</button>
+        <div class="friend-roles" aria-label="Три временные роли союзников">
+          <button type="button" data-defense-role="observe" disabled><b>◇</b><span>РОЛЬ A</span><strong>НАБЛЮДАТЕЛЬ</strong><small>ПРОВЕРИТЬ</small></button>
+          <button type="button" data-defense-role="filter" disabled><b>⊘</b><span>РОЛЬ B</span><strong>ФИЛЬТР</strong><small>ОТСЕЧЬ</small></button>
+          <button type="button" data-defense-role="restore" disabled><b>↺</b><span>РОЛЬ C</span><strong>ВОССТАНОВЛЕНИЕ</strong><small>ВЕРНУТЬ</small></button>
+        </div>
+        <div id="friendCodeReveal" class="friend-code-reveal" hidden>
+          <p><b>Q-BOT:</b> «Ты уже сделал это руками. Вот та же защита как программа».</p>
+          <pre><code id="friendDefenseCode"></code></pre>
+          <p class="friend-code-map"><span>event</span> — указатель на текущий импульс · <span>for</span> берёт все шесть · <span>def</span> хранит общий приём · <span>if</span> выбирает AI-роль.</p>
+        </div>
+        <button id="chatContinue" class="run-code" type="button" hidden>ДАЛЬШЕ →</button>
+      </div>
+    </section>
+
+    <section id="vikaMemory" class="vika-memory" hidden aria-labelledby="vikaTitle">
+      <p class="ending__eyebrow">ГЛАВА 6 · ЛОКАЛЬНЫЙ КОНТУР ПАМЯТИ</p>
+      <div class="vika-presence" aria-label="Синее парящее компьютерное лицо без тела">
+        <div class="vika-face" aria-hidden="true"><i class="vika-eye vika-eye--left"></i><i class="vika-eye vika-eye--right"></i><i class="vika-mouth"></i></div>
+        <div><h2 id="vikaTitle">«А вот и ты»</h2><p>Синее лицо в темноте. Одна фраза — и задача: вспомнить.</p></div>
+      </div>
+      <div id="vikaStage" class="vika-stage" data-step="briefing">
+        <div class="vika-signal">
+          <span id="vikaRoundLabel">3 ОДИНАКОВЫХ ВХОДА · ПАМЯТЬ МЕНЯЕТ РЕШЕНИЕ</span>
+          <div class="vika-signal-card">
+            <b id="vikaSignalGlyph" aria-hidden="true">◎</b>
+            <div><strong id="vikaSignalName">ОДИНАКОВЫЙ СИГНАЛ</strong><code id="vikaSignalVar">signal → ждёт вход</code></div>
+          </div>
+        </div>
+        <div class="vika-repeat-track" aria-label="Три одинаковых входных сигнала">
+          <span data-vika-repeat data-state="waiting">◎</span><span data-vika-repeat data-state="waiting">◎</span><span data-vika-repeat data-state="waiting">◎</span>
+        </div>
+        <div class="vika-memory-panel" aria-label="Панель сохранённого состояния">
+          <p>ПАМЯТЬ СИСТЕМЫ</p>
+          <div><code>seen</code><strong id="vikaMemorySeen">0</strong></div>
+          <div id="vikaMemoryTrustedRow" data-value="false"><code>trusted</code><strong id="vikaMemoryTrusted">FALSE</strong></div>
+        </div>
+        <p id="vikaOutput" role="status">Q-Bot видит три одинаковых сигнала. Без памяти он выбрал бы одно и то же действие три раза.</p>
+        <button id="vikaStartMemory" class="run-code" type="button">ПРОПУСТИТЬ ПЕРВЫЙ СИГНАЛ →</button>
+        <div class="vika-actions" aria-label="Действия по состоянию памяти">
+          <button type="button" data-vika-action="remember" disabled><b>1</b><strong>ЗАПОМНИТЬ</strong><small>ПЕРВЫЙ КОНТАКТ</small></button>
+          <button type="button" data-vika-action="verify" disabled><b>2</b><strong>ПРОВЕРИТЬ</strong><small>УЖЕ ВИДЕЛИ</small></button>
+          <button type="button" data-vika-action="respond" disabled><b>3</b><strong>ОТВЕТИТЬ</strong><small>СОСТОЯНИЕ ГОТОВО</small></button>
+        </div>
+        <div id="vikaCodeReveal" class="vika-code-reveal" hidden>
+          <p><b>Q-BOT:</b> «Вход был одинаковым. Менялось то, что система уже знала».</p>
+          <pre><code id="vikaStateCode"></code></pre>
+          <p class="vika-code-map"><span>memory</span> — физическая панель выше · <span>{ }</span> хранит пары ключ → значение · <span>if</span> читает состояние перед действием.</p>
+        </div>
+        <button id="vikaContinue" class="run-code" type="button" hidden>ЗАФИКСИРОВАТЬ ПАМЯТЬ →</button>
+      </div>
+    </section>
+
+    <section id="virusFinale" class="virus-finale" hidden aria-labelledby="virusTitle">
+      <p class="ending__eyebrow">ГЛАВА 7 · ФИНАЛ ПЕРВОЙ ИГРЫ</p>
+      <div class="virus-presence">
+        <div class="virus-core" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div><h2 id="virusTitle">Вирус ломает не HP. Он ломает предположения.</h2><p>Четыре синтетических сбоя в локальном процессе: неверный тип, пропуск, таймаут и нарушенный порядок.</p></div>
+      </div>
+      <div id="virusStage" class="virus-stage" data-step="briefing">
+        <div class="virus-failure">
+          <span id="virusCaseLabel">4 СБОЯ · 0 HP · ЛОМАЮТСЯ ПРЕДПОЛОЖЕНИЯ</span>
+          <div class="virus-failure-card">
+            <b id="virusFailureGlyph" aria-hidden="true">⚠</b>
+            <div><strong id="virusFailureName">СИНТЕТИЧЕСКИЙ ПРОЦЕСС</strong><small id="virusFailureDetail">Q-Bot запускает четыре заранее подготовленных аварийных случая.</small></div>
+          </div>
+        </div>
+        <div class="virus-case-track" aria-label="Четыре аварийных теста">
+          <span data-virus-case data-state="waiting">T?</span><span data-virus-case data-state="waiting">∅</span><span data-virus-case data-state="waiting">…</span><span data-virus-case data-state="waiting">3↔2</span>
+        </div>
+        <p id="virusOutput" role="status">Финал не про силу атаки. Он проверяет, умеет ли программа пережить вход, которого она не ожидала.</p>
+        <button id="virusStart" class="run-code" type="button">ЗАПУСТИТЬ АВАРИЙНЫЕ ТЕСТЫ →</button>
+        <div class="virus-recoveries" aria-label="Инструменты восстановления процесса">
+          <button type="button" data-virus-recovery="validate" disabled><b>T</b><strong>ПРОВЕРИТЬ ТИП</strong><small>НЕ ПРИНИМАТЬ ФОРМУ НА ВЕРУ</small></button>
+          <button type="button" data-virus-recovery="fallback" disabled><b>∅</b><strong>ДАТЬ ЗАПАСНОЕ</strong><small>ПЕРЕЖИТЬ ПРОПУСК</small></button>
+          <button type="button" data-virus-recovery="retry" disabled><b>↻</b><strong>ПОВТОРИТЬ ШАГ</strong><small>ВОССТАНОВИТЬСЯ ПОСЛЕ ТАЙМАУТА</small></button>
+          <button type="button" data-virus-recovery="reorder" disabled><b>⇅</b><strong>ВОССТАНОВИТЬ ПОРЯДОК</strong><small>СОБРАТЬ СОБЫТИЯ ПО ОЧЕРЕДИ</small></button>
+        </div>
+        <div class="virus-log-panel">
+          <p>ЖУРНАЛ ВОССТАНОВЛЕНИЯ</p>
+          <ol id="virusLog"></ol>
+        </div>
+        <div id="virusCodeReveal" class="virus-code-reveal" hidden>
+          <p><b>Q-BOT:</b> «Ты уже воспроизвёл каждый сбой и восстановил процесс. Вот та же надёжность как программа».</p>
+          <pre><code id="virusResilienceCode"></code></pre>
+          <p class="virus-code-map"><span>tests</span> заранее воспроизводят плохие случаи · <span>try/except</span> не даёт процессу исчезнуть при поломке · <span>log</span> сохраняет, что случилось.</p>
+        </div>
+        <button id="virusContinue" class="run-code" type="button" hidden>ЗАВЕРШИТЬ ПЕРВУЮ ИГРУ →</button>
+      </div>
+    </section>
+
+    <section id="automationFoundry" class="automation-foundry" hidden aria-labelledby="foundryTitle">
+      <p class="ending__eyebrow">ГЛАВА 8 · ЦЕХ АВТОМАТИЗАЦИИ</p>
+      <div class="foundry-head">
+        <div class="foundry-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div><h2 id="foundryTitle">Не ускоряй руки. Построй поток.</h2><p>Знакомые FILE / TEXT / TABLE теперь проходят через один видимый pipeline. Сначала ты повторишь шаги сам, потом соберёшь линию, найдёшь bottleneck и безопасно запустишь два worker’а.</p></div>
+      </div>
+      <div id="foundryStage" class="foundry-stage" data-step="briefing">
+        <div class="foundry-status">
+          <span id="foundryPhase">РУЧНОЙ PIPELINE → АВТОМАТИЗАЦИЯ → BOTTLENECK → CONCURRENCY</span>
+          <div id="foundryQueue" class="foundry-queue" data-level="0" aria-label="Очередь входящих задач">
+            <span data-foundry-item="job-01" data-state="active"><b>▤</b><small>FILE</small></span>
+            <span data-foundry-item="job-02" data-state="queued"><b>≡</b><small>TEXT</small></span>
+            <span data-foundry-item="job-03" data-state="queued"><b>▦</b><small>TABLE</small></span>
+            <span data-foundry-item="job-04" data-state="queued"><b>▤</b><small>FILE</small></span>
+            <span data-foundry-item="job-05" data-state="queued"><b>≡</b><small>TEXT</small></span>
+            <span data-foundry-item="job-06" data-state="queued"><b>▦</b><small>TABLE</small></span>
+          </div>
+        </div>
+
+        <div class="foundry-factory" aria-label="Визуальная фабрика задач">
+          <div class="foundry-belt" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="foundry-node" data-pipeline-node="read" data-state="idle"><b>01</b><strong>READ</strong><small>НЕ ПОДКЛЮЧЕН</small></div>
+          <div class="foundry-arrow">→</div>
+          <div class="foundry-node foundry-node--bottleneck" data-pipeline-node="route" data-state="idle"><b>02</b><strong>ROUTE</strong><small>НЕ ПОДКЛЮЧЕН</small></div>
+          <div class="foundry-arrow">→</div>
+          <div class="foundry-node" data-pipeline-node="save" data-state="idle"><b>03</b><strong>SAVE</strong><small>НЕ ПОДКЛЮЧЕН</small></div>
+        </div>
+
+        <div class="foundry-runtime">
+          <div id="foundryWorkers" class="foundry-workers" data-count="1" aria-label="Рабочие процесса"><span id="foundryWorkerA">A</span><span id="foundryWorkerB">B</span><small>WORKERS</small></div>
+          <div id="foundryThroughput" class="foundry-throughput"><small>FLOW</small><b>INPUT 2/s</b><i>→</i><b>ROUTE 1/s</b><i>→</i><b>OUTPUT</b></div>
+          <div id="foundryLedger" class="foundry-ledger" data-state="idle"><small>SHARED LEDGER</small><b>0001</b><b>0002</b><b>0003</b></div>
+        </div>
+
+        <p id="foundryOutput" role="status">Файлы, текст и таблицы теперь ведут себя как знакомый груз: каждый заказ должен пройти READ → ROUTE → SAVE.</p>
+        <button id="foundryStart" class="run-code" type="button">ЗАПУСТИТЬ ЦЕХ →</button>
+
+        <div class="foundry-controls foundry-controls--manual" aria-label="Ручные станции">
+          <button type="button" data-manual-station="read" disabled><b>1</b><strong>READ</strong><small>СЧИТАТЬ ВХОД</small></button>
+          <button type="button" data-manual-station="route" disabled><b>2</b><strong>ROUTE</strong><small>ВЫБРАТЬ ПУТЬ</small></button>
+          <button type="button" data-manual-station="save" disabled><b>3</b><strong>SAVE</strong><small>СОХРАНИТЬ</small></button>
+        </div>
+
+        <div class="foundry-controls foundry-controls--pipeline" aria-label="Модули pipeline">
+          <button type="button" data-pipeline-pick="read" disabled><b>+</b><strong>READ</strong><small>МОДУЛЬ</small></button>
+          <button type="button" data-pipeline-pick="route" disabled><b>+</b><strong>ROUTE</strong><small>МОДУЛЬ</small></button>
+          <button type="button" data-pipeline-pick="save" disabled><b>+</b><strong>SAVE</strong><small>МОДУЛЬ</small></button>
+        </div>
+
+        <div class="foundry-choices" aria-label="Выбор масштабирования">
+          <button type="button" data-scale-choice="source" disabled><b>⇈</b><strong>УСКОРИТЬ ВХОД</strong><small>ДАТЬ ЕЩЁ БОЛЬШЕ ЗАДАЧ</small></button>
+          <button type="button" data-scale-choice="buffer" disabled><b>▤</b><strong>БОЛЬШЕ БУФЕР</strong><small>БОЛЬШЕ МЕСТА ЖДАТЬ</small></button>
+          <button type="button" data-scale-choice="worker" disabled><b>+1</b><strong>ВТОРОЙ WORKER</strong><small>РАЗДЕЛИТЬ ОЧЕРЕДЬ</small></button>
+        </div>
+
+        <div class="foundry-choices" aria-label="Выбор защиты общей памяти">
+          <button type="button" data-race-choice="sleep" disabled><b>…</b><strong>SLEEP</strong><small>ПРОСТО ПОДОЖДАТЬ</small></button>
+          <button type="button" data-race-choice="worker" disabled><b>+1</b><strong>ТРЕТИЙ WORKER</strong><small>ЕЩЁ БОЛЬШЕ КОНКУРЕНЦИИ</small></button>
+          <button type="button" data-race-choice="lock" disabled><b>🔒</b><strong>LOCK</strong><small>ОДИН ПИШЕТ · ВТОРОЙ ЖДЁТ</small></button>
+        </div>
+
+        <div id="foundryCodeReveal" class="foundry-code-reveal" hidden>
+          <p><b>Q-BOT:</b> «Ты сначала увидел очередь, bottleneck и collision. Теперь названия: <code>asyncio.Queue</code>, две задачи и <code>Lock</code>».</p>
+          <pre><code id="foundryAsyncCode"></code></pre>
+          <p class="foundry-code-map"><span>Queue</span> — физический буфер · <span>create_task</span> — отдельный worker · <span>gather</span> — совместная работа · <span>Lock</span> — дверь в общую критическую секцию.</p>
+        </div>
+        <button id="foundryContinue" class="run-code" type="button" hidden>ОТКРЫТЬ ИНЖЕНЕРНЫЙ КАМПУС →</button>
+      </div>
+    </section>
+
+
+    <section id="engineerCampus" class="engineer-campus" hidden aria-labelledby="campusTitle">
+      <p class="ending__eyebrow">POSTGAME · ИНЖЕНЕРНЫЙ КАМПУС</p>
+      <header class="campus-head">
+        <div><h2 id="campusTitle">Кампания закончилась. Система — только началась.</h2><p>Теперь у тебя нет одного правильного маршрута. Строй системы, пиши настоящий Python, обучай модели, собирай агентов, расследуй сбои через OPS DESK, исследуй живой цифровой город и выходи в SIMNET — офлайн-симуляцию API, MCP, Git/DevOps и эксплуатации. Всё даёт один общий профиль.</p></div>
+        <div class="campus-rank"><small>РАНГ</small><b id="campusRank">СБОРЩИК</b><strong id="campusXp">0 XP</strong><div><i id="campusRankBar"></i></div><span id="campusNextRank"></span></div>
+      </header>
+      <div class="campus-branches" aria-label="Направления инженерного кампуса">
+        <button type="button" data-campus-branch="guild" data-done="false"><b>✧</b><span><small>СВОБОДНАЯ ИГРА · ПРОФЕССИИ / ЗАКАЗЫ / КОМАНДНЫЕ РЕЙДЫ</small><strong>ГИЛЬДИЯ КВЕСТОВ</strong><em>Не выбирай урок — выбери работу, которая кажется крутой. Гараж, свой сервер, AI, автоматизация, web, системы и low-level становятся RPG-скиллами.</em><i id="campusGuildState">0/10 КВЕСТОВ · 0/7 ПРОФЕССИЙ · 0 ₽</i></span></button>
+        <button type="button" data-campus-branch="nexus" data-done="false"><b>⌂</b><span><small>ПОСТОЯННЫЙ МИР · RESEARCH / BLUEPRINTS / Q-BOT</small><strong>FACTORY NEXUS</strong><em>Фабрика, куда возвращаются все навыки: исследования, свои схемы, аварии и обучаемый компаньон.</em><i id="campusNexusState">0/6 АРОК · 0 ∞ СМЕН</i></span></button>
+        <button type="button" data-campus-branch="world" data-done="false"><b>◎</b><span><small>ЖИВОЙ МИР · SERVICES / STORIES / CITY SHIFTS</small><strong>WORLD GRID</strong><em>Компании, сервисы, API, боты и люди зависят друг от друга. Исследуй связи и меняй мир несколькими способами.</em><i id="campusWorldState">0/6 ИСТОРИЙ · 0 ∞ CITY SHIFTS</i></span></button>
+        <button type="button" data-campus-branch="commons" data-done="false"><b>⟲</b><span><small>ТВОИ АВТОМАТЫ · BLUEPRINTS / CITY DAYS / CODE DEPLOY</small><strong>AUTOMATION COMMONS</strong><em>Собери правило один раз, сохрани как деталь и дай ему жить в городе. Рабочая схема — победа; оптимизация добровольна.</em><i id="campusCommonsState">0/4 BLUEPRINTS · 0 ∞ CITY DAYS</i></span></button>
+        <button type="button" data-campus-branch="operations" data-done="false"><b>⇪</b><span><small>ЖИВОЙ КОД · TEST / CANARY / OBSERVE / ROLLBACK</small><strong>RELEASE WEEK</strong><em>Твои автоматы уже кормят город. Теперь изменения надо выпускать так, чтобы новый patch не ломал людей, которые на него рассчитывают.</em><i id="campusOperationsState">0/5 RELEASES · 0 ∞ RELEASE RUNS</i></span></button>
+        <button type="button" data-campus-branch="chronicle" data-done="false"><b>⌛</b><span><small>ЖИВАЯ ИСТОРИЯ · LEGACY / DEBT / POSTMORTEM / MIGRATION</small><strong>CITY CHRONICLE</strong><em>Старые решения возвращаются в новом мире. Пойми, зачем они появились, что теперь изменилось и как убрать долг, не сломав тех, кто всё ещё зависит от прошлого.</em><i id="campusChronicleState">0/5 ИСТОРИЙ · 0 ∞ WINDOWS</i></span></button>
+        <button type="button" data-campus-branch="weave" data-done="false"><b>✦</b><span><small>ЖИВОЙ ГОРОД · TRUST / ACCESS / RESILIENCE / AUTONOMY</small><strong>CITY WEAVE</strong><em>Твои системы стали частью городской жизни. Теперь код меняет не только графики: люди, районы и Q-Bot запоминают, кому стало быстрее, кому сложнее и сколько власти ты отдал автоматам.</em><i id="campusWeaveState">0/5 СМЕН · 0 ∞ СЕЗОНОВ</i></span></button>
+        <button type="button" data-campus-branch="threads" data-done="false"><b>∞</b><span><small>ДОЛГАЯ ИСТОРИЯ · PEOPLE / DISTRICTS / ECHOES / PARTNERSHIP</small><strong>CITY THREADS</strong><em>Один и тот же город живёт много смен. Районы появляются из твоих успешных автоматизаций, старые решения возвращаются позже, а Q-Bot постепенно становится настоящим напарником.</em><i id="campusThreadsState">0/10 СМЕН · 0 ∞ ЦИКЛОВ</i></span></button>
+        <button type="button" data-campus-branch="desk" data-done="false"><b>▣</b><span><small>РАССЛЕДОВАНИЯ · EVIDENCE / TRACE / TERMINAL</small><strong>OPS DESK</strong><em>История приходит через рабочий стол: сообщения, заметки, карта потока и дружелюбный терминал. Найди причину, а не команду.</em><i id="campusDeskState">0/5 CASES · 0 ∞ DESK SHIFTS</i></span></button>
+        <button type="button" data-campus-branch="systems" data-done="false"><b>⇢</b><span><small>18 КОНТРАКТОВ + ∞ СМЕНЫ · SYSTEM DESIGN</small><strong>ЦЕХ СИСТЕМ</strong><em>Очереди, retry, idempotency, semaphore, batching, metrics, интерфейсы.</em><i id="campusContractCount">0/18</i></span></button>
+        <button type="button" data-campus-branch="python" data-done="false"><b>{ }</b><span><small>36 КОНТРАКТОВ · НАСТОЯЩИЙ CPYTHON</small><strong>КОДОВЫЙ ДОК</strong><em>Пиши функции для файлов, данных, retry, asyncio и границ tool-call.</em><i id="campusPythonCount">0/36</i></span></button>
+        <button type="button" data-campus-branch="ai" data-done="false"><b>◫</b><span><small>ГЛАВА 9 · ОБУЧЕНИЕ МОДЕЛИ</small><strong>AI-ПОЛИГОН</strong><em>Пиксели → labels → predict → eval → human reward. Поведение меняется на глазах.</em><i id="campusAiState">ДОСТУПНО</i></span></button>
+        <button type="button" data-campus-branch="model" data-done="false"><b>∑</b><span><small>ЛАБОРАТОРИЯ · ONE-LAYER MODEL</small><strong>MODEL WORKBENCH</strong><em>Цифры, буквы и пиктограммы → эпохи → loss → weights → data augmentation.</em><i id="campusModelState">ПОСЛЕ AI-ПОЛИГОНА</i></span></button>
+        <button type="button" data-campus-branch="neural" data-done="false"><b>≈</b><span><small>ЛАБОРАТОРИЯ · BACKPROP</small><strong>NEURAL FOUNDRY</strong><em>Линейный предел → hidden layer → forward → loss → backprop → learning rate.</em><i id="campusNeuralState">ПОСЛЕ 3 DATASETS</i></span></button>
+        <button type="button" data-campus-branch="llm" data-done="false"><b>◇</b><span><small>ГЛАВА 10 · LLM WRAPPER</small><strong>АГЕНТНЫЙ ЦЕХ</strong><em>Instruction, context, structured output, tool allowlist и evals как физическая линия.</em><i id="campusLlmState">ДОСТУПНО</i></span></button>
+        <button type="button" data-campus-branch="retrieval" data-done="false"><b>⌕</b><span><small>ЛАБОРАТОРИЯ · RETRIEVAL / RAG</small><strong>RETRIEVAL WAREHOUSE</strong><em>Chunks → vectors → cosine neighbors → context → provenance → untrusted DATA.</em><i id="campusRetrievalState">ПОСЛЕ LLM WRAPPER</i></span></button>
+        <button type="button" data-campus-branch="bot" data-done="false"><b>⚙</b><span><small>CAPSTONE · BOUNDED AGENTS</small><strong>BOT FORGE</strong><em>Planner, memory, retrieval, tools, policy, evals, retry и budget собираются в видимую систему.</em><i id="campusBotState">ПОСЛЕ NEURAL + RAG</i></span></button>
+        <button type="button" data-campus-branch="automation" data-done="false"><b>⌁</b><span><small>ЛАБОРАТОРИЯ · PYTHONIO BRIDGE</small><strong>REAL-WORLD AUTOMATION LAB</strong><em>Папки, CSV, HTTP и model adapters: dry-run, retry, idempotency, checkpoint, redaction.</em><i id="campusAutomationState">ПОСЛЕ 12 PYTHON-КОНТРАКТОВ</i></span></button>
+        <button type="button" data-campus-branch="factory" data-done="false"><b>▦</b><span><small>ФИНАЛ · OPEN ENGINEERING BRIEF</small><strong>MY AI FACTORY</strong><em>Собери одну ограниченную систему из модели, RAG, tools, очереди, reliability и evals.</em><i id="campusFactoryState">ПОСЛЕ BOT FORGE + AUTOMATION LAB</i></span></button>
+        <button type="button" data-campus-branch="simnet" data-done="false"><b>⌬</b><span><small>ВНЕШНИЙ КОНТУР · API / MCP / GIT / OPS</small><strong>SIMNET</strong><em>Фальшивый интернет с настоящими отказами: auth, limits, streaming, tools, evidence, readiness и rollback.</em><i id="campusSimnetState">ПОСЛЕ MY AI FACTORY</i></span></button>
+      </div>
+      <div class="campus-sync">
+        <div><strong>ПРОФИЛЬ ГОТОВ К БУДУЩИМ АККАУНТАМ</strong><p>Сейчас он local-first. Можно скопировать переносимый JSON-код; позже тот же объект сможет синхронизироваться через общий аккаунт без обязательного входа.</p></div>
+        <div class="campus-sync__buttons"><button id="campusExport" type="button">КОПИРОВАТЬ ПРОГРЕСС</button><button id="campusImportToggle" type="button">ВСТАВИТЬ ПРОГРЕСС</button></div>
+        <textarea id="campusImportBox" rows="4" hidden spellcheck="false" aria-label="Код прогресса QueQuest"></textarea>
+        <button id="campusImport" type="button">ОБЪЕДИНИТЬ ПРОФИЛИ</button>
+        <p id="campusSyncStatus" role="status">Local-first · вход не требуется.</p>
+      </div>
+    </section>
+
+
+    <section id="questGuild" class="quest-guild" hidden aria-labelledby="guildTitle">
+      <header class="guild-head"><div><p class="ending__eyebrow" data-build="МИРЫ ПРОФЕССИЙ">QUEQUEST 19.3 · МИРЫ ПРОФЕССИЙ</p><h2 id="guildTitle">ГИЛЬДИЯ КВЕСТОВ</h2><p>Не проходи курс по порядку. Выбери профессию, которая выглядит весело, возьми работу и прокачай именно её. Реальные инженерные истории становятся синтетическими разрешёнными квестами — сначала игра, потом узнавание реального мира.</p></div><div class="guild-head__actions"><button id="guildWorldsOpen" type="button">▶ ВОЙТИ В ПРОФЕССИЮ</button><button id="guildClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></div></header>
+      <div class="guild-meta"><span id="guildProgress">0/10 ИСТОРИЙ · 0 ЗАКАЗОВ · 0/2 RAID</span><strong id="guildWallet">0 CR</strong><em>CR — плата за полезный результат, не XP за урок.</em></div>
+      <div class="guild-layout">
+        <aside class="guild-sidebar">
+          <small>ТВОИ ПРОФЕССИИ · МОЖНО ИГРАТЬ ТОЛЬКО В ОДНУ</small>
+          <div id="guildSkills" class="guild-skills"></div>
+          <article class="guild-safety"><b>ПРАВИЛО МИРА</b><p>Все security/vehicle цели — собственные, синтетические или явно разрешённые стенды QueQuest. Реальные истории дают причинность и атмосферу, но не реальные цели и не команды для атаки.</p></article>
+        </aside>
+        <main class="guild-main">
+          <section class="guild-board"><div class="guild-section-head"><div><small>QUEST BOARD</small><h3>Куда хочется полезть сегодня?</h3><p>Гараж, платная автоматизация, AI, инфраструктура, web или свой тренировочный сервер. Старые приключения дают признание навыка, но не запирают новые пути.</p></div></div><div id="guildQuestGrid" class="guild-quest-grid"></div></section>
+          <section id="guildQuestDetail" class="guild-detail" hidden>
+            <button id="guildQuestBack" type="button">← ДОСКА КВЕСТОВ</button><small id="guildQuestKind">КВЕСТ</small><h3 id="guildQuestTitle">—</h3><b id="guildQuestClient">—</b><p id="guildQuestBrief"></p>
+            <div id="guildApproaches" class="guild-approaches"></div>
+            <div class="guild-detail-actions"><button id="guildSimulate" type="button" disabled>▶ ПРОЖИТЬ ПОДХОД</button><button id="guildCommit" class="run-code" type="button" hidden>ЗАКРЕПИТЬ РЕЗУЛЬТАТ</button></div>
+            <div id="guildResult" class="guild-result"><em>Выбери способ. Здесь нет одного правильного класса.</em></div><article id="guildRealEcho" class="guild-real-echo" hidden></article><p id="guildStatus" role="status">Сначала выбери работу, которая тебе реально интересна.</p>
+          </section>
+          <section class="guild-work"><div class="guild-section-head"><div><small>PAID WORK ORDERS</small><h3>Хочешь просто заработать CR?</h3><p>Короткие seed-заказы: автоматизировать рутину, собрать мини-инструмент, проверить AI, починить контракт или прогнать безопасный стенд.</p></div><button id="guildNewJob" type="button">НОВЫЙ ЗАКАЗ</button></div><article id="guildJob" class="guild-job"><em>Возьми случайный оплачиваемый заказ. Они не требуют проходить сюжет по порядку.</em></article></section>
+          <section class="guild-raid"><div class="guild-section-head"><div><small>PARTY BOARD · LOCAL PROTOTYPE</small><h3 id="guildRaidTitle">—</h3><p id="guildRaidBrief"></p></div><button id="guildRaidNext" type="button">ДРУГОЙ RAID</button></div><p id="guildRaidScope" class="guild-raid-scope"></p><div id="guildPartyPicks" class="guild-party-picks"></div><strong id="guildPartyLine">ПУСТАЯ ГРУППА</strong><button id="guildRaidRun" class="run-code" type="button">▶ СОБРАТЬ ГРУППУ И ЗАПУСТИТЬ</button><p id="guildRaidStatus" role="status">Три слота. Команда должна покрыть разные сильные стороны.</p></section>
+        </main>
+      </div>
+    </section>
+
+    <section id="careerWorlds" class="career-worlds" hidden aria-labelledby="careerTitle">
+      <header class="career-head"><div><p class="ending__eyebrow" data-build="МЕСТЬ «ТИСКАМ» · ПРОФЕССИИ">QUEQUEST 19.3 · МЕСТЬ «ТИСКАМ» · ПРОФЕССИИ</p><h2 id="careerTitle">ПРОФЕССИИ</h2><p>Холдинг «ТИСКИ» держит город. Профессия — это то, чем ты ему отвечаешь: у каждой несколько людей, которым надо вернуть своё.</p></div><div class="career-head__actions"><button id="careerRing" class="career-ring" type="button">⚔ РИНГ · КАРТОЧКА</button><button id="careerClose" class="icon-button" type="button" aria-label="Вернуться в гильдию квестов">×</button></div></header>
+      <section id="careerRealmList" class="career-realm-list"><div class="career-foundation"><small>ЧТО ТЫ УЖЕ УМЕЕШЬ</small><strong>СООБЩИТЬ → ВЫБРАТЬ → ПОВТОРИТЬ → СОБРАТЬ НАВЫК</strong><p>Технические имена Python раскрываются внутри задач, после того как смысл уже понятен.</p></div><div class="career-select"><div id="careerRealmGrid" class="career-realm-grid" role="listbox" aria-label="Профессии"></div><article id="careerShowcase" class="career-showcase"><canvas id="careerPreview" class="career-preview" width="320" height="180" aria-label="Живой кусок игры выбранной профессии"></canvas><div class="career-pitch"><small id="careerPickSub"></small><h3 id="careerPickTitle"></h3><p id="careerPickFantasy" class="career-pitch__fantasy"></p><b id="careerPickLabel" class="career-pitch__label">КОМУ ПОМОЧЬ</b><ol id="careerPickVerbs" class="career-quests"></ol><p id="careerPickLife" class="career-pitch__life"></p><p id="careerPickDeep" class="career-pitch__deep" role="status"></p><button id="careerEnter" class="run-code" type="button">ВОЙТИ →</button><p class="career-pitch__keys">↑ ↓ — выбрать · Enter — войти · Esc — закрыть</p></div></article></div></section>
+      <section id="careerStage" class="career-stage" hidden>
+        <button id="careerBack" type="button">← ВЫБОР ПРОФЕССИИ</button><button id="careerSurface" class="career-surface" type="button" hidden>↑ ВЫНЫРНУТЬ В ГАРАЖ</button><div class="career-stage__head"><small id="careerRealmSubtitle"></small><h3 id="careerRealmTitle">—</h3><p id="careerRealmPrompt"></p></div>
+        <div id="careerVisual" class="career-visual"><canvas id="careerLive" class="career-preview" width="320" height="180" aria-label="Твоя схема в работе"></canvas></div><div id="careerControls" class="career-controls"></div><button id="careerRun" class="run-code" type="button">▶ ПРОЖИТЬ РЕШЕНИЕ</button><p id="careerResult" class="career-result" role="status">Собери решение и запусти мир.</p>
+      </section>
+    </section>
+
+    <section id="deepRing" class="ring" hidden aria-labelledby="ringTitle"></section>
+
+    <section id="hackPolygon" class="hk" hidden aria-label="Взломай меня — учебный полигон"></section>
+
+    <section id="fpWorld" class="fp-world" hidden aria-label="Гараж и квартира от первого лица">
+      <canvas id="fpWorldCanvas" class="fp-world__canvas" tabindex="0" aria-label="Мир от первого лица"></canvas>
+      <div class="fp-world__hud"><small id="fpWorldWhere">ГАРАЖ · МАШИНА ВИТИ</small><b id="fpWorldEra">ДВИЖОК</b></div>
+      <button id="fpWorldLeave" class="fp-world__leave" type="button">← ВЫЙТИ</button>
+      <div class="fp-world__bottom"><p id="fpWorldSay" class="fp-world__say" aria-live="polite" hidden><b></b><span></span></p><div id="fpWorldPrompt" class="fp-world__prompt" data-hot="false">WASD · ИДТИ</div></div>
+      <button id="fpArToggle" class="fp-world__ar" type="button" aria-pressed="false" hidden>Q · НАДЕТЬ ШЛЕМ</button>
+      <section id="fpArEditor" class="fp-ar" hidden aria-label="Голографический редактор кода"></section>
+      <section id="fpWorldMenu" class="fp-world__menu" hidden></section>
+      <section id="fpWorldUpgrade" class="fp-world__upgrade" role="status" hidden></section>
+      <p class="fp-world__control">Клик — обзор мышью · R / F — вверх/вниз · ПРОБЕЛ — прыжок · E — действие · Q — AR-шлем · Esc — пауза</p>
+    </section>
+
+    <section id="factoryNexus" class="factory-nexus" hidden aria-labelledby="nexusTitle">
+      <header class="nexus-head"><div><p class="ending__eyebrow" data-build="ПОСТОЯННАЯ ФАБРИКА">QUEQUEST 19.3 · ПОСТОЯННАЯ ФАБРИКА</p><h2 id="nexusTitle">FACTORY NEXUS</h2><p>Не новый учебник, а место, куда возвращаются все навыки. Авария создаёт желание → исследование даёт новую машину → blueprint проверяет идею → Q-Bot учится на твоей обратной связи.</p></div><button id="nexusClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="nexus-meta"><span id="nexusProgress">0/6 АРОК · 0 ∞ СМЕН</span><span>RESEARCH <b id="nexusResearchPoints">4 ЯЧ.</b></span><span>BLUEPRINT <b id="nexusModuleCount">2 УЗЛА</b></span></div>
+      <div class="nexus-layout">
+        <aside class="nexus-missions"><small>АВАРИЙНЫЕ АРКИ</small><div id="nexusMissionTabs" class="nexus-mission-tabs"></div><article id="nexusMissionStory"><small id="nexusMissionChapter"></small><h3 id="nexusMissionTitle"></h3><p id="nexusMissionBrief"></p><em id="nexusMissionHint"></em></article><article id="nexusTrialStory" hidden><small id="nexusTrialSeed">FACTORY SHIFT #001</small><h3>Неизвестная смена</h3><p id="nexusTrialFaults">—</p><em>RESOURCE CAPACITY: <b id="nexusTrialCapacity">—</b>. Здесь уже нет одного authored ответа: собери минимальную архитектуру под наблюдаемые отказы.</em></article></aside>
+        <main class="nexus-builder">
+          <div class="nexus-flow" aria-label="Построенный поток"><span>SOURCE</span><i>→</i><span>BLUEPRINT</span><i>→</i><span>EFFECT</span><i>→</i><span>TRACE</span></div>
+          <section id="nexusPhysicalLine" class="nexus-physical-line" data-danger="false" aria-label="Физическая симуляция потока">
+            <div class="nexus-plant"><span><small>SOURCE</small><b>IN</b></span><i>→</i><span><small>BUFFER</small><b id="nexusQueueGauge">пусто</b></span><i>→</i><span><small>WORKERS</small><b id="nexusWorkerGauge">1 worker</b></span><i>→</i><span><small>OUTPUT</small><b>OUT</b></span></div>
+            <div id="nexusCrates" class="nexus-crates" aria-live="polite"><span class="nexus-crate">A</span><span class="nexus-crate">B</span><span class="nexus-crate">C</span><span class="nexus-crate">D</span><span class="nexus-crate">E</span><span class="nexus-crate">F</span><span class="nexus-crate">G</span><span class="nexus-crate">H</span></div>
+            <p id="nexusPhysicalLabel">Сначала собери схему. Потом ящики покажут правду.</p>
+          </section>
+          <div id="nexusModuleGrid" class="nexus-module-grid" aria-label="Модули blueprint"></div>
+          <div id="nexusFlowResult" class="nexus-result" data-ok="false"><b>ЛИНИЯ НЕ ЗАПУЩЕНА</b><span>DROPS —</span><span>DUP —</span><span>UNSAFE —</span></div>
+          <pre id="nexusTrace" class="nexus-trace">Телеметрия появится после запуска. Ошибка не отнимает прогресс — она показывает физическое последствие.</pre>
+          <p id="nexusRunStatus" class="nexus-status" role="status">Базовые FILTER + ROUTE уже стоят. Остальное открывается исследованиями и реальными авариями.</p>
+          <div class="nexus-actions"><button id="nexusRun" class="run-code" type="button">▶ ЗАПУСТИТЬ BLUEPRINT</button><button id="nexusRemixToggle" type="button" hidden>☆ BONUS ORDER</button><button id="nexusTrialsOpen" type="button" hidden>∞ FACTORY SHIFTS</button><button id="nexusNextTrial" type="button" hidden>СЛЕДУЮЩИЙ SEED →</button></div>
+          <p id="nexusRemixCopy" class="nexus-remix-copy" hidden></p>
+          <article id="nexusPythonReveal" class="nexus-python" hidden><small>РАБОТАЮЩАЯ СХЕМА → PYTHON-ЭКВИВАЛЕНТ</small><pre><code id="nexusPython"></code></pre></article>
+          <article id="nexusFinale" class="nexus-finale" hidden><small>АВТОНОМНЫЙ КОМПЛЕКС</small><h3>Ты больше не собираешь “правильный ответ”. Ты проектируешь поведение системы.</h3><p>Дальше Factory Shifts комбинируют уже знакомые отказы под новым resource capacity. Q-Bot помнит освоенные уроки, но всё ещё может ошибиться — его совет остаётся гипотезой, а не authority.</p><div class="nexus-builds" aria-label="Артефакты Q-Bot"><button type="button" data-nexus-build="monitor">SHIFT MONITOR</button><button type="button" data-nexus-build="mini-game">SORTER MINI-GAME</button><button type="button" data-nexus-build="repair-bot">REPAIR BOT</button><button type="button" data-nexus-build="research-scout">RESEARCH SCOUT</button></div><p id="nexusBuildStatus" class="nexus-build-status" role="status">Q-Bot может строить только из реально исследованных узлов. Никакой магической генерации.</p></article>
+        </main>
+        <aside class="nexus-side">
+          <section class="nexus-companion" id="nexusCompanion" data-state="learning"><small>ПЕРСОНАЛЬНЫЙ КОМПАНЬОН · ТЫ ЕГО УЧИШЬ</small><h3 id="nexusCompanionHumanState">Я ЕЩЁ УЧУСЬ</h3><p id="nexusCompanionAdvice">Я такого ещё не видел. Дай мне гипотезу — а линия покажет, прав ли я.</p><div id="nexusMemoryRack" class="nexus-memory-rack" aria-label="Память Q-Bot"></div><div class="nexus-feedback"><button id="nexusCoachGood" type="button">👍 ЭТО ПОМОГЛО</button><button id="nexusCoachBad" type="button">🛠 НЕ СРАБОТАЛО</button></div><button id="nexusMetricsToggle" class="nexus-metrics-toggle" type="button">ПОКАЗАТЬ, ЧТО У НЕГО В ГОЛОВЕ</button><div id="nexusCompanionMetrics" class="nexus-companion-metrics" hidden><b id="nexusCompanionLevel">Q-BOT L1</b><span id="nexusCompanionAccuracy">50% знакомые аварии · 45% новая смена</span></div><em>Q-Bot не знает “правильный ответ”. Он запоминает последствия твоей обратной связи — поэтому его можно научить и хорошо, и плохо.</em></section>
+          <section class="nexus-research"><small>RESEARCH TREE · 1 ЯЧЕЙКА = 1 УЗЕЛ</small><div id="nexusResearchGrid" class="nexus-research-grid"></div></section>
+        </aside>
+      </div>
+    </section>
+
+    <section id="opsDesk" class="ops-desk" hidden aria-labelledby="deskTitle">
+      <header class="ops-desk__head"><div><p class="ending__eyebrow" data-build="РАБОЧИЙ СТОЛ РАССЛЕДОВАНИЙ">QUEQUEST 19.3 · РАБОЧИЙ СТОЛ РАССЛЕДОВАНИЙ</p><h2 id="deskTitle">OPS DESK</h2><p>Не угадывай команду. Собери факты из сообщений, журналов, trace-карты и документов — затем объясни, что произошло. Всё синтетическое и локальное: никаких реальных сетей и атак.</p></div><button id="deskClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="ops-desk__meta"><span id="deskProgress">0/5 CASES</span><span id="deskObjective">0/3 EVIDENCE · ДИАГНОЗ — · ДЕЙСТВИЕ —</span></div>
+      <div class="ops-desktop">
+        <aside class="ops-launcher" aria-label="Приложения рабочего стола">
+          <button type="button" data-desk-app="dispatch" data-on="true"><b>✉</b><span>DISPATCH</span></button>
+          <button type="button" data-desk-app="notes" data-on="false"><b>▤</b><span>NOTES</span></button>
+          <button type="button" data-desk-app="map" data-on="false"><b>⌁</b><span>TRACE MAP</span></button>
+          <button type="button" data-desk-app="terminal" data-on="false"><b>&gt;_</b><span>TERMINAL</span></button>
+        </aside>
+        <main class="ops-window">
+          <div class="ops-window__bar"><span>● ● ●</span><b id="deskWindowTitle">DISPATCH</b><small id="deskCaseNo">1/5</small></div>
+          <section data-desk-panel="dispatch" class="ops-panel ops-dispatch">
+            <small id="deskCaseTag">CASE 01</small><h3 id="deskCaseTitle"></h3><p class="ops-caller"><b id="deskCaller"></b> → OPS DESK</p><p id="deskMessage"></p>
+            <div class="ops-dispatch__actions"><button type="button" data-desk-evidence="inbox">ОТКРЫТЬ СООБЩЕНИЕ</button><button type="button" data-desk-evidence="logs">ПОСМОТРЕТЬ ЖУРНАЛ</button><button type="button" data-desk-evidence="trace">ПОКАЗАТЬ МАРШРУТ</button><button type="button" data-desk-evidence="files">ОТКРЫТЬ RUNBOOK</button></div>
+            <article class="ops-qbot"><small>Q-BOT · ГИПОТЕЗА, НЕ AUTHORITY</small><p id="deskQbot"></p></article>
+          </section>
+          <section data-desk-panel="notes" class="ops-panel" hidden><small>AUTO-NOTES · НАЙДЕННОЕ НЕ НУЖНО ПЕРЕПИСЫВАТЬ</small><div id="deskEvidence" class="ops-evidence"></div></section>
+          <section data-desk-panel="map" class="ops-panel" hidden><small>TRACE MAP · СМОТРИ НА ГРАНИЦЫ</small><div id="deskGraph" class="ops-graph"></div><p>Цвет — только дополнительный сигнал: каждый узел ещё помечен состоянием и порядком.</p></section>
+          <section data-desk-panel="terminal" class="ops-panel ops-terminal" hidden><small>SAFE TERMINAL · КОРОТКИЕ КОМАНДЫ · TAB ДОПОЛНЯЕТ</small><div class="ops-terminal__screen"><code id="deskTerminalOutput">Введите команду или нажмите подсказку. Команда не исчезнет, пока вы печатаете.</code></div><label><span>&gt;</span><input id="deskTerminalInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="inbox / logs / trace / files / notes / help"><button id="deskTerminalRun" type="button">RUN</button></label><div class="ops-command-hints"><button type="button" data-desk-command="inbox">inbox</button><button type="button" data-desk-command="logs">logs</button><button type="button" data-desk-command="trace">trace</button><button type="button" data-desk-command="files">files</button><button type="button" data-desk-command="notes">notes</button><button type="button" data-desk-command="help">help</button></div></section>
+        </main>
+        <aside id="deskHypothesis" class="ops-hypothesis" data-ok="false">
+          <small>ГИПОТЕЗА</small><h3>Что объясняет всю цепочку?</h3><div id="deskDiagnoses" class="ops-choice-grid"></div>
+          <small>ДЕЙСТВИЕ</small><h3>Что лечит именно причину?</h3><div id="deskFixes" class="ops-choice-grid"></div>
+          <p id="deskHypothesisStatus" role="status">Сначала собери хотя бы три независимых evidence.</p>
+          <div id="deskCaseClosed" class="ops-case-closed" hidden>✓ CASE CLOSED · evidence сохранено автоматически</div>
+          <div class="ops-case-nav"><button id="deskPrevCase" type="button">← ПРЕДЫДУЩИЙ</button><button id="deskNextCase" type="button" hidden>СЛЕДУЮЩИЙ CASE →</button></div>
+        </aside>
+      </div>
+      <section id="deskIncidentPanel" class="ops-incidents" data-ok="false" hidden>
+        <div><small id="deskIncidentSeed">DESK SHIFT #001</small><h3>Бесконечная смена: симптом есть, готового маршрута нет.</h3><p id="deskIncidentSymptom"></p><em>СЛОЙ: <b id="deskIncidentLayer">—</b></em></div>
+        <div><small>ПРИЧИННАЯ ГИПОТЕЗА</small><div id="deskIncidentDiagnoses" class="ops-choice-grid"></div></div>
+        <div><small>ИСПРАВЛЕНИЕ</small><div id="deskIncidentFixes" class="ops-choice-grid"></div></div>
+        <p id="deskIncidentStatus" role="status">Сначала закрой пять authored cases.</p><div class="ops-incident-actions"><button id="deskIncidentRun" type="button">ПРОВЕРИТЬ ГИПОТЕЗУ</button><button id="deskIncidentNext" type="button" hidden>СЛЕДУЮЩАЯ СМЕНА →</button></div>
+      </section>
+    </section>
+
+
+    <section id="worldGrid" class="world-grid" hidden aria-labelledby="worldTitle">
+      <header class="world-head"><div><p class="ending__eyebrow">MASTERY LAYER · DISCOVERY → MASTERY → CODE</p><h2 id="worldTitle">WORLD GRID</h2><p>Не выбирай термин. Посмотри, кто от кого зависит, потрогай узлы и измени мир. Правильных архитектур может быть несколько — у каждой своя цена, скорость и доверие.</p></div><button id="worldClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="world-meta"><span id="worldProgress">0/6 ИСТОРИЙ · 0 ∞ СМЕН</span><span id="worldMode">DISCOVERY · СНАЧАЛА ПОЙМИ МИР</span><span id="worldMastery">0/7 ПАТТЕРНОВ ОСВОЕНО</span><div><small>ДОВЕРИЕ</small><b id="worldTrust">72%</b><i><em id="worldTrustBar"></em></i></div><div><small>ПОТОК</small><b id="worldFlow">68%</b><i><em id="worldFlowBar"></em></i></div><div><small>ЗАПАС</small><b id="worldCost">64%</b><i><em id="worldCostBar"></em></i></div><button id="worldShiftOpen" type="button">∞ CITY SHIFT</button><button id="worldBlackBoxOpen" type="button" hidden>◆ BLACK BOX</button></div>
+      <div class="world-layout">
+        <aside class="world-dispatch">
+          <section id="worldStoryPanel"><small id="worldCaseTag">WORLD 01</small><strong id="worldCaller">DISPATCH</strong><h3 id="worldStoryTitle"></h3><p id="worldBrief"></p><div id="worldMessages" class="world-messages"></div></section>
+          <section id="worldShiftPanel" hidden><small id="worldShiftSeed">CITY SHIFT #001</small><strong id="worldShiftCaller">NIGHT SHIFT</strong><h3>Мир придумал новую проблему.</h3><p id="worldShiftSymptom"></p><em id="worldShiftCapacity">—</em></section>
+          <div class="world-qbot"><small>Q-BOT · НАПАРНИК</small><b id="worldQbotState">НЕ УВЕРЕН</b><p id="worldQbotLine">Я не буду угадывать. Нажми на мигающий узел.</p></div>
+        </aside>
+        <main class="world-map-zone">
+          <div class="world-map-caption"><span>ЛЮДИ</span><i>→</i><span>СЕРВИСЫ</span><i>→</i><span>БОТЫ / ДАННЫЕ</span><i>→</i><span>ЭФФЕКТ</span></div>
+          <div id="worldMap" class="world-map" aria-label="Карта цифрового мира"></div>
+          <article class="world-node-detail"><small>ЧТО ЭТО ЗА МЕСТО?</small><h3 id="worldNodeName">Выбери узел на карте</h3><p id="worldNodeCopy">Не нужно знать термин. Сначала разберись, что здесь происходит.</p><em id="worldNodeDeps">Связи появятся после выбора.</em><code id="worldNodeTech">Техническое имя откроется здесь.</code></article>
+        </main>
+        <aside class="world-control">
+          <small>ТВОЙ ПЛАН · МАКСИМУМ 2 ВМЕШАТЕЛЬСТВА</small><h3>Что изменить в системе?</h3><div id="worldActions" class="world-actions"></div><p id="worldPlan">План пока пуст.</p><button id="worldDeploy" class="run-code" type="button">▶ ПРОВЕРИТЬ НА ЖИВОМ МИРЕ</button><button id="worldDirectOpen" class="world-direct-open" type="button" hidden>⚡ DIRECT PATCH · PYTHON</button><p id="worldStatus" role="status">Нажми на два мигающих узла. Не нужно знать ни одного термина.</p><section id="worldDirectPatch" class="world-direct" hidden><small>CHALLENGE PATH · ТЫ УЖЕ ПОНИМАЕШЬ ПРИЧИНУ</small><h3 id="worldDirectTitle">DIRECT PATCH</h3><p id="worldDirectBrief"></p><div class="code-editor"><span aria-hidden="true">PY</span><textarea id="worldDirectCode" rows="9" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python-патч для знакомой проблемы"></textarea></div><button id="worldDirectRun" class="run-code" type="button">▶ ПРОГНАТЬ СКРЫТЫЕ ПРОВЕРКИ</button><p id="worldDirectStatus" role="status">После mastery можно не собирать те же улики заново.</p></section><button id="worldNext" type="button" hidden>СЛЕДУЮЩАЯ ИСТОРИЯ →</button>
+          <div id="worldCodeReveal" class="world-code" hidden><small>ТЫ УЖЕ СДЕЛАЛ ЭТО В МИРЕ. ТЕПЕРЬ ИМЯ:</small><b id="worldRevealTerms">QUEUE</b><pre><code id="worldPython"></code></pre></div>
+        </aside>
+      </div>
+    </section>
+
+
+    <section id="automationCommons" class="automation-commons" hidden aria-labelledby="commonsHeading">
+      <header class="commons-head"><div><p class="ending__eyebrow" data-build="BUILD ONCE → LET IT LIVE">QUEQUEST 19.3 · BUILD ONCE → LET IT LIVE</p><h2 id="commonsHeading">AUTOMATION COMMONS</h2><p>Ты уже умеешь чинить знакомые проблемы. Теперь перестань чинить их руками: собери правило один раз, сохрани как blueprint и дай ему прожить следующий день вместо тебя.</p></div><button id="commonsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="commons-meta"><span id="commonsProgress">0/4 АВТОМАТА · 0 ∞ ДНЕЙ</span><div><small>ПОКРЫТИЕ</small><b id="commonsCoverage">0%</b></div><div><small>СЛОЖНОСТЬ</small><b id="commonsComplexity">0</b></div><div><small>ЭФФЕКТИВНОСТЬ</small><b id="commonsEfficiency">0</b></div><button id="commonsDayOpen" type="button"><img src="assets/ui/kenney-game-icons/signal3.png" alt="" aria-hidden="true">∞ CITY AUTOPILOT</button><button id="commonsCodeOpen" type="button">⚡ ЗАБРАТЬ УПРАВЛЕНИЕ КОДОМ</button></div>
+      <div class="commons-layout">
+        <aside class="commons-briefing">
+          <section id="commonsBriefPanel"><small id="commonsChapter">AUTOMATION 01</small><h3 id="commonsTitle"></h3><p id="commonsBrief"></p><em>Сначала собери поведение. Техническое имя и Python появятся после первого рабочего запуска.</em></section>
+          <section id="commonsDayPanel" hidden><small id="commonsDaySeed">CITY AUTOPILOT #001</small><h3>Город живёт без твоих рук.</h3><p id="commonsDayWeather">—</p><em>Здесь работают только сохранённые blueprints. Если день пережит — значит абстракция действительно переиспользуема.</em><button id="commonsDayRun" class="run-code" type="button">▶ ПРОЖИТЬ ДЕНЬ</button><button id="commonsDayNext" type="button" hidden>СЛЕДУЮЩИЙ ДЕНЬ →</button></section>
+          <section class="commons-library-wrap"><small>BLUEPRINT LIBRARY</small><div id="commonsLibrary" class="commons-library"></div></section>
+        </aside>
+        <main class="commons-workbench">
+          <section id="commonsBuilderPanel">
+            <div class="commons-machine"><span>СОБЫТИЕ</span><i>→</i><span>КОГДА?</span><i>→</i><span>ТОГДА?</span><i>→</i><span>ПАМЯТЬ</span></div>
+            <div id="commonsRules" class="commons-rules" aria-label="Правила автоматизации"></div>
+            <div class="commons-actions"><button id="commonsRun" class="run-code" type="button">▶ ПРОГНАТЬ СМЕНУ</button><button id="commonsSave" type="button" hidden><img src="assets/ui/kenney-game-icons/save.png" alt="" aria-hidden="true">СОХРАНИТЬ BLUEPRINT</button><button id="commonsNext" type="button" hidden>СЛЕДУЮЩАЯ АВТОМАТИЗАЦИЯ →</button></div>
+          </section>
+          <div id="commonsEventTape" class="commons-event-tape" aria-live="polite"></div>
+          <p id="commonsStatus" class="commons-status" role="status">Собери правило и запусти день.</p><p id="commonsOptimization" class="commons-optimization">Любое рабочее решение принимается. Красивее/дешевле/проще — уже твоя добровольная игра.</p>
+          <section id="commonsPythonReveal" class="commons-python" hidden><small>ТВОЙ BLUEPRINT УЖЕ РАБОТАЕТ · ВОТ ЕГО PYTHON-ФОРМА</small><pre><code id="commonsPython"></code></pre></section>
+          <section id="commonsCodePanel" class="commons-code-panel" hidden><small>MASTER PATH · ОДИН АВТОПИЛОТ НА СЕМЬ ПАТТЕРНОВ</small><h3>Теперь без конструктора.</h3><p>Мир уже научил тебя причинам. Напиши функцию, которая получает событие и состояние между вызовами. Скрытые датчики проверят поведение.</p><div class="code-editor"><span aria-hidden="true">PY</span><textarea id="commonsCode" rows="15" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python-код городского автопилота"></textarea></div><button id="commonsCodeRun" class="run-code" type="button">▶ ПРОГНАТЬ 7 СКРЫТЫХ КЛАССОВ</button><div id="commonsCodeChecks" class="commons-code-checks"></div><p id="commonsCodeStatus" role="status">После двух живых дней визуальные блоки больше не обязательны.</p></section>
+        </main>
+      </div>
+    </section>
+
+
+
+    <section id="cityOperations" class="city-operations" hidden aria-labelledby="opsReleaseHeading">
+      <header class="release-head"><div><p class="ending__eyebrow" data-build="YOUR CODE HAS A LIFE AFTER DEPLOY">QUEQUEST 19.3 · YOUR CODE HAS A LIFE AFTER DEPLOY</p><h2 id="opsReleaseHeading">RELEASE WEEK</h2><p>Вчера ты построил автомат. Сегодня на него уже рассчитывают люди. Мир меняется — твой код должен переживать новые данные, нагрузку и слишком смелые предложения Q-Bot.</p></div><button id="opsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="release-meta"><span id="opsProgress">0/5 РЕЛИЗОВ · 0 ∞ СМЕН</span><button id="opsRunOpen" type="button">∞ RELEASE RUN</button><button id="opsCodeOpen" type="button">⚡ НАПИСАТЬ RELEASE GUARD</button></div>
+      <p id="opsRunLabel" class="release-shift-label" hidden></p>
+      <div id="opsStoryPanel" class="release-layout">
+        <aside class="release-story">
+          <small id="opsArcDay">ДЕНЬ 1</small><h3 id="opsCaller">—</h3><p id="opsMessage"></p>
+          <div class="release-symptom"><span>ЧТО ЛЮДИ ВИДЯТ</span><b id="opsSymptom"></b><small id="opsBaseline"></small></div>
+          <div id="opsCityServices" class="release-services" aria-label="Сервисы города"></div>
+        </aside>
+        <main class="release-workbench">
+          <section class="release-qbot"><small>Q-BOT ПРИНЁС ИЗМЕНЕНИЕ</small><h3>Не верь patch-у. Проверь его.</h3><p id="opsSelectedPatch">Выбери изменение, которое хочешь проверить.</p><div id="opsPatchList" class="release-patches"></div></section>
+          <div id="opsReleaseTrack" class="release-track" aria-label="Путь релиза"></div>
+          <div class="release-controls"><button id="opsTest" type="button" disabled>1 · ПРОГНАТЬ НА СТЕНДЕ</button><button id="opsCanary" type="button" disabled>2 · ДАТЬ 10% ТРАФИКА</button><button id="opsObserve" type="button" disabled>3 · ПОСМОТРЕТЬ МЕТРИКИ</button><button id="opsDeploy" class="run-code" type="button" disabled>4 · ВЫПУСТИТЬ В ГОРОД</button><button id="opsRollback" type="button" hidden>↩ ОТКАТИТЬ СТАРУЮ ВЕРСИЮ</button></div>
+          <section class="release-evidence"><small>EVIDENCE · НЕ СЛОВА Q-BOT</small><div id="opsEvidence"><em>Пока только обещание patch-а.</em></div></section>
+          <p id="opsStatus" class="release-status" role="status">Сначала выбери patch. Можно ошибаться: тестовый стенд и canary существуют именно для этого.</p>
+          <p id="opsLesson" class="release-lesson" hidden></p>
+          <div class="release-next"><button id="opsNext" type="button" hidden>СЛЕДУЮЩИЙ ДЕНЬ →</button><button id="opsRunComplete" type="button">ЗАСЧИТАТЬ УСПЕШНУЮ ∞ СМЕНУ</button></div>
+        </main>
+      </div>
+      <section id="opsCodePanel" class="release-code" hidden><button id="opsCodeBack" type="button">← RELEASE WEEK</button><small>MASTER PATH · ОСТОРОЖНОСТЬ ТЕПЕРЬ ТОЖЕ КОД</small><h3>Напиши release guard.</h3><p>Раньше ты сам решал: тестировать, ограничить canary, откатить или выпускать. Теперь формализуй эту интуицию в Python. Скрытые сценарии проверят поведение.</p><div class="code-editor"><span aria-hidden="true">PY</span><textarea id="opsGuardCode" rows="12" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python release guard"></textarea></div><button id="opsGuardRun" class="run-code" type="button">▶ ПРОГНАТЬ СКРЫТЫЕ РЕЛИЗЫ</button><div id="opsGuardChecks" class="release-checks"></div><p id="opsGuardStatus" role="status">Пять прожитых релизов превращаются в одну функцию принятия решения.</p></section>
+    </section>
+
+    <section id="cityChronicle" class="city-chronicle" hidden aria-labelledby="chronicleHeading">
+      <header class="chronicle-head"><div><p class="ending__eyebrow" data-build="THE CITY REMEMBERS">QUEQUEST 19.3 · THE CITY REMEMBERS</p><h2 id="chronicleHeading">CITY CHRONICLE</h2><p>Ты уже умеешь выпускать изменения. Теперь научись жить с их историей: старые двери, забытые причины, редкие клиенты и уроки Q-Bot возвращаются позже — уже в другом мире.</p></div><button id="chronicleClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="chronicle-meta"><span id="chronicleProgress">0/5 ИСТОРИЙ · 0 ∞ WINDOWS</span><button id="chronicleWindowOpen" type="button">∞ MAINTENANCE WINDOW</button><button id="chronicleCodeOpen" type="button">⚡ НАПИСАТЬ MIGRATION POLICY</button></div>
+      <p id="chronicleWindowLabel" class="chronicle-window-label" hidden></p>
+      <div id="chronicleStory" class="chronicle-layout">
+        <aside class="chronicle-past"><small id="chronicleChapter">ГЛАВА 1</small><h3 id="chronicleCaller">—</h3><p id="chronicleMessage"></p><p id="chronicleEcho" class="chronicle-echo"></p><div class="chronicle-symptom"><span>ЭХО ПРОШЛОГО</span><b id="chronicleSymptom"></b></div><div id="chronicleServices" class="chronicle-services" aria-label="Сервисы города"></div></aside>
+        <main class="chronicle-board">
+          <section class="chronicle-clue-panel"><small>ОТКРОЙ ИСТОРИЮ · НЕ ЧИНИ ВСЛЕПУЮ</small><div id="chronicleClues" class="chronicle-clues"></div></section>
+          <section class="chronicle-debt"><div><span>LEGACY CABLES</span><b id="chronicleDebtValue">0 LEGACY CABLES</b></div><div class="chronicle-debt-track"><i id="chronicleDebtBar"></i></div><small>Долг — не “плохой код”. Это прошлое решение, цену которого город продолжает платить.</small></section>
+          <section class="chronicle-choice-panel"><small>ЧТО ТЫ ДЕЛАЕШЬ С ПРОШЛЫМ</small><div id="chronicleDecisions" class="chronicle-decisions"></div></section>
+          <p id="chronicleStatus" class="chronicle-status" role="status">Открой записи прошлого и пойми, зачем старое решение вообще появилось.</p>
+          <section id="chronicleMemory" class="chronicle-memory" hidden></section>
+          <div class="chronicle-next"><button id="chronicleNext" type="button" hidden>СЛЕДУЮЩАЯ ИСТОРИЯ →</button><button id="chronicleWindowComplete" type="button" hidden>ЗАСЧИТАТЬ MAINTENANCE WINDOW</button></div>
+        </main>
+      </div>
+      <section id="chronicleCodePanel" class="chronicle-code" hidden><button id="chronicleCodeBack" type="button">← CITY CHRONICLE</button><small>MASTER PATH · ИСТОРИЯ СТАНОВИТСЯ КОНТРАКТОМ</small><h3>Напиши migration policy.</h3><p>Ты уже видел, почему нельзя просто “удалить старое”. Теперь формализуй: текущая версия идёт нативно, старая — через adapter до sunset, неизвестная — отклоняется явно.</p><div class="code-editor"><span aria-hidden="true">PY</span><textarea id="chronicleCode" rows="12" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python migration policy"></textarea></div><button id="chronicleCodeRun" class="run-code" type="button">▶ ПРОГНАТЬ КЛИЕНТОВ ИЗ РАЗНЫХ ЭПОХ</button><div id="chronicleCodeChecks" class="chronicle-code-checks"></div><p id="chronicleCodeStatus" role="status">После пяти историй совместимость перестаёт быть магией и становится явным кодом.</p></section>
+    </section>
+
+    <section id="cityWeave" class="city-weave" hidden aria-labelledby="weaveHeading">
+      <header class="weave-head"><div><p class="ending__eyebrow" data-build="THE CITY LIVES ON YOUR CODE">QUEQUEST 19.3 · THE CITY LIVES ON YOUR CODE</p><h2 id="weaveHeading">CITY WEAVE</h2><p>Город уже живёт на твоих автоматах. Теперь решения меняют не только latency и drops: они меняют доверие, доступность, устойчивость и то, сколько власти ты отдаёшь Q-Bot.</p></div><button id="weaveClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="weave-meta"><span id="weaveProgress">0/5 СМЕН · 0 ∞ СЕЗОНОВ</span><button id="weaveSeasonOpen" type="button">∞ CITY SEASON</button><button id="weaveCodeOpen" type="button">⚡ НАПИСАТЬ CITY GOVERNOR</button></div>
+      <p id="weaveSeasonLabel" class="weave-season-label" hidden></p>
+      <div id="weaveStory" class="weave-layout">
+        <aside class="weave-city">
+          <small id="weaveChapter">СМЕНА 1</small><h3 id="weaveCaller">—</h3><p id="weaveMessage"></p><div class="weave-tension"><span>ЧТО ИЗМЕНИЛОСЬ В ЖИВОМ МИРЕ</span><b id="weaveTension"></b></div>
+          <div id="weaveDistricts" class="weave-districts" aria-label="Районы и сервисы города"></div>
+          <section class="weave-history"><small>ГОРОД ПОМНИТ ТВОИ РЕШЕНИЯ</small><div id="weaveHistory"></div></section>
+        </aside>
+        <main class="weave-board">
+          <section class="weave-pulse" aria-label="Пульс города">
+            <div><span>ДОВЕРИЕ</span><b id="weaveTrustValue">50</b><i><em id="weaveTrustBar"></em></i></div>
+            <div><span>УСТОЙЧИВОСТЬ</span><b id="weaveResilienceValue">50</b><i><em id="weaveResilienceBar"></em></i></div>
+            <div><span>ДОСТУПНОСТЬ</span><b id="weaveAccessValue">50</b><i><em id="weaveAccessBar"></em></i></div>
+            <div><span>ПОТОК</span><b id="weaveThroughputValue">50</b><i><em id="weaveThroughputBar"></em></i></div>
+            <div class="weave-autonomy"><span>СВОБОДА Q-BOT</span><b id="weaveAutonomy">0%</b></div>
+          </section>
+          <section class="weave-choice-panel"><small>КАКОЕ ОБЕЩАНИЕ ТЫ ДАЁШЬ ГОРОДУ</small><div id="weaveChoices" class="weave-choices"></div></section>
+          <div class="weave-actions"><button id="weaveSimulate" type="button" disabled>▶ ПРОЖИТЬ С ЭТИМ ОДНУ СМЕНУ</button><button id="weaveCommit" class="run-code" type="button" hidden>ЗАКРЕПИТЬ РЕШЕНИЕ</button></div>
+          <section class="weave-beats"><small>ЧТО ПРОИЗОШЛО В МИРЕ</small><div id="weaveBeats"><em>Сначала проживи смену. Мир покажет последствия.</em></div></section>
+          <p id="weaveStatus" class="weave-status" role="status">Посмотри, кто зависит от решения, выбери компромисс и проживи с ним одну смену.</p>
+          <p id="weaveLesson" class="weave-lesson" hidden></p>
+          <div class="weave-next"><button id="weaveNext" type="button" hidden>СЛЕДУЮЩАЯ СМЕНА →</button><button id="weaveSeasonComplete" type="button" hidden>ЗАСЧИТАТЬ CITY SEASON</button></div>
+        </main>
+      </div>
+      <section id="weaveCodePanel" class="weave-code" hidden><button id="weaveCodeBack" type="button">← CITY WEAVE</button><small>MASTER PATH · ДОВЕРИЕ ПРЕВРАЩАЕТСЯ В POLICY</small><h3>Напиши городской governor.</h3><p>Теперь ты уже чувствуешь разницу между “может” и “имеет право”. Формализуй её: незнакомое — отложить, high-impact — человеку, перегруз — не терять, знакомое low-impact при запасе — можно автоматизировать.</p><div class="code-editor"><span aria-hidden="true">PY</span><textarea id="weaveCode" rows="12" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python city governor"></textarea></div><button id="weaveCodeRun" class="run-code" type="button">▶ ПРОГНАТЬ ГОРОДСКИЕ СОБЫТИЯ</button><div id="weaveCodeChecks" class="weave-code-checks"></div><p id="weaveCodeStatus" role="status">После пяти смен автономность перестаёт быть настроением и становится явным контрактом.</p></section>
+    </section>
+
+    <section id="cityThreads" class="city-threads" hidden aria-labelledby="threadsHeading">
+      <header class="threads-head"><div><p class="ending__eyebrow" data-build="THE CITY REMEMBERS YOU">QUEQUEST 19.3 · THE CITY REMEMBERS YOU</p><h2 id="threadsHeading">CITY THREADS</h2><p>Теперь город живёт не пять минут, а много смен. Люди возвращаются, новые районы растут на твоих автоматах, старые компромиссы становятся сегодняшними условиями, а Q-Bot учится работать рядом с тобой.</p></div><button id="threadsClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="threads-meta"><span id="threadsProgress">0/10 СМЕН · 0 ∞ ЦИКЛОВ</span><button id="threadsCycleOpen" type="button">∞ CITY CYCLE</button><button id="threadsCodeOpen" type="button">⚡ НАПИСАТЬ ORCHESTRATOR</button></div>
+      <p id="threadsCycleLabel" class="threads-cycle-label" hidden></p>
+      <div id="threadsStory" class="threads-layout">
+        <aside class="threads-world">
+          <small id="threadsTurn">СМЕНА 1</small><h3 id="threadsActor">—</h3><p id="threadsMessage"></p><div class="threads-question"><span>ЧТО ТЕПЕРЬ СТАЛО ВАЖНО</span><b id="threadsQuestion"></b></div>
+          <section><small>ЛЮДИ, КОТОРЫЕ ВОЗВРАЩАЮТСЯ</small><div id="threadsActors" class="threads-actors"></div></section>
+          <section><small>ГОРОД РАСТЁТ ИЗ ТВОИХ РЕШЕНИЙ</small><div id="threadsDistricts" class="threads-districts"></div></section>
+          <section class="threads-echo-panel"><small>ЭХО ПРОШЛЫХ РЕШЕНИЙ</small><div id="threadsEchoes" class="threads-echoes"></div></section>
+        </aside>
+        <main class="threads-board">
+          <section class="threads-pulse" aria-label="Инженерные запасы долгой истории">
+            <div><span>НЕПРЕРЫВНОСТЬ</span><b id="threadsContinuityValue">50</b><i><em id="threadsContinuityBar"></em></i></div>
+            <div><span>ЗАПАС</span><b id="threadsSlackValue">50</b><i><em id="threadsSlackBar"></em></i></div>
+            <div><span>ЯСНОСТЬ</span><b id="threadsClarityValue">50</b><i><em id="threadsClarityBar"></em></i></div>
+            <div class="threads-bond"><span>ПАРТНЁРСТВО С Q-BOT</span><b id="threadsQbotBond">0%</b></div>
+          </section>
+          <section class="threads-choice-panel"><small>ЧТО ТЫ ОБЕЩАЕШЬ СЕГОДНЯ</small><div id="threadsChoices" class="threads-choices"></div></section>
+          <div class="threads-actions"><button id="threadsSimulate" type="button" disabled>▶ ПРОЖИТЬ ЭТУ СМЕНУ</button><button id="threadsCommit" class="run-code" type="button" hidden>ЗАКРЕПИТЬ И ПУСТИТЬ В ИСТОРИЮ</button></div>
+          <section class="threads-beats"><small>ЧТО ПРОИЗОШЛО С ЛЮДЬМИ И СИСТЕМАМИ</small><div id="threadsBeats"><em>Сначала проживи смену. Последствия появятся в мире.</em></div></section>
+          <p id="threadsStatus" class="threads-status" role="status">Сначала пойми, чьё прошлое решение стало частью сегодняшней ситуации.</p>
+          <p id="threadsReveal" class="threads-reveal" hidden></p>
+          <div class="threads-next"><button id="threadsNext" type="button" hidden>СЛЕДУЮЩАЯ СМЕНА →</button><button id="threadsCycleComplete" type="button" hidden>ЗАСЧИТАТЬ CITY CYCLE</button></div>
+        </main>
+      </div>
+      <section id="threadsCodePanel" class="threads-code" hidden><button id="threadsCodeBack" type="button">← CITY THREADS</button><small>MASTER PATH · ИСТОРИЯ СТАНОВИТСЯ STATEFUL POLICY</small><h3>Напиши городской orchestrator.</h3><p>Теперь ты уже видел один и тот же класс событий много раз. Пусть память живёт между вызовами: первый случай наблюдаем, повторяемый low-risk класс может заработать автономность, high-impact остаётся у человека, а перегруз не превращается в потерю работы.</p><div class="code-editor"><span aria-hidden="true">PY</span><textarea id="threadsCode" rows="13" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python city orchestrator"></textarea></div><button id="threadsCodeRun" class="run-code" type="button">▶ ПРОГНАТЬ СОБЫТИЯ ЧЕРЕЗ ОБЩУЮ ПАМЯТЬ</button><div id="threadsCodeChecks" class="threads-code-checks"></div><p id="threadsCodeStatus" role="status">После десяти смен память перестаёт быть сюжетом и становится явным состоянием программы.</p></section>
+    </section>
+
+    <section id="contractBoard" class="contract-board" hidden aria-labelledby="contractBoardTitle">
+      <header><div><p class="ending__eyebrow">КАМПУС · ЦЕХ СИСТЕМ</p><h2 id="contractBoardTitle">Не угадывай термин. Найди ограничение системы.</h2><p>Каждый контракт показывает симптом и метрику. Меняй именно причину: throughput, burst, shared state, порядок, свежесть или границы.</p></div><button id="contractClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="contract-board__meta"><span id="contractProgress">0/18 закрыто</span><small>Повторное прохождение не фармит XP — можно спокойно экспериментировать.</small><button id="contractSandboxOpen" type="button">∞ БЕСКОНЕЧНАЯ СМЕНА</button></div>
+      <div id="contractList" class="contract-list"></div>
+      <article id="contractDetail" class="contract-detail" hidden>
+        <button id="contractBack" type="button">← ВСЕ КОНТРАКТЫ</button><small id="contractTier"></small><h3 id="contractTitle"></h3><p id="contractProblem"></p>
+        <div id="contractChoices" class="contract-choices"></div><p id="contractFeedback" role="status"></p>
+      </article>
+    </section>
+
+    <section id="systemSandbox" class="system-sandbox" hidden aria-labelledby="sandboxTitle">
+      <header><div><p class="ending__eyebrow">КАМПУС · БЕСКОНЕЧНАЯ СМЕНА</p><h2 id="sandboxTitle">Система каждый раз новая. Физика очереди — та же.</h2><p>Seed создаёт воспроизводимую смену. Настрой workers, buffer и lock так, чтобы за 16 ticks не потерять данные и не лечить проблему грубой мощностью.</p></div><button id="sandboxClose" class="icon-button" type="button" aria-label="Вернуться к контрактам">×</button></header>
+      <div class="sandbox-layout">
+        <aside class="sandbox-brief">
+          <strong id="sandboxSeed">SHIFT #001</strong>
+          <dl><div><dt>INPUT</dt><dd id="sandboxSource">—</dd></div><div><dt>WORKER RATE</dt><dd id="sandboxWorkerRate">—</dd></div><div><dt>BURST</dt><dd id="sandboxBurst">—</dd></div><div><dt>SHARED WRITE</dt><dd id="sandboxShared">—</dd></div></dl>
+          <p>Цель: <b>0 drops</b> · <b>0 collisions</b> · очередь успевает разгружаться · без бессмысленного overprovision.</p>
+        </aside>
+        <div class="sandbox-machine">
+          <div class="sandbox-flow" aria-label="Схема потока"><span>SOURCE</span><i>→</i><span>BUFFER</span><i>→</i><span>WORKERS</span><i>→</i><span>LEDGER</span></div>
+          <div class="sandbox-controls">
+            <div><small>WORKERS</small><button id="sandboxWorkersMinus" type="button" aria-label="Уменьшить число workers">−</button><b id="sandboxWorkers">1</b><button id="sandboxWorkersPlus" type="button" aria-label="Увеличить число workers">+</button></div>
+            <div><small>BUFFER</small><button id="sandboxBufferMinus" type="button" aria-label="Уменьшить buffer">−</button><b id="sandboxBuffer">4</b><button id="sandboxBufferPlus" type="button" aria-label="Увеличить buffer">+</button></div>
+            <button id="sandboxLock" class="sandbox-lock" type="button" data-on="false">LOCK: OFF</button>
+          </div>
+          <div id="sandboxTimeline" class="sandbox-timeline" aria-label="Очередь по ticks"></div>
+          <p id="sandboxResult" class="sandbox-result" role="status">Настрой линию и запусти 16 ticks.</p>
+          <div class="sandbox-actions"><button id="sandboxRun" class="run-code" type="button">▶ ЗАПУСТИТЬ 16 TICKS</button><button id="sandboxNext" type="button" hidden>СЛЕДУЮЩАЯ СМЕНА →</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pythonContracts" class="python-contracts" hidden aria-labelledby="pythonContractsTitle">
+      <header><div><p class="ending__eyebrow">КАМПУС · КОДОВЫЙ ДОК</p><h2 id="pythonContractsTitle">Здесь схема становится настоящим Python.</h2><p>Каждый датчик запускается внутри изолированного CPython/Pyodide. Не нужно угадать строку — нужно выполнить контракт поведения.</p></div><button id="pythonContractClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="python-contracts__meta"><span id="pythonContractProgress">0/30 программ собрано</span><small>Ошибки дают быстрый retry; уже закрытые задачи можно переписывать без риска потерять прогресс.</small></div>
+      <div id="pythonContractList" class="python-contract-list"></div>
+      <article id="pythonContractEditor" class="python-contract-editor" hidden>
+        <button id="pythonContractBack" type="button">← ВСЕ ПРОГРАММЫ</button><small id="pythonContractTier"></small><h3 id="pythonContractTitle"></h3><p id="pythonContractBrief"></p>
+        <div id="pythonContractVisual" class="python-contract-visual">FILE → CODE → RESULT</div>
+        <div class="code-editor python-contract-code"><span aria-hidden="true">PY</span><textarea id="pythonContractCode" rows="12" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Код Python для контракта"></textarea></div>
+        <button id="pythonContractRun" class="run-code" type="button"><span>▶</span> ЗАПУСТИТЬ ДАТЧИКИ</button>
+        <div id="pythonContractChecks" class="python-contract-checks"></div><p id="pythonContractFeedback" role="status"></p>
+      </article>
+    </section>
+
+    <section id="aiLab" class="ai-lab" hidden aria-labelledby="aiLabTitle">
+      <p class="ending__eyebrow">ГЛАВА 9 · AI-ПОЛИГОН</p>
+      <div class="ai-lab-head"><div class="ai-core" aria-hidden="true"><i></i><i></i><i></i></div><div><h2 id="aiLabTitle">Не говори модели, что она умная. Покажи, на чём она ошибается.</h2><p>Здесь маленькая модель настоящая в смысле алгоритма: она сравнивает 5×5 пиксели с размеченными примерами. Потом ты переключишься с labels на reward и увидишь другой тип обучения.</p></div></div>
+      <div id="aiLabStage" class="ai-lab-stage" data-step="briefing">
+        <div class="ai-lab-status"><span id="aiPhase">TRAINING DATA → PREDICT → EVAL → FEEDBACK</span><div><b id="aiAccuracy">ещё не измерена</b><i><em id="aiAccuracyBar"></em></i></div></div>
+        <div class="ai-training"><div><small>TRAINING MEMORY</small><strong id="aiMemoryCount">2 примера в памяти</strong></div><div id="aiTrainingGrid" class="ai-sample-grid"></div></div>
+        <div class="ai-eval"><small>EVAL SET · НОВЫЕ ПРИМЕРЫ</small><div id="aiEvalGrid" class="ai-sample-grid ai-sample-grid--eval"></div></div>
+        <p id="aiLabOutput" role="status">У модели нет магии: сначала ей нужны примеры.</p>
+        <button id="aiStart" class="run-code" type="button">ВКЛЮЧИТЬ МОДЕЛЬ →</button>
+        <button id="aiRunEval" class="run-code" type="button" hidden>ЗАПУСТИТЬ EVAL →</button>
+        <div id="aiCorrection" class="ai-correction" hidden><div><small>HARD SAMPLE · НОВЫЙ КЛАСС</small><div class="ai-pixels" aria-label="Пиксельная цифра 7"><i data-on="true"></i><i data-on="true"></i><i data-on="true"></i><i data-on="true"></i><i data-on="true"></i><i></i><i></i><i></i><i data-on="true"></i><i></i><i></i><i></i><i data-on="true"></i><i></i><i></i><i></i><i data-on="true"></i><i></i><i></i><i></i><i></i><i data-on="true"></i><i></i><i></i><i></i></div></div><div class="ai-label-buttons"><button type="button" data-ai-label="0">LABEL 0</button><button type="button" data-ai-label="1">LABEL 1</button><button type="button" data-ai-label="7">LABEL 7</button></div></div>
+        <button id="aiRunEval2" class="run-code" type="button" hidden>ПОВТОРИТЬ EVAL →</button>
+        <button id="aiOpenCoach" class="run-code" type="button" hidden>ПЕРЕЙТИ ОТ LABEL К REWARD →</button>
+        <div id="aiCoach" class="ai-coach" hidden><small id="aiCoachRound">1/3 · HUMAN FEEDBACK</small><h3 id="aiCoachScenario">СЦЕНАРИЙ</h3><p id="aiCoachCopy"></p><div class="ai-choice"><span>БОТ ВЫБРАЛ</span><b id="aiCoachChoice">MOVE</b></div><div id="aiValueBars" class="ai-value-bars"></div><div class="ai-reward-buttons"><button id="aiRewardBad" type="button">👎 НЕПРАВИЛЬНО · -1</button><button id="aiRewardGood" type="button">👍 ПРАВИЛЬНО · +1</button></div></div>
+        <div id="aiCodeReveal" class="ai-code-reveal" hidden><div><small>SUPERVISED · БЛИЖАЙШИЙ ПРИМЕР</small><pre><code id="aiKnnCode"></code></pre></div><div><small>HUMAN FEEDBACK · ОБНОВЛЕНИЕ ЦЕННОСТИ</small><pre><code id="aiRewardCode"></code></pre></div><p><b>Важно:</b> эта глава специально начинает с маленьких прозрачных алгоритмов. Нейросеть появится позже, когда будет понятно, что именно она заменяет и как её оценивать.</p></div>
+        <button id="aiContinue" class="run-code" type="button" hidden>СОХРАНИТЬ MODEL / EVAL / REWARD →</button>
+      </div>
+    </section>
+
+    <section id="modelWorkbench" class="model-workbench" hidden aria-labelledby="modelWorkbenchTitle">
+      <header><div><p class="ending__eyebrow">AI-ПОЛИГОН · MODEL WORKBENCH</p><h2 id="modelWorkbenchTitle">Здесь “обучение” видно в 25 числах.</h2><p>Это прозрачный один линейный слой: 5×5 пикселей входят в модель, веса меняются после эпох, а скрытый шумный eval показывает, обобщилась ли закономерность.</p></div><button id="modelClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="model-pack-tabs" aria-label="Наборы изображений"><button type="button" data-model-pack="digits">012 · ЦИФРЫ</button><button type="button" data-model-pack="letters">ILT · БУКВЫ</button><button type="button" data-model-pack="icons">□×+ · ИКОНКИ</button></div>
+      <div class="model-dashboard">
+        <div class="model-stats"><div><small>EPOCHS</small><b id="modelEpochs">0</b></div><div><small>TRAINING</small><b id="modelTrainCount">3 samples</b></div><div><small>LOSS</small><b id="modelLoss">1.099</b></div><div><small>HIDDEN EVAL</small><b id="modelAccuracy">0/12 · 0%</b><i><em id="modelAccuracyBar"></em></i></div></div>
+        <div class="model-main">
+          <article><small>PROTOTYPES · КЛИКНИ КЛАСС</small><div id="modelPrototypes" class="model-prototypes"></div><strong id="modelWeightLabel">WEIGHTS</strong><div id="modelWeights" class="model-weights" aria-label="Карта весов выбранного класса"></div><p>Светлые клетки толкают score класса вверх, красные — вниз. Нулевая карта означает, что модель ещё ничего не выучила.</p></article>
+          <article><small>CONFUSION · СКРЫТЫЙ ШУМНЫЙ EVAL</small><div id="modelConfusion" class="model-confusion"></div><p id="modelStatus" role="status"></p><b id="modelMastery">0/3 DATASETS MASTERED</b></article>
+        </div>
+        <div class="model-controls"><button id="modelEpoch1" class="run-code" type="button">EPOCH +1</button><button id="modelEpoch10" type="button">TRAIN ×10</button><button id="modelAugment" type="button" data-on="false">ДОБАВИТЬ ШУМНЫЕ ПРИМЕРЫ</button><button id="modelReset" type="button">RESET WEIGHTS</button></div>
+      </div>
+    </section>
+
+    <section id="neuralFoundry" class="neural-foundry" hidden aria-labelledby="neuralTitle">
+      <header><div><p class="ending__eyebrow">AI-ПОЛИГОН · NEURAL FOUNDRY</p><h2 id="neuralTitle">Скрытый слой нужен не потому, что “нейросеть моднее”.</h2><p>Сначала один линейный узел честно пытается решить XOR и упирается в предел. Затем ты вставляешь hidden layer и видишь forward, loss и backprop как движение сигнала туда и ошибки обратно.</p></div><button id="neuralClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="neural-layout">
+        <article class="neural-brief"><small>LINEAR BASELINE</small><strong id="neuralLinearAccuracy">0/4 · 0%</strong><p>Четыре случая: одинаковые входы дают 0, разные — 1. Одна линейная граница не умеет разделить XOR.</p><button id="neuralTrainLinear" class="run-code" type="button">TRAIN LINEAR ×200</button><button id="neuralAddHidden" type="button" hidden>+ ВСТАВИТЬ HIDDEN LAYER</button></article>
+        <article class="neural-machine">
+          <div class="neural-stats"><span><small>EPOCHS</small><b id="neuralEpochs">0</b></span><span><small>LOSS</small><b id="neuralLoss">0.693</b></span><span><small>EVAL</small><b id="neuralAccuracy">0/4 · 0%</b></span></div>
+          <div id="neuralGraph" class="neural-graph" data-hidden="false" aria-label="Сеть 2 входа, 4 скрытых нейрона и выход">
+            <div class="neural-inputs"><i id="neuralInputA">0</i><i id="neuralInputB">1</i></div><b>→</b>
+            <div class="neural-hidden"><i data-neural-hidden>0.00</i><i data-neural-hidden>0.00</i><i data-neural-hidden>0.00</i><i data-neural-hidden>0.00</i></div><b>→</b><strong id="neuralOutput">0.50</strong>
+            <div class="neural-backprop" aria-hidden="true">LOSS ← OUTPUT ← HIDDEN ← WEIGHTS</div>
+          </div>
+          <div id="neuralSamples" class="neural-samples"></div><p id="neuralStatus" role="status"></p>
+          <div class="neural-controls"><button id="neuralEpoch25" type="button" disabled>BACKPROP ×25</button><button id="neuralEpoch200" type="button" disabled>BACKPROP ×200</button><button id="neuralRate" type="button">LR 0.8</button><button id="neuralReset" type="button">RESET</button></div>
+          <div id="neuralCodeReveal" class="neural-code" hidden><small>ТЕ ЖЕ СВЯЗИ · В PYTHON-МАТЕМАТИКЕ</small><pre><code id="neuralPython"></code></pre></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="llmWorkshop" class="llm-workshop" hidden aria-labelledby="llmTitle">
+      <p class="ending__eyebrow">ГЛАВА 10 · АГЕНТНЫЙ ЦЕХ</p>
+      <div class="llm-head"><div class="llm-orb" aria-hidden="true">Q</div><div><h2 id="llmTitle">Модель генерирует текст. Обёртка превращает текст в систему.</h2><p>Никакого реального внешнего API в обязательной кампании: Q‑Mini — локальный детерминированный симулятор ошибок. Мы учимся границам wrapper-а, которые потом одинаково нужны любому провайдеру.</p></div></div>
+      <div id="llmStage" class="llm-stage" data-step="briefing">
+        <span id="llmPhase">ЗАДАЧА → MODEL → ?</span>
+        <div id="llmPipeline" class="llm-pipeline" aria-label="Pipeline LLM-обёртки">
+          <div data-llm-node="instruction"><b>01</b><strong>INSTRUCTION</strong><small>ЧТО МОЖНО</small></div><i>→</i><div data-llm-node="context"><b>02</b><strong>CONTEXT</strong><small>ФАКТЫ</small></div><i>→</i><div data-llm-node="model"><b>03</b><strong>MODEL</strong><small>Q-MINI</small></div><i>→</i><div data-llm-node="validator"><b>04</b><strong>VALIDATOR</strong><small>SCHEMA</small></div><i>→</i><div data-llm-node="tool"><b>05</b><strong>TOOL</strong><small>ALLOWLIST</small></div><i>→</i><div data-llm-node="eval"><b>06</b><strong>EVAL</strong><small>TEST SET</small></div>
+        </div>
+        <p id="llmOutput" role="status">Модель сама по себе — не агент.</p>
+        <button id="llmStart" class="run-code" type="button">ДАТЬ МОДЕЛИ ПЕРВУЮ ЗАДАЧУ →</button>
+        <div class="llm-module-rack" aria-label="Модули обёртки"><button type="button" data-llm-add="context" disabled><strong>+ CONTEXT</strong><small>ДАТЬ ПРОВЕРЯЕМЫЕ ФАКТЫ</small></button><button type="button" data-llm-add="validator" disabled><strong>+ VALIDATOR</strong><small>СХЕМА + ALLOWLIST</small></button><button type="button" data-llm-add="tool" disabled><strong>+ TOOL</strong><small>ВЫПОЛНИТЬ ДЕЙСТВИЕ</small></button><button type="button" data-llm-add="eval" disabled><strong>+ EVALS</strong><small>НЕ ВЕРИТЬ ОДНОМУ ДЕМО</small></button></div>
+        <div id="llmEvalGrid" class="llm-eval-grid"></div>
+        <div id="llmCodeReveal" class="llm-code-reveal" hidden><p><b>Q-BOT:</b> «Provider можно заменить. Границы остаются».</p><pre><code id="llmWrapperCode"></code></pre><p><span>Protocol</span> отделяет клиент модели · <span>schema</span> задаёт форму · <span>allowlist</span> ограничивает инструменты · <span>evals</span> проверяют набор случаев, а не один красивый ответ.</p></div>
+        <button id="llmContinue" class="run-code" type="button" hidden>СОХРАНИТЬ PROMPT / CONTEXT / TOOL / EVAL →</button>
+      </div>
+    </section>
+
+    <section id="retrievalWarehouse" class="retrieval-warehouse" hidden aria-labelledby="retrievalTitle">
+      <header><div><p class="ending__eyebrow">AI-ПОЛИГОН · RETRIEVAL WAREHOUSE</p><h2 id="retrievalTitle">Контекст тоже груз. Плохой склад даёт плохой ответ.</h2><p>Документы режутся на chunks, превращаются в маленькие векторы и занимают место на карте сходства. Настраивай гранулярность, top-k и границы доверия — результат считается, а не подыгрывает кнопке.</p></div><button id="retrievalClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="retrieval-layout">
+        <article class="retrieval-mission"><small id="retrievalMissionNo">1/3</small><h3 id="retrievalMissionTitle"></h3><p id="retrievalQuery"></p><div class="retrieval-controls"><button id="retrievalMode" type="button">CHUNKS: WHOLE DOC</button><button id="retrievalTopK" type="button">TOP-K 1</button><button id="retrievalProvenance" type="button" data-on="false">PROVENANCE: OFF</button><button id="retrievalGuard" type="button" data-on="false">DATA GUARD: OFF</button></div><div id="retrievalChecks" class="retrieval-checks"></div><p id="retrievalStatus" role="status"></p><button id="retrievalCommit" class="run-code" type="button" disabled>СОХРАНИТЬ RETRIEVAL-КОНТРАКТ →</button><b id="retrievalProgress">0/3 MISSIONS</b></article>
+        <article class="retrieval-space"><small>VECTOR MAP · БЛИЗОСТЬ ВИДНА КАК СКЛАД</small><div id="retrievalMap" class="retrieval-map"></div><div id="retrievalResults" class="retrieval-results"></div></article>
+      </div>
+    </section>
+
+    <section id="botForge" class="bot-forge" hidden aria-labelledby="forgeTitle">
+      <header><div><p class="ending__eyebrow">CAPSTONE · BOT FORGE</p><h2 id="forgeTitle">Не “дай агенту всё”. Собери ровно столько системы, сколько выдержат evals.</h2><p>Локальный bounded planner создаёт программу, patch, мини-игру и многоботовый blueprint. Ты видишь каждый модуль, выбранную стратегию, eval и feedback, который меняет следующий выбор.</p></div><button id="forgeClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="forge-grid">
+        <article class="forge-brief"><small id="forgeMissionNo">1/4</small><h3 id="forgeMissionTitle"></h3><p id="forgeMissionBrief"></p><b id="forgeProgress">0/4 BUILDS</b><div class="forge-modules" aria-label="Модули бота">
+          <button type="button" data-bot-module="planner">PLANNER<small>steps</small></button><button type="button" data-bot-module="memory">MEMORY<small>state</small></button><button type="button" data-bot-module="retrieval">RETRIEVAL<small>context</small></button><button type="button" data-bot-module="tools">TOOLS<small>actions</small></button><button type="button" data-bot-module="policy">POLICY<small>authority</small></button><button type="button" data-bot-module="tests">EVALS<small>checks</small></button><button type="button" data-bot-module="retry">RETRY<small>bounded</small></button><button type="button" data-bot-module="budget">BUDGET<small>stop</small></button><button type="button" data-bot-module="trace">TRACE<small>log</small></button>
+        </div></article>
+        <article class="forge-work"><small>ASSEMBLED AGENT</small><div id="forgePipeline" class="forge-pipeline">ПУСТО</div><div class="forge-strategies"><div data-forge-strategy="fast"><span>FAST</span><i></i><b>0.00</b></div><div data-forge-strategy="safe"><span>SAFE</span><i></i><b>0.00</b></div><div data-forge-strategy="modular"><span>MODULAR</span><i></i><b>0.00</b></div></div><button id="forgeRun" class="run-code" type="button">RUN PLAN → BUILD → EVAL</button><div id="forgeEval" class="forge-eval"></div><pre id="forgeArtifact" class="forge-artifact">—</pre><p id="forgeStatus" role="status"></p><div class="forge-feedback"><button id="forgeReject" type="button" hidden>👎 STRATEGY -1 · ПЕРЕОБУЧИТЬ</button><button id="forgeApprove" type="button" hidden>👍 ACCEPT +1 · ЗАКРЕПИТЬ</button></div></article>
+      </div>
+    </section>
+
+    <section id="automationLab" class="automation-lab" hidden aria-labelledby="automationLabHeading">
+      <header><div><p class="ending__eyebrow">PYTHONIO BRIDGE · REAL-WORLD AUTOMATION</p><h2 id="automationLabHeading">Автоматизация становится полезной, когда переживает реальный мир.</h2><p>Никаких настоящих файлов, ключей или внешних запросов без явного подключения. Здесь безопасный симулятор: собери границы для папок, CSV, HTTP и replaceable model adapter.</p></div><button id="automationLabClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="automation-lab-grid">
+        <article class="automation-lab-brief"><small id="automationLabMissionNo">1/4</small><h3 id="automationLabTitle"></h3><p id="automationLabBrief"></p><div id="automationLabCargo" class="automation-lab-cargo"></div><b id="automationLabProgress">0/4 BLUEPRINTS</b></article>
+        <article class="automation-lab-work"><small>SAFE PIPELINE</small><div id="automationLabPipeline" class="automation-lab-pipeline">ПУСТО</div><div class="automation-lab-modules" aria-label="Модули автоматизации">
+          <button type="button" data-auto-module="scan">SCAN<small>paths</small></button><button type="button" data-auto-module="validate">VALIDATE<small>shape</small></button><button type="button" data-auto-module="dryrun">DRY-RUN<small>preview</small></button><button type="button" data-auto-module="normalize">NORMALIZE<small>fields</small></button><button type="button" data-auto-module="dedupe">DEDUPE<small>hash/key</small></button><button type="button" data-auto-module="checkpoint">CHECKPOINT<small>resume</small></button><button type="button" data-auto-module="retry">RETRY<small>bounded</small></button><button type="button" data-auto-module="idempotency">IDEMPOTENCY<small>once</small></button><button type="button" data-auto-module="timeout">TIMEOUT<small>deadline</small></button><button type="button" data-auto-module="log">LOG<small>trace</small></button><button type="button" data-auto-module="adapter">ADAPTER<small>provider</small></button><button type="button" data-auto-module="schema">SCHEMA<small>output</small></button><button type="button" data-auto-module="redact">REDACT<small>secrets</small></button><button type="button" data-auto-module="budget">BUDGET<small>limit</small></button>
+        </div><button id="automationLabRun" class="run-code" type="button">▶ DRY SIMULATION</button><div id="automationLabChecks" class="automation-lab-checks"></div><div id="automationLabTrace" class="automation-lab-trace"></div><p id="automationLabStatus" role="status"></p><button id="automationLabCommit" type="button" disabled>СОХРАНИТЬ BLUEPRINT →</button></article>
+      </div>
+      <article id="automationLabCode" class="automation-lab-code" hidden><small>ТЕ ЖЕ ГРАНИЦЫ · В РЕАЛЬНОМ PYTHON</small><pre><code id="automationLabPython"></code></pre></article>
+    </section>
+
+    <section id="aiFactoryCapstone" class="ai-factory-capstone" hidden aria-labelledby="factoryHeading">
+      <header><div><p class="ending__eyebrow">LONG-GAME FINALE · MY AI FACTORY</p><h2 id="factoryHeading">Не собери “самого умного бота”. Собери систему, которая выдерживает мир.</h2><p>Hidden eval прогоняет шумный вход, неизвестный факт, tool-call, hostile DATA, duplicate, timeout, burst, race, crash и неправильный результат. Архитектура должна пройти всё и остаться внутри capacity.</p></div><button id="factoryClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="factory-top"><div><small id="factoryTrialLabel">MASTER EVAL · 10 HIDDEN CASES</small><small>RESOURCE CAPACITY</small><b id="factoryCost">0/21 UNITS</b><i><em id="factoryBudgetBar"></em></i></div><strong id="factoryBest">НЕ ПРОЙДЕНО</strong></div>
+      <div class="factory-layout">
+        <article><small>MODULE RACK</small><div class="factory-modules" aria-label="Модули AI Factory">
+          <button type="button" data-factory-module="model">MODEL<small>3</small></button><button type="button" data-factory-module="human">HUMAN REVIEW<small>2</small></button><button type="button" data-factory-module="retrieval">RETRIEVAL<small>2</small></button><button type="button" data-factory-module="provenance">PROVENANCE<small>1</small></button><button type="button" data-factory-module="tools">TOOLS<small>2</small></button><button type="button" data-factory-module="policy">POLICY<small>1</small></button><button type="button" data-factory-module="guard">DATA GUARD<small>1</small></button><button type="button" data-factory-module="idempotency">IDEMPOTENCY<small>1</small></button><button type="button" data-factory-module="retry">RETRY<small>1</small></button><button type="button" data-factory-module="queue">QUEUE<small>2</small></button><button type="button" data-factory-module="parallel">2 WORKERS<small>2</small></button><button type="button" data-factory-module="lock">LOCK<small>1</small></button><button type="button" data-factory-module="checkpoint">CHECKPOINT<small>1</small></button><button type="button" data-factory-module="trace">TRACE<small>1</small></button><button type="button" data-factory-module="budget">BUDGET<small>1</small></button>
+        </div></article>
+        <article><small>VISIBLE ARCHITECTURE</small><div id="factoryPipeline" class="factory-pipeline">INGEST → ? → RESULT</div><div class="factory-actions"><button id="factoryRun" class="run-code" type="button">RUN HIDDEN EVAL</button><button id="factoryReset" type="button">RESET</button><button id="factoryNextTrial" type="button" hidden>NEXT FACTORY TRIAL →</button></div><div class="factory-score"><b id="factoryScore">0/10</b><p id="factoryStatus" role="status">Собери архитектуру.</p></div><div id="factoryEvals" class="factory-evals"></div></article>
+      </div>
+      <article id="factorySkeletonWrap" class="factory-skeleton" hidden><div><small>EXPORTABLE PROJECT SKELETON</small><button id="factoryExport" type="button" hidden>КОПИРОВАТЬ PYTHON SKELETON</button></div><pre><code id="factorySkeleton"></code></pre></article>
+    </section>
+
+    <section id="simnetLab" class="simnet-lab" hidden aria-labelledby="simnetHeading">
+      <header><div><p class="ending__eyebrow">SIMNET · EXTERNAL SYSTEMS WITHOUT EXTERNAL RISK</p><h2 id="simnetHeading">Фабрика научилась думать. Теперь научи её жить среди чужих систем.</h2><p>Ни один запрос реально не уходит в сеть, ключи вымышленные. Но границы ведут себя как настоящие: 401/429/5xx, streaming, MCP, Git evidence, health/readiness, privacy и rollback.</p></div><button id="simnetClose" class="icon-button" type="button" aria-label="Вернуться в кампус">×</button></header>
+      <div class="simnet-grid">
+        <article class="simnet-brief"><small id="simnetMissionTag">STATION</small><h3 id="simnetMissionTitle"></h3><p id="simnetMissionBrief"></p><div class="simnet-event"><small>INJECTED EVENT</small><b id="simnetMissionEvent"></b></div><strong id="simnetProgress">0/5 STATIONS</strong></article>
+        <article class="simnet-work"><div><small id="simnetMissionNo">1/5</small><small>VISIBLE ROUTE</small></div><div id="simnetRoute" class="simnet-route"></div><div class="simnet-modules" aria-label="Модули внешнего контура">
+          <button type="button" data-simnet-module="bearer">BEARER<small>auth</small></button><button type="button" data-simnet-module="allowlist">ALLOWLIST<small>policy</small></button><button type="button" data-simnet-module="requestid">REQUEST ID<small>trace</small></button><button type="button" data-simnet-module="timeout">TIMEOUT<small>deadline</small></button><button type="button" data-simnet-module="stream">STREAM<small>chunks</small></button><button type="button" data-simnet-module="redact">REDACT<small>secrets</small></button>
+          <button type="button" data-simnet-module="discover">DISCOVER<small>capabilities</small></button><button type="button" data-simnet-module="dataguard">DATA GUARD<small>untrusted</small></button><button type="button" data-simnet-module="approval">APPROVAL<small>side effects</small></button><button type="button" data-simnet-module="branch">BRANCH<small>isolate</small></button><button type="button" data-simnet-module="diff">DIFF<small>small patch</small></button><button type="button" data-simnet-module="test">TEST<small>command</small></button>
+          <button type="button" data-simnet-module="status">STATUS<small>tree</small></button><button type="button" data-simnet-module="evidence">EVIDENCE<small>exit/output</small></button><button type="button" data-simnet-module="health">HEALTH<small>liveness</small></button><button type="button" data-simnet-module="ready">READY<small>dependencies</small></button><button type="button" data-simnet-module="backup">BACKUP<small>recovery</small></button><button type="button" data-simnet-module="checksum">CHECKSUM<small>integrity</small></button>
+          <button type="button" data-simnet-module="rollback">ROLLBACK<small>known good</small></button><button type="button" data-simnet-module="permission">PERMISSION<small>consent</small></button><button type="button" data-simnet-module="sanitize">SANITIZE<small>private data</small></button><button type="button" data-simnet-module="localroute">LOCAL ROUTE<small>127.0.0.1</small></button><button type="button" data-simnet-module="trace">TRACE<small>route proof</small></button><button type="button" data-simnet-module="idempotency">IDEMPOTENCY<small>duplicate-safe</small></button>
+        </div><button id="simnetRun" class="run-code" type="button">▶ RUN OFFLINE SIMULATION</button><div id="simnetChecks" class="simnet-checks"></div><div id="simnetTrace" class="simnet-trace"></div><p id="simnetStatus" role="status"></p><button id="simnetCommit" type="button" disabled>SEAL EVIDENCE →</button></article>
+      </div>
+      <article id="simnetIncidentPanel" class="simnet-incidents" hidden>
+        <div class="simnet-incident-head"><div><small id="simnetIncidentSeed">INCIDENT #001</small><h3>БЕСКОНЕЧНЫЕ INCIDENT DRILLS</h3></div><b id="simnetIncidentStatus">—</b></div>
+        <p id="simnetIncidentSymptom"></p>
+        <div class="simnet-incident-choice"><small>ГДЕ СЛОМАЛОСЬ?</small><div><button type="button" data-incident-layer="CLIENT">CLIENT</button><button type="button" data-incident-layer="GATEWAY">GATEWAY</button><button type="button" data-incident-layer="PROVIDER">PROVIDER</button><button type="button" data-incident-layer="MCP">MCP</button><button type="button" data-incident-layer="SERVICE">SERVICE</button></div></div>
+        <div class="simnet-incident-choice"><small>КАК ЛЕЧИТЬ?</small><div id="simnetIncidentFixes"></div></div>
+        <div class="simnet-incident-actions"><button id="simnetIncidentRun" class="run-code" type="button">DIAGNOSE</button><button id="simnetIncidentNext" type="button" hidden>NEXT INCIDENT →</button></div><p id="simnetIncidentFeedback" role="status"></p>
+      </article>
+      <article id="simnetCode" class="simnet-code" hidden><small>ТЕ ЖЕ ГРАНИЦЫ · В PROVIDER-NEUTRAL PYTHON</small><pre><code id="simnetPython"></code></pre></article>
+    </section>
+
+    <aside id="skillJournal" class="skill-journal" hidden aria-label="Дневник способностей">
+      <p>ДНЕВНИК · МАШИННАЯ ЛОГИКА</p>
+      <div id="printSkill" class="skill-card" data-unlocked="false" title="Python: print(...) отправляет сообщение. Здесь этим сообщением мы будим руку.">
+        <b>ОТПРАВИТЬ СООБЩЕНИЕ</b>
+        <span>Ты заставил машину услышать текст. В Python это называется print(...).</span>
+        <small id="printSkillMethod">СПОСОБ: НАБРАНО РУКАМИ</small>
+      </div>
+      <div id="forSkill" class="skill-card" data-unlocked="false" title="Python: for повторяет действие для каждого объекта в наборе.">
+        <b>ПОВТОРИТЬ ДЛЯ КАЖДОГО</b>
+        <span>Одно действие применяется к каждому ящику. В Python это цикл for.</span>
+      </div>
+      <div id="ifSkill" class="skill-card" data-unlocked="false" title="Python: if выполняет действие только когда условие подходит.">
+        <b>ВЫБРАТЬ ПО УСЛОВИЮ</b>
+        <span>Машина сначала проверяет груз и только потом действует. В Python это if.</span>
+      </div>
+      <div id="listSkill" class="skill-card" data-unlocked="false" title="Список хранит несколько объектов; очередь задаёт порядок обработки.">
+        <b>ХРАНИТЬ ОЧЕРЕДЬ</b>
+        <span>Работа хранится как изменяемая очередь ящиков</span>
+      </div>
+      <div id="whileSkill" class="skill-card" data-unlocked="false" title="Python: while повторяет действие, пока условие остаётся истинным.">
+        <b>РАБОТАТЬ, ПОКА ЕСТЬ ЗАДАЧИ</b>
+        <span>Q-Bot работает, пока условие остаётся истинным</span>
+      </div>
+      <div id="funcSkill" class="skill-card" data-unlocked="false" title="Python: def даёт имени повторяемому поведению.">
+        <b>СОБРАТЬ ПОВТОРЯЕМЫЙ НАВЫК</b>
+        <span>Один проверенный навык можно подключить к нескольким потокам</span>
+      </div>
+      <div id="dictSkill" class="skill-card" data-unlocked="false">
+        <b>DICT / STATE</b>
+        <span>Система хранит ключи памяти и принимает решение по уже известному состоянию</span>
+      </div>
+      <div id="reliabilitySkill" class="skill-card" data-unlocked="false">
+        <b>TRY / TEST / LOG</b>
+        <span>Программа воспроизводит сбой, переживает исключение и оставляет след</span>
+      </div>
+      <div id="asyncSkill" class="skill-card" data-unlocked="false">
+        <b>ASYNC / QUEUE / LOCK</b>
+        <span>Несколько worker’ов делят поток, а Lock защищает общую критическую секцию</span>
+      </div>
+      <div id="aiSkill" class="skill-card" data-unlocked="false">
+        <b>MODEL / EVAL / REWARD</b>
+        <span>Данные и обратная связь меняют поведение, а eval отдельно измеряет качество</span>
+      </div>
+      <div id="llmSkill" class="skill-card" data-unlocked="false">
+        <b>PROMPT / CONTEXT / TOOL / EVAL</b>
+        <span>LLM-обёртка отделяет инструкцию, факты, структуру, действия и проверку качества</span>
+      </div>
+      <div id="neuralSkill" class="skill-card" data-unlocked="false"><b>HIDDEN / LOSS / BACKPROP</b><span>Ошибка проходит назад через связи и меняет веса скрытого слоя</span></div>
+      <div id="ragSkill" class="skill-card" data-unlocked="false"><b>CHUNK / VECTOR / RETRIEVAL</b><span>Контекст ищется как соседство, хранит provenance и остаётся недоверенным DATA</span></div>
+      <div id="agentSkill" class="skill-card" data-unlocked="false"><b>PLANNER / POLICY / EVAL</b><span>Агент — это ограниченная система модулей, а не модель с неограниченными правами</span></div>
+      <div id="automationSkill" class="skill-card" data-unlocked="false"><b>DRY-RUN / IDEMPOTENCY / ADAPTER</b><span>Автоматизация безопасно касается файлов, API и сменных model provider-ов</span></div>
+      <div id="factorySkill" class="skill-card" data-unlocked="false"><b>AI FACTORY</b><span>Модель, retrieval, tools, reliability и evals работают как одна ограниченная система</span></div>
+      <div id="simnetSkill" class="skill-card" data-unlocked="false"><b>API / MCP / EVIDENCE</b><span>Внешние системы подключаются через наблюдаемые границы: auth, policy, readiness, proof и rollback</span></div>
+      <div id="deskSkill" class="skill-card" data-unlocked="false"><b>TRACE / EVIDENCE / ROOT CAUSE</b><span>Симптом превращается в причинную цепочку только после нескольких независимых доказательств</span></div>
+      <div id="nexusSkill" class="skill-card" data-unlocked="false"><b>FACTORY / BLUEPRINT / COMPANION</b><span>Архитектура становится переиспользуемым чертежом, а Q-Bot учится на последствиях и feedback</span></div>
+      <div id="commonsSkill" class="skill-card" data-unlocked="false"><b>RULE / BLUEPRINT / AUTOPILOT</b><span>Понятая причинность превращается в переиспользуемый автомат, а потом — в живущий в мире Python-код</span></div>
+      <div id="operationsSkill" class="skill-card" data-unlocked="false"><b>TEST / CANARY / ROLLBACK</b><span>Код продолжает жить после deploy: изменения проверяются, ограничиваются и могут безопасно откатываться</span></div>
+      <div id="chronicleSkill" class="skill-card" data-unlocked="false"><b>LEGACY / DEBT / POSTMORTEM</b><span>Сильная система помнит, зачем появился старый код, измеряет цену совместимости и превращает прошлые инциденты в новые guardrails</span></div>
+      <div id="weaveSkill" class="skill-card" data-unlocked="false"><b>TRUST / RESILIENCE / BOUNDED AUTONOMY</b><span>Код становится частью города: архитектура теперь балансирует скорость, доступность, устойчивость и право автоматов действовать без человека</span></div>
+      <div id="guildSkill" class="skill-card" data-unlocked="false"><b>ГИЛЬДИЯ КВЕСТОВ · RPG SKILL PATHS</b><span>Python, AI, automation, systems, security, vehicle, web и low-level становятся силами игрока: выбирай профессию, бери реальные по смыслу заказы и собирай party под сложные разрешённые рейды</span></div>
+      <div id="threadsSkill" class="skill-card" data-unlocked="false"><b>STATE / CONTRACT EVOLUTION / PROGRESSIVE AUTONOMY</b><span>Долгая система помнит прошлые обещания: новые районы растут из твоего кода, старые решения возвращаются echoes, а Q-Bot зарабатывает свободу доказательствами</span></div>
+      <div id="botSkill" class="skill-card" data-unlocked="false">
+        <b>Q-BOT 0.1</b>
+        <span>Повторяет выученную связку без твоих рук</span>
+      </div>
+    </aside>
+    <button id="journalToggle" class="journal-toggle" type="button" hidden aria-expanded="false">НАВЫКИ</button>
+    <button id="careerDoor" class="career-door" type="button" hidden aria-label="Открыть дерево навыков"><b>✦ НАВЫКИ</b><small id="careerDoorState">ДЕРЕВО · ЧТО ДАЛЬШЕ</small></button>
+    <button id="questDoor" class="quest-door" type="button" hidden aria-label="Открыть журнал квестов"><b>☰ КВЕСТЫ</b><small>ЖУРНАЛ</small></button>
+    <p id="questLine" class="quest-line" hidden aria-live="polite"><b>◆</b> <span id="questLineText"></span></p>
+
+    <div class="corner-tools">
+      <a id="homeLink" class="home-link" href="https://aka-gst.ru/" hidden>НА САЙТ</a>
+      <button id="traceToggle" class="icon-button tool-button" type="button" hidden aria-label="Скрыть трассировку" aria-pressed="false" title="Трассировка выполнения">ТРАССА: ВКЛ</button>
+      <button id="soundToggle" class="icon-button tool-button" type="button" aria-label="Выключить звук" aria-pressed="false" title="Звук игры">ЗВУК: ВКЛ</button>
+      <button id="openHackPolygon" class="icon-button tool-button" type="button" aria-label="Взломай меня: учебный полигон" title="Взломай меня — учебный полигон">⚑ ПОЛИГОН</button>
+      <button id="reportHole" class="icon-button tool-button" type="button" aria-label="Сообщить о дыре" title="Нашёл дыру у нас? Сообщи">⚠ ДЫРА</button>
+      <button id="restartGame" class="icon-button tool-button tool-button--reset" type="button" aria-label="Начать игру заново" title="Начать заново: весь прогресс исчезнет">↺ ЗАНОВО</button>
+    </div>
+
+    <div class="screen-noise" aria-hidden="true"></div>
+    <div class="screen-vignette" aria-hidden="true"></div>
+    <section id="hourDesk" class="desk" hidden></section>
+    <div id="seamFlash" class="seam" hidden></div>
+    <section id="skillTree" class="tree" hidden aria-labelledby="treeTitle"></section>
+    <section id="questLog" class="qlog" hidden aria-labelledby="qlogTitle"></section>
+    <div id="confirmDialog" class="confirm" hidden></div>
+    <div id="touchPad" class="touch" hidden aria-hidden="true"></div>
+    <div id="rotateHint" class="rotate-hint" hidden><b>↻</b><p>Поверни телефон горизонтально — так склад виден целиком.</p><button type="button" id="rotateDismiss">ИГРАТЬ ВЕРТИКАЛЬНО</button></div>
+    <section id="exitDialog" class="exit-dialog" role="dialog" aria-modal="true" aria-labelledby="exitTitle" hidden>
+      <div class="exit-dialog__card">
+        <h2 id="exitTitle">Выйти из игры?</h2>
+        <p>Прогресс может не сохраниться. Останешься в игре?</p>
+        <button id="stayInGame" class="run-code" type="button">ОСТАТЬСЯ В ИГРЕ</button>
+        <a id="confirmExit" class="run-code" href="https://aka-gst.ru/">ВЫЙТИ НА САЙТ</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="src/game/main.js?v=game-193"></script>
+</body>
+</html>

@@ -13,7 +13,8 @@ const ACTION_KEYS = new Map([
   ['ShiftLeft', 'dash'],
   ['ShiftRight', 'dash'],
   ['KeyQ', 'pulse'],
-  ['KeyE', 'shield'],
+  ['KeyF', 'shield'],
+  ['KeyE', 'action'],
   ['Space', 'action'],
 ]);
 
@@ -22,6 +23,7 @@ export function createInput(target = window) {
   const pressed = new Set();
   const state = { moveX: 0, moveY: 0 };
   let pointer = null;
+  let pointerNavigation = true;
 
   function calculateMovement() {
     let x = 0;
@@ -61,7 +63,7 @@ export function createInput(target = window) {
   }
 
   function pointerDown(event) {
-    if (event.target !== target) return;
+    if (!pointerNavigation || event.target !== target) return;
     pointer = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY };
     target.setPointerCapture?.(event.pointerId);
   }
@@ -93,6 +95,13 @@ export function createInput(target = window) {
       const active = pressed.has(action);
       pressed.delete(action);
       return active;
+    },
+    setPointerNavigation(enabled) {
+      pointerNavigation = Boolean(enabled);
+      if (!pointerNavigation) {
+        pointer = null;
+        calculateMovement();
+      }
     },
     destroy() {
       window.removeEventListener('keydown', keyDown);
