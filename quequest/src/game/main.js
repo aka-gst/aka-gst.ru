@@ -52,6 +52,8 @@ import { createTouchControls, isTouchDevice } from './touch-controls.js';
 import { drawFace, faceIdFor } from './faces.js';
 import { masteryEvent, listenForSkills, pythonioWay } from './mastery.js';
 import { applyBuildLabels, BUILD } from './version.js';
+import { createRing } from './duel-ui.js';
+import { resolveAdapter, profileSnapshot, applySnapshot } from './profile-store.js';
 // 19.0 · the first week: five days, button → fired → Витя's garage.
 import { isWeekCheckpoint, weekDayOf, weekClock, weekPin, payLedger, legacyFromQuery, weekFromLegacy, BOSS_END, BOSS_MORNING, HALL_MORNING, EVENING, MORNING, FIRED, CORP, WEEK_PAY_CHECKPOINTS } from './week.js';
 import { createPayCard, createWeekPin } from './week-ui.js';
@@ -342,7 +344,7 @@ let engagementProgressAt = performance.now();
 let friendVisited = ['reward5', 'vika', 'reward6', 'virus', 'reward7', 'foundry', 'reward8', 'campus', 'ai-lab', 'reward9', 'llm-lab', 'reward10'].includes(checkpoint.checkpoint);
 let journalOpen = false;
 let exitOpen = false;
-const BLOCKING_OVERLAY_IDS = ['firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
+const BLOCKING_OVERLAY_IDS = ['deepRing','firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
 function isBlockingOverlayOpen() {
   return BLOCKING_OVERLAY_IDS.some((id) => !document.querySelector(`#${id}`)?.hidden);
 }
@@ -739,6 +741,49 @@ const careerWorlds = createCareerWorlds(careerWorldsRoot, {
   // ЛИНИЯ 03 → «дальше — мастерская»: Pythonio takes the dive over.
   onDeeper: () => { const fromDive = careerWorlds.release(); if (!fromDive) careerWorlds.close(); pythonio.open({ fromDive }); },
 });
+// 19.1 · КАРТОЧКА ДАЙВЕРА и ринг «ТИСКОВ» (canon §19, duel-ui.js). The
+// profile store (profile-store.js) is the one seam for accounts: a page may
+// set window.QQ_PROFILE_ADAPTER before boot; logins are Сергей's part.
+const profileStore = resolveAdapter();
+let ringPlayer = null;
+function ringGate() {
+  if (legacy || state.checkpoint === 'fired' || loadFlags().vityaCalled || heldRealmDay(campusProfile, 'vehicle') >= 1) return { ok: true };
+  return { ok: false, reason: 'Ринг откроется после увольнения: Витя расскажет, где «ТИСКИ» меряются задачками. Для показа есть «ПОКАЗ» в главном меню.' };
+}
+function saveRingSnapshot() {
+  const id = ringPlayer?.id ?? 'local';
+  try { profileStore.saveSnapshot(id, profileSnapshot(campusProfile, { player: ringPlayer })); } catch (err) { console.warn(err); }
+}
+const ring = createRing(document.querySelector('#deepRing'), {
+  getProfile: () => campusProfile,
+  onProfile: (profile) => { updateCampusProfile({ type: 'replace', profile }); saveRingSnapshot(); careerWorlds.refresh?.(); },
+  onSound: (name) => audio.play(name),
+  getPlayer: () => ringPlayer,
+  canDuel: ringGate,
+  store: profileStore,
+});
+function openRing(view = 'card', opts = {}) {
+  releaseAllKeys('overlay');
+  if (document.pointerLockElement) document.exitPointerLock?.();
+  audio.unlock?.();
+  ring.open(view, opts);
+}
+// A signed-in player (remote adapter): their nick on the card and their saved snapshot.
+Promise.resolve(profileStore.getCurrentPlayer()).then(async (player) => {
+  if (!player?.id) return;
+  ringPlayer = { id: String(player.id), nick: player.nick ?? '', classId: player.classId ?? null };
+  const snap = await profileStore.loadSnapshot(ringPlayer.id);
+  if (snap) updateCampusProfile({ type: 'replace', profile: applySnapshot(campusProfile, snap) });
+}).catch((err) => console.warn(err));
+document.querySelector('#careerRing')?.addEventListener('click', () => { audio.play('ui-click'); openRing('card'); });
+document.querySelector('#startDuelDemo')?.addEventListener('click', () => { telemetry.mark('ring-demo'); openRing('card', { demo: true }); });
+// Витя tells about the ring once, the first time the professions open after the firing.
+new MutationObserver(() => {
+  if (careerWorldsRoot.hidden || !ringGate().ok || loadFlags().ringTold) return;
+  setFlag('ringTold');
+  showReflexToast({ kind: 'saved', kicker: 'СОСЕД ВИТЯ', thought: '«У ТИСКОВ стажёры по вечерам меряются на ринге — задачками».', more: 'Решил быстро — получил баф. Кнопка «⚔ РИНГ · КАРТОЧКА» — наверху.' }, 6500);
+}).observe(careerWorldsRoot, { attributes: true, attributeFilter: ['hidden'] });
+
 // Шаг 2: Pythonio as the depth of AUTO (pythonio-bridge.js, games/pythonio/).
 // Its orders pay into the same profile (AUTO branch, XP) and wallet, once per order.
 const pythonio = createPythonioBridge(document.body, {
@@ -922,7 +967,7 @@ function talkInHall(who) {
 // assemble, day 4 by hand, day 5 the whole line runs itself → fired → Витя's
 // call → the garage. One terminal visit a day; a pay card every evening.
 const weekOn = () => !legacy && isWeekCheckpoint(state.checkpoint);
-const payCard = createPayCard(game, { onNext: () => weekCardNext(), sound: (n) => audio.play(n) });
+const payCard = createPayCard(game, { onNext: () => weekCardNext(), sound: (n) => audio.play(n), onCard: () => openRing('card') });
 const weekPinEl = createWeekPin(game);
 // Shift 1 is over: «ВСТАВИТЬ ЧИП В РУКУ 07» really puts it in. You stand
 // in front of Arm 07, the chip clicks into the socket, the arm gets power
@@ -1109,7 +1154,7 @@ function enterRealm(id) {
   if (pick && careerWorldsRoot.dataset.picked !== id) pick.click();
   document.querySelector('#careerEnter')?.click();
 }
-const skillTreeView = createSkillTreeView(document.querySelector('#skillTree'), { getTree: () => buildSkillTree(progressInput()), onEnterRealm: enterRealm, sound: (n) => audio.play(n) });
+const skillTreeView = createSkillTreeView(document.querySelector('#skillTree'), { getTree: () => buildSkillTree(progressInput()), onEnterRealm: enterRealm, sound: (n) => audio.play(n), onCard: () => openRing('card') });
 const questLogView = createQuestLogView(document.querySelector('#questLog'), { getLog: () => buildQuestLog(progressInput()), sound: (n) => audio.play(n) });
 document.querySelector('#careerDoor').addEventListener('click', () => { releaseAllKeys('overlay'); if (document.pointerLockElement) document.exitPointerLock?.(); skillTreeView.open(); audio.play('ui-click'); });
 document.querySelector('#questDoor').addEventListener('click', () => { releaseAllKeys('overlay'); if (document.pointerLockElement) document.exitPointerLock?.(); questLogView.open(); audio.play('ui-click'); });
@@ -2244,6 +2289,7 @@ if (isLocal) {
       requestAnimationFrame(count);
     }),
     hall: { debug: (patch) => { const pos = factoryView.debug(patch); state = { ...state, player: { ...state.player, ...pos } }; return pos; }, body: () => factoryView.body(), engine: () => factoryView.engine(), speech: () => factoryView.speech(), setYaw: (yaw) => { warehouseYaw = yaw; } },
+    ring: { open: (view = 'card', opts = {}) => openRing(view, opts), close: () => ring.close(), state: () => ring.state(), fast: (on = true) => ring.fast(on), start: (opts) => ring.start(opts), snapshot: () => profileSnapshot(campusProfile, { player: ringPlayer }), store: () => profileStore.kind },
     world: { open: (level = 'garage', opts = {}) => fpWorld.open(level, opts), debug: (patch) => fpWorld.debug(patch), state: () => fpWorld.state(), surface: (r) => careerWorlds.surface(r), engine: () => engineStatus(engineNow()) },
     pythonio: { open: (opts) => pythonio.open(opts), close: () => pythonio.close(), active: () => pythonio.active, ready: () => pythonio.ready },
     blackice: { open: (opts) => blackice.open(opts), close: () => blackice.close(), enter: (n) => blackice.enter(n), lobby: () => blackice.lobby(), handle: (msg) => blackice.handle(msg), active: () => blackice.active, ready: () => blackice.ready, view: () => blackice.view, playing: () => blackice.playing, profile: () => ({ stats: campusProfile.stats, cleared: labyrinthCleared(campusProfile), xp: campusProfile.xp, wage: state.warehouse?.wage ?? 0 }) },
@@ -2320,6 +2366,15 @@ requestAnimationFrame(frame);
 
 // 17.3: ?world=garage|home walks straight into the garage or the apartment.
 if (['garage', 'home'].includes(query.get('world'))) fpWorld.open(query.get('world'));
+
+// 19.1 · ?open=card|ring|class|share (and ?duel=<code> for a friend's
+// card) open the diver card straight away — for the demo link too.
+{
+  const ringOpen = query.get('open');
+  const code = query.get('duel');
+  if (code) openRing('share', { demo: true, code });
+  else if (['card', 'ring', 'class', 'share', 'storm'].includes(ringOpen)) openRing(ringOpen === 'ring' ? 'ladder' : ringOpen, { demo: query.has('demo') });
+}
 
 // Admin panel (admin.html) deep links, local only:
 // ?open=careers[&realm=<id>[&enter=1]] opens the professions screen on a

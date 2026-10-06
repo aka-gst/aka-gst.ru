@@ -6,7 +6,7 @@ import { WEEK, payLedger, FIRED } from './week.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const rub = (n) => `${n < 0 ? '−' : ''}${Math.abs(n).toLocaleString('ru-RU')} ₽`;
 
-export function createPayCard(host, { onNext = () => {}, sound = () => {} } = {}) {
+export function createPayCard(host, { onNext = () => {}, sound = () => {}, onCard = null } = {}) {
   if (!host) return { show() {}, hide() {}, visible: () => false };
   const root = document.createElement('section');
   root.id = 'payCard';
@@ -36,6 +36,7 @@ export function createPayCard(host, { onNext = () => {}, sound = () => {} } = {}
       <p class="pay__wallet">На счету: <b>${rub(card.wage ?? ledger.wage)}</b></p>
       ${card.fired ? `<p class="pay__chip">${esc(FIRED.chip)}</p>` : ''}
       <button type="button" class="pay__next run-code">${esc(card.button)}</button>
+      ${onCard ? '<button type="button" class="pay__ring">КАРТОЧКА ДАЙВЕРА: что я уже умею</button>' : ''}
     </div>`;
     root.hidden = false;
     nextAt = performance.now() + 450;
@@ -45,6 +46,7 @@ export function createPayCard(host, { onNext = () => {}, sound = () => {} } = {}
       sound('ui-click');
       onNext();
     });
+    root.querySelector('.pay__ring')?.addEventListener('click', () => { sound('ui-click'); onCard?.(); });
     setTimeout(() => btn.focus({ preventScroll: true }), 40);
   }
   function hide() { if (!root.hidden) { root.hidden = true; shownKey = ''; } }
