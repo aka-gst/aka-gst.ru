@@ -54,6 +54,11 @@ import { onReleaseKeys, releaseAllKeys } from './key-guard.js';
 import { createTouchControls, isTouchDevice } from './touch-controls.js';
 import { drawFace, faceIdFor } from './faces.js';
 import { masteryEvent, listenForSkills, pythonioWay } from './mastery.js';
+import { consoleGreeting, sideCheck, impossibleReasons, isAutomationContext, duelLooksAutomated, isHonestSpeedrun, MESSAGES } from './tamper.js';
+import { evaluateBadges, earnBadge, badgeById, badgeGrid, RARITY } from './achievements.js';
+import { createHackPolygon } from './hack-ui.js';
+import { pythonioDone } from './pythonio-bridge.js';
+import { tasterFinished } from './career-tasters.js';
 import { applyBuildLabels, BUILD } from './version.js';
 import { createRing } from './duel-ui.js';
 import { resolveAdapter, profileSnapshot, applySnapshot } from './profile-store.js';
@@ -69,7 +74,7 @@ import { createSystemSandbox } from './system-sandbox.js?v=sandbox-1';
 import { createPythonContracts } from './python-contracts.js?v=python-contracts-1';
 import { createEngineerCampus } from './engineer-campus.js?v=campus-6';
 import {
-  loadCampusProfile, saveCampusProfile, createCampusProfile, markContractSolved, markPythonContractSolved, markSandboxSolved, markModelDatasetSolved, markCampusMission, markFactoryTrialSolved, markSimnetIncidentSolved, markNexusResearch, markNexusMission, markNexusRemix, markNexusTrialSolved, markNexusCompanionLesson, markNexusCompanionBuild, markDeskIncidentSolved, markWorldStorySolved, markWorldShiftSolved, markCommonsBlueprint, markCommonsDay, markCommonsCode, markOperationsArc, markOperationsRollback, markOperationsShift, markOperationsCode, markChronicleArc, markChronicleWindow, markChronicleCode, markWeaveArc, markWeaveSeason, markWeaveCode, markThreadsEpisode, markThreadsCycle, markThreadsCode, markGuildQuest, markGuildJob, markGuildRaid, markGuildRealm, markLabComplete,
+  loadCampusProfile, saveCampusProfile, createCampusProfile, CAMPUS_PROFILE_KEY, markContractSolved, markPythonContractSolved, markSandboxSolved, markModelDatasetSolved, markCampusMission, markFactoryTrialSolved, markSimnetIncidentSolved, markNexusResearch, markNexusMission, markNexusRemix, markNexusTrialSolved, markNexusCompanionLesson, markNexusCompanionBuild, markDeskIncidentSolved, markWorldStorySolved, markWorldShiftSolved, markCommonsBlueprint, markCommonsDay, markCommonsCode, markOperationsArc, markOperationsRollback, markOperationsShift, markOperationsCode, markChronicleArc, markChronicleWindow, markChronicleCode, markWeaveArc, markWeaveSeason, markWeaveCode, markThreadsEpisode, markThreadsCycle, markThreadsCode, markGuildQuest, markGuildJob, markGuildRaid, markGuildRealm, markLabComplete,
 } from './campus-profile.js?v=campus-profile-7';
 import {
   createFakeGateway,
@@ -443,6 +448,24 @@ const automationFoundry = createAutomationFoundry(document.querySelector('#autom
   },
 });
 let campusProfile = loadCampusProfile();
+// 19.3 · hack awareness (canon §20, tamper.js): if someone hand-edited the save
+// (bad signature) or set an impossible value, restore the last good copy and
+// remember to tell them warmly + hand a secret badge. Runs even under e2e (the
+// hack e2e tests exactly this); the console greeting and inhuman-duel / debug
+// checks are the ones that stay quiet in automation.
+let tamperPending = null;
+(function checkProfileTamper() {
+  let raw = null; try { raw = localStorage.getItem(CAMPUS_PROFILE_KEY); } catch { raw = null; }
+  const chk = sideCheck(localStorage, CAMPUS_PROFILE_KEY, raw);
+  const rollback = () => { if (chk.shadow) { try { localStorage.setItem(CAMPUS_PROFILE_KEY, chk.shadow); } catch { /* private mode */ } campusProfile = loadCampusProfile(); } };
+  if (chk.status === 'tampered') { rollback(); tamperPending = 'seam'; return; }
+  if (chk.status === 'ok') {
+    const reasons = impossibleReasons(campusProfile);
+    if (reasons.length) { rollback(); tamperPending = 'impossible'; }
+  }
+  // 'unsigned' = an older save with no signature yet: it is signed on the save
+  // below (migration path), so a legit upgrade never false-positives.
+})();
 // Campaign checkpoints remain authoritative if optional local campus meta-progress
 // was cleared. Rebuild unlock facts without granting XP so account/import sync can
 // never relock content the player already finished in the story save.
@@ -510,6 +533,7 @@ function updateCampusProfile(action) {
   accountSaveSoon();
   syncCampusSkillJournal();
   campus?.refresh?.();
+  maybeEarnBadges();
   return campusProfile;
 }
 let campus;
@@ -792,6 +816,14 @@ const ring = createRing(document.querySelector('#deepRing'), {
   canDuel: ringGate,
   store: profileStore,
   decorate: (node) => accountUi?.decorate(node),
+  onDuelEnd: (d) => onDuelEnd(d),
+  onForgedCode: () => {
+    campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), forger: true } };
+    saveCampusProfile(campusProfile);
+    showReflexToast({ kind: 'saved', kicker: MESSAGES.forger.kicker, thought: MESSAGES.forger.title, more: MESSAGES.forger.text }, 7000);
+    earnBadgeNow('forger');
+    maybeEarnBadges();
+  },
 });
 function openRing(view = 'card', opts = {}) {
   releaseAllKeys('overlay');
@@ -841,6 +873,24 @@ accountUi = createAccountUi(document.body, {
 accountUi.decorate(document.querySelector('#startPanel'));
 document.querySelector('#careerRing')?.addEventListener('click', () => { audio.play('ui-click'); openRing('card'); });
 document.querySelector('#startDuelDemo')?.addEventListener('click', () => { telemetry.mark('ring-demo'); openRing('card', { demo: true }); });
+
+// 19.3 · «Взломай меня» polygon (hack-ui.js, polygon.js, canon §20).
+const hackPolygon = createHackPolygon(document.querySelector('#hackPolygon'), {
+  getProfile: () => campusProfile,
+  onProfile: (profile) => { updateCampusProfile({ type: 'replace', profile }); saveRingSnapshot(); },
+  onSound: (name) => audio.play(name),
+  onBadge: (id) => earnBadgeNow(id),
+  getNick: () => campusProfile.duel?.nick || currentPlayer()?.nick || 'Дайвер',
+});
+function openHackPolygon(view = 'polygon') {
+  releaseAllKeys('overlay');
+  if (document.pointerLockElement) document.exitPointerLock?.();
+  audio.unlock?.();
+  telemetry.mark(`hack-${view}`);
+  hackPolygon.open(view);
+}
+document.querySelector('#openHackPolygon')?.addEventListener('click', () => { audio.play('ui-click'); openHackPolygon('polygon'); });
+document.querySelector('#reportHole')?.addEventListener('click', () => { audio.play('ui-click'); openHackPolygon('report'); });
 // Витя tells about the ring once, the first time the professions open after the firing.
 new MutationObserver(() => {
   if (careerWorldsRoot.hidden || !ringGate().ok || loadFlags().ringTold) return;
@@ -894,6 +944,103 @@ document.querySelector('#guildWorldsOpen').addEventListener('click', () => { car
 const FLAGS_KEY = 'quequest.flags.v1';
 function loadFlags() { try { return JSON.parse(localStorage.getItem(FLAGS_KEY) || '{}') || {}; } catch { return {}; } }
 function setFlag(name) { const f = loadFlags(); if (f[name]) return; f[name] = true; try { localStorage.setItem(FLAGS_KEY, JSON.stringify(f)); } catch { /* private mode */ } }
+
+// ---------------------------------------------------------------- 19.3 · ЗНАЧКИ
+// Deeds the profile can't say on its own (week flags, reflexes, class).
+function badgeFacts() {
+  const flags = loadFlags();
+  const rr = (typeof reflexRecord === 'object' && reflexRecord) || {};
+  return {
+    fired: state.checkpoint === 'fired',
+    weekDay: weekDayOf(state.checkpoint),
+    heldDay: heldRealmDay(campusProfile, 'vehicle'),
+    ordersDone: pythonioDone(campusProfile),
+    tasters: Object.fromEntries(['security', 'web', 'ai', 'systems', 'lowlevel'].map((id) => [id, tasterFinished(campusProfile, id)])),
+    reflexes: { save: Boolean(rr.reflexes?.save), crate: Boolean(rr.reflexes?.crate), pattern: Boolean(rr.reflexes?.pattern) },
+    meaningHeard: Object.values(rr.heard ?? {}).some((l) => Number(l) > 0),
+    classJoined: Boolean(currentPlayer()?.classId || flags.classJoined),
+    cardPublished: Boolean(profileStore.account?.showCard?.()),
+  };
+}
+const RARITY_RU = { common: 'ОБЫЧНЫЙ', rare: 'РЕДКИЙ', epic: 'ЛЕГЕНДАРНЫЙ', secret: 'СЕКРЕТНЫЙ' };
+function toastBadge(b) {
+  if (!b) return;
+  showReflexToast({ kind: 'saved', kicker: `ЗНАЧОК · ${RARITY_RU[b.rarity] ?? ''}`, thought: `${b.glyph} ${b.title}`, more: b.how }, 5200);
+  audio.play('duel-buff');
+}
+let evaluatingBadges = false;
+function applyBadgeProofs(profile, earned) {
+  let p = profile;
+  for (const b of earned) if (b.proof) { const ev = masteryEvent(p, b.proof); if (ev.first) p = ev.profile; }
+  return p;
+}
+// Earn any newly-satisfied badges from the live state. Guarded so the save it
+// triggers can't recurse through updateCampusProfile.
+function maybeEarnBadges(extra = {}) {
+  if (evaluatingBadges) return [];
+  evaluatingBadges = true;
+  try {
+    const { profile, earned } = evaluateBadges(campusProfile, { ...badgeFacts(), ...extra });
+    if (!earned.length) return [];
+    campusProfile = applyBadgeProofs(profile, earned);
+    saveCampusProfile(campusProfile);
+    accountSaveSoon();
+    syncCampusSkillJournal();
+    campus?.refresh?.();
+    ring?.refresh?.();
+    for (const b of earned) toastBadge(b);
+    return earned;
+  } finally { evaluatingBadges = false; }
+}
+// Earn one badge by id directly (polygon flags, hacker secrets).
+function earnBadgeNow(id, { toast = true } = {}) {
+  const r = earnBadge(campusProfile, id);
+  if (!r.first) return false;
+  const b = badgeById(id);
+  campusProfile = applyBadgeProofs(r.profile, b ? [b] : []);
+  saveCampusProfile(campusProfile);
+  accountSaveSoon();
+  ring?.refresh?.();
+  if (toast) toastBadge(b);
+  return true;
+}
+// 19.3 · hack awareness: tell the player warmly, roll back, hand a secret badge.
+function showTamperMessage(kind) {
+  const M = kind === 'impossible' ? MESSAGES.impossible : MESSAGES.seam;
+  campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), ...(kind === 'impossible' ? { tooGood: true } : { seam: true }) } };
+  saveCampusProfile(campusProfile);
+  showReflexToast({ kind: 'saved', kicker: M.kicker, thought: M.title, more: M.text }, 8000);
+  audio.play('alarm');
+  if (M.badge) earnBadgeNow(M.badge);
+  accountSaveSoon();
+}
+// After a duel: notice inhuman timings (doesn't count + badge «Автокликер»),
+// an honest sub-second answer (badge), and a classmate ghost beaten. Quiet in
+// automation so the e2e fast-mode runs (ms≈0) are never treated as bots.
+function onDuelEnd({ mode, outcome, results = [], timings = [], foe = {} } = {}) {
+  if (isAutomationContext()) return {};
+  let touched = false;
+  const setHack = (patch) => { campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), ...patch } }; touched = true; };
+  if (mode === 'duel' && outcome === 'win' && foe?.classmate) setHack({ classBeat: true });
+  if (results.some((r, i) => r.correct && isHonestSpeedrun({ ms: timings[i]?.ms }))) setHack({ speedrun: true });
+  if (duelLooksAutomated(timings)) {
+    setHack({ autoclicker: true });
+    saveCampusProfile(campusProfile);
+    showReflexToast({ kind: 'saved', kicker: MESSAGES.autoclicker.kicker, thought: MESSAGES.autoclicker.title, more: MESSAGES.autoclicker.text }, 8000);
+    audio.play('alarm');
+    earnBadgeNow('autoclicker');
+    maybeEarnBadges();
+    return { skipProofs: true };
+  }
+  if (touched) { saveCampusProfile(campusProfile); maybeEarnBadges(); }
+  return {};
+}
+// Noticed at boot: show it once the UI is ready (and only to real players).
+// Show it once the UI is ready (toast element + consts are initialized later in
+// this module). A short delay in automation too, so init finishes first.
+if (tamperPending) setTimeout(() => showTamperMessage(tamperPending), isAutomationContext() ? 60 : 1400);
+// Console greeting: Глубина ASCII + «ты уже на этаже С НУЛЯ…» (always, friendly).
+consoleGreeting();
 
 // ---------------------------------------------------------------- 18.2
 // §16: the hero is a gamer who forgot he is one -- reflexes (save, look
@@ -2369,12 +2516,41 @@ if (isLocal) {
     },
     // 18.2: §16 reflexes and §17 meaning layers.
     reflex: { record: () => JSON.parse(JSON.stringify(reflexRecord)), save: () => saveReflex(), talk: (who) => talkInHall(who), target: () => hallTalkTarget(), knows: () => [...knowsNow()], slip: (scene) => factoryView.pair(takeSlip(scene)) },
+    // 19.3 · badges + «Взломай меня» polygon (achievements.js, polygon.js, hack-ui.js).
+    hack: {
+      open: (view = 'polygon') => openHackPolygon(view),
+      close: () => hackPolygon.close(),
+      state: () => hackPolygon.state(),
+      solve: (id) => hackPolygon.solveFlag(id),
+      badges: () => JSON.parse(JSON.stringify(campusProfile.badges ?? {})),
+      grid: () => badgeGrid(campusProfile),
+      flags: () => JSON.parse(JSON.stringify(campusProfile.hack ?? {})),
+      earn: (id) => earnBadgeNow(id),
+      tamper: () => JSON.parse(JSON.stringify({ seam: campusProfile.hack?.seam ?? false, tooGood: campusProfile.hack?.tooGood ?? false })),
+    },
     otherMind: () => ({
       ...otherMindRuntime.snapshot(),
       phase: state.otherMind.phase,
       line: state.otherMind.line,
     }),
   };
+  // 19.3 · «Смотрю под капот»: a curious kid poking the debug hook from the
+  // console is noticed warmly (canon §20). Never in automation (e2e uses it),
+  // so the existing suites keep working — the raw object is used there.
+  if (!isAutomationContext()) {
+    const real = window.__QUEQUEST_DEBUG__;
+    let peeked = false;
+    window.__QUEQUEST_DEBUG__ = new Proxy(real, { get(t, k, r) { if (!peeked) { peeked = true; setTimeout(noteUnderHood, 10); } return Reflect.get(t, k, r); } });
+  }
+}
+function noteUnderHood() {
+  if (campusProfile.hack?.underHood) return;
+  campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), underHood: true } };
+  saveCampusProfile(campusProfile);
+  try { console.log('%c' + MESSAGES.underHood.text, 'color:#8ff0a6;font-size:13px'); } catch { /* no console */ }
+  showReflexToast({ kind: 'saved', kicker: MESSAGES.underHood.kicker, thought: MESSAGES.underHood.title, more: MESSAGES.underHood.text }, 7000);
+  earnBadgeNow('under-hood');
+  maybeEarnBadges();
 }
 
 applyBuildLabels(document);
@@ -2437,7 +2613,11 @@ if (['garage', 'home'].includes(query.get('world'))) fpWorld.open(query.get('wor
   const ringOpen = query.get('open');
   const code = query.get('duel');
   if (code) openRing('share', { demo: true, code });
-  else if (['card', 'ring', 'class', 'share', 'storm'].includes(ringOpen)) openRing(ringOpen === 'ring' ? 'ladder' : ringOpen, { demo: query.has('demo') });
+  else if (['card', 'ring', 'class', 'share', 'storm', 'badges'].includes(ringOpen)) openRing(ringOpen === 'ring' ? 'ladder' : ringOpen, { demo: query.has('demo') });
+  // 19.3 · ?open=hack|report|hall open the «Взломай меня» polygon (canon §20).
+  else if (['hack', 'polygon'].includes(ringOpen)) openHackPolygon('polygon');
+  else if (ringOpen === 'report') openHackPolygon('report');
+  else if (ringOpen === 'hall') openHackPolygon('hall');
 }
 
 // Admin panel (admin.html) deep links, local only:

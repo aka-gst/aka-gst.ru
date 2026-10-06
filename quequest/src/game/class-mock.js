@@ -5,20 +5,28 @@
 // would give: ratings per area, proofs, who is stuck where, what to give next.
 
 import { AREAS, AREA_IDS, AREA_QUESTS, diverCard, powersOf } from './diver-card.js';
+import { badgeById } from './achievements.js';
+
+// Badge info for a class row (19.3): count + whether the pride badge «нашёл
+// шов» is among the ids the student opened to the class.
+export function classBadges(ids = []) {
+  const list = (Array.isArray(ids) ? ids : []).filter((id) => badgeById(id));
+  return { count: list.length, ids: list, seam: list.includes('seam-found') };
+}
 
 const W = ['tap', 'knobs', 'code', 'raw'];
 // [skill, way, stage, proofs] per student. misses: wrong duel answers by area.
 const STUDENTS = Object.freeze([
-  { id: 'ex-01', nick: 'Аня К.', xp: 820, grid: [['print', 2, 4, 3], ['if', 2, 3, 3], ['for', 2, 2, 2], ['site', 1, 3, 2]], misses: { loop: 1 } },
-  { id: 'ex-02', nick: 'Боря Л.', xp: 310, grid: [['print', 2, 2, 2], ['if', 1, 2, 2], ['bits', 1, 4, 3]], misses: { if: 4, loop: 3 } },
-  { id: 'ex-03', nick: 'Вика М.', xp: 1460, grid: [['print', 2, 5, 4], ['if', 2, 4, 4], ['for', 2, 3, 3], ['def', 2, 2, 2], ['guard', 2, 3, 3], ['train', 1, 3, 2]], misses: {} },
-  { id: 'ex-04', nick: 'Гоша Н.', xp: 120, grid: [['print', 0, 2, 1], ['if', 0, 1, 1]], misses: { say: 2, if: 5 } },
-  { id: 'ex-05', nick: 'Даша О.', xp: 640, grid: [['print', 2, 3, 2], ['site', 1, 4, 3], ['train', 1, 4, 3], ['if', 1, 3, 2]], misses: { loop: 4 } },
-  { id: 'ex-06', nick: 'Егор П.', xp: 980, grid: [['print', 2, 3, 3], ['if', 2, 3, 3], ['lock', 2, 3, 2], ['guard', 1, 4, 3], ['bits', 1, 3, 2], ['cascade', 1, 2, 1]], misses: { web: 2 } },
-  { id: 'ex-07', nick: 'Женя Р.', xp: 260, grid: [['print', 1, 3, 2], ['for', 1, 1, 1], ['cascade', 1, 3, 2]], misses: { loop: 6 } },
-  { id: 'ex-08', nick: 'Зоя С.', xp: 1890, grid: [['print', 3, 3, 4], ['if', 2, 5, 5], ['for', 2, 4, 4], ['while', 2, 3, 2], ['def', 2, 3, 3], ['route', 2, 3, 2], ['bits', 1, 4, 2]], misses: {} },
-  { id: 'ex-09', nick: 'Илья Т.', xp: 430, grid: [['print', 2, 2, 2], ['if', 2, 1, 1], ['guard', 1, 2, 2], ['bits', 1, 2, 1]], misses: { if: 3, guard: 2 } },
-  { id: 'ex-10', nick: 'Кира У.', xp: 700, grid: [['print', 2, 3, 2], ['site', 1, 3, 2], ['train', 1, 2, 2], ['cascade', 1, 4, 3], ['try', 1, 2, 1]], misses: { hw: 3 } },
+  { id: 'ex-01', nick: 'Аня К.', xp: 820, grid: [['print', 2, 4, 3], ['if', 2, 3, 3], ['for', 2, 2, 2], ['site', 1, 3, 2]], misses: { loop: 1 }, badges: ['fired-honor', 'vitya-car', 'duel-first', 'taster-web'] },
+  { id: 'ex-02', nick: 'Боря Л.', xp: 310, grid: [['print', 2, 2, 2], ['if', 1, 2, 2], ['bits', 1, 4, 3]], misses: { if: 4, loop: 3 }, badges: ['no-button', 'taster-lowlevel'] },
+  { id: 'ex-03', nick: 'Вика М.', xp: 1460, grid: [['print', 2, 5, 4], ['if', 2, 4, 4], ['for', 2, 3, 3], ['def', 2, 2, 2], ['guard', 2, 3, 3], ['train', 1, 3, 2]], misses: {}, badges: ['fired-honor', 'hacker-pro', 'all-tasters', 'ladder-clear', 'seam-found', 'flag-price', 'flag-admin', 'polygon-clear'] },
+  { id: 'ex-04', nick: 'Гоша Н.', xp: 120, grid: [['print', 0, 2, 1], ['if', 0, 1, 1]], misses: { say: 2, if: 5 }, badges: [] },
+  { id: 'ex-05', nick: 'Даша О.', xp: 640, grid: [['print', 2, 3, 2], ['site', 1, 4, 3], ['train', 1, 4, 3], ['if', 1, 3, 2]], misses: { loop: 4 }, badges: ['vitya-car', 'taster-web', 'taster-ai'] },
+  { id: 'ex-06', nick: 'Егор П.', xp: 980, grid: [['print', 2, 3, 3], ['if', 2, 3, 3], ['lock', 2, 3, 2], ['guard', 1, 4, 3], ['bits', 1, 3, 2], ['cascade', 1, 2, 1]], misses: { web: 2 }, badges: ['sanya-lock', 'flag-input', 'flag-token', 'seam-found'] },
+  { id: 'ex-07', nick: 'Женя Р.', xp: 260, grid: [['print', 1, 3, 2], ['for', 1, 1, 1], ['cascade', 1, 3, 2]], misses: { loop: 6 }, badges: ['reflex-save'] },
+  { id: 'ex-08', nick: 'Зоя С.', xp: 1890, grid: [['print', 3, 3, 4], ['if', 2, 5, 5], ['for', 2, 4, 4], ['while', 2, 3, 2], ['def', 2, 3, 3], ['route', 2, 3, 2], ['bits', 1, 4, 2]], misses: {}, badges: ['fired-honor', 'self-automaton', 'engineer-pro', 'duel-clean', 'beat-spec', 'flag-sign', 'polygon-clear'] },
+  { id: 'ex-09', nick: 'Илья Т.', xp: 430, grid: [['print', 2, 2, 2], ['if', 2, 1, 1], ['guard', 1, 2, 2], ['bits', 1, 2, 1]], misses: { if: 3, guard: 2 }, badges: ['no-button', 'reflex-crate'] },
+  { id: 'ex-10', nick: 'Кира У.', xp: 700, grid: [['print', 2, 3, 2], ['site', 1, 3, 2], ['train', 1, 2, 2], ['cascade', 1, 4, 3], ['try', 1, 2, 1]], misses: { hw: 3 }, badges: ['taster-web', 'taster-systems', 'meaning-seam'] },
 ]);
 
 function profileOf(s) {
@@ -41,7 +49,7 @@ export function studentView(s) {
   const stuckId = missTop && missTop[1] >= 3 ? missTop[0] : (card.weakest?.id ?? null);
   const stuck = stuckId ? AREAS.find((a) => a.id === stuckId) : null;
   return {
-    id: s.id, nick: s.nick, example: true, card, powers: powersOf(card), misses: { ...s.misses },
+    id: s.id, nick: s.nick, example: true, card, powers: powersOf(card), misses: { ...s.misses }, badges: classBadges(s.badges),
     stuck: stuck ? { id: stuck.id, name: stuck.name, why: missTop && missTop[0] === stuck.id && missTop[1] >= 3 ? `${missTop[1]} ошибок подряд в дуэлях` : 'слабее всего из начатого' } : null,
     suggest: stuck ? AREA_QUESTS[stuck.id] : null,
   };
@@ -52,7 +60,9 @@ export function classSummary(list = sampleClass()) {
   const avg = AREA_IDS.map((id, i) => ({ id, name: AREAS[i].name, short: AREAS[i].short, avg: Math.round(list.reduce((s, x) => s + x.powers[i], 0) / list.length), stuck: list.filter((x) => x.stuck?.id === id).length }));
   const weakest = [...avg].sort((a, b) => a.avg - b.avg)[0];
   const mostStuck = [...avg].sort((a, b) => b.stuck - a.stuck)[0];
-  return { students: list.length, avg, weakest, mostStuck, proofs: list.reduce((s, x) => s + x.card.proofs, 0) };
+  const badges = list.reduce((s, x) => s + (x.badges?.count ?? 0), 0);
+  const seams = list.filter((x) => x.badges?.seam).length;
+  return { students: list.length, avg, weakest, mostStuck, proofs: list.reduce((s, x) => s + x.card.proofs, 0), badges, seams };
 }
 
 // A real class (accounts): one row per player snapshot from the adapter's
@@ -66,7 +76,7 @@ export function studentFromSnapshot({ id, nick, snapshot } = {}) {
   const missTop = Object.entries(misses).sort((a, b) => b[1] - a[1])[0];
   const stuckId = missTop && missTop[1] >= 3 ? missTop[0] : (card.weakest?.id ?? null);
   const stuck = stuckId ? AREAS.find((a) => a.id === stuckId) : null;
-  return { ...view, example: false, card, powers: powersOf(card), stuck: stuck ? { id: stuck.id, name: stuck.name, why: missTop && missTop[0] === stuck.id && missTop[1] >= 3 ? `${missTop[1]} ошибок в дуэлях` : 'слабее всего из начатого' } : null, suggest: stuck ? AREA_QUESTS[stuck.id] : null };
+  return { ...view, example: false, card, powers: powersOf(card), badges: classBadges(Object.keys(profile.badges ?? {})), stuck: stuck ? { id: stuck.id, name: stuck.name, why: missTop && missTop[0] === stuck.id && missTop[1] >= 3 ? `${missTop[1]} ошибок в дуэлях` : 'слабее всего из начатого' } : null, suggest: stuck ? AREA_QUESTS[stuck.id] : null };
 }
 
 // 19.2 · A classmate's PUBLIC card from the site's class service (opt-in:
@@ -81,7 +91,7 @@ export function studentFromCard({ id, nick, card = {} } = {}) {
   const name = String(nick ?? card.nick ?? '—');
   const avatar = Math.max(0, Math.min(7, Number(card.avatar) || 0));
   return {
-    id: String(id ?? 'class-x'), nick: name, example: false, public: true, powers, misses: {},
+    id: String(id ?? 'class-x'), nick: name, example: false, public: true, powers, misses: {}, badges: classBadges(card.badges),
     card: { rank: String(card.rank ?? ''), proofs: 0, strongest, avatar },
     stuck: weakest ? { id: weakest.id, name: weakest.name, why: 'слабее всего из начатого' } : null,
     suggest: weakest ? AREA_QUESTS[weakest.id] : null,

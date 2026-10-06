@@ -8,9 +8,10 @@ import { WAY_NAMES, STAGE_NAMES } from './mastery.js';
 import { BUFFS, GHOSTS, ladder, nextGhost, createMatch, startRound, answerRound, practiceSummary, duelProofs, recordOutcome, meFromProfile, shareFromProfile, decodeShare, ghostFromShare, STORM_SITES, HACK_TARGET, DAILY_CAP, buffOfArea } from './duel.js';
 import { SIGNS } from './duel-tasks.js';
 import { sampleClass, classSummary, studentFromSnapshot, studentFromCard } from './class-mock.js';
+import { badgeGrid, badgeCount, RARITY } from './achievements.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const CSS_HREF = new URL('./duel.css?v=192', import.meta.url).href;
+const CSS_HREF = new URL('./duel.css?v=193', import.meta.url).href;
 const pct = (v) => `${Math.round(v)}%`;
 const BUFF_GLYPH = { attack: '⚔', double: '⚔⚔', shield: '⛨', heal: '✚', aura: '◎', auto: '⚙' };
 
@@ -64,7 +65,7 @@ function areaRing(ctx, x, y, R, t, alpha = 1) {
 }
 
 // --------------------------------------------------------------- the view
-export function createRing(root, { getProfile = () => ({}), onProfile = () => {}, onSound = () => {}, getPlayer = () => null, canDuel = () => ({ ok: true }), onClose = () => {}, store = null, decorate = () => {} } = {}) {
+export function createRing(root, { getProfile = () => ({}), onProfile = () => {}, onSound = () => {}, getPlayer = () => null, canDuel = () => ({ ok: true }), onClose = () => {}, store = null, decorate = () => {}, onDuelEnd = () => ({}), onForgedCode = () => {} } = {}) {
   if (!root) return { open() {}, close() {}, isOpen: () => false };
   const doc = root.ownerDocument;
   if (doc && !doc.querySelector('link[data-ring-css]')) { const l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = CSS_HREF; l.dataset.ringCss = ''; doc.head.append(l); }
@@ -135,6 +136,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
           <small>${xpLine}</small>
           <small class="ring-side__more">Ринг: боёв ${c.ring.played} · побед ${c.ring.won}</small>
           <small class="ring-side__more">Призраки: ${c.ring.beaten.length} из ${GHOSTS.length}</small>
+          <button type="button" class="ring-side__badges" data-ring="badges" title="Твои значки">✦ ЗНАЧКИ: ${badgeCount(getProfile())} из ${badgeGrid(getProfile()).total}</button>
         </div>
       </aside>
       <section class="ring-power">
@@ -160,6 +162,24 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
     const c = diverCard(getProfile());
     const a = c.areas.find((x) => x.id === selArea) ?? c.areas[0];
     shell(a.name, 'КАРТОЧКА ДАЙВЕРА · ОБЛАСТЬ', `<section class="ring-detail ring-detail--page">${areaDetail(a)}</section>`);
+    wire();
+  }
+
+  // ------------------------------------------------------------ ЗНАЧКИ
+  function renderBadges() {
+    const g = badgeGrid(getProfile());
+    const RW = { common: 'обычный', rare: 'редкий', epic: 'легендарный', secret: 'секретный' };
+    const cells = g.rows.map((b) => `<li class="ring-badge" data-earned="${b.earned}" data-rarity="${b.rarity}">
+        <i class="ring-badge__glyph">${esc(b.glyph)}</i>
+        <b class="ring-badge__title">${esc(b.title)}</b>
+        <small class="ring-badge__how">${esc(b.earned ? b.how : (b.secret ? '' : b.how))}</small>
+        <em class="ring-badge__rar">${esc(RW[b.rarity])}</em>
+      </li>`).join('');
+    shell('Значки', 'ЗА ДЕЛА, НЕ ЗА ОЧКИ', `
+      <section class="ring-badges-wrap">
+        <p class="ring-badges-head">Открыто <b>${g.earned}</b> из ${g.total}${g.hiddenSecrets ? ` · ${g.hiddenSecrets} ${g.hiddenSecrets === 1 ? 'секрет ещё спрятан' : 'секретов ещё спрятано'}` : ''}. Значок даётся за поступок: помог человеку, прошёл ночь, нашёл шов.</p>
+        <ul class="ring-badges">${cells}</ul>
+      </section>`);
     wire();
   }
 
@@ -221,7 +241,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
     root.querySelector('#ringCopyLink').addEventListener('click', () => copy(`${location.origin}${location.pathname}?duel=${encodeURIComponent(code0)}`));
     root.querySelector('#ringFriendGo').addEventListener('click', () => {
       const d = decodeShare(root.querySelector('#ringFriendCode').value);
-      if (!d.ok) { shareError = d.reason; sound('duel-wrong'); renderShare(); return; }
+      if (!d.ok) { shareError = d.reason; sound('duel-wrong'); if (/контрольная сумма|изменён|повреждён/i.test(d.reason)) { try { onForgedCode(d.reason); } catch { /* optional */ } } renderShare(); return; }
       shareError = ''; friend = ghostFromShare(d.card); picked = 'friend';
       if (!gate().ok && !demo) { demo = true; }
       startMatch({ mode: 'duel', foe: friend });
@@ -238,7 +258,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
     bad_code: 'Код не похож на код класса — проверь у учителя.', not_found: 'Такого кода нет — проверь у учителя.', too_many_attempts: 'Слишком много неверных кодов. Подожди немного.',
     bad_nick: 'Ник в классе: 3–24 знака — буквы, цифры, пробел, _ . -', nick_taken: 'Такой ник в этом классе уже есть — возьми другой.',
     is_teacher: 'Это твой класс — ты в нём учитель.', class_full: 'Класс заполнен.', too_many_classes: 'Слишком много классов.', bad_name: 'Назови класс (до 40 знаков).',
-    card_too_large: 'Карточка слишком большая.', bad_card: 'Карточка не прошла проверку.', card_too_complex: 'Карточка не прошла проверку.',
+    card_too_large: 'Сервер отклонил карточку: слишком большая. Сервер тоже не дурак — размер он считает сам.', bad_card: 'Сервер отклонил карточку: не прошла проверку. Сервер тоже не дурак — он проверяет сам, не веря браузеру.', card_too_complex: 'Сервер отклонил карточку: слишком сложная. Сервер тоже не дурак — проверяет сам.',
     forbidden: 'Это может только учитель класса.', bad_klass: 'Такого класса нет.', bad_origin: 'Классы работают только на сайте aka-gst.ru.', too_many_requests: 'Слишком много запросов — подожди немного.', too_many_games: 'Слишком много игр на аккаунте.', bad_max: 'Мест в классе: от 1 до 100.',
   };
   const classIdOf = (c) => String(c?.id ?? c?.klass ?? c?.class ?? '');
@@ -276,16 +296,17 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
     const live = liveClasses();
     const cname = live ? (classes ?? []).find((c) => classIdOf(c) === classSel)?.name ?? classSel : pl?.classId;
     const head = AREAS.map((a) => `<th title="${esc(a.name)}">${esc(a.glyph)}</th>`).join('');
-    const rows = list.map((s, i) => `<tr data-student="${i}" aria-selected="${i === classPick}"><th><button type="button" data-pick="${i}">${esc(s.nick)}</button></th>${s.powers.map((p, k) => `<td style="--p:${p}" data-stuck="${s.stuck?.id === AREA_IDS[k]}">${p || '·'}</td>`).join('')}<td class="ring-class__lvl">${s.public ? '·' : s.card.proofs}</td></tr>`).join('');
+    const rows = list.map((s, i) => `<tr data-student="${i}" aria-selected="${i === classPick}"><th><button type="button" data-pick="${i}">${esc(s.nick)}</button></th>${s.powers.map((p, k) => `<td style="--p:${p}" data-stuck="${s.stuck?.id === AREA_IDS[k]}">${p || '·'}</td>`).join('')}<td class="ring-class__lvl">${s.public ? '·' : s.card.proofs}</td><td class="ring-class__badges" data-seam="${Boolean(s.badges?.seam)}" title="значки${s.badges?.seam ? ' · нашёл шов' : ''}">${s.badges?.count ? `${s.badges.count}${s.badges.seam ? '⟊' : ''}` : '·'}</td></tr>`).join('');
     shell('Класс', real ? 'КЛАСС · ОТКРЫТЫЕ КАРТОЧКИ' : 'КАБИНЕТ УЧИТЕЛЯ · МАКЕТ', `
       <p class="ring-class__label">${real ? `КЛАСС «${esc(cname)}» · ${list.length} ${live ? 'открытых карточек (видно только то, что ученик сам открыл: облик, ранг, силы; ник — ник класса)' : 'учеников'}` : 'ПРИМЕР КЛАССА · имена и данные выдуманы. Так будет выглядеть кабинет учителя, когда появятся аккаунты.'}${live ? ' <button type="button" class="ring-link" data-ring="myclass">▦ МОЙ КЛАСС · вступить / создать</button>' : ''}</p>
       <div class="ring-class">
-        <table class="ring-class__grid"><thead><tr><th>ученик</th>${head}<th title="доказательств">✓</th></tr></thead><tbody>${rows}</tbody></table>
+        <table class="ring-class__grid"><thead><tr><th>ученик</th>${head}<th title="доказательств">✓</th><th title="значки">✦</th></tr></thead><tbody>${rows}</tbody></table>
         <aside class="ring-class__detail">
           <h3>${esc(sel.nick)} · ${esc(sel.card.rank)}</h3>
           <p>${sel.public ? 'открытая карточка' : `${sel.card.proofs} доказательств`} · сильнее всего: ${esc(sel.card.strongest?.name ?? '—')} ${sel.card.strongest?.power ?? ''}</p>
+          <p class="ring-class__badgeline">Значки: <b>${sel.badges?.count ?? 0}</b>${sel.badges?.seam ? ' · <em class="ring-class__seam">⟊ нашёл шов</em>' : ''}</p>
           ${sel.stuck ? `<p class="ring-class__stuck">${sel.public ? 'Слабее всего' : 'Застрял'}: <b>${esc(sel.stuck.name)}</b> — ${esc(sel.stuck.why)}</p><p>Дать: ${esc(sel.suggest)}</p>` : ''}
-          <p class="ring-class__sum">Классу подтянуть: <b>${esc(sum.weakest.name)}</b> (в среднем ${sum.weakest.avg}) · чаще всего застревают: <b>${esc(sum.mostStuck.name)}</b></p>
+          <p class="ring-class__sum">Классу подтянуть: <b>${esc(sum.weakest.name)}</b> (в среднем ${sum.weakest.avg}) · значков всего: ${sum.badges}${sum.seams ? ` · «нашёл шов»: ${sum.seams}` : ''}</p>
         </aside>
       </div>`);
     wire();
@@ -456,8 +477,13 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
   function finish() {
     stopLoop();
     const m = match;
+    // 19.3 · hack awareness: the host inspects answer timings (inhuman →
+    // doesn't count; honest sub-second → a badge). It may set profile flags
+    // before we read getProfile() below, and ask us to skip the proofs.
+    let verdict = {};
+    try { verdict = onDuelEnd({ mode: m.mode, outcome: m.outcome, results: m.results, timings: m.results.map((r) => ({ ms: r.ms })), foe: m.foe }) ?? {}; } catch { verdict = {}; }
     let p = getProfile();
-    const proofs = duelProofs(p, m.results);
+    const proofs = verdict.skipProofs ? { written: [], capped: false, left: DAILY_CAP } : duelProofs(p, m.results);
     p = recordOutcome(proofs.profile, m);
     onProfile(p);
     const sum = practiceSummary(m);
@@ -564,7 +590,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
   function render(v = view) {
     if (v !== 'arena') { stopLoop(); if (view === 'arena' && match && !match.over) match = null; }
     view = v;
-    if (v === 'card') renderCard(); else if (v === 'myclass') renderMyClass(); else if (v === 'ladder') renderLadder(); else if (v === 'storm') renderStorm(); else if (v === 'share') renderShare(); else if (v === 'class') renderClass(); else if (v === 'area') renderArea(); else renderCard();
+    if (v === 'card') renderCard(); else if (v === 'myclass') renderMyClass(); else if (v === 'ladder') renderLadder(); else if (v === 'storm') renderStorm(); else if (v === 'share') renderShare(); else if (v === 'class') renderClass(); else if (v === 'area') renderArea(); else if (v === 'badges') renderBadges(); else renderCard();
     root.dataset.view = view;
     root.querySelector('.ring-go, .ring__close')?.focus({ preventScroll: true });
   }

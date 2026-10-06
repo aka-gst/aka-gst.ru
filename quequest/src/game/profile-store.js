@@ -24,6 +24,7 @@ import { createCampusProfile, mergeCampusProfile } from './campus-profile.js?v=c
 import { diverCard, powersOf, cleanNick } from './diver-card.js';
 import { GHOSTS, ghostById, decodeShare, ghostFromShare, SHARE_PREFIX } from './duel.js';
 import { sampleClass } from './class-mock.js';
+import { mergeBadges, cardBadgeIds } from './achievements.js';
 
 export const SNAPSHOT_KIND = 'quequest.diver';
 export const SNAPSHOT_VERSION = 1;
@@ -40,8 +41,8 @@ export function profileSnapshot(profile = {}, { player = null, at = Date.now() }
   return {
     kind: SNAPSHOT_KIND, v: SNAPSHOT_VERSION, at,
     player: player ? { id: String(player.id), nick: cleanNick(player.nick ?? card.nick) } : null,
-    card: { nick: player?.nick ? cleanNick(player.nick) : card.nick, avatar: card.avatar, rank: card.rank, rankIndex: card.rankIndex, xp: card.xp, powers: powersOf(card), proofs: card.proofs },
-    profile: { ...p, duel: profile.duel ?? p.duel ?? {} },
+    card: { nick: player?.nick ? cleanNick(player.nick) : card.nick, avatar: card.avatar, rank: card.rank, rankIndex: card.rankIndex, xp: card.xp, powers: powersOf(card), proofs: card.proofs, badges: cardBadgeIds(p) },
+    profile: { ...p, duel: profile.duel ?? p.duel ?? {}, badges: profile.badges ?? p.badges ?? {}, hack: profile.hack ?? p.hack ?? {} },
   };
 }
 // ------------------------------------------------------------ 19.2 · size
@@ -143,9 +144,21 @@ export function applySnapshot(profile = {}, snap) {
     for (const [k, v] of Object.entries(snap.totals.guild ?? {})) { const d = (Number(v) || 0) - (have[k] ?? 0); if (d > 0) { carry[k] = (carry[k] ?? 0) + d; topped = true; } }
     if (topped) merged = { ...merged, labs: { ...merged.labs, guild: { ...guild, skillLedger: { ...(guild.skillLedger ?? {}), [CARRY_KEY]: carry } } } };
   }
+  // Badges and hack flags are facts — union them, never lose one (canon §20).
+  const badges = mergeBadges(profile.badges ?? {}, incoming.badges ?? {});
+  const ha = profile.hack ?? {}, hb = incoming.hack ?? {};
+  const hack = {
+    ...ha, ...hb,
+    flags: { ...(ha.flags ?? {}), ...(hb.flags ?? {}) },
+    seam: ha.seam || hb.seam, tooGood: ha.tooGood || hb.tooGood, forger: ha.forger || hb.forger,
+    autoclicker: ha.autoclicker || hb.autoclicker, underHood: ha.underHood || hb.underHood,
+    speedrun: ha.speedrun || hb.speedrun, classBeat: ha.classBeat || hb.classBeat,
+    hall: [...(Array.isArray(ha.hall) ? ha.hall : []), ...(Array.isArray(hb.hall) ? hb.hall : [])].slice(-30),
+    reports: [...(Array.isArray(ha.reports) ? ha.reports : []), ...(Array.isArray(hb.reports) ? hb.reports : [])].slice(-20),
+  };
   // mergeCampusProfile does not know about later top-level fields: keep both.
-  const { legacyXp: _l, awards: _a, xp: _x, ...rest } = incoming;
-  return { ...profile, ...rest, ...merged, duel };
+  const { legacyXp: _l, awards: _a, xp: _x, badges: _b, hack: _h, ...rest } = incoming;
+  return { ...profile, ...rest, ...merged, duel, badges, hack };
 }
 // Two snapshots of one player (server + this browser's cache) -> one.
 export function mergeSnapshots(a, b, { player = null } = {}) {

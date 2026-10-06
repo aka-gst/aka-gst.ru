@@ -25,6 +25,7 @@
 import { profileSnapshot, applySnapshot, validSnapshot, compactSnapshot, mergeSnapshots, snapshotBytes, SNAPSHOT_BUDGET } from './profile-store.js';
 import { createCampusProfile, CAMPUS_PROFILE_KEY } from './campus-profile.js?v=campus-profile-7';
 import { cleanNick } from './diver-card.js';
+import { sideSign } from './tamper.js';
 
 export const IGRA = 'quequest';
 export const SAVE_LIMIT = 65536;
@@ -286,7 +287,11 @@ export function createAkkaunty({
       if (A) await A.logout();
       me = null; status.user = false; ver = undefined; lastPushed = ''; pending = null;
       const g = get(GUEST_KEY);
-      if (g) set(CAMPUS_PROFILE_KEY, g); else set(CAMPUS_PROFILE_KEY, JSON.stringify(createCampusProfile()));
+      const restored = g || JSON.stringify(createCampusProfile());
+      set(CAMPUS_PROFILE_KEY, restored);
+      // 19.3 · keep the save signature in step with this direct write, so the
+      // next load doesn't mistake a legit logout for tampering (canon §20).
+      sideSign(storage, CAMPUS_PROFILE_KEY, restored);
       del(GUEST_KEY); del(OWNER_KEY);
       emit('logout');
       reload();
@@ -356,7 +361,9 @@ export function createAkkaunty({
 // the service shows the class nick instead (its README: «не кладём ник»).
 export function publicCard(c = {}) {
   const powers = (Array.isArray(c.powers) ? c.powers : []).slice(0, 9).map((p) => Math.max(0, Math.min(100, Math.round(Number(p) || 0))));
-  return { avatar: Math.max(0, Math.min(7, Number(c.avatar) || 0)), rank: String(c.rank ?? '').slice(0, 40), rankIndex: Math.max(0, Math.min(20, Math.round(Number(c.rankIndex) || 0))), powers };
+  // 19.3 · опционально ids значков (только id, по согласию «показать карточку»).
+  const badges = (Array.isArray(c.badges) ? c.badges : []).filter((id) => typeof id === 'string').slice(0, 50).map((id) => id.slice(0, 32));
+  return { avatar: Math.max(0, Math.min(7, Number(c.avatar) || 0)), rank: String(c.rank ?? '').slice(0, 40), rankIndex: Math.max(0, Math.min(20, Math.round(Number(c.rankIndex) || 0))), powers, ...(badges.length ? { badges } : {}) };
 }
 export function ghostFromCard(row) {
   return { id: row.id, name: row.nick, avatar: row.card.avatar, powers: row.card.powers, classmate: true, hello: 'Я из твоего класса. Посмотрим, кто быстрее!', win: 'Ладно, сегодня ты сильнее.', lose: 'Класс! Подтянись и вызови снова.' };
