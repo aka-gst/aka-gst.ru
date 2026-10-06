@@ -7,10 +7,10 @@ import { AREAS, AREA_IDS, AREA_QUESTS, AVATARS, diverCard, areaById, cleanNick, 
 import { WAY_NAMES, STAGE_NAMES } from './mastery.js';
 import { BUFFS, GHOSTS, ladder, nextGhost, createMatch, startRound, answerRound, practiceSummary, duelProofs, recordOutcome, meFromProfile, shareFromProfile, decodeShare, ghostFromShare, STORM_SITES, HACK_TARGET, DAILY_CAP, buffOfArea } from './duel.js';
 import { SIGNS } from './duel-tasks.js';
-import { sampleClass, classSummary, studentFromSnapshot } from './class-mock.js';
+import { sampleClass, classSummary, studentFromSnapshot, studentFromCard } from './class-mock.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const CSS_HREF = new URL('./duel.css?v=191', import.meta.url).href;
+const CSS_HREF = new URL('./duel.css?v=192', import.meta.url).href;
 const pct = (v) => `${Math.round(v)}%`;
 const BUFF_GLYPH = { attack: '⚔', double: '⚔⚔', shield: '⛨', heal: '✚', aura: '◎', auto: '⚙' };
 
@@ -64,7 +64,7 @@ function areaRing(ctx, x, y, R, t, alpha = 1) {
 }
 
 // --------------------------------------------------------------- the view
-export function createRing(root, { getProfile = () => ({}), onProfile = () => {}, onSound = () => {}, getPlayer = () => null, canDuel = () => ({ ok: true }), onClose = () => {}, store = null } = {}) {
+export function createRing(root, { getProfile = () => ({}), onProfile = () => {}, onSound = () => {}, getPlayer = () => null, canDuel = () => ({ ok: true }), onClose = () => {}, store = null, decorate = () => {} } = {}) {
   if (!root) return { open() {}, close() {}, isOpen: () => false };
   const doc = root.ownerDocument;
   if (doc && !doc.querySelector('link[data-ring-css]')) { const l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = CSS_HREF; l.dataset.ringCss = ''; doc.head.append(l); }
@@ -74,7 +74,10 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
   const now = () => performance.now();
   const sound = (n) => onSound(n);
   const player = () => { try { return getPlayer() ?? null; } catch { return null; } };
-  const nick = () => player()?.nick ? cleanNick(player().nick) : diverCard(getProfile()).nick;
+  // The in-game nick lives in the profile (editable here, also when signed in).
+  const nick = () => { const pr = getProfile(); return pr.duel?.nick ? cleanNick(pr.duel.nick) : player()?.nick ? cleanNick(player().nick) : diverCard(pr).nick; };
+  const account = () => store?.account ?? null;
+  const liveClasses = () => Boolean(player() && account()?.hasClasses?.());
   const gate = () => (demo ? { ok: true } : canDuel());
 
   function shell(title, kicker, body, { back = true } = {}) {
@@ -82,6 +85,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
       <div class="ring__top-actions">${back && view !== 'card' ? '<button type="button" class="ring__back" data-ring="card" aria-label="К карточке">←<span class="ring-wide"> КАРТОЧКА</span></button>' : ''}<button type="button" class="ring__close" aria-label="Закрыть">×</button></div></header>
       <div class="ring__body" data-view="${view}">${body}</div>`;
     root.querySelector('.ring__close').addEventListener('click', close);
+    try { decorate(root); } catch { /* the account pill is optional */ }
   }
   function wire() {
     for (const b of root.querySelectorAll('[data-ring]')) b.addEventListener('click', () => go(b.dataset.ring));
@@ -93,7 +97,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
     if (where === 'storm-garage') return startMatch({ mode: 'storm', site: 'garage' });
     if (where === 'storm-server') return startMatch({ mode: 'storm', site: 'server' });
     if (where === 'hack') return startMatch({ mode: 'hack' });
-    if (where === 'fight') return startMatch({ mode: 'duel', foe: picked === 'friend' && friend ? friend : GHOSTS.find((g) => g.id === picked) ?? nextGhost(getProfile()) });
+    if (where === 'fight') return startMatch({ mode: 'duel', foe: picked === 'friend' && friend ? friend : classGhost(picked) ?? GHOSTS.find((g) => g.id === picked) ?? nextGhost(getProfile()) });
     if (where === 'again' && lastEnd) return startMatch(lastEnd.opts);
     if (where === 'next-ghost') { picked = nextGhost(getProfile()).id; return startMatch({ mode: 'duel', foe: GHOSTS.find((g) => g.id === picked) }); }
     render(where);
@@ -124,7 +128,8 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
       <aside class="ring-side">
         <button type="button" class="ring-side__avatar" data-avatar title="Сменить облик"><canvas id="ringAvatar" width="120" height="120" aria-label="Облик дайвера"></canvas></button>
         <div class="ring-side__who">
-          ${p ? `<b class="ring-side__nick">${esc(nick())}</b><small>вход выполнен</small>` : `<button type="button" class="ring-side__nick" data-ring="share" title="Сменить ник">${esc(nick())} ✎</button>`}
+          <button type="button" class="ring-side__nick" data-ring="share" title="Сменить ник (виден в дуэлях и кодах)">${esc(nick())} ✎</button>
+          <span class="akk-slot" data-akk-slot="card" hidden></span>
           <small class="ring-side__rank">${esc(c.rank)}</small>
           <span class="ring-bar ring-bar--xp"><i style="width:${Math.round(c.progress * 100)}%"></i></span>
           <small>${xpLine}</small>
@@ -143,7 +148,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
         <button type="button" data-ring="storm" data-locked="${!g.ok}">⛨ <span class="ring-wide">ТИСКИ-</span>ШТУРМ</button>
         <button type="button" data-ring="hack" data-locked="${!g.ok}">⚿ ВЗЛОМ<span class="ring-wide"> ЗАМКА</span></button>
         <button type="button" data-ring="share">⇄ КОД ДРУГУ</button>
-        <button type="button" data-ring="class">▦ КЛАСС<span class="ring-wide"> · пример</span></button>
+        <button type="button" data-ring="class">▦ КЛАСС${liveClasses() ? '' : '<span class="ring-wide"> · пример</span>'}</button>
       </nav>
       <p class="ring__flash" role="status" ${g.ok ? 'hidden' : ''}>${g.ok ? '' : esc(g.reason ?? '')}</p>`);
     wire();
@@ -161,14 +166,16 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
   // ------------------------------------------------------------ ТУРНИРЫ
   function renderLadder() {
     const l = ladder(getProfile());
-    if (!picked || (picked !== 'friend' && !l.find((g) => g.id === picked && g.open))) picked = nextGhost(getProfile()).id;
+    if (!picked || (picked !== 'friend' && !classGhost(picked) && !l.find((g) => g.id === picked && g.open))) picked = nextGhost(getProfile()).id;
+    loadClassmates();
+    const mates = classmates();
     const rows = l.map((g) => {
       const top = AREA_IDS.map((id, i) => ({ id, p: g.powers[i] })).sort((a, b) => b.p - a.p).slice(0, 2).map((x) => `${areaById(x.id).name} ${x.p}`).join(', ');
       return `<li><button type="button" data-ghost="${g.id}" aria-pressed="${picked === g.id}" ${g.open ? '' : 'disabled'}><canvas data-face="${g.avatar}" width="56" height="56" aria-hidden="true"></canvas><span><strong>${esc(g.name)}</strong><em>${g.open ? `сильнее всего: ${esc(top)}` : 'откроется после победы над предыдущим'}</em></span><b>${g.beaten ? '✓' : g.open ? '▶' : '🔒'}</b></button></li>`;
     }).join('');
     shell('Ринг «ТИСКОВ»', 'ДУЭЛЬ ЗАДАЧКАМИ · ПРИЗРАКИ', `
       <p class="ring-vitya"><b>Витя:</b> «У ТИСКОВ стажёры по вечерам меряются на ринге — задачками. Решил быстро — получил баф. Сходи, покажи им, кто тут дайвер».</p>
-      <ol class="ring-ladder">${rows}${friend ? `<li><button type="button" data-ghost="friend" aria-pressed="${picked === 'friend'}"><canvas data-face="${friend.avatar}" width="56" height="56" aria-hidden="true"></canvas><span><strong>${esc(friend.name)} · призрак друга</strong><em>по коду друга</em></span><b>⇄</b></button></li>` : ''}</ol>
+      <ol class="ring-ladder">${rows}${friend ? `<li><button type="button" data-ghost="friend" aria-pressed="${picked === 'friend'}"><canvas data-face="${friend.avatar}" width="56" height="56" aria-hidden="true"></canvas><span><strong>${esc(friend.name)} · призрак друга</strong><em>по коду друга</em></span><b>⇄</b></button></li>` : ''}${mates.length ? `<li class="ring-ladder__head"><small>ОДНОКЛАССНИКИ · карточки, которые они сами открыли классу</small></li>${mates.map((g) => `<li><button type="button" data-ghost="${esc(g.id)}" aria-pressed="${picked === g.id}"><canvas data-face="${g.avatar}" width="56" height="56" aria-hidden="true"></canvas><span><strong>${esc(g.name)} · одноклассник</strong><em>призрак по открытой карточке</em></span><b>▦</b></button></li>`).join('')}` : ''}</ol>
       <nav class="ring-actions ring-actions--two"><button type="button" class="ring-go" data-ring="fight">В БОЙ →</button><button type="button" data-ring="share">⇄ ДРУГ ПО КОДУ</button></nav>`);
     wire();
     for (const b of root.querySelectorAll('[data-ghost]')) b.addEventListener('click', () => { picked = b.dataset.ghost; sound('ui-click'); renderLadder(); });
@@ -190,7 +197,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
     const p = player();
     shell('Код для друга', 'ДУЭЛЬ БЕЗ СЕРВЕРА', `
       <section class="ring-share">
-        <label class="ring-share__nick">Твой ник ${p ? '<small>(из входа)</small>' : ''}<input id="ringNick" maxlength="${NICK_MAX}" value="${esc(nick())}" ${p ? 'disabled' : ''} autocomplete="off"></label>
+        <label class="ring-share__nick">Твой ник в игре <small>виден в дуэлях и в кодах${p ? ' · хранится в аккаунте' : ''}</small><input id="ringNick" maxlength="${NICK_MAX}" value="${esc(nick())}" autocomplete="off"></label>
         <p class="ring-share__label">Твой код — это твоя карточка: ник, облик и силу по девяти областям. Друг вставит его и сразится с твоим призраком.</p>
         <code id="ringMyCode" class="ring-share__code">${esc(code)}</code>
         <div class="ring-share__row"><button type="button" class="ring-go" id="ringCopy">СКОПИРОВАТЬ КОД</button><button type="button" id="ringCopyLink" class="ring-link">ИЛИ ССЫЛКУ</button><span id="ringCopied" role="status"></span></div>
@@ -222,33 +229,97 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
   }
 
   // ------------------------------------------------------------ КЛАСС
-  let realClass = null;
+  // Without a class service: the made-up example class (макет). With the
+  // site accounts + classes (feature-detected, docs/AKKAUNTY-CLASS.md): my
+  // classes, the cards classmates chose to open, join by code, create one.
+  let realClass = null, classes = null, classSel = null, classMsg = '', classCode = '';
+  const CLASS_ERRORS = {
+    no_classes: 'Классы на сайте ещё не включены.', offline: 'Нет связи — попробуй позже.', not_logged_in: 'Сначала войди в аккаунт.',
+    bad_code: 'Код не похож на код класса — проверь у учителя.', not_found: 'Такого кода нет — проверь у учителя.', too_many_attempts: 'Слишком много неверных кодов. Подожди немного.',
+    bad_nick: 'Ник в классе: 3–24 знака — буквы, цифры, пробел, _ . -', nick_taken: 'Такой ник в этом классе уже есть — возьми другой.',
+    is_teacher: 'Это твой класс — ты в нём учитель.', class_full: 'Класс заполнен.', too_many_classes: 'Слишком много классов.', bad_name: 'Назови класс (до 40 знаков).',
+    card_too_large: 'Карточка слишком большая.', bad_card: 'Карточка не прошла проверку.', card_too_complex: 'Карточка не прошла проверку.',
+    forbidden: 'Это может только учитель класса.', bad_klass: 'Такого класса нет.', bad_origin: 'Классы работают только на сайте aka-gst.ru.', too_many_requests: 'Слишком много запросов — подожди немного.', too_many_games: 'Слишком много игр на аккаунте.', bad_max: 'Мест в классе: от 1 до 100.',
+  };
+  const classIdOf = (c) => String(c?.id ?? c?.klass ?? c?.class ?? '');
+  function loadClasses() {
+    if (!liveClasses() || classes !== null) return;
+    classes = [];
+    Promise.resolve(account().classMine()).then((r) => {
+      const list = r?.klassy ?? [];
+      classes = (Array.isArray(list) ? list : []).filter((c) => classIdOf(c));
+      if (!classes.find((c) => classIdOf(c) === classSel)) classSel = classes[0] ? classIdOf(classes[0]) : null;
+      realClass = null;
+      if (view === 'class' || view === 'myclass' || view === 'ladder') render(view);
+    }).catch(() => {});
+  }
+  function currentClassId() { return liveClasses() ? classSel : player()?.classId ?? null; }
+  function loadClassmates() {
+    loadClasses();
+    const id = currentClassId();
+    if (!id || !store || realClass !== null) return;
+    realClass = [];
+    Promise.resolve(store.listPlayers({ classId: id })).then((rows) => {
+      realClass = (rows ?? []).filter((r) => r?.snapshot || r?.card).map((r) => (r.snapshot ? studentFromSnapshot(r) : { ...studentFromCard(r), me: Boolean(r.me) }));
+      if (view === 'class' || view === 'ladder') render(view);
+    }).catch(() => {});
+  }
+  const classmates = () => (realClass ?? []).filter((s) => s.ghost && !s.me).map((s) => s.ghost);
+  const classGhost = (id) => classmates().find((g) => g.id === id) ?? null;
   function renderClass() {
     const pl = player();
-    // A signed-in teacher or student with a class: the real list from the adapter.
-    if (pl?.classId && store && realClass === null) {
-      realClass = [];
-      Promise.resolve(store.listPlayers({ classId: pl.classId })).then((rows) => { realClass = (rows ?? []).filter((r) => r?.snapshot).map(studentFromSnapshot); if (view === 'class') renderClass(); }).catch(() => {});
-    }
+    loadClassmates();
     const real = Boolean(realClass?.length);
     const list = real ? realClass : sampleClass();
     const sum = classSummary(list);
     const sel = list[classPick] ?? list[0];
+    const live = liveClasses();
+    const cname = live ? (classes ?? []).find((c) => classIdOf(c) === classSel)?.name ?? classSel : pl?.classId;
     const head = AREAS.map((a) => `<th title="${esc(a.name)}">${esc(a.glyph)}</th>`).join('');
-    const rows = list.map((s, i) => `<tr data-student="${i}" aria-selected="${i === classPick}"><th><button type="button" data-pick="${i}">${esc(s.nick)}</button></th>${s.powers.map((p, k) => `<td style="--p:${p}" data-stuck="${s.stuck?.id === AREA_IDS[k]}">${p || '·'}</td>`).join('')}<td class="ring-class__lvl">${s.card.proofs}</td></tr>`).join('');
-    shell('Класс', 'КАБИНЕТ УЧИТЕЛЯ · МАКЕТ', `
-      <p class="ring-class__label">${real ? `КЛАСС ${esc(pl.classId)} · ${list.length} учеников` : 'ПРИМЕР КЛАССА · имена и данные выдуманы. Так будет выглядеть кабинет учителя, когда появятся аккаунты.'}</p>
+    const rows = list.map((s, i) => `<tr data-student="${i}" aria-selected="${i === classPick}"><th><button type="button" data-pick="${i}">${esc(s.nick)}</button></th>${s.powers.map((p, k) => `<td style="--p:${p}" data-stuck="${s.stuck?.id === AREA_IDS[k]}">${p || '·'}</td>`).join('')}<td class="ring-class__lvl">${s.public ? '·' : s.card.proofs}</td></tr>`).join('');
+    shell('Класс', real ? 'КЛАСС · ОТКРЫТЫЕ КАРТОЧКИ' : 'КАБИНЕТ УЧИТЕЛЯ · МАКЕТ', `
+      <p class="ring-class__label">${real ? `КЛАСС «${esc(cname)}» · ${list.length} ${live ? 'открытых карточек (видно только то, что ученик сам открыл: облик, ранг, силы; ник — ник класса)' : 'учеников'}` : 'ПРИМЕР КЛАССА · имена и данные выдуманы. Так будет выглядеть кабинет учителя, когда появятся аккаунты.'}${live ? ' <button type="button" class="ring-link" data-ring="myclass">▦ МОЙ КЛАСС · вступить / создать</button>' : ''}</p>
       <div class="ring-class">
         <table class="ring-class__grid"><thead><tr><th>ученик</th>${head}<th title="доказательств">✓</th></tr></thead><tbody>${rows}</tbody></table>
         <aside class="ring-class__detail">
           <h3>${esc(sel.nick)} · ${esc(sel.card.rank)}</h3>
-          <p>${sel.card.proofs} доказательств · сильнее всего: ${esc(sel.card.strongest?.name ?? '—')} ${sel.card.strongest?.power ?? ''}</p>
-          ${sel.stuck ? `<p class="ring-class__stuck">Застрял: <b>${esc(sel.stuck.name)}</b> — ${esc(sel.stuck.why)}</p><p>Дать: ${esc(sel.suggest)}</p>` : ''}
+          <p>${sel.public ? 'открытая карточка' : `${sel.card.proofs} доказательств`} · сильнее всего: ${esc(sel.card.strongest?.name ?? '—')} ${sel.card.strongest?.power ?? ''}</p>
+          ${sel.stuck ? `<p class="ring-class__stuck">${sel.public ? 'Слабее всего' : 'Застрял'}: <b>${esc(sel.stuck.name)}</b> — ${esc(sel.stuck.why)}</p><p>Дать: ${esc(sel.suggest)}</p>` : ''}
           <p class="ring-class__sum">Классу подтянуть: <b>${esc(sum.weakest.name)}</b> (в среднем ${sum.weakest.avg}) · чаще всего застревают: <b>${esc(sum.mostStuck.name)}</b></p>
         </aside>
       </div>`);
     wire();
     for (const b of root.querySelectorAll('[data-pick]')) b.addEventListener('click', () => { classPick = Number(b.dataset.pick); sound('ui-click'); renderClass(); });
+  }
+  function renderMyClass() {
+    const acc = account();
+    if (!liveClasses()) { render('class'); return; }
+    loadClasses();
+    const showing = acc.showCard();
+    const mine = (classes ?? []).map((c) => `<button type="button" data-klass="${esc(classIdOf(c))}" aria-pressed="${classIdOf(c) === classSel}">${esc(c.name ?? classIdOf(c))}${c.teacher ? ' · ты учитель' : c.myNick ? ` · ты «${esc(c.myNick)}»` : ''}</button>${c.teacher && c.code ? `<small>код для учеников: <b class="ring-myclass__code">${esc(c.code)}</b>${c.members != null ? ` · учеников: ${c.members}` : ''}</small>` : ''}`).join('');
+    shell('Мой класс', 'АККАУНТ · КЛАСС', `
+      <div class="ring-myclass">
+        <section><h3>МОИ КЛАССЫ</h3>${mine || '<p>Пока ни одного. Вступи по коду учителя — или создай класс, если ты учитель.</p>'}</section>
+        <section><h3>ВСТУПИТЬ ПО КОДУ</h3>
+          <input id="ringClassCode" placeholder="код от учителя" autocomplete="off" spellcheck="false" maxlength="24">
+          <input id="ringClassNick" maxlength="24" value="${esc(nick())}" autocomplete="off" aria-label="ник в классе">
+          <small>Ник в классе (3–24 знака) видят только этот класс и учитель. Почта и вход — никому.</small>
+          <button type="button" class="ring-go" id="ringClassJoin">ВСТУПИТЬ</button></section>
+        <section><h3>МОЯ КАРТОЧКА</h3>
+          <label class="ring-toggle"><input type="checkbox" id="ringShowCard" ${showing ? 'checked' : ''}> Показывать мою карточку классу</label>
+          <small>Только облик, ранг и 9 сил — для дуэлей с твоим призраком. В классе ты под ником класса. Без прогресса и истории. Выключил — карточка удаляется из всех классов.</small></section>
+        <section><h3>Я УЧИТЕЛЬ</h3>
+          <input id="ringClassName" placeholder="например, 7Б информатика" maxlength="40" autocomplete="off">
+          <button type="button" id="ringClassCreate">СОЗДАТЬ КЛАСС</button>
+          ${classCode ? `<p>Код для учеников: <b class="ring-myclass__code">${esc(classCode)}</b></p>` : ''}</section>
+        <p class="ring__flash" role="status" ${classMsg ? '' : 'hidden'}>${esc(classMsg)}</p>
+      </div>`);
+    wire();
+    const say = (r, ok) => { classMsg = r?.ok ? ok : (CLASS_ERRORS[r?.error] ?? `Не вышло (${String(r?.error ?? 'ошибка').slice(0, 30)}).`); sound(r?.ok ? 'reflex-save' : 'blocked'); classes = null; realClass = null; renderMyClass(); };
+    for (const b of root.querySelectorAll('[data-klass]')) b.addEventListener('click', () => { classSel = b.dataset.klass; realClass = null; sound('ui-click'); renderMyClass(); });
+    root.querySelector('#ringClassJoin').addEventListener('click', async () => say(await acc.classJoin(root.querySelector('#ringClassCode').value, root.querySelector('#ringClassNick').value), 'Ты в классе!'));
+    root.querySelector('#ringClassCreate').addEventListener('click', async () => { const r = await acc.classCreate(root.querySelector('#ringClassName').value || 'Мой класс'); classCode = r?.ok ? String(r.klass?.code ?? '') : ''; if (r?.ok) classSel = String(r.klass?.id ?? classSel); say(r, 'Класс создан. Дай ученикам код.'); });
+    root.querySelector('#ringShowCard').addEventListener('change', async (e) => { const c = diverCard(getProfile()); const r = await acc.setShowCard(e.target.checked, { avatar: c.avatar, rank: c.rank, rankIndex: c.rankIndex, powers: AREA_IDS.map((id) => c.areas.find((a) => a.id === id)?.power ?? 0) }); say(r, e.target.checked ? 'Карточка открыта классу.' : 'Карточка скрыта.'); });
   }
 
   // ------------------------------------------------------------ АРЕНА
@@ -493,7 +564,7 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
   function render(v = view) {
     if (v !== 'arena') { stopLoop(); if (view === 'arena' && match && !match.over) match = null; }
     view = v;
-    if (v === 'card') renderCard(); else if (v === 'ladder') renderLadder(); else if (v === 'storm') renderStorm(); else if (v === 'share') renderShare(); else if (v === 'class') renderClass(); else if (v === 'area') renderArea(); else renderCard();
+    if (v === 'card') renderCard(); else if (v === 'myclass') renderMyClass(); else if (v === 'ladder') renderLadder(); else if (v === 'storm') renderStorm(); else if (v === 'share') renderShare(); else if (v === 'class') renderClass(); else if (v === 'area') renderArea(); else renderCard();
     root.dataset.view = view;
     root.querySelector('.ring-go, .ring__close')?.focus({ preventScroll: true });
   }
@@ -514,6 +585,15 @@ export function createRing(root, { getProfile = () => ({}), onProfile = () => {}
 
   return {
     open: openRing, close, isOpen: () => open,
+    // the account changed (login / logout / sync): redraw what is on screen
+    refresh() {
+      classes = null; realClass = null;
+      if (!open || view === 'arena') return;
+      // Never redraw under the player's fingers: typing in a field → only the pill.
+      const ae = doc?.activeElement;
+      if (ae && root.contains(ae) && ae.tagName === 'INPUT') { try { decorate(root); } catch { /* optional */ } return; }
+      render(view);
+    },
     // tests and the admin panel
     fast(on = true) { fast = Boolean(on); },
     state: () => ({ view, demo, phase, mode: match?.mode ?? null, round: match?.round ?? 0, over: match?.over ?? false, outcome: match?.outcome ?? null, me: match ? { hp: match.me.hp } : null, foe: match ? { hp: match.foe.hp, layer: match.foe.layer, alarm: match.foe.alarm, name: match.foe.name } : null, task: match?.task ? { answer: match.task.answer, family: match.task.family, area: match.task.area, options: match.task.options.length, explain: match.task.explain } : null }),

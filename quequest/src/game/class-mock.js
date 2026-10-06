@@ -68,3 +68,23 @@ export function studentFromSnapshot({ id, nick, snapshot } = {}) {
   const stuck = stuckId ? AREAS.find((a) => a.id === stuckId) : null;
   return { ...view, example: false, card, powers: powersOf(card), stuck: stuck ? { id: stuck.id, name: stuck.name, why: missTop && missTop[0] === stuck.id && missTop[1] >= 3 ? `${missTop[1]} ошибок в дуэлях` : 'слабее всего из начатого' } : null, suggest: stuck ? AREA_QUESTS[stuck.id] : null };
 }
+
+// 19.2 · A classmate's PUBLIC card from the site's class service (opt-in:
+// nick, avatar, rank, 9 powers — nothing else). Same row shape as above, plus
+// a duel ghost built from the powers.
+export function studentFromCard({ id, nick, card = {} } = {}) {
+  const powers = AREA_IDS.map((_, i) => Math.max(0, Math.min(100, Math.round(Number(card.powers?.[i]) || 0))));
+  const areas = AREAS.map((a, i) => ({ id: a.id, name: a.name, power: powers[i] }));
+  const tried = areas.filter((a) => a.power > 0);
+  const strongest = tried.length ? [...tried].sort((x, y) => y.power - x.power)[0] : null;
+  const weakest = tried.length ? [...tried].sort((x, y) => x.power - y.power)[0] : null;
+  const name = String(nick ?? card.nick ?? '—');
+  const avatar = Math.max(0, Math.min(7, Number(card.avatar) || 0));
+  return {
+    id: String(id ?? 'class-x'), nick: name, example: false, public: true, powers, misses: {},
+    card: { rank: String(card.rank ?? ''), proofs: 0, strongest, avatar },
+    stuck: weakest ? { id: weakest.id, name: weakest.name, why: 'слабее всего из начатого' } : null,
+    suggest: weakest ? AREA_QUESTS[weakest.id] : null,
+    ghost: { id: String(id ?? 'class-x'), name, avatar, powers, classmate: true, hello: 'Я из твоего класса. Посмотрим, кто быстрее!', win: 'Ладно, сегодня ты сильнее.', lose: 'Мой призрак победил. Подтянись и вызови снова!' },
+  };
+}

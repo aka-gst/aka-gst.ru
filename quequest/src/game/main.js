@@ -1,3 +1,6 @@
+// 19.2 · the shared site login (/akkaunty) installs window.QQ_PROFILE_ADAPTER
+// before anything below resolves it — only on aka-gst.ru / ?akk=1 (akkaunty-adapter.js).
+import './akkaunty-adapter.js';
 import { createInput } from './input.js';
 import { DOOR_SLAM_AT } from './chip-scene.js';
 import { createCompanion } from './companion.js?v=center-virus-1';
@@ -54,6 +57,7 @@ import { masteryEvent, listenForSkills, pythonioWay } from './mastery.js';
 import { applyBuildLabels, BUILD } from './version.js';
 import { createRing } from './duel-ui.js';
 import { resolveAdapter, profileSnapshot, applySnapshot } from './profile-store.js';
+import { createAccountUi } from './account-ui.js';
 // 19.0 · the first week: five days, button → fired → Витя's garage.
 import { isWeekCheckpoint, weekDayOf, weekClock, weekPin, payLedger, legacyFromQuery, weekFromLegacy, BOSS_END, BOSS_MORNING, HALL_MORNING, EVENING, MORNING, FIRED, CORP, WEEK_PAY_CHECKPOINTS } from './week.js';
 import { createPayCard, createWeekPin } from './week-ui.js';
@@ -65,7 +69,7 @@ import { createSystemSandbox } from './system-sandbox.js?v=sandbox-1';
 import { createPythonContracts } from './python-contracts.js?v=python-contracts-1';
 import { createEngineerCampus } from './engineer-campus.js?v=campus-6';
 import {
-  loadCampusProfile, saveCampusProfile, markContractSolved, markPythonContractSolved, markSandboxSolved, markModelDatasetSolved, markCampusMission, markFactoryTrialSolved, markSimnetIncidentSolved, markNexusResearch, markNexusMission, markNexusRemix, markNexusTrialSolved, markNexusCompanionLesson, markNexusCompanionBuild, markDeskIncidentSolved, markWorldStorySolved, markWorldShiftSolved, markCommonsBlueprint, markCommonsDay, markCommonsCode, markOperationsArc, markOperationsRollback, markOperationsShift, markOperationsCode, markChronicleArc, markChronicleWindow, markChronicleCode, markWeaveArc, markWeaveSeason, markWeaveCode, markThreadsEpisode, markThreadsCycle, markThreadsCode, markGuildQuest, markGuildJob, markGuildRaid, markGuildRealm, markLabComplete,
+  loadCampusProfile, saveCampusProfile, createCampusProfile, markContractSolved, markPythonContractSolved, markSandboxSolved, markModelDatasetSolved, markCampusMission, markFactoryTrialSolved, markSimnetIncidentSolved, markNexusResearch, markNexusMission, markNexusRemix, markNexusTrialSolved, markNexusCompanionLesson, markNexusCompanionBuild, markDeskIncidentSolved, markWorldStorySolved, markWorldShiftSolved, markCommonsBlueprint, markCommonsDay, markCommonsCode, markOperationsArc, markOperationsRollback, markOperationsShift, markOperationsCode, markChronicleArc, markChronicleWindow, markChronicleCode, markWeaveArc, markWeaveSeason, markWeaveCode, markThreadsEpisode, markThreadsCycle, markThreadsCode, markGuildQuest, markGuildJob, markGuildRaid, markGuildRealm, markLabComplete,
 } from './campus-profile.js?v=campus-profile-7';
 import {
   createFakeGateway,
@@ -503,6 +507,7 @@ function updateCampusProfile(action) {
   else if (action?.type === 'guild-raid') campusProfile = markGuildRaid(campusProfile, action.id, action.skills, action.credits, action.score, action.xp);
   else if (action?.type === 'guild-realm') campusProfile = markGuildRealm(campusProfile, action.id, action.score, action.skill, action.skillGain, action.xp, action.day);
   saveCampusProfile(campusProfile);
+  accountSaveSoon();
   syncCampusSkillJournal();
   campus?.refresh?.();
   return campusProfile;
@@ -745,22 +750,48 @@ const careerWorlds = createCareerWorlds(careerWorldsRoot, {
 // profile store (profile-store.js) is the one seam for accounts: a page may
 // set window.QQ_PROFILE_ADAPTER before boot; logins are Сергей's part.
 const profileStore = resolveAdapter();
-let ringPlayer = null;
+var ringPlayer = null; // var: updateCampusProfile may run before this line (TDZ)
+// The player as the ring sees them: the in-game nick lives in the profile
+// (editable on the card); the account gives only the id and a default nick.
+const currentPlayer = () => (ringPlayer ? { ...ringPlayer, nick: campusProfile.duel?.nick || ringPlayer.nick } : null);
 function ringGate() {
   if (legacy || state.checkpoint === 'fired' || loadFlags().vityaCalled || heldRealmDay(campusProfile, 'vehicle') >= 1) return { ok: true };
   return { ok: false, reason: 'Ринг откроется после увольнения: Витя расскажет, где «ТИСКИ» меряются задачками. Для показа есть «ПОКАЗ» в главном меню.' };
 }
 function saveRingSnapshot() {
   const id = ringPlayer?.id ?? 'local';
-  try { profileStore.saveSnapshot(id, profileSnapshot(campusProfile, { player: ringPlayer })); } catch (err) { console.warn(err); }
+  try {
+    const snap = profileSnapshot(campusProfile, { player: currentPlayer() });
+    profileStore.saveSnapshot(id, snap);
+    if (ringPlayer) profileStore.account?.publishCard?.(snap.card)?.catch?.(() => {});
+  } catch (err) { console.warn(err); }
 }
+// 19.2 · every profile change (fights, days, professions, duels) goes to the
+// account — debounced here and again in the adapter. localStorage is already
+// written by saveCampusProfile. A guest: nothing more to do.
+let accountTimer = 0;
+function accountSaveSoon() {
+  if (!ringPlayer) return;
+  clearTimeout(accountTimer);
+  accountTimer = setTimeout(saveRingSnapshot, 600);
+}
+function accountFlush(leaving) {
+  if (!ringPlayer) return;
+  clearTimeout(accountTimer);
+  saveRingSnapshot();
+  profileStore.flush({ leaving });
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') accountFlush(false); });
+addEventListener('pagehide', () => accountFlush(true));
+let accountUi = null;
 const ring = createRing(document.querySelector('#deepRing'), {
   getProfile: () => campusProfile,
   onProfile: (profile) => { updateCampusProfile({ type: 'replace', profile }); saveRingSnapshot(); careerWorlds.refresh?.(); },
   onSound: (name) => audio.play(name),
-  getPlayer: () => ringPlayer,
+  getPlayer: currentPlayer,
   canDuel: ringGate,
   store: profileStore,
+  decorate: (node) => accountUi?.decorate(node),
 });
 function openRing(view = 'card', opts = {}) {
   releaseAllKeys('overlay');
@@ -768,13 +799,46 @@ function openRing(view = 'card', opts = {}) {
   audio.unlock?.();
   ring.open(view, opts);
 }
-// A signed-in player (remote adapter): their nick on the card and their saved snapshot.
-Promise.resolve(profileStore.getCurrentPlayer()).then(async (player) => {
-  if (!player?.id) return;
+// A signed-in player: load the account, merge it with what this browser has
+// (first login: the guest's progress goes INTO the account; another
+// account's browser: start from the account), save the merge back. Runs at
+// boot and again on login / when the service appears (event `qq:account`).
+let syncing = null;
+async function syncAccount() {
+  const player = await profileStore.getCurrentPlayer();
+  if (!player?.id) { ringPlayer = null; return; }
+  if (ringPlayer?.id === String(player.id)) return;
   ringPlayer = { id: String(player.id), nick: player.nick ?? '', classId: player.classId ?? null };
+  const claim = await profileStore.claimLocal(ringPlayer.id);
   const snap = await profileStore.loadSnapshot(ringPlayer.id);
-  if (snap) updateCampusProfile({ type: 'replace', profile: applySnapshot(campusProfile, snap) });
-}).catch((err) => console.warn(err));
+  let next = claim === 'replace' ? createCampusProfile() : campusProfile;
+  if (snap) next = applySnapshot(next, snap);
+  if (!next.duel?.nick) next = { ...next, duel: { ...(next.duel ?? {}), nick: player.nick } };
+  updateCampusProfile({ type: 'replace', profile: next });
+  saveRingSnapshot();
+  profileStore.flush();          // the merge goes up now, not after the debounce
+  careerWorlds.refresh?.();
+  ring.refresh?.();
+  accountUi?.refresh();
+}
+function syncAccountOnce() { if (!syncing) syncing = syncAccount().catch((err) => console.warn(err)).finally(() => { syncing = null; }); return syncing; }
+syncAccountOnce();
+addEventListener('qq:account', (e) => {
+  const d = e.detail ?? {};
+  if (d.type === 'login' || (d.type === 'service' && d.user && !ringPlayer)) syncAccountOnce();
+  if (d.type === 'logout') ringPlayer = null;
+  // Another device saved newer: its progress joins the live profile (grows only).
+  if (d.type === 'remote' && d.snapshot && ringPlayer) updateCampusProfile({ type: 'replace', profile: applySnapshot(campusProfile, d.snapshot) });
+});
+accountUi = createAccountUi(document.body, {
+  account: profileStore.account,
+  getProfile: () => campusProfile,
+  getPlayer: currentPlayer,
+  onProfile: (profile) => { updateCampusProfile({ type: 'replace', profile }); saveRingSnapshot(); },
+  onSound: (name) => audio.play(name),
+  onChange: () => ring.refresh?.(),
+});
+accountUi.decorate(document.querySelector('#startPanel'));
 document.querySelector('#careerRing')?.addEventListener('click', () => { audio.play('ui-click'); openRing('card'); });
 document.querySelector('#startDuelDemo')?.addEventListener('click', () => { telemetry.mark('ring-demo'); openRing('card', { demo: true }); });
 // Витя tells about the ring once, the first time the professions open after the firing.
@@ -2289,7 +2353,7 @@ if (isLocal) {
       requestAnimationFrame(count);
     }),
     hall: { debug: (patch) => { const pos = factoryView.debug(patch); state = { ...state, player: { ...state.player, ...pos } }; return pos; }, body: () => factoryView.body(), engine: () => factoryView.engine(), speech: () => factoryView.speech(), setYaw: (yaw) => { warehouseYaw = yaw; } },
-    ring: { open: (view = 'card', opts = {}) => openRing(view, opts), close: () => ring.close(), state: () => ring.state(), fast: (on = true) => ring.fast(on), start: (opts) => ring.start(opts), snapshot: () => profileSnapshot(campusProfile, { player: ringPlayer }), store: () => profileStore.kind },
+    ring: { open: (view = 'card', opts = {}) => openRing(view, opts), close: () => ring.close(), state: () => ring.state(), fast: (on = true) => ring.fast(on), start: (opts) => ring.start(opts), snapshot: () => profileSnapshot(campusProfile, { player: currentPlayer() }), store: () => profileStore.kind, account: () => profileStore.account?.status?.() ?? null, sync: () => syncAccountOnce() },
     world: { open: (level = 'garage', opts = {}) => fpWorld.open(level, opts), debug: (patch) => fpWorld.debug(patch), state: () => fpWorld.state(), surface: (r) => careerWorlds.surface(r), engine: () => engineStatus(engineNow()) },
     pythonio: { open: (opts) => pythonio.open(opts), close: () => pythonio.close(), active: () => pythonio.active, ready: () => pythonio.ready },
     blackice: { open: (opts) => blackice.open(opts), close: () => blackice.close(), enter: (n) => blackice.enter(n), lobby: () => blackice.lobby(), handle: (msg) => blackice.handle(msg), active: () => blackice.active, ready: () => blackice.ready, view: () => blackice.view, playing: () => blackice.playing, profile: () => ({ stats: campusProfile.stats, cleared: labyrinthCleared(campusProfile), xp: campusProfile.xp, wage: state.warehouse?.wage ?? 0 }) },

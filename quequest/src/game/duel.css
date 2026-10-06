@@ -252,3 +252,4 @@ body .career-worlds .career-ring{min-height:44px;padding:4px 14px;border:1px sol
 .start-panel .start-demo{display:block;width:100%;margin-top:10px;min-height:44px;padding:8px 14px;border:1px solid #64e9ff66;border-radius:8px;background:#0b1316;color:#64e9ff;font:800 15px system-ui,sans-serif;letter-spacing:.03em;cursor:pointer}
 .tree__card{margin-left:auto;min-height:40px;padding:4px 12px;border:1px solid #ffc857;border-radius:8px;background:#ffc857;color:#0b0d10;font:800 14px system-ui,sans-serif;cursor:pointer}
 .pay__card .pay__ring{display:block;margin:6px auto 0;min-height:40px;padding:4px 14px;border:1px solid #64e9ff55;border-radius:8px;background:none;color:#64e9ff;font:800 14px system-ui,sans-serif;cursor:pointer}
+.ring-share__nick small{font-size:14px;font-weight:500;color:var(--r-dim)}
