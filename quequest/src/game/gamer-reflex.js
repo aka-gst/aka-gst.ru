@@ -93,8 +93,8 @@ export const MEANING = Object.freeze({
   'vitya.gate': Object.freeze({
     who: 'neighbor',
     layers: Object.freeze([
-      Object.freeze({ text: 'О, сосед! Опять ночью со своим шлюзом?' }),
-      Object.freeze({ needs: Object.freeze(['if']), text: 'О, сосед! Опять со своим шлюзом? Своих пускать, чужих нет — как в подъезде.', seam: 'if машина == "своя": открыть()' }),
+      Object.freeze({ text: 'О, сосед! Опять ночью сторожишь машины от «ТИСКОВ»?' }),
+      Object.freeze({ needs: Object.freeze(['if']), text: 'О, сосед! Опять сторожишь? Своих пускать, чужих нет — как в подъезде.', seam: 'if машина == "своя": открыть()' }),
     ]),
   }),
 });

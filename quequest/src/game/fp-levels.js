@@ -66,7 +66,7 @@ export const HOME_CEIL = 3.0;
 export const DOOR_OPEN_H = 2.4;
 
 export const LEVELS = freeze({
-  garage: freeze({ id: 'garage', title: 'ГАРАЖ · СИНЯЯ МАШИНА', rows: GARAGE_ROWS, spawn: freeze({ x: 9.3, z: 10.6, yaw: -0.75 }) }),
+  garage: freeze({ id: 'garage', title: 'ГАРАЖ · МАШИНА ВИТИ', rows: GARAGE_ROWS, spawn: freeze({ x: 9.3, z: 10.6, yaw: -0.75 }) }),
   home: freeze({ id: 'home', title: 'КВАРТИРА · НОЧЬ', rows: HOME_ROWS, spawn: freeze({ x: 12.5, z: 9.5, yaw: -Math.PI / 2 }) }),
 });
 // Where you come in through a connecting door.
@@ -172,7 +172,7 @@ export function activeLamps(id, lights = {}) {
 const T = (id, kind, x, z, y, label, extra = {}) => freeze({ id, kind, x, z, y, label, reach: 1.7, ...extra });
 export const THINGS = freeze({
   garage: freeze([
-    T('laptop', 'laptop', 1.62, 4.6, 1.05, 'НОУТБУК · НЫРНУТЬ В ПРОГРАММУ ШЛЮЗА', { program: 'garage', reach: 1.9 }),
+    T('laptop', 'laptop', 1.62, 4.6, 1.05, 'НОУТБУК · СТОРОЖ МАШИНЫ', { program: 'garage', reach: 1.9 }),
     T('sw-main', 'switch', 14.93, 9.0, 1.3, 'СВЕТ', { group: 'main' }),
     T('worklamp', 'switch', 3.2, 7.6, 1.5, 'РАБОЧАЯ ЛАМПА', { group: 'work' }),
     T('loftlamp', 'switch', 12.0, 1.2, 3.2, 'ЛАМПА НА АНТРЕСОЛИ', { group: 'loft' }),

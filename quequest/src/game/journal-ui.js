@@ -23,7 +23,7 @@ function panTo(el) {
   el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
 }
 
-export function createSkillTreeView(root, { getTree, onEnterRealm = () => {}, onClose = () => {}, sound = () => {} } = {}) {
+export function createSkillTreeView(root, { getTree, onEnterRealm = () => {}, onClose = () => {}, sound = () => {}, onCard = null } = {}) {
   if (!root) return { open() {}, close() {}, isOpen: () => false };
   let selected = null;
   function render() {
@@ -34,7 +34,7 @@ export function createSkillTreeView(root, { getTree, onEnterRealm = () => {}, on
     root.innerHTML = `
       <header class="tree__head"><div><small>QUEQUEST · ПРОКАЧКА</small><h2 id="treeTitle">Дерево навыков</h2></div>
         <p class="tree__legend"><span data-s="done">готово</span><span data-s="next">следующее</span><span data-s="locked">закрыто</span><span class="tree__pipkey">${FLOOR_NAMES.map((f) => `<i></i>${f}`).join(' ')}</span></p>
-        <button class="tree__close" type="button" aria-label="Закрыть дерево навыков">×</button></header>
+        ${onCard ? '<button class="tree__card" type="button">КАРТОЧКА ДАЙВЕРА</button>' : ''}<button class="tree__close" type="button" aria-label="Закрыть дерево навыков">×</button></header>
       <div class="tree__canvas" tabindex="0" aria-label="Ветки навыков. Перетащи, чтобы подвинуть.">
         ${tree.map((b) => `<section class="tree__branch" data-branch="${b.id}"><h3>${esc(b.title)}</h3><ol>${b.nodes.map((n) => `
           <li><button type="button" class="tree__node" data-id="${n.id}" data-state="${n.state}" data-kind="${n.kind}" aria-pressed="${n.id === selected}" aria-label="${esc(n.title)}: ${STATE_LABEL[n.state]}">
@@ -48,6 +48,7 @@ export function createSkillTreeView(root, { getTree, onEnterRealm = () => {}, on
         ${sel.kind === 'realm' && sel.state !== 'locked' ? `<button type="button" class="tree__enter" data-realm="${esc(sel.realm)}">ВОЙТИ В ПРОФЕССИЮ →</button>` : ''}</div>` : ''}
       </aside>`;
     root.querySelector('.tree__close').addEventListener('click', close);
+    root.querySelector('.tree__card')?.addEventListener('click', () => { close(); onCard?.(); });
     for (const b of root.querySelectorAll('.tree__node')) b.addEventListener('click', () => { selected = b.dataset.id; sound('ui-click'); const keep = root.querySelector('.tree__canvas'); const sl = keep.scrollLeft; const st = keep.scrollTop; render(); const c = root.querySelector('.tree__canvas'); c.scrollLeft = sl; c.scrollTop = st; });
     root.querySelector('.tree__enter')?.addEventListener('click', (e) => { close(); onEnterRealm(e.currentTarget.dataset.realm); });
     panTo(root.querySelector('.tree__canvas'));

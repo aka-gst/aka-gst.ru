@@ -11,6 +11,12 @@ export function getInteractionTarget(state) {
       ? { ...CHIP_SOCKET_TARGET, type: 'insert-python-chip', label: 'Вставить чип в разъём руки' }
       : { x: 850, y: 535, type: 'pick-python-chip', label: 'Поднять чип' };
   }
+  // 19.0 · the first week: day 1 the green button, then the terminal.
+  if (state.warehouse?.week && ['machine', 'condition'].includes(state.scene)) {
+    if (state.warehouse.week === 'button') return { ...LOOSE_START_BUTTON, type: 'press-start-button', label: 'Нажать зелёную кнопку «ПУСК»' };
+    const label = { copy: 'Терминал руки · скопировать строчку', assemble: 'Терминал руки · собрать строчку', hand: 'Терминал руки · написать правило', auto: 'Терминал руки · запустить всю линию' }[state.warehouse.week];
+    return { ...MACHINE_TERMINAL, type: 'open-machine', label };
+  }
   if (state.scene === 'machine' && state.checkpoint === 'shift2' && state.warehouse.day2 === 'button') {
     return { ...LOOSE_START_BUTTON, type: 'press-start-button', label: 'Нажать зелёную кнопку' };
   }

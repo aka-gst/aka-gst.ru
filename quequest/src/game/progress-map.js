@@ -16,12 +16,14 @@ const ERA_NODES = Object.freeze([
 ]);
 
 // What to do in the world to open a key. Never a bare keyword.
+// 19.0: the first week (week.js) — print on day 2, if on day 4, for on day
+// 5; while and def live in the professions later.
 export const WORLD_GATES = Object.freeze({
-  print: 'Скажи руке «wake» словами — день 2, терминал у руки',
-  if: 'Научи руку брать только белые ящики — день 2',
-  for: 'Разгрузи фуру вечером дня 2: «для каждого ящика»',
-  while: 'Переживи ночную смену: рука работает одна, пока есть ящики',
-  func: 'Собери один маршрут для двух линий — день 3',
+  print: 'Скопируй строчку с листка электрика — день 2',
+  if: 'Напиши сам правило «только белые» — день 4',
+  for: 'Сделай, чтобы вся линия шла сама — день 5',
+  while: 'Позже — в профессиях, после первой недели',
+  func: 'Позже — в профессиях, после первой недели',
 });
 export function worldGate(missing = []) {
   const uniq = [...new Set(missing.map((k) => WORLD_GATES[k] ?? k))];
@@ -29,9 +31,10 @@ export function worldGate(missing = []) {
 }
 
 // Who you become in each realm (career-worlds SKILL_ROLES), short for nodes.
-export const PROFESSION_NAMES = Object.freeze({ automation: 'Автоматизатор', vehicle: 'Автохакер', security: 'Защитник', web: 'Создатель сайтов', ai: 'Тренер ИИ', systems: 'Спасатель систем', lowlevel: 'Знаток железа' });
+export const PROFESSION_NAMES = Object.freeze({ automation: 'Инженер', vehicle: 'Хакер', security: 'Сетевик', web: 'Создатель сайтов', ai: 'Тренер ИИ', systems: 'Спасатель города', lowlevel: 'Знаток железа' });
 
 import { floorsOf } from './mastery.js';
+import { isWeekCheckpoint, weekDayOf, weekPin, WEEK, FIRED } from './week.js';
 
 const FLOOR_NAMES = Object.freeze(['ТЫК', 'РУЧКИ', 'КОД', 'С НУЛЯ']);
 export { FLOOR_NAMES };
@@ -63,7 +66,7 @@ export function pythonSkills({ learning = {}, warehouse = {}, checkpoint = 'star
 
 function nodeState(done, prevDone) { return done ? 'done' : (prevDone ? 'next' : 'locked'); }
 
-export function skillTree({ learning = {}, warehouse = {}, checkpoint = 'start', engine = { era: 0, toNext: 0 }, realms = [], realmWins = [], mastery = {} } = {}) {
+export function skillTree({ learning = {}, warehouse = {}, checkpoint = 'start', engine = { era: 0, toNext: 0 }, realms = [], realmWins = [], mastery = {}, availability = null } = {}) {
   const py = pythonSkills({ learning, warehouse, checkpoint, mastery });
   let prev = true;
   const python = py.map((s) => {
@@ -83,15 +86,21 @@ export function skillTree({ learning = {}, warehouse = {}, checkpoint = 'start',
   const wins = new Set(realmWins);
   const professions = realms.map((r) => {
     const missing = (r.gate ?? []).filter((k) => !learning[{ print: 'printUnlocked', if: 'ifUnlocked', for: 'forUnlocked', while: 'whileUnlocked', func: 'funcUnlocked' }[k]]);
+    // 19.0: the professions screen may say itself whether a realm is open
+    // (career-worlds.js realmAvailability); otherwise the learning gates.
+    let av = null;
+    try { av = typeof availability === 'function' ? availability(r) : null; } catch { av = null; }
+    const open = av && typeof av === 'object' ? Boolean(av.ok ?? av.open ?? av.available) : (typeof av === 'boolean' ? av : !missing.length);
+    const avGate = av && typeof av === 'object' ? (av.gate ?? av.reason ?? av.why ?? av.text) : null;
     return {
-      id: `realm-${r.id}`, realm: r.id, kind: 'realm', icon: r.glyph ?? '◇', title: PROFESSION_NAMES[r.id] ?? r.title, what: `${r.title} · ${r.subtitle ?? ''}`,
-      state: wins.has(r.id) ? 'done' : (missing.length ? 'locked' : 'next'),
-      gate: missing.length ? worldGate(missing) : 'Открыто — заходи',
+      id: `realm-${r.id}`, realm: r.id, kind: 'realm', icon: r.glyph ?? '◇', title: r.role ?? PROFESSION_NAMES[r.id] ?? r.title, what: `${r.title} · ${r.subtitle ?? ''}`,
+      state: wins.has(r.id) ? 'done' : (open ? 'next' : 'locked'),
+      gate: open ? 'Открыто — заходи' : (avGate || worldGate(missing) || 'Пока закрыто'),
     };
   });
   return [
     { id: 'engine', title: 'ГЛАВНЫЙ СЮЖЕТ · ПИШЕШЬ ДВИЖОК', nodes: engineNodes },
-    { id: 'python', title: 'PYTHON · ЧЕМУ НАУЧИЛАСЬ РУКА', nodes: python },
+    { id: 'python', title: 'ЧЕМУ НАУЧИЛАСЬ РУКА', nodes: python },
     { id: 'realms', title: 'ПРОФЕССИИ · ДВЕРИ В МИРЫ', nodes: professions },
   ];
 }
@@ -100,7 +109,7 @@ export function skillTree({ learning = {}, warehouse = {}, checkpoint = 'start',
 
 const MAIN = Object.freeze([
   { id: 'q-manual', title: 'Не твой участок', giver: 'Начальник', goal: 'Перенеси три ящика на ленту и подойди к начальнику.', short: 'Перенеси 3 ящика на ленту', reward: '60 ₽', doneAt: ['chip', 'machine', 'red-crate', 'reward', 'shift2', ...AFTER_DAY2] },
-  { id: 'q-chip', title: 'Мёртвая рука 07', giver: 'Чип с пола', goal: 'Вставь сервисный чип в руку — пусть таскает сама.', short: 'Вставь чип в руку 07', reward: '120 ₽ · рука работает', doneAt: ['reward', 'shift2', ...AFTER_DAY2] },
+  { id: 'q-chip', title: 'Мёртвая рука 07', giver: 'Чип с пола', goal: 'Вставь сервисный чип в руку — пусть таскает сама.', short: 'Вставь чип в руку 07', reward: '120 ₽ · рука работает', doneAt: ['machine', 'red-crate', 'reward', 'shift2', ...AFTER_DAY2] },
   { id: 'q-word', title: 'Слово для руки', giver: 'Терминал руки', goal: 'Нажми зелёную кнопку, а потом скажи руке «wake» словами.', short: 'Скажи руке wake словами', reward: 'навык print', done: (s) => Boolean(s.learning.printUnlocked) },
   { id: 'q-torn', title: 'Кто разрешил?!', giver: 'Начальник', goal: 'Кнопку оторвали. Заставь руку работать без неё.', short: 'Рука без кнопки: снова скажи wake', reward: '60 ₽', done: (s) => s.warehouse.day2 === 'done' || after(s.checkpoint, AFTER_DAY2) },
   { id: 'q-white', title: 'Только белые', giver: 'Начальник по рации', goal: 'Придумай правило: белые — брать, красные — оставить. Сначала кнопками, потом if.', short: 'Только белые: придумай правило', reward: 'навык if · без штрафа', done: (s) => Boolean(s.learning.ifUnlocked) },
@@ -110,24 +119,41 @@ const MAIN = Object.freeze([
   { id: 'q-engine', title: 'Движок', giver: 'Ты · из будущего', goal: 'Пиши движок от Wolfenstein до Half-Life. Только на максимуме виден финальный босс.', short: 'Пиши движок дальше', reward: 'новая эпоха мира', done: () => false },
 ]);
 
-const SIDE = Object.freeze([
-  { id: 's-door', title: 'Только для мееенеджеров', giver: 'Дверь начальника', goal: 'Попробуй войти в кабинет начальника. Тебя не пустят — но попробуй.', reward: 'улыбка', done: (s) => Boolean(s.flags.doorGag) },
-  { id: 's-pocket', title: 'Сувенир', giver: 'Грузчик', goal: 'Подними оторванную начальником кнопку. На память.', reward: 'кнопка в кармане', done: (s) => s.warehouse.button === 'pocket', available: (s) => ['torn', 'pocket'].includes(s.warehouse.button) },
-  { id: 's-clock', title: 'Обед в 11:00', giver: 'Грузчик', goal: 'Грузчик обедает с утра. Посмотри на часы у него над головой.', reward: '—', done: (s) => Boolean(s.flags.sawClock) },
-  { id: 's-sorter', title: 'Поиграть с правилом', giver: 'Сортировочный цех', goal: 'Бонус: собери правила для разных ящиков без штрафов.', reward: 'опыт', done: () => false, available: (s) => Boolean(s.learning.ifUnlocked) },
+// 19.0 · the first week: one quest a day, then Витя's garage.
+const weekAt = (s) => weekDayOf(s.checkpoint);
+const weekPaid = (s, day) => s.checkpoint !== 'start' && s.checkpoint !== 'warehouse' && (weekAt(s) > day || (weekAt(s) === day && s.checkpoint === WEEK[day - 1].pay));
+const MAIN_WEEK = Object.freeze([
+  { id: 'q-manual', title: 'Не твой участок', giver: 'Начальник', goal: 'Перенеси три ящика на ленту и подойди к начальнику.', short: 'Перенеси 3 ящика на ленту', reward: '60 ₽', done: (s) => isWeekCheckpoint(s.checkpoint) },
+  { id: 'q-chip', title: 'Чип за ящиком', giver: 'Звук «дзынь»', goal: 'Загляни за ящик, подними чип — и вставь его в руку 07.', short: 'Чип: загляни за ящик', reward: 'рука 07 оживает', done: (s) => isWeekCheckpoint(s.checkpoint) && !(s.checkpoint === 'd1-button' && s.scene === 'chip') },
+  { id: 'q-button', title: 'День 1 · Кнопка «ПУСК»', giver: 'Электрик', goal: 'Нажми зелёную кнопку — рука сама перетаскает ящики.', short: 'Нажми зелёную кнопку «ПУСК»', reward: 'зарплата (урезанная)', done: (s) => weekPaid(s, 1) },
+  { id: 'q-copy', title: 'День 2 · Листок электрика', giver: 'Электрик', goal: 'Кнопку оторвали. Перенеси строчку с листка в терминал: выдели, скопируй, вставь.', short: 'Скопируй строчку с листка', reward: 'зарплата', done: (s) => weekPaid(s, 2) },
+  { id: 'q-assemble', title: 'День 3 · Порванный листок', giver: 'Начальник по рации', goal: 'Только белые! Собери порванную строчку из кусков, одно слово впиши сам.', short: 'Собери порванную строчку', reward: 'зарплата', done: (s) => weekPaid(s, 3) },
+  { id: 'q-hand', title: 'День 4 · Без листка', giver: 'Начальник', goal: 'Листка нет. Напиши правило «если ящик белый — возьми» сам.', short: 'Напиши правило сам', reward: 'премия', done: (s) => weekPaid(s, 4) },
+  { id: 'q-auto', title: 'День 5 · Вся линия — сама', giver: 'Начальник', goal: 'Фура. Сделай, чтобы рука сама прошла всю линию: для каждого ящика — твоё правило.', short: 'Сделай, чтобы линия шла сама', reward: 'расчёт', done: (s) => s.checkpoint === 'fired' },
+  { id: FIRED.questId, title: FIRED.questTitle, giver: 'Витя · по телефону', goal: 'Холдинг «ТИСКИ», которому принадлежит завод, по ночам вскрывает машины. У Вити в гараже вскрывают машину. Дверь в гараж — из квартиры.', short: FIRED.questTitle, reward: 'первая профессия', done: (s) => Boolean(s.flags.vityaGarage) },
+  { id: 'q-engine', title: 'Движок', giver: 'Ты · из будущего', goal: 'Пиши движок от Wolfenstein до Half-Life. Только на максимуме виден финальный босс.', short: 'Пиши движок дальше', reward: 'новая эпоха мира', done: () => false },
 ]);
 
-export function questLog({ learning = {}, warehouse = {}, checkpoint = 'start', flags = {}, realms = [], realmWins = [], realmPay = 300 } = {}) {
-  const s = { learning, warehouse, checkpoint, flags };
+const SIDE = Object.freeze([
+  { id: 's-door', title: 'Только для мееенеджеров', giver: 'Дверь начальника', goal: 'Попробуй войти в кабинет начальника. Тебя не пустят — но попробуй.', reward: 'улыбка', done: (s) => Boolean(s.flags.doorGag) },
+  { id: 's-pocket', title: 'Сувенир', giver: 'Грузчик', goal: 'Подними оторванную начальником кнопку. На память.', reward: 'кнопка в кармане', done: (s) => s.warehouse.button === 'pocket' || Boolean(s.flags.buttonPocket), available: (s) => ['torn', 'pocket'].includes(s.warehouse.button) || weekAt(s) >= 2 || Boolean(s.flags.buttonPocket) },
+  { id: 's-clock', title: 'Обед в 11:00', giver: 'Грузчик', goal: 'Грузчик обедает с утра. Посмотри на часы у него над головой.', reward: '—', done: (s) => Boolean(s.flags.sawClock) },
+  { id: 's-sorter', title: 'Поиграть с правилом', giver: 'Сортировочный цех', goal: 'Бонус: собери правила для разных ящиков без штрафов.', reward: 'опыт', done: () => false, available: (s) => Boolean(s.learning.ifUnlocked), legacyOnly: true },
+]);
+
+export function questLog({ learning = {}, warehouse = {}, checkpoint = 'start', flags = {}, realms = [], realmWins = [], realmPay = 300, scene = 'warehouse', arm = {}, legacy = false } = {}) {
+  const s = { learning, warehouse, checkpoint, flags, scene, arm };
+  // 19.0: the first week has its own main line unless ?legacy=1.
+  const week = !legacy && (isWeekCheckpoint(checkpoint) || ['start', 'warehouse'].includes(checkpoint));
   let found = false;
-  const main = MAIN.map((q) => {
+  const main = (week ? MAIN_WEEK : MAIN).map((q) => {
     const done = q.done ? q.done(s) : q.doneAt.includes(checkpoint);
     // The engine is a thread that runs through the whole game: always open.
     const status = done ? 'done' : (q.id === 'q-engine' || !found ? 'active' : 'locked');
     if (!done && q.id !== 'q-engine') found = true;
     return { ...q, status, done: undefined, doneAt: undefined };
   });
-  const side = SIDE.map((q) => {
+  const side = SIDE.filter((q) => !(week && q.legacyOnly)).map((q) => {
     const done = q.done(s);
     const status = done ? 'done' : (q.available && !q.available(s) ? 'locked' : 'active');
     return { ...q, status, done: undefined, available: undefined };
@@ -142,8 +168,13 @@ export function questLog({ learning = {}, warehouse = {}, checkpoint = 'start', 
     { id: 'f-pythonio', title: 'Питонио · сортировочный цех', giver: 'Компьютер дома', goal: 'Заказы на сортировку: руками, таблицей правил или своим def route().', reward: 'за каждый заказ' },
     { id: 'f-jumpkill', title: 'JUMP KILL · 13 уровней', giver: 'Автомат в гараже', goal: 'Пройди арену уровень за уровнем.', reward: 'рубли за уровень' },
     { id: 'f-locks', title: 'Замки Сани', giver: 'Саня, гараж', goal: 'Вскрой замки на доске: штифты руками, потом скриптом.', reward: 'детали и рубли' },
-  ].map((q) => ({ ...q, status: garageOpen ? 'active' : 'locked', gate: garageOpen ? '' : 'Откроется в гараже: научи руку брать только белые (день 2)' }));
-  const current = main.find((q) => q.status === 'active' && q.id !== 'q-engine') ?? main[main.length - 1];
+  ].map((q) => ({ ...q, status: garageOpen ? 'active' : 'locked', gate: garageOpen ? '' : (week ? 'Откроется в гараже у Вити — после первой недели' : 'Откроется в гараже: научи руку брать только белые (день 2)') }));
+  let current = main.find((q) => q.status === 'active' && q.id !== 'q-engine') ?? main[main.length - 1];
+  // The pinned line says what to do right now, not just the quest's name.
+  if (week && isWeekCheckpoint(checkpoint) && current) {
+    const pin = weekPin({ checkpoint, scene, arm, warehouse }, flags);
+    if (pin) current = { ...current, short: pin };
+  }
   return { tabs: { main, side, money, freelance }, current };
 }
 

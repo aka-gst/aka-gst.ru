@@ -236,7 +236,7 @@ export function lockOpensFor(source, who, code) {
 const TAG = (id, x, z, y, title, extra = {}) => freeze({ id, x, z, y, title, ...extra });
 export const AR_TAGS = freeze({
   garage: freeze([
-    TAG('car', 6.0, 6.5, 2.05, 'ШЛЮЗ · СИНЯЯ МАШИНА', { thing: 'car', edit: 'gateway', kind: 'gateway' }),
+    TAG('car', 6.0, 6.5, 2.05, 'СТОРОЖ · МАШИНА ВИТИ', { thing: 'car', edit: 'gateway', kind: 'gateway' }),
     TAG('worklamp', 3.2, 7.6, 1.95, 'РАБОЧАЯ ЛАМПА', { thing: 'worklamp', edit: 'lamp', kind: 'lamp', group: 'work' }),
     TAG('sw-main', 14.9, 9.0, 1.65, 'СВЕТ · ГАРАЖ', { thing: 'sw-main', kind: 'switch', group: 'main' }),
     TAG('loftlamp', 12.0, 1.2, 3.45, 'ЛАМПА · АНТРЕСОЛЬ', { thing: 'loftlamp', kind: 'switch', group: 'loft' }),
@@ -286,11 +286,11 @@ export function tagReadout(tag, ctx = {}) {
     case 'switch':
       return { lines: ['IF SWITCH: LIGHT = "ON"', `SWITCH = ${lit(tag.group) ? 'TRUE' : 'FALSE'}`], tone: 'info' };
     case 'radio':
-      return { lines: [`RADIO = ${ws.radio ? 'TRUE' : 'FALSE'}`, 'SRC = "RADIO" → ШЛЮЗ'], tone: 'info' };
+      return { lines: [`RADIO = ${ws.radio ? 'TRUE' : 'FALSE'}`, 'откуда = "радио" → СТОРОЖ'], tone: 'info' };
     case 'rolldoor':
       return { lines: [`DOOR = "${ws.doors?.rolldoor ? 'OPEN' : 'CLOSED'}"`, 'SRC = "AIR" ЛЕТИТ С УЛИЦЫ'], tone: 'info' };
     case 'laptop':
-      return { lines: ['E — НЫРНУТЬ В ПРОГРАММУ', 'ИЛИ ЧИНИ ШЛЮЗ ПРЯМО ЗДЕСЬ'], tone: 'info' };
+      return { lines: ['E — НЫРНУТЬ В ПРОГРАММУ', 'ИЛИ ЧИНИ СТОРОЖА ПРЯМО ЗДЕСЬ'], tone: 'info' };
     case 'lock': {
       if (fixed.has('lock')) return { lines: ['IF CODE == "0310": ОТКРЫТЬ', 'ЗАМОК ДЕРЖИТ'], tone: 'ok' };
       return { lines: [codeLine(ctx.codes?.lock ?? AR_TASKS.lock.starter), 'ОТКРЫВАЕТ ВСЕМ · E — ПОЧИНИТЬ'], tone: 'bad' };

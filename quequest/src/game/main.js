@@ -1,3 +1,6 @@
+// 19.2 · the shared site login (/akkaunty) installs window.QQ_PROFILE_ADAPTER
+// before anything below resolves it — only on aka-gst.ru / ?akk=1 (akkaunty-adapter.js).
+import './akkaunty-adapter.js';
 import { createInput } from './input.js';
 import { DOOR_SLAM_AT } from './chip-scene.js';
 import { createCompanion } from './companion.js?v=center-virus-1';
@@ -26,9 +29,13 @@ import { createCityChronicle } from './city-chronicle.js?v=chronicle-1';
 import { createCityWeave } from './city-weave.js?v=weave-1';
 import { createCityThreads } from './city-threads.js?v=threads-1';
 import { createQuestGuild } from './quest-guild.js?v=guild-1';
-import { CAREER_REALMS, createCareerWorlds, foundationStatus, characterSheet, heldRealmDay, nextRealmDay } from './career-worlds.js?v=career-10';
+import { CAREER_REALMS, createCareerWorlds, foundationStatus, characterSheet, heldRealmDay, nextRealmDay } from './career-worlds.js?v=career-11';
+// 19.0: optional exports of the professions screen (realmAvailability,
+// enterGarageQuest); read through the namespace so this works before and
+// after the garage/professions branch lands.
+import * as careerApi from './career-worlds.js?v=career-11';
 import { deviceFromQuery } from './vr-devices.js';
-import { createFpWorld } from './fp-world.js?v=fp-world-7';
+import { createFpWorld } from './fp-world.js?v=fp-world-8';
 import { createPythonioBridge, markPythonioOrder } from './pythonio-bridge.js';
 import { createBlackIceBridge } from './blackice-bridge.js';
 import { markLabyrinthFloor, labyrinthCleared, LABYRINTH_FLOORS } from './labyrinth.js';
@@ -47,7 +54,19 @@ import { onReleaseKeys, releaseAllKeys } from './key-guard.js';
 import { createTouchControls, isTouchDevice } from './touch-controls.js';
 import { drawFace, faceIdFor } from './faces.js';
 import { masteryEvent, listenForSkills, pythonioWay } from './mastery.js';
+import { consoleGreeting, sideCheck, impossibleReasons, isAutomationContext, duelLooksAutomated, isHonestSpeedrun, MESSAGES } from './tamper.js';
+import { evaluateBadges, earnBadge, badgeById, badgeGrid, RARITY } from './achievements.js';
+import { createHackPolygon } from './hack-ui.js';
+import { pythonioDone } from './pythonio-bridge.js';
+import { tasterFinished } from './career-tasters.js';
 import { applyBuildLabels, BUILD } from './version.js';
+import { createRing } from './duel-ui.js';
+import { resolveAdapter, profileSnapshot, applySnapshot } from './profile-store.js';
+import { createAccountUi } from './account-ui.js';
+// 19.0 · the first week: five days, button → fired → Витя's garage.
+import { isWeekCheckpoint, weekDayOf, weekClock, weekPin, payLedger, legacyFromQuery, weekFromLegacy, BOSS_END, BOSS_MORNING, HALL_MORNING, EVENING, MORNING, FIRED, CORP, WEEK_PAY_CHECKPOINTS } from './week.js';
+import { createPayCard, createWeekPin } from './week-ui.js';
+import { firedHandoff } from './week-hooks.js';
 import { createFactoryView, toWorld as hallToWorld, hallAimPoints } from './factory-view.js';
 import { createSorterBay } from './sorter-bay.js?v=sorter-1';
 import { createContractBoard } from './contract-board.js?v=contracts-1';
@@ -55,7 +74,7 @@ import { createSystemSandbox } from './system-sandbox.js?v=sandbox-1';
 import { createPythonContracts } from './python-contracts.js?v=python-contracts-1';
 import { createEngineerCampus } from './engineer-campus.js?v=campus-6';
 import {
-  loadCampusProfile, saveCampusProfile, markContractSolved, markPythonContractSolved, markSandboxSolved, markModelDatasetSolved, markCampusMission, markFactoryTrialSolved, markSimnetIncidentSolved, markNexusResearch, markNexusMission, markNexusRemix, markNexusTrialSolved, markNexusCompanionLesson, markNexusCompanionBuild, markDeskIncidentSolved, markWorldStorySolved, markWorldShiftSolved, markCommonsBlueprint, markCommonsDay, markCommonsCode, markOperationsArc, markOperationsRollback, markOperationsShift, markOperationsCode, markChronicleArc, markChronicleWindow, markChronicleCode, markWeaveArc, markWeaveSeason, markWeaveCode, markThreadsEpisode, markThreadsCycle, markThreadsCode, markGuildQuest, markGuildJob, markGuildRaid, markGuildRealm, markLabComplete,
+  loadCampusProfile, saveCampusProfile, createCampusProfile, CAMPUS_PROFILE_KEY, markContractSolved, markPythonContractSolved, markSandboxSolved, markModelDatasetSolved, markCampusMission, markFactoryTrialSolved, markSimnetIncidentSolved, markNexusResearch, markNexusMission, markNexusRemix, markNexusTrialSolved, markNexusCompanionLesson, markNexusCompanionBuild, markDeskIncidentSolved, markWorldStorySolved, markWorldShiftSolved, markCommonsBlueprint, markCommonsDay, markCommonsCode, markOperationsArc, markOperationsRollback, markOperationsShift, markOperationsCode, markChronicleArc, markChronicleWindow, markChronicleCode, markWeaveArc, markWeaveSeason, markWeaveCode, markThreadsEpisode, markThreadsCycle, markThreadsCode, markGuildQuest, markGuildJob, markGuildRaid, markGuildRealm, markLabComplete,
 } from './campus-profile.js?v=campus-profile-7';
 import {
   createFakeGateway,
@@ -68,12 +87,12 @@ import {
   getFirstActionGuide,
   getNearbyAction,
   stepGame,
-} from './model.js?v=game-100';
+} from './model.js?v=game-190';
 import { renderGame } from './render.js?v=game-03';
 import { EXPLAIN_MODE_KEY, getAdaptiveCoach, getConceptBridge, getManualIncomeCopy, getSkillRecorderBeat, normalizeExplainMode } from './engagement-director.js?v=4';
-import { createCheckpointPersistence, loadCheckpoint } from './save.js?v=2';
+import { createCheckpointPersistence, loadCheckpoint } from './save.js?v=190';
 import { createTelemetry } from './telemetry.js';
-import { CHECKPOINTS, CRATE_PAY, REWARD_REVEAL_DURATION } from './config.js?v=game-162';
+import { CHECKPOINTS, CRATE_PAY, REWARD_REVEAL_DURATION } from './config.js?v=game-190';
 import { getSceneCameraTarget, getViewportTransform, screenToWorld } from './viewport.js?v=2';
 
 const canvas = document.querySelector('#gameCanvas');
@@ -144,9 +163,14 @@ const requestedCheckpoint = query.get('checkpoint');
 const showcaseChip = query.get('showcase') === 'chip';
 const showcaseManual = query.get('showcase') === 'manual';
 game.dataset.chipShowcase = showcaseChip ? 'true' : 'false';
+// 19.0: chapters 5–10 and the campus only open with ?legacy=1; without it
+// an old save lands on the matching day of the first week.
+const legacy = legacyFromQuery(location.search)
+  || Boolean(isLocal && requestedCheckpoint && CHECKPOINTS.includes(requestedCheckpoint) && !isWeekCheckpoint(requestedCheckpoint) && !['start', 'warehouse'].includes(requestedCheckpoint));
 const checkpoint = (isLocal && CHECKPOINTS.includes(requestedCheckpoint)) || requestedCheckpoint === 'start'
   ? { checkpoint: requestedCheckpoint }
   : (showcaseChip ? { checkpoint: 'chip' } : (showcaseManual ? { checkpoint: 'warehouse' } : loadCheckpoint()));
+if (!legacy && !showcaseChip && !showcaseManual) checkpoint.checkpoint = weekFromLegacy(checkpoint.checkpoint);
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const narrowViewport = window.matchMedia('(max-width: 760px)');
 const telemetry = createTelemetry({ enabled: isLocal });
@@ -186,6 +210,7 @@ const firstShift = createFirstShift(document.querySelector('#firstShift'), {
   gamerLine: (scene) => takeSlip(scene),
   onComplete: ({ delivered = 3, extra = 0, player = null } = {}) => {
     remember('quests', 'quest1');
+    if (!legacy) { weekChipIn({ delivered, extra, player }); return; }
     state = createCheckpointState('chip');
     state = { ...state, warehouse: { ...state.warehouse, wage: Math.max(state.warehouse.wage, (delivered + extra) * CRATE_PAY) } };
     lastScene = state.scene;
@@ -263,6 +288,27 @@ const hourDesk = createHourDesk(document.querySelector('#hourDesk'), {
     automationAcceptedAt = performance.now();
     persistence.save(state);
   },
+  // 19.0 · the first week: what you copied / assembled / wrote moves the arm.
+  onWeek: ({ step, result, hints }) => {
+    const queued = state.warehouse.crates.filter((crate) => crate.status === 'queued');
+    const move = (crate) => ({ type: 'arm.move', boxId: crate.id, targetId: 'pallet-a' });
+    let events = [];
+    if (step === 'copy') {
+      recordSkill('print', 'knobs', { stage: 2, key: 'print:copy' });
+      events = queued.filter((c) => c.kind === 'normal').map(move);
+    } else if (step === 'assemble' || step === 'hand') {
+      if (step === 'assemble') recordSkill('if', 'knobs', { stage: 2, key: 'if:assemble' });
+      else { recordSkill('if', 'code', { stage: hints ? 2 : 3, hints, key: 'if:hand' }); if (!hints) recordSkill('if', 'raw', { stage: 1, key: 'if:raw' }); }
+      events = queued.filter((c, i) => result.decisions?.[i]?.take).map(move);
+    } else if (step === 'auto') {
+      recordSkill('for', 'code', { stage: hints ? 2 : 3, hints, key: 'for:auto' });
+      events = (result.taken ?? []).map((i) => queued[i]).filter(Boolean).map(move);
+    }
+    state = applyGameAction(state, { type: 'week-command-accepted', events });
+    automationAcceptedAt = performance.now();
+    persistence.save(state);
+    factoryView.comment('code-ok');
+  },
   onClose: () => { canvas.focus?.({ preventScroll: true }); },
 });
 let lastRules = { white: 'take', red: 'leave' };
@@ -307,7 +353,7 @@ let engagementProgressAt = performance.now();
 let friendVisited = ['reward5', 'vika', 'reward6', 'virus', 'reward7', 'foundry', 'reward8', 'campus', 'ai-lab', 'reward9', 'llm-lab', 'reward10'].includes(checkpoint.checkpoint);
 let journalOpen = false;
 let exitOpen = false;
-const BLOCKING_OVERLAY_IDS = ['firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
+const BLOCKING_OVERLAY_IDS = ['deepRing','firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
 function isBlockingOverlayOpen() {
   return BLOCKING_OVERLAY_IDS.some((id) => !document.querySelector(`#${id}`)?.hidden);
 }
@@ -402,6 +448,24 @@ const automationFoundry = createAutomationFoundry(document.querySelector('#autom
   },
 });
 let campusProfile = loadCampusProfile();
+// 19.3 · hack awareness (canon §20, tamper.js): if someone hand-edited the save
+// (bad signature) or set an impossible value, restore the last good copy and
+// remember to tell them warmly + hand a secret badge. Runs even under e2e (the
+// hack e2e tests exactly this); the console greeting and inhuman-duel / debug
+// checks are the ones that stay quiet in automation.
+let tamperPending = null;
+(function checkProfileTamper() {
+  let raw = null; try { raw = localStorage.getItem(CAMPUS_PROFILE_KEY); } catch { raw = null; }
+  const chk = sideCheck(localStorage, CAMPUS_PROFILE_KEY, raw);
+  const rollback = () => { if (chk.shadow) { try { localStorage.setItem(CAMPUS_PROFILE_KEY, chk.shadow); } catch { /* private mode */ } campusProfile = loadCampusProfile(); } };
+  if (chk.status === 'tampered') { rollback(); tamperPending = 'seam'; return; }
+  if (chk.status === 'ok') {
+    const reasons = impossibleReasons(campusProfile);
+    if (reasons.length) { rollback(); tamperPending = 'impossible'; }
+  }
+  // 'unsigned' = an older save with no signature yet: it is signed on the save
+  // below (migration path), so a legit upgrade never false-positives.
+})();
 // Campaign checkpoints remain authoritative if optional local campus meta-progress
 // was cleared. Rebuild unlock facts without granting XP so account/import sync can
 // never relock content the player already finished in the story save.
@@ -466,8 +530,10 @@ function updateCampusProfile(action) {
   else if (action?.type === 'guild-raid') campusProfile = markGuildRaid(campusProfile, action.id, action.skills, action.credits, action.score, action.xp);
   else if (action?.type === 'guild-realm') campusProfile = markGuildRealm(campusProfile, action.id, action.score, action.skill, action.skillGain, action.xp, action.day);
   saveCampusProfile(campusProfile);
+  accountSaveSoon();
   syncCampusSkillJournal();
   campus?.refresh?.();
+  maybeEarnBadges();
   return campusProfile;
 }
 let campus;
@@ -704,11 +770,139 @@ const careerWorlds = createCareerWorlds(careerWorldsRoot, {
   // ЛИНИЯ 03 → «дальше — мастерская»: Pythonio takes the dive over.
   onDeeper: () => { const fromDive = careerWorlds.release(); if (!fromDive) careerWorlds.close(); pythonio.open({ fromDive }); },
 });
+// 19.1 · КАРТОЧКА ДАЙВЕРА и ринг «ТИСКОВ» (canon §19, duel-ui.js). The
+// profile store (profile-store.js) is the one seam for accounts: a page may
+// set window.QQ_PROFILE_ADAPTER before boot; logins are Сергей's part.
+const profileStore = resolveAdapter();
+var ringPlayer = null; // var: updateCampusProfile may run before this line (TDZ)
+// The player as the ring sees them: the in-game nick lives in the profile
+// (editable on the card); the account gives only the id and a default nick.
+const currentPlayer = () => (ringPlayer ? { ...ringPlayer, nick: campusProfile.duel?.nick || ringPlayer.nick } : null);
+function ringGate() {
+  if (legacy || state.checkpoint === 'fired' || loadFlags().vityaCalled || heldRealmDay(campusProfile, 'vehicle') >= 1) return { ok: true };
+  return { ok: false, reason: 'Ринг откроется после увольнения: Витя расскажет, где «ТИСКИ» меряются задачками. Для показа есть «ПОКАЗ» в главном меню.' };
+}
+function saveRingSnapshot() {
+  const id = ringPlayer?.id ?? 'local';
+  try {
+    const snap = profileSnapshot(campusProfile, { player: currentPlayer() });
+    profileStore.saveSnapshot(id, snap);
+    if (ringPlayer) profileStore.account?.publishCard?.(snap.card)?.catch?.(() => {});
+  } catch (err) { console.warn(err); }
+}
+// 19.2 · every profile change (fights, days, professions, duels) goes to the
+// account — debounced here and again in the adapter. localStorage is already
+// written by saveCampusProfile. A guest: nothing more to do.
+let accountTimer = 0;
+function accountSaveSoon() {
+  if (!ringPlayer) return;
+  clearTimeout(accountTimer);
+  accountTimer = setTimeout(saveRingSnapshot, 600);
+}
+function accountFlush(leaving) {
+  if (!ringPlayer) return;
+  clearTimeout(accountTimer);
+  saveRingSnapshot();
+  profileStore.flush({ leaving });
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') accountFlush(false); });
+addEventListener('pagehide', () => accountFlush(true));
+let accountUi = null;
+const ring = createRing(document.querySelector('#deepRing'), {
+  getProfile: () => campusProfile,
+  onProfile: (profile) => { updateCampusProfile({ type: 'replace', profile }); saveRingSnapshot(); careerWorlds.refresh?.(); },
+  onSound: (name) => audio.play(name),
+  getPlayer: currentPlayer,
+  canDuel: ringGate,
+  store: profileStore,
+  decorate: (node) => accountUi?.decorate(node),
+  onDuelEnd: (d) => onDuelEnd(d),
+  onForgedCode: () => {
+    campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), forger: true } };
+    saveCampusProfile(campusProfile);
+    showReflexToast({ kind: 'saved', kicker: MESSAGES.forger.kicker, thought: MESSAGES.forger.title, more: MESSAGES.forger.text }, 7000);
+    earnBadgeNow('forger');
+    maybeEarnBadges();
+  },
+});
+function openRing(view = 'card', opts = {}) {
+  releaseAllKeys('overlay');
+  if (document.pointerLockElement) document.exitPointerLock?.();
+  audio.unlock?.();
+  ring.open(view, opts);
+}
+// A signed-in player: load the account, merge it with what this browser has
+// (first login: the guest's progress goes INTO the account; another
+// account's browser: start from the account), save the merge back. Runs at
+// boot and again on login / when the service appears (event `qq:account`).
+let syncing = null;
+async function syncAccount() {
+  const player = await profileStore.getCurrentPlayer();
+  if (!player?.id) { ringPlayer = null; return; }
+  if (ringPlayer?.id === String(player.id)) return;
+  ringPlayer = { id: String(player.id), nick: player.nick ?? '', classId: player.classId ?? null };
+  const claim = await profileStore.claimLocal(ringPlayer.id);
+  const snap = await profileStore.loadSnapshot(ringPlayer.id);
+  let next = claim === 'replace' ? createCampusProfile() : campusProfile;
+  if (snap) next = applySnapshot(next, snap);
+  if (!next.duel?.nick) next = { ...next, duel: { ...(next.duel ?? {}), nick: player.nick } };
+  updateCampusProfile({ type: 'replace', profile: next });
+  saveRingSnapshot();
+  profileStore.flush();          // the merge goes up now, not after the debounce
+  careerWorlds.refresh?.();
+  ring.refresh?.();
+  accountUi?.refresh();
+}
+function syncAccountOnce() { if (!syncing) syncing = syncAccount().catch((err) => console.warn(err)).finally(() => { syncing = null; }); return syncing; }
+syncAccountOnce();
+addEventListener('qq:account', (e) => {
+  const d = e.detail ?? {};
+  if (d.type === 'login' || (d.type === 'service' && d.user && !ringPlayer)) syncAccountOnce();
+  if (d.type === 'logout') ringPlayer = null;
+  // Another device saved newer: its progress joins the live profile (grows only).
+  if (d.type === 'remote' && d.snapshot && ringPlayer) updateCampusProfile({ type: 'replace', profile: applySnapshot(campusProfile, d.snapshot) });
+});
+accountUi = createAccountUi(document.body, {
+  account: profileStore.account,
+  getProfile: () => campusProfile,
+  getPlayer: currentPlayer,
+  onProfile: (profile) => { updateCampusProfile({ type: 'replace', profile }); saveRingSnapshot(); },
+  onSound: (name) => audio.play(name),
+  onChange: () => ring.refresh?.(),
+});
+accountUi.decorate(document.querySelector('#startPanel'));
+document.querySelector('#careerRing')?.addEventListener('click', () => { audio.play('ui-click'); openRing('card'); });
+document.querySelector('#startDuelDemo')?.addEventListener('click', () => { telemetry.mark('ring-demo'); openRing('card', { demo: true }); });
+
+// 19.3 · «Взломай меня» polygon (hack-ui.js, polygon.js, canon §20).
+const hackPolygon = createHackPolygon(document.querySelector('#hackPolygon'), {
+  getProfile: () => campusProfile,
+  onProfile: (profile) => { updateCampusProfile({ type: 'replace', profile }); saveRingSnapshot(); },
+  onSound: (name) => audio.play(name),
+  onBadge: (id) => earnBadgeNow(id),
+  getNick: () => campusProfile.duel?.nick || currentPlayer()?.nick || 'Дайвер',
+});
+function openHackPolygon(view = 'polygon') {
+  releaseAllKeys('overlay');
+  if (document.pointerLockElement) document.exitPointerLock?.();
+  audio.unlock?.();
+  telemetry.mark(`hack-${view}`);
+  hackPolygon.open(view);
+}
+document.querySelector('#openHackPolygon')?.addEventListener('click', () => { audio.play('ui-click'); openHackPolygon('polygon'); });
+document.querySelector('#reportHole')?.addEventListener('click', () => { audio.play('ui-click'); openHackPolygon('report'); });
+// Витя tells about the ring once, the first time the professions open after the firing.
+new MutationObserver(() => {
+  if (careerWorldsRoot.hidden || !ringGate().ok || loadFlags().ringTold) return;
+  setFlag('ringTold');
+  showReflexToast({ kind: 'saved', kicker: 'СОСЕД ВИТЯ', thought: '«У ТИСКОВ стажёры по вечерам меряются на ринге — задачками».', more: 'Решил быстро — получил баф. Кнопка «⚔ РИНГ · КАРТОЧКА» — наверху.' }, 6500);
+}).observe(careerWorldsRoot, { attributes: true, attributeFilter: ['hidden'] });
+
 // Шаг 2: Pythonio as the depth of AUTO (pythonio-bridge.js, games/pythonio/).
 // Its orders pay into the same profile (AUTO branch, XP) and wallet, once per order.
 const pythonio = createPythonioBridge(document.body, {
   getLearning: () => state.learning,
-  getPlayer: () => getCampusRank(campusProfile.xp ?? 0).name,
+  getPlayer: () => (careerApi.plainRank ?? ((n) => n))(getCampusRank(campusProfile.xp ?? 0).name),
   getProfile: () => campusProfile,
   getWallet: () => state.warehouse?.wage ?? 0,
   getLevel: () => characterSheet(campusProfile, state.learning).skills.find((k) => k.id === 'automation')?.level ?? 0,
@@ -728,7 +922,7 @@ const pythonio = createPythonioBridge(document.body, {
 // JUMP KILL · Лабиринт (blackice-bridge.js, labyrinth.js, games/blackice/):
 // a cleared level pays XP and rubles once, and counts in the «Лабиринт» stat.
 const blackice = createBlackIceBridge(document.body, {
-  getPlayer: () => getCampusRank(campusProfile.xp ?? 0).name,
+  getPlayer: () => (careerApi.plainRank ?? ((n) => n))(getCampusRank(campusProfile.xp ?? 0).name),
   getProfile: () => campusProfile,
   getWallet: () => state.warehouse?.wage ?? 0,
   onFloor: (msg) => {
@@ -750,6 +944,103 @@ document.querySelector('#guildWorldsOpen').addEventListener('click', () => { car
 const FLAGS_KEY = 'quequest.flags.v1';
 function loadFlags() { try { return JSON.parse(localStorage.getItem(FLAGS_KEY) || '{}') || {}; } catch { return {}; } }
 function setFlag(name) { const f = loadFlags(); if (f[name]) return; f[name] = true; try { localStorage.setItem(FLAGS_KEY, JSON.stringify(f)); } catch { /* private mode */ } }
+
+// ---------------------------------------------------------------- 19.3 · ЗНАЧКИ
+// Deeds the profile can't say on its own (week flags, reflexes, class).
+function badgeFacts() {
+  const flags = loadFlags();
+  const rr = (typeof reflexRecord === 'object' && reflexRecord) || {};
+  return {
+    fired: state.checkpoint === 'fired',
+    weekDay: weekDayOf(state.checkpoint),
+    heldDay: heldRealmDay(campusProfile, 'vehicle'),
+    ordersDone: pythonioDone(campusProfile),
+    tasters: Object.fromEntries(['security', 'web', 'ai', 'systems', 'lowlevel'].map((id) => [id, tasterFinished(campusProfile, id)])),
+    reflexes: { save: Boolean(rr.reflexes?.save), crate: Boolean(rr.reflexes?.crate), pattern: Boolean(rr.reflexes?.pattern) },
+    meaningHeard: Object.values(rr.heard ?? {}).some((l) => Number(l) > 0),
+    classJoined: Boolean(currentPlayer()?.classId || flags.classJoined),
+    cardPublished: Boolean(profileStore.account?.showCard?.()),
+  };
+}
+const RARITY_RU = { common: 'ОБЫЧНЫЙ', rare: 'РЕДКИЙ', epic: 'ЛЕГЕНДАРНЫЙ', secret: 'СЕКРЕТНЫЙ' };
+function toastBadge(b) {
+  if (!b) return;
+  showReflexToast({ kind: 'saved', kicker: `ЗНАЧОК · ${RARITY_RU[b.rarity] ?? ''}`, thought: `${b.glyph} ${b.title}`, more: b.how }, 5200);
+  audio.play('duel-buff');
+}
+let evaluatingBadges = false;
+function applyBadgeProofs(profile, earned) {
+  let p = profile;
+  for (const b of earned) if (b.proof) { const ev = masteryEvent(p, b.proof); if (ev.first) p = ev.profile; }
+  return p;
+}
+// Earn any newly-satisfied badges from the live state. Guarded so the save it
+// triggers can't recurse through updateCampusProfile.
+function maybeEarnBadges(extra = {}) {
+  if (evaluatingBadges) return [];
+  evaluatingBadges = true;
+  try {
+    const { profile, earned } = evaluateBadges(campusProfile, { ...badgeFacts(), ...extra });
+    if (!earned.length) return [];
+    campusProfile = applyBadgeProofs(profile, earned);
+    saveCampusProfile(campusProfile);
+    accountSaveSoon();
+    syncCampusSkillJournal();
+    campus?.refresh?.();
+    ring?.refresh?.();
+    for (const b of earned) toastBadge(b);
+    return earned;
+  } finally { evaluatingBadges = false; }
+}
+// Earn one badge by id directly (polygon flags, hacker secrets).
+function earnBadgeNow(id, { toast = true } = {}) {
+  const r = earnBadge(campusProfile, id);
+  if (!r.first) return false;
+  const b = badgeById(id);
+  campusProfile = applyBadgeProofs(r.profile, b ? [b] : []);
+  saveCampusProfile(campusProfile);
+  accountSaveSoon();
+  ring?.refresh?.();
+  if (toast) toastBadge(b);
+  return true;
+}
+// 19.3 · hack awareness: tell the player warmly, roll back, hand a secret badge.
+function showTamperMessage(kind) {
+  const M = kind === 'impossible' ? MESSAGES.impossible : MESSAGES.seam;
+  campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), ...(kind === 'impossible' ? { tooGood: true } : { seam: true }) } };
+  saveCampusProfile(campusProfile);
+  showReflexToast({ kind: 'saved', kicker: M.kicker, thought: M.title, more: M.text }, 8000);
+  audio.play('alarm');
+  if (M.badge) earnBadgeNow(M.badge);
+  accountSaveSoon();
+}
+// After a duel: notice inhuman timings (doesn't count + badge «Автокликер»),
+// an honest sub-second answer (badge), and a classmate ghost beaten. Quiet in
+// automation so the e2e fast-mode runs (ms≈0) are never treated as bots.
+function onDuelEnd({ mode, outcome, results = [], timings = [], foe = {} } = {}) {
+  if (isAutomationContext()) return {};
+  let touched = false;
+  const setHack = (patch) => { campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), ...patch } }; touched = true; };
+  if (mode === 'duel' && outcome === 'win' && foe?.classmate) setHack({ classBeat: true });
+  if (results.some((r, i) => r.correct && isHonestSpeedrun({ ms: timings[i]?.ms }))) setHack({ speedrun: true });
+  if (duelLooksAutomated(timings)) {
+    setHack({ autoclicker: true });
+    saveCampusProfile(campusProfile);
+    showReflexToast({ kind: 'saved', kicker: MESSAGES.autoclicker.kicker, thought: MESSAGES.autoclicker.title, more: MESSAGES.autoclicker.text }, 8000);
+    audio.play('alarm');
+    earnBadgeNow('autoclicker');
+    maybeEarnBadges();
+    return { skipProofs: true };
+  }
+  if (touched) { saveCampusProfile(campusProfile); maybeEarnBadges(); }
+  return {};
+}
+// Noticed at boot: show it once the UI is ready (and only to real players).
+// Show it once the UI is ready (toast element + consts are initialized later in
+// this module). A short delay in automation too, so init finishes first.
+if (tamperPending) setTimeout(() => showTamperMessage(tamperPending), isAutomationContext() ? 60 : 1400);
+// Console greeting: Глубина ASCII + «ты уже на этаже С НУЛЯ…» (always, friendly).
+consoleGreeting();
 
 // ---------------------------------------------------------------- 18.2
 // §16: the hero is a gamer who forgot he is one -- reflexes (save, look
@@ -857,6 +1148,8 @@ for (const clock of document.querySelectorAll('[data-clock]')) {
 // The in-game time on the main HUD clock, by scene.
 function clockText() {
   const w = state.warehouse;
+  const wc = legacy ? null : weekClock(state);
+  if (wc) return wc;
   if (state.scene === 'forlesson') return '18:40';
   if (state.scene === 'queue') return '23:10';
   if (state.scene === 'function') return '09:30';
@@ -880,10 +1173,189 @@ function talkInHall(who) {
   if (line.seam) setTimeout(() => showMeaningSeam(line.seam), 900);
   return line;
 }
+// ---------------------------------------------------------------- 19.0
+// The first week (canon §18, week.js): day 1 the button, day 2 copy, day 3
+// assemble, day 4 by hand, day 5 the whole line runs itself → fired → Витя's
+// call → the garage. One terminal visit a day; a pay card every evening.
+const weekOn = () => !legacy && isWeekCheckpoint(state.checkpoint);
+const payCard = createPayCard(game, { onNext: () => weekCardNext(), sound: (n) => audio.play(n), onCard: () => openRing('card') });
+const weekPinEl = createWeekPin(game);
+// Shift 1 is over: «ВСТАВИТЬ ЧИП В РУКУ 07» really puts it in. You stand
+// in front of Arm 07, the chip clicks into the socket, the arm gets power
+// and waits for its green button.
+function weekChipIn({ delivered = 3, extra = 0, player = null } = {}) {
+  state = createCheckpointState('d1-button');
+  state = {
+    ...state, scene: 'chip', sceneTime: 0,
+    arm: { ...state.arm, chip: 'inserting', awake: false },
+    warehouse: { ...state.warehouse, wage: Math.max(state.warehouse.wage, (delivered + extra) * CRATE_PAY) },
+  };
+  void player;
+  lastScene = state.scene;
+  factoryView.place(state);
+  faceTarget({ type: 'insert-python-chip', x: 1010, y: 636 });
+  started = true;
+  lastTime = performance.now();
+  startPanel.hidden = true;
+  persistence.save(state);
+  audio.setAmbient('warehouse');
+  audio.play('power');
+  telemetry.mark('week-chip-in');
+}
+// A day starts in the hall: the boss (days 2–5) and someone in the hall.
+function weekMorningBeat() {
+  const day = weekDayOf(state.checkpoint);
+  const hallLine = () => {
+    for (const [who, text] of HALL_MORNING[day] ?? []) {
+      const said = who === 'lunch' ? (hear('loader.bread')?.text ?? text) : text;
+      setTimeout(() => { if (!storyActive) factoryView.say(who, said); }, 500);
+    }
+  };
+  const seam = {
+    2: { kicker: 'ШОВ · ЧТО БЫЛО ВНУТРИ КНОПКИ', lines: ['кнопка ничего не умела сама', 'она посылала руке одну строчку:', '<code>print("wake")</code>'], from: '— это не совпадение. Ты сам оставил себе эту подсказку.' },
+    3: { kicker: 'ШОВ · МЫСЛЬ ПРИШЛА САМА', lines: ['белый → <b>бери</b>', 'красный → <b>оставь</b>', 'ЕСЛИ… ТО…'], from: '— это не совпадение. Ты сам оставил себе эту подсказку.' },
+  }[day];
+  const afterBoss = () => {
+    if (day === 2) { audio.play('impact'); hear('boss.button'); }
+    hallLine();
+    if (seam) setTimeout(() => showSeam(document.querySelector('#seamFlash'), seam, () => { const t = getInteractionTarget(state); if (t) faceTarget(t); }), 2800);
+    persistence.save(state);
+  };
+  const boss = BOSS_MORNING[day];
+  if (boss) tellStory(day === 3 ? 'НАЧАЛЬНИК · ПО РАЦИИ' : 'НАЧАЛЬНИК', boss.title, boss.line, boss.button, afterBoss);
+  else afterBoss();
+  // §16: one gamer slip for the first morning with the button.
+  if (day === 1) setTimeout(() => { if (state.scene === 'machine' && !storyActive) factoryView.pair(takeSlip('day2-morning')); }, 6500);
+}
+// The day's work is done: the boss says his line, then the pay card.
+function weekEndBeat() {
+  const day = weekDayOf(state.checkpoint);
+  const b = BOSS_END[day];
+  if (!b) return;
+  const me = b.me ? ` Ты про себя: «${b.me}»` : '';
+  tellStory('НАЧАЛЬНИК', b.title, `«${b.line}»${me}`, day === 5 ? 'ВЗЯТЬ ДЕНЬГИ' : 'В КАССУ', () => {
+    audio.play(day === 5 ? 'blocked' : 'cash');
+    persistence.save(state);
+  });
+}
+function weekCard() {
+  const day = weekDayOf(state.checkpoint);
+  const fired = state.checkpoint === 'fired';
+  const flags = loadFlags();
+  return {
+    day, fired, wage: state.warehouse.wage,
+    ledger: { ...payLedger(day), wage: state.warehouse.wage },
+    quote: { who: 'НАЧАЛЬНИК', text: BOSS_END[day]?.title ?? '' },
+    me: BOSS_END[day]?.me ?? '',
+    button: fired ? (flags.vityaGarage ? 'В ГАРАЖ К ВИТЕ →' : (flags.vityaCalled ? 'ИДТИ К ВИТЕ →' : 'ДАЛЬШЕ →')) : 'ДОМОЙ · ВЕЧЕР →',
+  };
+}
+function weekCardNext() {
+  if (storyActive) return;
+  payCard.hide();
+  const day = weekDayOf(state.checkpoint);
+  if (state.checkpoint === 'fired') { firedNext(); return; }
+  const ev = EVENING[day];
+  const mo = MORNING[day + 1];
+  tellStory(ev.when, ev.title, ev.line, 'СПАТЬ →', () => {
+    tellStory(mo.when, mo.title, mo.line, 'НА СКЛАД →', () => {
+      state = applyGameAction(state, { type: 'week-next' });
+      if (loadFlags().buttonPocket && state.warehouse.button === 'torn') state = { ...state, warehouse: { ...state.warehouse, button: 'pocket' } };
+      lastAutoDelivered = 0;
+      const t = getInteractionTarget(state);
+      if (t) faceTarget(t);
+      persistence.save(state);
+      telemetry.mark(`week-day-${day + 1}`);
+    });
+  });
+}
+// Fired. Витя calls; the quest «Сходи в гараж к Вите» is pinned; the evening
+// is at home, and the garage is through the apartment's door.
+function firedNext() {
+  const flags = loadFlags();
+  if (flags.vityaGarage) { if (!enterGarageQuest()) openWorld('garage'); return; }
+  if (flags.vityaCalled) { if (enterGarageQuest()) { onFiredHandoff(); return; } openWorld('home'); return; }
+  audio.play('chatter');
+  tellStory(FIRED.callWho, FIRED.callTitle, FIRED.callLine, FIRED.callButton, () => {
+    setFlag('vityaCalled');
+    telemetry.mark('week-vitya-called');
+    // The professions screen runs the garage quest itself when it can
+    // (enterGarageQuest returns false until it is built); otherwise the
+    // evening at home and the walk through the door to the garage.
+    if (enterGarageQuest()) { onFiredHandoff(); return; }
+    openWorld('home');
+  });
+}
+function enterGarageQuest() {
+  try {
+    const fn = careerWorlds?.enterGarageQuest ?? careerApi.enterGarageQuest;
+    return typeof fn === 'function' ? Boolean(fn.call(careerWorlds, FIRED.questId)) : false;
+  } catch (err) { console.error(err); return false; }
+}
+function openWorld(level) {
+  releaseAllKeys('overlay');
+  fpWorld.open(level, { reset: true });
+  // Look at the door to the garage: it is right behind you when you come home.
+  if (level === 'home') fpWorld.debug({ yaw: Math.PI / 2 });
+}
+// The hook for the professions (week-hooks.js): once, when you step into
+// Витя's garage after the firing.
+function onFiredHandoff() {
+  if (loadFlags().vityaGarage) return;
+  setFlag('vityaGarage');
+  remember('quests', FIRED.questId);
+  telemetry.mark('week-garage-vitya');
+  audio.play('poster');
+  showReflexToast({ kind: 'saved', kicker: 'КВЕСТ ВЫПОЛНЕН', thought: FIRED.questTitle, more: `Витя ждёт у машины. Дальше — месть холдингу «${CORP.name}»: профессии в дереве навыков.` }, 5200);
+  // Витя meets you with the reason you came (the garage's own lines follow).
+  setTimeout(() => { if (!fpWorldRoot.hidden) fpWorld.debug({ speech: { who: 'neighbor', name: 'СОСЕД ВИТЯ', text: `Пришёл! Глянь: замок вскрыт, сигналка молчит. Это «${CORP.name}», я тебе говорю.` } }); }, 2600);
+  firedHandoff({ questId: FIRED.questId, corp: CORP.name, from: 'home-door' });
+}
+let handoffCheckAt = 0;
+function watchWeekWorld(now) {
+  if (legacy) { weekPinEl.set(''); return; }
+  const flags = loadFlags();
+  const worldOpen = !fpWorldRoot.hidden;
+  if (worldOpen && flags.vityaCalled && !flags.vityaGarage && now > handoffCheckAt) {
+    handoffCheckAt = now + 350;
+    if (fpWorld.state().level === 'garage') onFiredHandoff();
+  }
+  const pin = worldOpen && state.checkpoint === 'fired'
+    ? (loadFlags().vityaGarage ? '' : `${FIRED.questTitle} — дверь прямо перед тобой`)
+    : '';
+  weekPinEl.set(pin);
+}
+function weekHud(nearby) {
+  const day = weekDayOf(state.checkpoint);
+  const w = state.warehouse;
+  hud.chapter.textContent = `ДЕНЬ ${day} · СКЛАД 07`;
+  if (state.scene === 'chip') {
+    hud.mission.textContent = 'Чип защёлкивается';
+    hud.message.textContent = 'ЩЁЛК · РУКА 07 ПОЛУЧАЕТ ПИТАНИЕ';
+    return true;
+  }
+  if (['machine', 'condition'].includes(state.scene) && w.week) {
+    hud.mission.textContent = { button: 'Кнопка «ПУСК»', copy: 'Листок электрика', assemble: 'Порванный листок', hand: 'Без листка', auto: 'Вся линия — сама' }[w.week];
+    hud.message.textContent = nearby?.label ? `E · ${nearby.label}` : (w.week === 'button' ? 'ПОДОЙДИ К ЗЕЛЁНОЙ КНОПКЕ У РУКИ · E' : 'ПОДОЙДИ К ТЕРМИНАЛУ У РУКИ · E');
+    return true;
+  }
+  if (state.scene === 'automation' && state.arm.startSource === 'week') {
+    hud.mission.textContent = 'Рука таскает сама';
+    hud.message.textContent = `ЯЩИКОВ НА ЛЕНТЕ: ${w.autoDelivered}/${w.autoTarget}`;
+    return true;
+  }
+  if (state.scene === 'reward') {
+    hud.mission.textContent = state.checkpoint === 'fired' ? 'Расчёт' : 'Конец смены';
+    hud.message.textContent = 'КАССА';
+    return true;
+  }
+  return false;
+}
 function progressInput() {
   return {
-    learning: state.learning, warehouse: state.warehouse, checkpoint: state.checkpoint, flags: loadFlags(),
-    engine: engineStatus(engineNow()), realms: CAREER_REALMS, realmWins: campusProfile?.labs?.guild?.realmWins ?? [], mastery: campusProfile?.mastery ?? {},
+    learning: state.learning, warehouse: state.warehouse, checkpoint: state.checkpoint, flags: loadFlags(), scene: state.scene, arm: state.arm, legacy,
+    engine: engineStatus(engineNow()), realms: CAREER_REALMS,
+    availability: typeof careerApi.realmAvailability === 'function' ? (r) => careerApi.realmAvailability(r, campusProfile, state.learning) : null, realmWins: campusProfile?.labs?.guild?.realmWins ?? [], mastery: campusProfile?.mastery ?? {},
   };
 }
 function enterRealm(id) {
@@ -893,7 +1365,7 @@ function enterRealm(id) {
   if (pick && careerWorldsRoot.dataset.picked !== id) pick.click();
   document.querySelector('#careerEnter')?.click();
 }
-const skillTreeView = createSkillTreeView(document.querySelector('#skillTree'), { getTree: () => buildSkillTree(progressInput()), onEnterRealm: enterRealm, sound: (n) => audio.play(n) });
+const skillTreeView = createSkillTreeView(document.querySelector('#skillTree'), { getTree: () => buildSkillTree(progressInput()), onEnterRealm: enterRealm, sound: (n) => audio.play(n), onCard: () => openRing('card') });
 const questLogView = createQuestLogView(document.querySelector('#questLog'), { getLog: () => buildQuestLog(progressInput()), sound: (n) => audio.play(n) });
 document.querySelector('#careerDoor').addEventListener('click', () => { releaseAllKeys('overlay'); if (document.pointerLockElement) document.exitPointerLock?.(); skillTreeView.open(); audio.play('ui-click'); });
 document.querySelector('#questDoor').addEventListener('click', () => { releaseAllKeys('overlay'); if (document.pointerLockElement) document.exitPointerLock?.(); questLogView.open(); audio.play('ui-click'); });
@@ -1081,6 +1553,10 @@ function recordFirstAction() {
 function openMachinePanel() {
   if (document.pointerLockElement === canvas) document.exitPointerLock?.();
   releaseAllKeys('overlay');
+  if (state.warehouse.week && state.warehouse.week !== 'button') {
+    hourDesk.open(state.warehouse.week);
+    return;
+  }
   if (state.scene === 'machine' && state.warehouse.day2) {
     hourDesk.open(state.warehouse.day2 === 'print2' ? 'print2' : 'print');
     return;
@@ -1106,9 +1582,14 @@ function resizeCanvas() {
 const beatsSeen = new Set();
 function hourBeat() {
   const w = state.warehouse;
-  const key = `${state.checkpoint}:${state.scene}:${w.day2 ?? ''}:${w.ruleStage ?? ''}`;
+  const key = `${state.checkpoint}:${state.scene}:${w.day2 ?? ''}:${w.ruleStage ?? ''}:${w.week ?? ''}`;
   if (beatsSeen.has(key)) return;
   beatsSeen.add(key);
+  if (weekOn()) {
+    if (['machine', 'condition'].includes(state.scene) && w.week) weekMorningBeat();
+    else if (state.scene === 'reward') weekEndBeat();
+    return;
+  }
   if (state.scene === 'machine' && w.day2 === 'button') {
     factoryView.comment('day2-morning');
     // §16: the tutorial look of it all (one slip for this scene).
@@ -1167,7 +1648,10 @@ function useAction() {
   }
   if (action.type === 'press-start-button') {
     recordSkill('print', 'tap', { stage: 1, key: 'print:button' });
+    const weekButton = state.warehouse.week === 'button';
     state = applyGameAction(state, action);
+    // 19.0: turn to the arm so you see it take the pile.
+    if (weekButton) faceTarget({ type: 'insert-python-chip', x: 1010, y: 636 });
     audio.play('power');
     automationAcceptedAt = performance.now();
     persistence.save(state);
@@ -1175,6 +1659,7 @@ function useAction() {
   }
   if (action.type === 'pick-torn-button') {
     state = applyGameAction(state, action);
+    setFlag('buttonPocket');
     audio.play('pickup');
     factoryView.say('lunch', 'Кнопку в карман? Правильно. На память о начальнике. (жуёт)');
     return;
@@ -1359,9 +1844,10 @@ function updateHud(now = performance.now()) {
     coach.style.left = `${pos.x}px`; coach.style.top = `${pos.y}px`;
     coach.textContent = narrowViewport.matches ? 'Веди пальцем по полю · я стреляю сам' : '↑ ↓ ← → Двигайся · я стреляю сам';
   }
-  wallet.hidden = !started || ['prologue', 'collapse'].includes(state.scene) || machineOpen;
+  wallet.hidden = !started || ['prologue', 'collapse'].includes(state.scene) || machineOpen || payCard.visible();
+  { const label = weekOn() ? 'НА СЧЕТУ' : 'СЧЁТ СМЕНЫ'; const el = wallet.querySelector('small'); if (el.textContent !== label) el.textContent = label; }
   document.querySelector('#walletTotal').textContent = `${state.warehouse.wage.toLocaleString('ru-RU')} ₽`;
-  document.querySelector('#walletMode').textContent = state.arm.awake ? `РУКА ЗАРАБОТАЛА ${(state.warehouse.autoDelivered * CRATE_PAY).toLocaleString('ru-RU')} ₽` : `+${CRATE_PAY} ₽ за каждый ящик`;
+  document.querySelector('#walletMode').textContent = weekOn() ? `+${CRATE_PAY} ₽ за каждый ящик` : state.arm.awake ? `РУКА ЗАРАБОТАЛА ${(state.warehouse.autoDelivered * CRATE_PAY).toLocaleString('ru-RU')} ₽` : `+${CRATE_PAY} ₽ за каждый ящик`;
   incomeToast.hidden = now >= incomeNoticeUntil;
 
   if (state.scene === 'prologue') {
@@ -1458,6 +1944,7 @@ function updateHud(now = performance.now()) {
       hud.mission.textContent = 'Перенеси три ящика';
       hud.message.textContent = state.player.carrying ? 'ЯЩИК В РУКАХ · ДОЙДИ ДО ПАЛЕТЫ · E' : `ДОСТАВЛЕНО ${state.warehouse.manualDelivered}/3 · ПОДОЙДИ К ЯЩИКУ · E`;
     }
+    if (weekOn()) weekHud(nearby);
     const completed = state.warehouse.manualDelivered + state.warehouse.autoDelivered;
     hud.progress.style.width = `${Math.min(100, (completed / 9) * 100)}%`;
     hud.system.textContent = state.arm.blocked ? 'БЛОК' : (state.arm.awake ? 'АВТО' : (['machine', 'condition', 'forlesson', 'queue', 'function'].includes(state.scene) ? 'ДОСТУП' : 'ОТКЛЮЧЕНА'));
@@ -1466,7 +1953,11 @@ function updateHud(now = performance.now()) {
   }
 
   hud.machine.hidden = !machineOpen;
-  hud.ending.hidden = state.scene !== 'reward' || state.sceneTime < REWARD_REVEAL_DURATION || storyActive || isBlockingOverlayOpen();
+  hud.ending.hidden = weekOn() || state.scene !== 'reward' || state.sceneTime < REWARD_REVEAL_DURATION || storyActive || isBlockingOverlayOpen();
+  // 19.0: the pay card of the day (no overlaps: doors, wallet and the
+  // companion step aside while it is up).
+  if (weekOn() && started && state.scene === 'reward' && state.sceneTime >= .6 && !storyActive && !exitOpen && !isBlockingOverlayOpen()) payCard.show(weekCard());
+  else payCard.hide();
   const sorterBonus = document.querySelector('#sorterBonus');
   const sorterUnlocked = ['reward2','reward3','reward4'].includes(state.checkpoint);
   sorterBonus.hidden = !sorterUnlocked;
@@ -1476,14 +1967,16 @@ function updateHud(now = performance.now()) {
       ? 'БОНУС · SORTER BAY · ДВА ПРИЗНАКА →'
       : 'БОНУС · SORTER BAY · AND / OR / NOT →';
   const hasSkill = state.learning.printUnlocked || state.learning.forUnlocked || state.learning.ifUnlocked || state.learning.listUnlocked || state.learning.whileUnlocked || state.learning.funcUnlocked || state.learning.dictUnlocked || state.learning.reliabilityUnlocked || state.learning.asyncUnlocked || state.learning.aiUnlocked || state.learning.llmUnlocked || state.learning.botUnlocked;
-  document.querySelector('#journalToggle').hidden = !hasSkill || machineOpen || storyActive || isBlockingOverlayOpen();
+  // 19.0: the old «ЧТО Я УЖЕ УМЕЮ» list covered the title on phones; the
+  // skill tree (НАВЫКИ) says the same. It stays for ?legacy=1.
+  document.querySelector('#journalToggle').hidden = !legacy || !hasSkill || machineOpen || storyActive || isBlockingOverlayOpen();
   const careerDoor = document.querySelector('#careerDoor');
   // 16.6: the door opens as soon as the chip wakes the arm (and stays from
   // chapter 2 / the first print on), not after chapter 8.
   const careerVisible = Boolean(state.arm?.awake || state.learning.printUnlocked || state.learning.chapter >= 2);
-  careerDoor.hidden = !careerVisible || machineOpen || storyActive || isBlockingOverlayOpen();
+  careerDoor.hidden = !careerVisible || machineOpen || storyActive || isBlockingOverlayOpen() || payCard.visible();
   const questDoor = document.querySelector('#questDoor');
-  const hudFree = started && !machineOpen && !storyActive && !isBlockingOverlayOpen() && !['prologue', 'collapse'].includes(state.scene);
+  const hudFree = started && !machineOpen && !storyActive && !isBlockingOverlayOpen() && !payCard.visible() && !['prologue', 'collapse'].includes(state.scene);
   questDoor.hidden = !hudFree;
   const questLine = document.querySelector('#questLine');
   const pin = hudFree && firstPersonScene() ? questPin(buildQuestLog(progressInput())) : '';
@@ -1564,7 +2057,7 @@ function updateHud(now = performance.now()) {
   } else if (state.checkpoint === 'virus') {
     hud.endingEyebrow.textContent = 'ГЛАВА 7 · ВИРУС';
     hud.endingTitle.textContent = 'Процесс всё ещё сломан.';
-    hud.endingCopy.textContent = 'Финал не про HP: восстанови неверный тип, пропуск, таймаут и нарушенный порядок. Это локальные синтетические тесты, не реальные атаки.';
+    hud.endingCopy.textContent = 'Финал не про HP: восстанови неверный тип, пропуск, таймаут и нарушенный порядок.';
     document.querySelector('#continueGame').textContent = 'ВЕРНУТЬСЯ К СБОЮ →';
   } else if (state.checkpoint === 'reward6') {
     hud.endingEyebrow.textContent = 'ШЕСТОЙ КОНТУР · ПАМЯТЬ';
@@ -1574,7 +2067,7 @@ function updateHud(now = performance.now()) {
   } else if (state.checkpoint === 'vika') {
     hud.endingEyebrow.textContent = 'ШЕСТАЯ ГЛАВА · ВИКА';
     hud.endingTitle.textContent = 'Одинаковый сигнал уже ждёт.';
-    hud.endingCopy.textContent = 'Смотри на сохранённое состояние, а не на форму входа. Канон Вики здесь не расширяется: синее парящее лицо без тела и одна подтверждённая фраза.';
+    hud.endingCopy.textContent = 'Смотри на то, что система уже запомнила, а не на то, как выглядит вход.';
     document.querySelector('#continueGame').textContent = 'ВЕРНУТЬСЯ К ПАМЯТИ →';
   } else if (state.checkpoint === 'reward5') {
     hud.endingEyebrow.textContent = 'ПЯТЫЙ КОНТУР · КОМАНДА';
@@ -1584,7 +2077,7 @@ function updateHud(now = performance.now()) {
   } else if (state.checkpoint === 'friends') {
     hud.endingEyebrow.textContent = 'ПЯТАЯ ГЛАВА · ТРЕНИРОВОЧНАЯ ЗАЩИТА';
     hud.endingTitle.textContent = 'Друзья ждут тебя в контуре.';
-    hud.endingCopy.textContent = 'Матч изолирован от настоящих сетей: шесть вымышленных импульсов, три временные AI-роли и знакомый Q-Bot.';
+    hud.endingCopy.textContent = 'Шесть импульсов уже летят. Трое друзей и Q-Bot ждут, кого куда поставишь.';
     document.querySelector('#continueGame').textContent = 'ВЕРНУТЬСЯ В МАТЧ →';
   } else if (state.checkpoint === 'reward4') {
     hud.endingEyebrow.textContent = 'ЧЕТВЁРТЫЙ КОНТУР ВОССТАНОВЛЕН';
@@ -1599,13 +2092,18 @@ function updateHud(now = performance.now()) {
   } else if (state.checkpoint === 'reward2') {
     hud.endingEyebrow.textContent = 'КАССА · КОНЕЦ ВТОРОЙ СМЕНЫ';
     hud.endingTitle.textContent = 'Теперь рука умеет не только двигаться, но и выбирать.';
-    hud.endingCopy.textContent = 'Ты дал ей два понятных правила: пройти по каждому ящику и двигать только подходящий. В Python эти две идеи называются for и if. На ночной смене появится новая проблема: заранее неизвестно, сколько работы приедет.';
+    hud.endingCopy.textContent = 'Ты дал ей понятное правило: белый — бери, красный — оставь. В Python это слово if. Вечером приедет фура — ящиков будет много.';
     document.querySelector('#continueGame').textContent = 'ЗАКОНЧИТЬ СМЕНУ →';
+  } else if (state.checkpoint === 'reward-for') {
+    hud.endingEyebrow.textContent = 'ДЕНЬ 2 · ВЕЧЕР · ФУРА РАЗГРУЖЕНА';
+    hud.endingTitle.textContent = 'Одно правило — для каждого ящика.';
+    hud.endingCopy.textContent = `Фура разгружена: рука прошла по всей партии сама. За день на счету ${state.warehouse.wage.toLocaleString('ru-RU')} ₽. Ночью линия останется без тебя.`;
+    document.querySelector('#continueGame').textContent = 'К НОЧНОЙ СМЕНЕ →';
   } else {
     hud.endingEyebrow.textContent = 'КАССА · КОНЕЦ СМЕНЫ';
     hud.endingTitle.textContent = 'Рука дотащила остаток участка.';
     hud.endingCopy.textContent = `За смену вышло ${state.warehouse.wage.toLocaleString('ru-RU')} ₽. Три ящика ты унёс сам. Остальное — машина. Завтра снова в 07:00.`;
-    document.querySelector('#continueGame').textContent = 'ПОЛУЧИТЬ ДЕНЬГИ · ДОМОЙ →';
+    document.querySelector('#continueGame').textContent = 'ПОЛУЧИТЬ ДЕНЬГИ · ВЕЧЕР ДОМА →';
   }
   hud.printSkillMethod.textContent = codeInputMethod === 'pasted'
     ? 'СПОСОБ: ВСТАВЛЕНО С КЛАВИАТУРЫ'
@@ -1672,7 +2170,7 @@ function frame(now) {
     state = { ...state, player: { ...state.player, x: pos.x, y: pos.y } };
   }
   if (state.scene !== lastScene) {
-    if (!showcaseChip && ['warehouse', 'chip', 'machine', 'red-crate', 'reward', 'shift2', 'red2', 'condition', 'reward2', 'forlesson', 'reward-for', 'queue', 'reward3', 'function', 'reward4'].includes(state.checkpoint)) persistence.save(state);
+    if (!showcaseChip && (isWeekCheckpoint(state.checkpoint) || ['warehouse', 'chip', 'machine', 'red-crate', 'reward', 'shift2', 'red2', 'condition', 'reward2', 'forlesson', 'reward-for', 'queue', 'reward3', 'function', 'reward4'].includes(state.checkpoint))) persistence.save(state);
     lastScene = state.scene;
     if (['machine', 'condition', 'forlesson', 'queue', 'function'].includes(state.scene)) {
       const nextTarget = getInteractionTarget(state);
@@ -1722,7 +2220,8 @@ function frame(now) {
     lastThreats = state.prologue.threats;
   }
   updateHud(now);
-  companion.update(state.scene === 'reward' && !storyActive && !exitOpen && !isBlockingOverlayOpen(), now);
+  companion.update(!weekOn() && state.scene === 'reward' && !storyActive && !exitOpen && !isBlockingOverlayOpen(), now);
+  watchWeekWorld(now);
   const wakeProgress = state.otherMind.phase === 'waking' && otherMindWakingAt !== null
     ? Math.min(1, Math.max(0, (now - otherMindWakingAt) / 1200))
     : (state.otherMind.phase === 'awake' ? 1 : 0);
@@ -1939,9 +2438,10 @@ document.querySelector('#continueGame').addEventListener('click', () => {
     campus.open();
     return;
   }
+  if (!legacy) return; // 19.0: the friends chapter is legacy-only (?legacy=1)
   if (!friendVisited) {
     friendVisited = true;
-    tellStory('ДОМА · СООБЩЕНИЕ ОТ ДРУГА', 'Ты освободил себе вечер.', '«Ты оживил ту руку? Тогда заходи в наш тренировочный контур. Нас трое, Q-Bot будет четвёртым. Шесть импульсов уже летят — распределишь защиту?» Это только игровая копия: никаких настоящих аккаунтов или сетей.', 'ВОЙТИ В ТРЕНИРОВОЧНЫЙ КОНТУР →', () => friendSandbox.open());
+    tellStory('ДОМА · СООБЩЕНИЕ ОТ ДРУГА', 'Ты освободил себе вечер.', '«Ты оживил ту руку? Тогда заходи в наш тренировочный контур. Нас трое, Q-Bot будет четвёртым. Шесть импульсов уже летят — распределишь защиту?»', 'ВОЙТИ В ТРЕНИРОВОЧНЫЙ КОНТУР →', () => friendSandbox.open());
   } else comic.show(0);
 });
 
@@ -2000,19 +2500,57 @@ if (isLocal) {
       requestAnimationFrame(count);
     }),
     hall: { debug: (patch) => { const pos = factoryView.debug(patch); state = { ...state, player: { ...state.player, ...pos } }; return pos; }, body: () => factoryView.body(), engine: () => factoryView.engine(), speech: () => factoryView.speech(), setYaw: (yaw) => { warehouseYaw = yaw; } },
+    ring: { open: (view = 'card', opts = {}) => openRing(view, opts), close: () => ring.close(), state: () => ring.state(), fast: (on = true) => ring.fast(on), start: (opts) => ring.start(opts), snapshot: () => profileSnapshot(campusProfile, { player: currentPlayer() }), store: () => profileStore.kind, account: () => profileStore.account?.status?.() ?? null, sync: () => syncAccountOnce() },
     world: { open: (level = 'garage', opts = {}) => fpWorld.open(level, opts), debug: (patch) => fpWorld.debug(patch), state: () => fpWorld.state(), surface: (r) => careerWorlds.surface(r), engine: () => engineStatus(engineNow()) },
     pythonio: { open: (opts) => pythonio.open(opts), close: () => pythonio.close(), active: () => pythonio.active, ready: () => pythonio.ready },
     blackice: { open: (opts) => blackice.open(opts), close: () => blackice.close(), enter: (n) => blackice.enter(n), lobby: () => blackice.lobby(), handle: (msg) => blackice.handle(msg), active: () => blackice.active, ready: () => blackice.ready, view: () => blackice.view, playing: () => blackice.playing, profile: () => ({ stats: campusProfile.stats, cleared: labyrinthCleared(campusProfile), xp: campusProfile.xp, wage: state.warehouse?.wage ?? 0 }) },
     hour: { openTerminal: () => openMachinePanel(), desk: () => hourDesk.step(), beat: () => hourBeat(), lesson: () => state.warehouse.lessonStage, state: () => ({ day2: state.warehouse.day2, button: state.warehouse.button, ruleStage: state.warehouse.ruleStage, scene: state.scene, storyActive }) },
     firstShift: { debug: (patch) => firstShift.debug(patch), state: () => firstShift.state(), body: () => firstShift.body(), speech: () => firstShift.speech(), chip: () => firstShift.chip() },
+    // 19.0: the first week.
+    week: {
+      state: () => ({ checkpoint: state.checkpoint, scene: state.scene, week: state.warehouse.week, day: state.warehouse.day, wage: state.warehouse.wage, autoDelivered: state.warehouse.autoDelivered, autoTarget: state.warehouse.autoTarget, button: state.warehouse.button, card: payCard.visible(), story: storyActive, desk: hourDesk.step(), flags: loadFlags(), pin: document.querySelector('#questLineText')?.textContent ?? '', clock: clockText(), legacy }),
+      terminal: () => openMachinePanel(),
+      next: () => weekCardNext(),
+      face: () => { const t = getInteractionTarget(state); if (t) { factoryView.place(state); faceTarget(t); } return t; },
+      fast: (k = 6) => { state = { ...state, arm: { ...state.arm, wakeRevealRemaining: 0, active: state.arm.active ? { ...state.arm.active, progress: Math.max(state.arm.active.progress, 1 - 1 / k) } : null } }; },
+    },
     // 18.2: §16 reflexes and §17 meaning layers.
     reflex: { record: () => JSON.parse(JSON.stringify(reflexRecord)), save: () => saveReflex(), talk: (who) => talkInHall(who), target: () => hallTalkTarget(), knows: () => [...knowsNow()], slip: (scene) => factoryView.pair(takeSlip(scene)) },
+    // 19.3 · badges + «Взломай меня» polygon (achievements.js, polygon.js, hack-ui.js).
+    hack: {
+      open: (view = 'polygon') => openHackPolygon(view),
+      close: () => hackPolygon.close(),
+      state: () => hackPolygon.state(),
+      solve: (id) => hackPolygon.solveFlag(id),
+      badges: () => JSON.parse(JSON.stringify(campusProfile.badges ?? {})),
+      grid: () => badgeGrid(campusProfile),
+      flags: () => JSON.parse(JSON.stringify(campusProfile.hack ?? {})),
+      earn: (id) => earnBadgeNow(id),
+      tamper: () => JSON.parse(JSON.stringify({ seam: campusProfile.hack?.seam ?? false, tooGood: campusProfile.hack?.tooGood ?? false })),
+    },
     otherMind: () => ({
       ...otherMindRuntime.snapshot(),
       phase: state.otherMind.phase,
       line: state.otherMind.line,
     }),
   };
+  // 19.3 · «Смотрю под капот»: a curious kid poking the debug hook from the
+  // console is noticed warmly (canon §20). Never in automation (e2e uses it),
+  // so the existing suites keep working — the raw object is used there.
+  if (!isAutomationContext()) {
+    const real = window.__QUEQUEST_DEBUG__;
+    let peeked = false;
+    window.__QUEQUEST_DEBUG__ = new Proxy(real, { get(t, k, r) { if (!peeked) { peeked = true; setTimeout(noteUnderHood, 10); } return Reflect.get(t, k, r); } });
+  }
+}
+function noteUnderHood() {
+  if (campusProfile.hack?.underHood) return;
+  campusProfile = { ...campusProfile, hack: { ...(campusProfile.hack ?? {}), underHood: true } };
+  saveCampusProfile(campusProfile);
+  try { console.log('%c' + MESSAGES.underHood.text, 'color:#8ff0a6;font-size:13px'); } catch { /* no console */ }
+  showReflexToast({ kind: 'saved', kicker: MESSAGES.underHood.kicker, thought: MESSAGES.underHood.title, more: MESSAGES.underHood.text }, 7000);
+  earnBadgeNow('under-hood');
+  maybeEarnBadges();
 }
 
 applyBuildLabels(document);
@@ -2060,14 +2598,27 @@ window.addEventListener('mousemove', (event) => {
   factoryView.look(event.movementX * .0026, event.movementY * .0026);
 });
 resizeCanvas();
-if (state.checkpoint === 'ai-lab') aiLab.open({ resume: true });
-else if (state.checkpoint === 'llm-lab') llmWorkshop.open({ resume: true });
-else if (['campus', 'reward9', 'reward10'].includes(state.checkpoint)) campus.open();
+if (legacy && state.checkpoint === 'ai-lab') aiLab.open({ resume: true });
+else if (legacy && state.checkpoint === 'llm-lab') llmWorkshop.open({ resume: true });
+else if (legacy && ['campus', 'reward9', 'reward10'].includes(state.checkpoint)) campus.open();
 updateHud();
 requestAnimationFrame(frame);
 
 // 17.3: ?world=garage|home walks straight into the garage or the apartment.
 if (['garage', 'home'].includes(query.get('world'))) fpWorld.open(query.get('world'));
+
+// 19.1 · ?open=card|ring|class|share (and ?duel=<code> for a friend's
+// card) open the diver card straight away — for the demo link too.
+{
+  const ringOpen = query.get('open');
+  const code = query.get('duel');
+  if (code) openRing('share', { demo: true, code });
+  else if (['card', 'ring', 'class', 'share', 'storm', 'badges'].includes(ringOpen)) openRing(ringOpen === 'ring' ? 'ladder' : ringOpen, { demo: query.has('demo') });
+  // 19.3 · ?open=hack|report|hall open the «Взломай меня» polygon (canon §20).
+  else if (['hack', 'polygon'].includes(ringOpen)) openHackPolygon('polygon');
+  else if (ringOpen === 'report') openHackPolygon('report');
+  else if (ringOpen === 'hall') openHackPolygon('hall');
+}
 
 // Admin panel (admin.html) deep links, local only:
 // ?open=careers[&realm=<id>[&enter=1]] opens the professions screen on a
@@ -2079,6 +2630,6 @@ if (isLocal) {
     const pick = document.querySelector(`#careerRealmGrid [data-realm="${query.get('realm') ?? ''}"]`);
     if (pick && careerWorldsRoot.dataset.picked !== pick.dataset.realm) pick.click();
     if (pick && query.get('enter') === '1') document.querySelector('#careerEnter')?.click();
-  } else if (open === 'campus') campus.open();
-  else if (open === 'guild') questGuild.open();
+  } else if (legacy && open === 'campus') campus.open();
+  else if (legacy && open === 'guild') questGuild.open();
 }

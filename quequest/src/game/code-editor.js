@@ -57,6 +57,18 @@ export function createCodeEditor(host, { label = 'Код', onInput = () => {}, o
     clearTimeout(say.t); say.t = setTimeout(() => { notice.hidden = true; }, ms);
   }
 
+  // Move the selected lines (or the caret's line) right by 4 spaces, or left.
+  function shiftLines(back = false) {
+    const { selectionStart: a, selectionEnd: b, value } = input;
+    const from = value.lastIndexOf('\n', a - 1) + 1;
+    let to = b > a && value[b - 1] === '\n' ? b - 1 : b;
+    const end = value.indexOf('\n', to); to = end < 0 ? value.length : end;
+    const lines = value.slice(from, to).split('\n');
+    const moved = lines.map((l) => (back ? l.replace(/^ {1,4}/, '') : `    ${l}`)).join('\n');
+    input.value = value.slice(0, from) + moved + value.slice(to);
+    input.selectionStart = from; input.selectionEnd = from + moved.length;
+    input.dispatchEvent(new Event('input'));
+  }
   input.addEventListener('input', () => { diagnostics = []; render(); onInput(input.value); });
   input.addEventListener('scroll', () => { mirror.scrollTop = input.scrollTop; mirror.scrollLeft = input.scrollLeft; });
   input.addEventListener('keydown', (event) => {
@@ -64,6 +76,9 @@ export function createCodeEditor(host, { label = 'Код', onInput = () => {}, o
     if (event.key === 'Tab') {
       event.preventDefault();
       const { selectionStart: a, selectionEnd: b, value } = input;
+      // 19.0: several lines selected — move them all right (Shift+Tab: left),
+      // like every IDE. Day 5 needs it: the rule goes inside the loop.
+      if (value.slice(a, b).includes('\n') || event.shiftKey) { shiftLines(event.shiftKey); return; }
       input.value = `${value.slice(0, a)}    ${value.slice(b)}`;
       input.selectionStart = input.selectionEnd = a + 4;
       input.dispatchEvent(new Event('input'));
@@ -118,6 +133,7 @@ export function createCodeEditor(host, { label = 'Код', onInput = () => {}, o
     setPasteAllowed(allowed, why = '') { pasteAllowed = Boolean(allowed); pasteWhy = why; host.dataset.paste = pasteAllowed ? 'on' : 'off'; },
     pasteAllowed: () => pasteAllowed,
     focus() { input.focus({ preventScroll: true }); },
+    shiftLines,
     say,
   };
 }

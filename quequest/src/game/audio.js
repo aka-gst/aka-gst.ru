@@ -53,6 +53,20 @@ export const SOUND_RECIPES = Object.freeze({
   'reflex-pattern-2': Object.freeze({ frequency: 392, end: 784, duration: .22, gain: .04, type: 'triangle' }),
   beat: Object.freeze({ frequency: 880, end: 840, duration: .045, gain: .022, type: 'triangle' }),
   seam: Object.freeze({ frequency: 1600, end: 2400, duration: .26, gain: .022, type: 'sine' }),
+  // 19.1 · the ring: a buff lands, a hit, a shield, a heal, a wrong answer, the bell.
+  'duel-go': Object.freeze({ frequency: 523, end: 784, duration: .12, gain: .05, type: 'square', next: 'duel-go-2' }),
+  'duel-go-2': Object.freeze({ frequency: 1046, end: 1046, duration: .16, gain: .045, type: 'square' }),
+  'duel-buff': Object.freeze({ frequency: 440, end: 1320, duration: .22, gain: .06, type: 'triangle', next: 'duel-buff-2' }),
+  'duel-buff-2': Object.freeze({ frequency: 1320, end: 1760, duration: .14, gain: .04, type: 'sine' }),
+  'duel-hit': Object.freeze({ frequency: 180, end: 40, duration: .2, gain: .12, type: 'sawtooth' }),
+  'duel-shield': Object.freeze({ frequency: 900, end: 1400, duration: .25, gain: .045, type: 'sine' }),
+  'duel-heal': Object.freeze({ frequency: 392, end: 784, duration: .35, gain: .05, type: 'sine' }),
+  'duel-wrong': Object.freeze({ frequency: 220, end: 140, duration: .28, gain: .06, type: 'square' }),
+  'duel-tick': Object.freeze({ frequency: 1200, end: 1100, duration: .04, gain: .02, type: 'square' }),
+  'duel-foe': Object.freeze({ frequency: 700, end: 500, duration: .08, gain: .03, type: 'triangle' }),
+  'duel-win': Object.freeze({ frequency: 392, end: 1568, duration: .8, gain: .12, type: 'sawtooth' }),
+  'duel-lose': Object.freeze({ frequency: 330, end: 82, duration: .8, gain: .09, type: 'triangle' }),
+  'duel-ring': Object.freeze({ frequency: 660, end: 1980, duration: .5, gain: .05, type: 'sine' }),
 });
 
 export const AMBIENT_RECIPES = Object.freeze({

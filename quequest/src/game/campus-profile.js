@@ -1,4 +1,5 @@
 import { mergeMastery } from './mastery.js';
+import { sideSign } from './tamper.js';
 export const CAMPUS_PROFILE_VERSION = 15;
 export const CAMPUS_PROFILE_KEY = 'quequest.campus.v15';
 export const LEGACY_CAMPUS_PROFILE_KEYS = Object.freeze(['quequest.campus.v14','quequest.campus.v13','quequest.campus.v12','quequest.campus.v11','quequest.campus.v10','quequest.campus.v9','quequest.campus.v8','quequest.campus.v7','quequest.campus.v6','quequest.campus.v5','quequest.campus.v4','quequest.campus.v3','quequest.campus.v2','quequest.campus.v1']);
@@ -650,7 +651,11 @@ export function loadCampusProfile(storage = globalThis.localStorage) {
 
 export function saveCampusProfile(profile, storage = globalThis.localStorage) {
   try {
-    storage?.setItem(CAMPUS_PROFILE_KEY, JSON.stringify(createCampusProfile(profile)));
+    const json = JSON.stringify(createCampusProfile(profile));
+    storage?.setItem(CAMPUS_PROFILE_KEY, json);
+    // 19.3 · sign it (side keys) so a hand-edit of the save is noticed — a game
+    // signal, not security (canon §20). Every game save path goes through here.
+    sideSign(storage, CAMPUS_PROFILE_KEY, json);
     return { ok: true };
   } catch {
     return { ok: false };

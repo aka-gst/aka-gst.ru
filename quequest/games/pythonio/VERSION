@@ -6,3 +6,10 @@ vendored: Game/index.html, Game/style.css, Game/src/*.js, LICENSE (MIT)
 not vendored: docs, tests, tools, ИГРАТЬ.html (standalone build), preview images
 update: copy the same files from a newer Pythonio commit and change this note;
         tools/pythonio-bridge.test.mjs checks the reward table against src/data.js
+local:  QueQuest 19.0 adds optional hello.story (src/host-bridge.js applyStory):
+        story frames for orders 1-3 (people «ТИСКИ-Маркет» squeezes); upstream
+        Pythonio ignores the field, so the patch is safe to drop on update.
+local:  QueQuest 19.0 C adds src/qq-guide.js (+ one <script> in index.html): a
+        gentler first order inside QueQuest only — extra panels hidden, one
+        highlighted control at a time with a plain-words bubble, driven by
+        Workshop.state. Inert standalone; safe to drop on update.

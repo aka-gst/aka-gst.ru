@@ -33,6 +33,12 @@ export const SKILLS = Object.freeze({
   route: { name: 'Сортировка потока (Питонио)', guild: 'automation' },
   light: { name: 'Свет и картинка (TD Lab)', guild: 'ai' },
   lock: { name: 'Замки', guild: 'security' },
+  // 19.0 C · the five profession tasters (career-tasters.js).
+  guard: { name: 'Сторож сервера (Сетевик)', guild: 'security' },
+  site: { name: 'Понятная страница (Создатель сайтов)', guild: 'web' },
+  train: { name: 'Учить робота на примерах (Тренер ИИ)', guild: 'ai' },
+  cascade: { name: 'Остановить цепочку поломок (Спасатель города)', guild: 'systems' },
+  bits: { name: 'Сигналы и переключатели (Знаток железа)', guild: 'lowlevel' },
 });
 
 // One level scale for guild points (was GUILD_LEVELS in quest-guild.js and a

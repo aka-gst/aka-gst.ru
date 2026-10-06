@@ -17,7 +17,7 @@ import {
 import { loadAtlas } from './first-shift-atlas.js';
 import { drawText, textWidth } from './pixel-font.js';
 import { dressHall, drawSpeech, surfaceOf, subtitleFloorRow } from './fp-overlay.js';
-import { buildArmSprites, armPoseAt, tint, paintTerminal, paintButton } from './arm-art.js';
+import { buildArmSprites, armPoseAt, tint, paintTerminal, paintButton, paintSheet } from './arm-art.js';
 import { createBody, moveBody, stepBody, openAt, jump as bodyJump, landingDip, clampPitch, pitchShear } from './fp-body.js';
 import { createChatter, createMomentWatcher, SPEAKERS } from './npc-chatter.js';
 // 17.4: the hall is drawn at the player's rung of the engine ladder too.
@@ -70,6 +70,7 @@ const GOLD = rgb(255, 200, 70);
 const CYAN = rgb(110, 240, 255);
 const RED = rgb(232, 60, 44);
 const REACH_SPEED = 3.2;
+export const HALL_MIN_LEVEL = Math.max(0, FEATURES.findIndex((f) => f.id === 'res200'));
 
 // 18.2: slip(event) -> a §16 gamer line ({ me, who, reply }) to say instead
 // of the usual chatter for this event, or null (the host keeps one per scene).
@@ -94,6 +95,7 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
     extra.crateRed = tint(a.crate3q, [1.4, 0.45, 0.4]);
     extra.termDead = paintTerminal(false); extra.termLive = paintTerminal(true); extra.termSlot = paintTerminal(false, true);
     extra.button = paintButton(false); extra.buttonTried = paintButton(true);
+    extra.sheet = paintSheet(false); extra.sheetTorn = paintSheet(true);
   }).catch(() => { atlas = null; });
 
   const frame = typeof document !== 'undefined' ? document.createElement('canvas') : null;
@@ -108,7 +110,11 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
       imageData = typeof ImageData !== 'undefined' ? new ImageData(new Uint8ClampedArray(renderer.buf.buffer), W, VIEW_ROWS) : null;
     }
   }
-  function currentLevel() { return forcedLevel ?? clampLevel(getEngineLevel()); }
+  // 19.0: the hall never draws below Shift 1's own look (≈ 200 rows, VGA
+  // palette with dither, lamp light). Below that rung the 120-row, 6-level
+  // frame turned the warehouse into grey noise and its subtitles into a wall
+  // of giant letters. The ladder still climbs from here (and in the garage).
+  function currentLevel() { return forcedLevel ?? Math.max(HALL_MIN_LEVEL, clampLevel(getEngineLevel())); }
   function seen() { try { const v = storage?.getItem('quequest.engine.seenLevel'); return v === null || v === undefined ? null : Number(v); } catch { return null; } }
   function markSeen(n) { try { storage?.setItem('quequest.engine.seenLevel', String(n)); } catch { /* private mode */ } }
   // The engine grows while you work in the hall (a shift held, the arm
@@ -364,7 +370,16 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
       const m = toHall({ x: 850, y: 535 });
       push(sprite(atlas.chip, m.x, m.z, 0.02, { ppm: 48, fullbright: true, glow: 1.2 }));
     }
-    if (['shift2', 'red2'].includes(state.checkpoint) || (state.scene === 'machine' && (state.learning?.chapter ?? 1) >= 2)) {
+    const weekDay = state.warehouse?.day ?? 0;
+    if (weekDay) {
+      // 19.0: the green button (day 1 on its stand, later torn off on the
+      // floor until you pocket it) and the electrician's sheet (day 2 whole,
+      // day 3 torn, gone from day 4).
+      const m = toHall({ x: 1155, y: 550 });
+      if (state.warehouse.button === 'mounted') push(sprite(state.warehouse.looseButtonTried ? extra.buttonTried : extra.button, m.x, m.z, 0.55));
+      else if (state.warehouse.button === 'torn') push(sprite(extra.buttonTried, m.x, m.z, 0));
+      if (weekDay === 2 || weekDay === 3) push(sprite(weekDay === 2 ? extra.sheet : extra.sheetTorn, TERMINAL.x + 0.42, TERMINAL.z + 0.05, 0.9, { fullbright: true }));
+    } else if (['shift2', 'red2'].includes(state.checkpoint) || (state.scene === 'machine' && (state.learning?.chapter ?? 1) >= 2)) {
       const m = toHall({ x: 1155, y: 550 });
       push(sprite(state.warehouse?.looseButtonTried ? extra.buttonTried : extra.button, m.x, m.z, 0));
     }
@@ -401,8 +416,10 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
     } else if (moment) moment = null;
     if (state.arm?.awake && state.arm.wakeRevealRemaining > 0) {
       const fromChip = state.arm.startSource === 'chip';
-      banner(buf, viewH, fromChip ? 'СЕРВИСНЫЙ ЧИП ПРИНЯТ' : 'КОМАНДА ПРИНЯТА', 'РУКА 07 · РАБОТАЕТ', fromChip ? GOLD : CYAN);
+      const weekTop = { button: 'КНОПКА «ПУСК»', copy: 'СТРОЧКА С ЛИСТКА', assemble: 'СОБРАННАЯ СТРОЧКА', hand: 'ТВОЁ ПРАВИЛО', auto: 'ВСЯ ЛИНИЯ САМА' }[state.warehouse?.week];
+      banner(buf, viewH, weekTop ?? (fromChip ? 'СЕРВИСНЫЙ ЧИП ПРИНЯТ' : 'КОМАНДА ПРИНЯТА'), 'РУКА 07 · РАБОТАЕТ', fromChip || weekTop ? GOLD : CYAN);
     }
+    if (!moment && state.scene === 'chip' && state.arm?.chip === 'inserting') banner(buf, viewH, 'ЩЁЛК', 'ЧИП В РУКЕ 07', GOLD);
     if (state.scene === 'red-crate' || state.arm?.failure?.phase === 'freeze') {
       if (Math.floor(now / 500) % 2 === 0) drawText(buf, W, viewH, Math.round(W / 2 - textWidth('ЛИНИЯ СТОИТ') / 2), 6, 'ЛИНИЯ СТОИТ', RED);
     }
@@ -421,7 +438,8 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
   }
 
   function banner(buf, viewH, top, bottom, color) {
-    const y0 = Math.round(viewH * 0.16);
+    // 19.0: below the HUD's title block (top-left), not on top of it.
+    const y0 = Math.round(viewH * 0.3);
     const big = textWidth(bottom, 2) + 20 <= W ? 2 : 1;
     const w = Math.min(W - 4, Math.max(textWidth(top), textWidth(bottom, big)) + 16);
     const x0 = Math.round((W - w) / 2);

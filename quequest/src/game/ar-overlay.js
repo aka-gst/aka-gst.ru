@@ -9,6 +9,7 @@ import { rgb } from './raycaster.js';
 import { drawText, textWidth } from './pixel-font.js';
 import { projectPoint, onScreen, occluded, AR_GATE } from './ar-headset.js';
 import { deviceSettings, deviceField, deviceJitter } from './vr-devices.js';
+import { SRC_RU, CMD_RU } from './garage-night.js';
 
 const pack = (c) => rgb(c[0] | 0, c[1] | 0, c[2] | 0);
 function mix(buf, i, c, a) {
@@ -200,7 +201,7 @@ function drawPackets(buf, W, H, opts, dev, fld) {
     }
     blob(buf, W, H, depth, pt.x, pt.y, pt.dz, r, c, { glow: 1 });
     if (f.stage === 'fly' && pt.dz < 7 && pt.x > fld.x0 && pt.x < fld.x1) {
-      const label = dev.rich ? `${f.p.src}:${f.p.cmd}:${f.p.key || '-'}` : f.p.cmd;
+      const cmd = CMD_RU[f.p.cmd] ?? f.p.cmd, label = dev.rich ? `${SRC_RU[f.p.src] ?? f.p.src}:${cmd}:${f.p.key ? 'ключ' : '-'}` : cmd;
       drawText(buf, W, H, Math.round(pt.x - textWidth(label) / 2), Math.round(pt.y - r * 2 - 9), label, pack(c), { shadow: 0xff000000 });
     }
   }

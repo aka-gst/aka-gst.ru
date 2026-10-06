@@ -138,6 +138,9 @@ export const LESSON_BATCHES = Object.freeze({
     code: FUNCTION_LAYOUT,
   }),
 });
+// 19.0, day 5: the whole line — a truck's worth, white and red mixed.
+export const WEEK_LINE_LAYOUT = batch('wk', ['w', 'r', 'w', 'w', 'r', 'w', 'w', 'r', 'w']);
+
 // In the night queue two crates "arrive" while the arm works (after the
 // second one it takes): the count is not known in advance — that is why while.
 export const QUEUE_ARRIVE_AFTER = 2;
@@ -174,4 +177,15 @@ export const CHECKPOINTS = Object.freeze([
   'reward9',
   'llm-lab',
   'reward10',
+  // 19.0 · the first week (week.js): five days, button → fired.
+  'd1-button',
+  'pay1',
+  'd2-copy',
+  'pay2',
+  'd3-assemble',
+  'pay3',
+  'd4-hand',
+  'pay4',
+  'd5-auto',
+  'fired',
 ]);

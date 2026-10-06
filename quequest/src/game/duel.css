@@ -1,0 +1,278 @@
+/* 19.1 · Карточка дайвера, ринг «ТИСКОВ», штурм, взлом, код для друга, класс.
+   One overlay, no page scroll at 1280×800 and 375×812, nothing under 14px.
+   QueQuest's own look: ink panels, gold for what matters, cyan for floors
+   and links, monospace labels (v18.css tokens). */
+.ring{--r-gold:var(--q-gold,#ffc857);--r-cyan:var(--q-cyan,#64e9ff);--r-red:var(--q-red,#ff5a52);--r-green:#8ff0a6;--r-ink:#0b0d10;--r-panel:#0b1013;--r-line:var(--q-line,#ffffff1f);--r-text:var(--q-text,#eef1ed);--r-dim:var(--q-dim,#a9b3b0);
+  position:fixed;inset:0;z-index:215;display:flex;flex-direction:column;gap:10px;padding:12px clamp(12px,2.4vw,32px) calc(12px + var(--safe-bottom,0px));background:linear-gradient(180deg,#0b141a,#05080a);color:var(--r-text);font:15px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;box-sizing:border-box}
+.ring[hidden]{display:none}
+.ring *{box-sizing:border-box}
+.ring button{font:inherit;color:inherit;cursor:pointer}
+.ring__top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex:0 0 auto}
+.ring__top small{display:block;color:var(--r-gold);font:800 14px/1.2 ui-monospace,monospace;letter-spacing:.1em}
+.ring__top h2{margin:2px 0 0;font:900 clamp(20px,2.4vw,30px)/1.1 system-ui,sans-serif;letter-spacing:.02em;color:#fff}
+.ring__top-actions{display:flex;gap:8px;align-items:center}
+.ring__close,.ring__back{white-space:nowrap;min-width:44px;min-height:44px;padding:0 14px;border:1px solid var(--r-line);border-radius:8px;background:#0f1519;font-weight:800;font-size:15px}
+.ring__close{font-size:24px;padding:0}
+.ring__body{flex:1 1 auto;min-height:0;width:100%;max-width:1280px;margin:0 auto}
+.ring__flash{margin:0;color:var(--r-gold);font-weight:700;font-size:15px}
+.ring__flash[hidden]{display:none}
+.ring-ico{display:inline-grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:#161d21;color:var(--r-cyan);font:900 14px/1 ui-monospace,monospace;font-style:normal}
+.ring-bar{display:block;height:6px;border-radius:3px;background:#1b2327;overflow:hidden}
+.ring-bar i{display:block;height:100%;background:var(--r-cyan);transition:width .5s}
+.ring-bar--thin{height:3px}
+.ring-bar--xp{width:100%;height:5px}.ring-bar--xp i{background:var(--r-gold)}
+.ring-pips{display:flex;gap:3px}
+.ring-pips i{width:10px;height:10px;border-radius:2px;background:#2b3438}
+.ring-pips i[data-on="true"]{background:var(--r-cyan)}
+.ring-ok{font-style:normal;color:var(--r-green);font-weight:900}
+
+/* ------------------------------------------------------------ карточка */
+.ring__body[data-view="card"]{display:grid;grid-template-columns:220px minmax(0,1fr) 300px;grid-template-rows:minmax(0,1fr) auto auto;gap:12px 16px}
+.ring-side,.ring-power,.ring-detail{border:1px solid var(--r-line);border-radius:12px;background:var(--r-panel)}
+.ring-side{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px}
+.ring-side__avatar{padding:0;border:2px solid #64e9ff44;border-radius:50%;background:radial-gradient(circle,#13232b,#0b0d10);width:124px;height:124px;display:grid;place-items:center}
+.ring-side__avatar canvas{width:120px;height:120px}
+.ring-side__who{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;width:100%}
+.ring-side__nick{font:900 20px system-ui,sans-serif;color:#fff;background:none;border:0;padding:0;min-height:0}
+.ring-side__who small{font-size:14px;color:var(--r-dim)}
+.ring-side__rank{color:var(--r-gold)!important;font:800 15px ui-monospace,monospace!important;letter-spacing:.06em}
+.ring-power{display:flex;flex-direction:column;gap:6px;min-height:0;padding:12px 14px}
+.ring-power__title{margin:0;color:var(--r-gold);font:800 14px ui-monospace,monospace;letter-spacing:.08em}
+.ring-power__title small{color:var(--r-dim);font:400 14px system-ui,sans-serif;letter-spacing:0;margin-left:6px}
+.ring-areas{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;min-height:0;overflow:hidden}
+.ring-area{display:grid;grid-template-columns:28px minmax(0,1fr) auto minmax(80px,1.1fr) 34px 96px;align-items:center;gap:10px;width:100%;min-height:40px;padding:4px 8px;border:1px solid transparent;border-radius:8px;background:none;text-align:left}
+.ring-area:hover{background:#ffffff08}
+.ring-area[aria-pressed="true"]{border-color:#64e9ff55;background:#0f1a1f}
+.ring-area[data-top="true"] .ring-bar i{background:var(--r-gold)}
+.ring-area__name{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ring-area__pow{font:900 16px ui-monospace,monospace;text-align:right}
+.ring-area__word{font-size:14px;color:var(--r-dim)}
+.ring-hint{margin:auto 0 0;font-size:15px;color:#c8d1ce}
+.ring-hint b{color:#fff}
+.ring-detail{display:flex;flex-direction:column;gap:8px;padding:12px 14px;min-height:0;overflow:hidden}
+.ring-detail small{color:var(--r-gold);font:800 14px ui-monospace,monospace;letter-spacing:.08em}
+.ring-detail h3{display:flex;align-items:center;gap:8px;margin:0;font:900 19px system-ui,sans-serif}
+.ring-detail h3 b{margin-left:auto;font:900 22px ui-monospace,monospace;color:var(--r-cyan)}
+.ring-floors{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.ring-floors li{display:flex;flex-direction:column;padding:4px 8px;border:1px solid var(--r-line);border-radius:6px;color:#8a9491;font-size:14px}
+.ring-floors li b{font:800 14px ui-monospace,monospace}
+.ring-floors li[data-on="true"]{border-color:#64e9ff66;color:var(--r-text)}
+.ring-floors li[data-on="true"] b{color:var(--r-cyan)}
+.ring-topics{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:15px}
+.ring-topics li[data-proof="true"]{color:var(--r-green)}
+.ring-topics em{font-style:normal;color:var(--r-dim);font-size:14px}
+.ring-detail p{margin:0;font-size:14px;color:#c8d1ce}
+.ring-detail__buff b{color:var(--r-gold)}
+.ring-detail--page{max-width:640px;margin:0 auto;height:auto}
+.ring-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.ring-actions--two{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.ring-actions button{min-height:48px;padding:6px 10px;border:1px solid #64e9ff44;border-radius:8px;background:#0b1316;color:var(--r-cyan);font-weight:800;font-size:15px;letter-spacing:.04em}
+.ring-actions button[data-locked="true"]{opacity:.5}
+.ring-go{background:var(--r-gold)!important;border-color:var(--r-gold)!important;color:var(--r-ink)!important;font-weight:900!important;letter-spacing:.06em}
+.ring .ring__flash{grid-column:1/-1}
+
+/* ------------------------------------------------------------ призраки */
+.ring__body[data-view="ladder"],.ring__body[data-view="storm"],.ring__body[data-view="share"],.ring__body[data-view="end"],.ring__body[data-view="area"]{display:flex;flex-direction:column;gap:10px;max-width:860px}
+.ring-vitya{margin:0;padding:10px 14px;border-left:3px solid var(--r-gold);background:#ffc85712;font-size:15px}
+.ring-ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-height:0}
+.ring-ladder button{display:flex;align-items:center;gap:12px;width:100%;padding:6px 12px;border:1px solid var(--r-line);border-radius:10px;background:var(--r-panel);text-align:left}
+.ring-ladder button[aria-pressed="true"]{border-color:var(--r-gold);background:#1a1609}
+.ring-ladder button:disabled{opacity:.45;cursor:default}
+.ring-ladder canvas{flex:0 0 48px;width:48px;height:48px}
+.ring-ladder span{flex:1;min-width:0;display:flex;flex-direction:column}
+.ring-ladder strong{font:900 17px system-ui,sans-serif}
+.ring-ladder em{font-style:normal;font-size:14px;color:var(--r-dim)}
+.ring-ladder b{font-size:18px;color:var(--r-gold)}
+
+/* ------------------------------------------------------------ арена */
+.ring__body[data-view="arena"]{max-width:1000px}
+.ring-arena{display:flex;flex-direction:column;gap:8px;height:100%;min-height:0}
+.ring-stage{position:relative;flex:1 1 250px;max-height:260px;min-height:96px;border:1px solid #64e9ff33;border-radius:12px;overflow:hidden;background:#05070b}
+.ring-stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.ring-hp{position:absolute;top:8px;width:40%;display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:14px}
+.ring-hp--me{left:10px}.ring-hp--foe{right:10px;text-align:right}
+.ring-hp b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ring-hp em{font-style:normal;font:700 14px ui-monospace,monospace}
+.ring-hpbar{grid-column:1/-1;height:8px;border-radius:4px;background:#ffffff1a;overflow:hidden}
+.ring-hpbar i{display:block;height:100%;width:100%;background:var(--r-green);transition:width .35s}
+.ring-hp--foe .ring-hpbar i{margin-left:auto;background:var(--r-red)}
+.ring-arena[data-mode="hack"] .ring-hp--me .ring-hpbar i{background:var(--r-red)}
+.ring-arena[data-mode="hack"] .ring-hp--foe .ring-hpbar i{background:var(--r-gold)}
+.ring-round{position:absolute;left:0;right:0;bottom:6px;margin:0;text-align:center;font:800 14px ui-monospace,monospace;color:#ffffffaa}
+.ring-skills{display:flex;gap:6px;list-style:none;margin:0;padding:0;flex:0 0 auto;overflow:hidden}
+.ring-skills li{display:flex;align-items:center;gap:6px;flex:1 1 0;min-width:0;padding:3px 6px;border:1px solid var(--r-line);border-radius:8px;background:var(--r-panel)}
+.ring-skills li>span{flex:1;min-width:0}
+.ring-skills small{font:700 14px ui-monospace,monospace;color:var(--r-dim)}
+.ring-skills b{font:700 14px ui-monospace,monospace;white-space:nowrap}
+.ring-task{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--r-line);border-radius:12px;background:var(--r-panel)}
+.ring-task__wait{margin:auto;color:var(--r-dim);font-size:16px;text-align:center}
+.ring-task__wait b{color:var(--r-gold)}
+.ring-link{min-height:44px;padding:4px 14px;border:1px solid #64e9ff55;border-radius:8px;background:#0b1316;color:var(--r-cyan);font-weight:800}
+.ring-task__head{display:flex;align-items:center;gap:10px}
+.ring-task__head span{flex:1;min-width:0;display:flex;flex-direction:column}
+.ring-task__head b{font:800 14px ui-monospace,monospace;color:var(--r-gold);letter-spacing:.06em}
+.ring-task__head small{font-size:14px;color:var(--r-dim)}
+.ring-task__head em{font-style:normal;font-size:14px;color:var(--r-gold);white-space:nowrap}
+.ring-timer{display:block;height:6px;border-radius:3px;background:#ffffff12;overflow:hidden;flex:0 0 auto}
+.ring-timer i{display:block;height:100%;width:100%;background:var(--r-cyan)}
+.ring-timer i[data-low="true"]{background:var(--r-red)}
+.ring-task__prompt{margin:0;font:800 17px system-ui,sans-serif;color:#fff}
+.ring-code{margin:0;padding:8px 12px;border-radius:8px;background:#05070b;border:1px solid #64e9ff22;color:#d6fff0;font:15px/1.4 ui-monospace,Menlo,monospace;white-space:pre;overflow:hidden}
+.ring-scene{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.ring-boxes li{padding:4px 8px;border-radius:6px;font-size:14px;font-weight:700;border:2px solid transparent}
+.ring-boxes li[data-color="white"]{background:#e9e3d5;color:#111}
+.ring-boxes li[data-color="red"]{background:#c8323c;color:#fff}
+.ring-boxes li[data-take="true"]{border-color:var(--r-green)}
+.ring-boxes li b{color:#0a7a45;margin-right:3px}
+.ring-boxes li[data-color="red"] b{color:#b6ffd9}
+.ring-bits li{display:flex;flex-direction:column;align-items:center;min-width:52px;padding:4px 8px;border:1px solid var(--r-line);border-radius:8px;font-size:14px}
+.ring-bits li[data-on="true"]{border-color:var(--r-gold);background:#ffc85722;color:var(--r-gold)}
+.ring-bits b{font:800 16px ui-monospace,monospace}
+.ring-bits i{font-style:normal}
+.ring-line li{display:flex;flex-direction:column;align-items:center;min-width:30px;font-size:18px}
+.ring-line li b{font-size:14px}
+.ring-line li[data-fault="true"]{color:var(--r-gold)}
+.ring-line .ring-wall{color:var(--r-cyan);font-weight:900;min-width:10px;font-size:26px}
+.ring-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ring-opts[data-long="true"]{grid-template-columns:1fr}
+.ring-opt{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border:1px solid #ffffff22;border-radius:8px;background:#131a1e;text-align:left;font-size:16px}
+.ring-opt:hover:not(:disabled){border-color:var(--r-cyan)}
+.ring-opt kbd{flex:0 0 auto;display:grid;place-items:center;width:24px;height:24px;border-radius:5px;background:#ffffff14;font:800 14px ui-monospace,monospace}
+.ring-opt span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ring-opt[data-mono="true"] span{font-family:ui-monospace,Menlo,monospace;font-size:15px}
+.ring-opt code{font:15px ui-monospace,Menlo,monospace;white-space:pre}
+.ring-opt[data-state="right"]{border-color:var(--r-green);background:#0f2a1e}
+.ring-opt[data-state="wrong"]{border-color:var(--r-red);background:#2a1214}
+.ring-opt:disabled{cursor:default}
+.ring-signs{display:flex;flex-wrap:wrap;gap:4px}
+.ring-signs i{font-style:normal;font-size:14px;padding:0 6px;border-radius:4px;background:#ff5a5222;color:#ffb3ae}
+.ring-feedback{margin:0;font-size:15px}
+.ring-feedback b{color:#fff}
+.ring-feedback[data-ok="true"] b{color:var(--r-green)}
+.ring-feedback[data-ok="false"] b{color:#ff9a94}
+.ring-why{font-size:14px;color:var(--r-dim)}
+.ring-next{min-height:40px;padding:4px 16px;border-radius:8px;font-weight:900;font-size:15px;margin-left:6px}
+
+/* ------------------------------------------------------------ итог */
+.ring-end{display:flex;flex-direction:column;gap:10px}
+.ring-end__line{margin:0;font:700 19px system-ui,sans-serif}
+.ring-end h3{margin:0;font:800 14px ui-monospace,monospace;letter-spacing:.08em;color:var(--r-gold)}
+.ring-end__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ring-end__list li{display:flex;align-items:center;gap:8px;font-size:16px}
+.ring-end__list b{margin-left:auto}
+.ring-end__proofs{margin:0;font-size:15px;color:#c8d1ce}
+.ring-end[data-outcome="win"] .ring-end__line{color:var(--r-green)}
+
+/* ------------------------------------------------------------ код */
+.ring-share{display:flex;flex-direction:column;gap:8px}
+.ring-share__nick{display:flex;align-items:center;gap:10px;font-size:15px}
+.ring-share input{min-height:44px;padding:6px 10px;border:1px solid #64e9ff44;border-radius:8px;background:#05070b;color:#fff;font:16px ui-monospace,monospace;flex:1;min-width:0}
+.ring-share__label{margin:0;font-size:15px;color:#c8d1ce}
+.ring-share__code{display:block;padding:10px 12px;border:1px dashed var(--r-cyan);border-radius:8px;background:#05070b;color:var(--r-cyan);font:700 16px/1.4 ui-monospace,monospace;word-break:break-all;user-select:all}
+.ring-share__row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ring-share__row button{min-height:44px;padding:4px 14px;border-radius:8px;font-weight:800;font-size:15px}
+.ring-share__how{margin:0;padding-left:20px;font-size:15px;display:flex;flex-direction:column;gap:2px}
+#ringCopied{color:var(--r-green);font-size:15px}
+
+/* ------------------------------------------------------------ класс */
+.ring__body[data-view="class"]{display:flex;flex-direction:column;gap:8px}
+.ring-class__label{margin:0;padding:6px 10px;border:1px dashed var(--r-gold);border-radius:8px;color:var(--r-gold);font-weight:700;font-size:14px}
+.ring-class{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);gap:14px;min-height:0}
+.ring-class__grid{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed}
+.ring-class__grid th,.ring-class__grid td{font-size:14px;text-align:center;padding:0;height:34px}
+.ring-class__grid thead th{color:var(--r-cyan);font:900 15px ui-monospace,monospace}
+.ring-class__grid thead th:first-child{width:96px;text-align:left;font:700 14px system-ui,sans-serif;color:var(--r-dim)}
+.ring-class__grid tbody th button{min-height:0;width:100%;height:100%;padding:0 6px;border:1px solid var(--r-line);border-radius:6px;background:var(--r-panel);text-align:left;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ring-class__grid tbody tr[aria-selected="true"] th button{border-color:var(--r-gold);background:#1a1609}
+.ring-class__grid td{border-radius:5px;background:color-mix(in srgb,#64e9ff calc(var(--p) * 0.7%),#10161a);color:#fff;font:700 14px ui-monospace,monospace}
+.ring-class__grid td[data-stuck="true"]{outline:2px solid var(--r-gold);outline-offset:-2px}
+.ring-class__lvl{color:var(--r-green)!important;background:#0e1015!important}
+.ring-class__badges{color:var(--r-gold)!important;background:#0e1015!important;font:700 14px ui-monospace,monospace}
+.ring-class__badges[data-seam="true"]{color:#c7aaff!important}
+.ring-class__badgeline b{color:var(--r-gold)}
+.ring-class__seam{font-style:normal;color:#c7aaff;font-weight:800}
+.ring-class__detail{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid var(--r-line);border-radius:12px;background:var(--r-panel);font-size:15px}
+.ring-class__detail h3{margin:0;font:900 18px system-ui,sans-serif}
+.ring-class__detail p{margin:0}
+.ring-class__stuck b{color:var(--r-gold)}
+.ring-class__sum{margin-top:auto!important;padding-top:6px;border-top:1px solid var(--r-line);color:#c8d1ce}
+
+/* ------------------------------------------------------------ значки (19.3) */
+.ring-side__badges{display:block;margin-top:2px;padding:3px 8px;border:1px solid #ffc85766;border-radius:7px;background:#17130a;color:var(--r-gold);font:800 14px ui-monospace,monospace;letter-spacing:.03em;cursor:pointer}
+.ring-badges-wrap{display:flex;flex-direction:column;gap:10px;height:100%;min-height:0}
+.ring-badges-head{margin:0;font-size:15px;color:#c8d1ce}
+.ring-badges-head b{color:var(--r-gold)}
+.ring-badges{list-style:none;margin:0;padding:2px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;min-height:0;overflow:auto}
+.ring-badge{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--r-line);border-radius:10px;background:var(--r-panel)}
+.ring-badge[data-earned="false"]{opacity:.62}
+.ring-badge[data-rarity="rare"]{border-color:#64e9ff55}
+.ring-badge[data-rarity="epic"]{border-color:#ffc85788}
+.ring-badge[data-rarity="secret"]{border-color:#b28cff99;background:#120f1a}
+.ring-badge__glyph{grid-row:1/3;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#161d21;color:var(--r-cyan);font:900 17px/1 ui-monospace,monospace;font-style:normal}
+.ring-badge[data-earned="true"][data-rarity="epic"] .ring-badge__glyph{color:var(--r-gold)}
+.ring-badge[data-rarity="secret"] .ring-badge__glyph{color:#c7aaff}
+.ring-badge__title{font:800 15px system-ui,sans-serif;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ring-badge__how{font-size:14px;color:var(--r-dim);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ring-badge__rar{grid-column:2;font:700 14px ui-monospace,monospace;color:#8a9491;font-style:normal}
+
+/* ------------------------------------------------------------ phone */
+@media (max-width:700px){
+  .ring{padding:8px 16px calc(8px + var(--safe-bottom,0px));gap:6px}
+  .ring-wide{display:none}
+  .ring__top h2{font-size:20px}
+  .ring__close,.ring__back{min-height:40px}
+  .ring__back{font-size:15px;padding:0 10px}
+  .ring__body[data-view="card"]{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto auto;gap:6px}
+  .ring-detail:not(.ring-detail--page){display:none}
+  .ring-side{flex-direction:row;padding:6px 10px;gap:10px;align-items:center}
+  .ring-side__avatar{width:60px;height:60px;flex:0 0 60px}
+  .ring-side__avatar canvas{width:56px;height:56px}
+  .ring-side__who{align-items:flex-start;text-align:left;gap:1px}
+  .ring-side__nick{font-size:18px}
+  .ring-side__more{display:none}
+  .ring-side__badges{margin-top:1px;padding:1px 6px}
+  .ring-power{padding:8px 10px;gap:4px}
+  .ring-power__title small{display:block;margin:0}
+  .ring-area{grid-template-columns:24px minmax(0,1fr) auto 52px 28px;min-height:34px;padding:1px 4px;gap:6px}
+  .ring-area__word{display:none}
+  .ring-ico{flex-basis:24px;width:24px;height:24px}
+  .ring-area__name{font-size:15px}
+  .ring-pips i{width:8px;height:8px}
+  .ring-hint{font-size:14px}
+  .ring-actions{grid-template-columns:repeat(3,1fr);gap:6px}
+  .ring-actions button{min-height:44px;font-size:14px;padding:4px 6px}
+  .ring-actions--two{grid-template-columns:1fr 1fr}
+  .ring-ladder button{padding:4px 8px;gap:8px}
+  .ring-ladder canvas{flex-basis:40px;width:40px;height:40px}
+  .ring-ladder strong{font-size:15px}
+  .ring-stage{flex-basis:150px;min-height:96px}
+  .ring-hp{width:44%}
+  .ring-skills li{padding:2px 4px;gap:4px}
+  .ring-skills li .ring-bar{display:none}
+  .ring-task{padding:8px;gap:5px}
+  .ring-task__prompt{font-size:16px}
+  .ring-code{font-size:14px;padding:6px 8px}
+  .ring-opt{min-height:42px;font-size:15px;padding:4px 8px}
+  .ring-opt[data-mono="true"] span,.ring-opt code{font-size:14px}
+  .ring-feedback{font-size:14px}
+  .ring-vitya{font-size:14px;padding:6px 10px}
+  .ring-class{grid-template-columns:1fr;gap:6px}
+  .ring-class__grid{border-spacing:2px}
+  .ring-class__grid th,.ring-class__grid td{height:30px}
+  .ring-class__grid thead th:first-child{width:74px}
+  .ring-class__grid tbody th button{padding:0 3px}
+  .ring-class__detail{padding:8px 10px;font-size:14px;gap:3px}
+  .ring-class__detail h3{font-size:16px}
+  .ring-share__label,.ring-share__how{font-size:14px}
+  .ring-share__code{font-size:14px;padding:8px}
+}
+@media (max-width:700px) and (max-height:700px){ .ring-stage{flex-basis:110px} }
+
+/* ------------------------------------------------------------ entry points */
+body .career-worlds .career-head__actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+body .career-worlds .career-ring{min-height:44px;padding:4px 14px;border:1px solid #ffc857;border-radius:8px;background:#ffc857;color:#0b0d10;font:800 15px system-ui,sans-serif;letter-spacing:.03em;cursor:pointer;white-space:nowrap}
+@media (max-width:700px){ body .career-worlds .career-ring{min-height:40px;padding:2px 10px;font-size:14px} }
+.start-panel .start-demo{display:block;width:100%;margin-top:10px;min-height:44px;padding:8px 14px;border:1px solid #64e9ff66;border-radius:8px;background:#0b1316;color:#64e9ff;font:800 15px system-ui,sans-serif;letter-spacing:.03em;cursor:pointer}
+.tree__card{margin-left:auto;min-height:40px;padding:4px 12px;border:1px solid #ffc857;border-radius:8px;background:#ffc857;color:#0b0d10;font:800 14px system-ui,sans-serif;cursor:pointer}
+.pay__card .pay__ring{display:block;margin:6px auto 0;min-height:40px;padding:4px 14px;border:1px solid #64e9ff55;border-radius:8px;background:none;color:#64e9ff;font:800 14px system-ui,sans-serif;cursor:pointer}
+.ring-share__nick small{font-size:14px;font-weight:500;color:var(--r-dim)}

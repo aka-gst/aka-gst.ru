@@ -643,7 +643,7 @@ export function runRule(source, colors) {
   const text = normalizeSource(source);
   const usesIf = /^\s*if\b/m.test(text);
   if (tookRed) return { ok: false, decisions, diagnostics: [{ line: 1, col: 1, endCol: 3, message: 'Рука унесла красный ящик — за это штраф.', fix: usesIf ? 'Проверь условие: брать нужно, только когда box == "white".' : 'Рука берёт всё подряд. Поставь проверку: if box == "white":', code: 'took-red' }] };
-  if (leftWhite) return { ok: false, decisions, diagnostics: [{ line: 1, col: 1, endCol: 3, message: 'Белые ящики остались стоять — рука их не взяла.', fix: 'Внутри if дай команду: arm.take()  (с отступом в 4 пробела).', code: 'left-white' }] };
+  if (leftWhite) return { ok: false, decisions, diagnostics: [{ line: 1, col: 1, endCol: 3, message: 'Белые ящики остались стоять — рука их не взяла.', fix: 'Внутри if дай команду: arm.take(box)  (с отступом в 4 пробела).', code: 'left-white' }] };
   if (!usesIf) return { ok: false, decisions, diagnostics: [{ line: 1, col: 1, endCol: 3, message: 'Правило должно спрашивать про цвет.', fix: 'Начни с if box == "white":', code: 'no-if' }] };
   return { ok: true, decisions, diagnostics: [] };
 }
