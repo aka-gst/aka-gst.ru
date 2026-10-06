@@ -51,7 +51,7 @@ expect() {
 }
 
 echo "== страницы =="
-for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /quequest/ /acid/ \
+for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /quequest/ /acid/ /ashennote/ /static/app.js \
          /psy-admin/ /photodata/ /tetcolor/ /stihii/ /lines/ /coin/ \
          /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
   expect "$p" 200
@@ -85,6 +85,10 @@ moved /tetris/ /tetcolor/
 # QueQuest переехал на /quequest/ 05.10.2026; старый адрес ведёт туда с сохранением пути (301).
 moved /qa-quest/ /quequest/
 moved /qa-quest/src/game/main.js /quequest/src/game/main.js
+# AshenNote (06.10.2026): вход /ashennote/, заметки /n/<id>; админ-API и метрики наружу закрыты.
+expect /api/v1/admin/notes/proba 404
+expect /metrics 404
+moved /ashennote /ashennote/
 
 echo
 echo "== опечатка в адресе даёт страницу, а не пустоту =="
