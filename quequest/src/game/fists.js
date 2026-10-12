@@ -16,7 +16,8 @@ export const PUNCH_REACH = 1.55;
 // How many punches a worker takes before he answers: the first one is a warning.
 export const PUNCHES_TO_BEATING = 2;
 // Phases where the fists are free (not a dialogue, not the fight's own bar).
-export const PUNCH_PHASES = Object.freeze(['manual', 'report', 'choice']);
+// 19.5 (§22): and while the boss storms off, and at the arm before the shock.
+export const PUNCH_PHASES = Object.freeze(['manual', 'report', 'slam', 'lock', 'button']);
 export const WORKER_IDS = Object.freeze(['welder', 'fitter', 'electrician', 'lunch']);
 
 // The fight with the boss (1 · 2 · 3 · БАМ): a push on the beat right after

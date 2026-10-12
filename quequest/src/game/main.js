@@ -68,6 +68,7 @@ import { createAccountUi } from './account-ui.js';
 import { isWeekCheckpoint, weekDayOf, weekClock, weekPin, payLedger, legacyFromQuery, weekFromLegacy, BOSS_END, BOSS_MORNING, HALL_MORNING, EVENING, MORNING, FIRED, CORP, WEEK_PAY_CHECKPOINTS } from './week.js';
 import { createPayCard, createWeekPin } from './week-ui.js';
 import { firedHandoff } from './week-hooks.js';
+import { openingFacts, AFTER_SHOCK_HALL, DAY2_PRINCIPLE } from './opening.js';
 import { createFactoryView, toWorld as hallToWorld, hallAimPoints } from './factory-view.js';
 import { createSorterBay } from './sorter-bay.js?v=sorter-1';
 import { createContractBoard } from './contract-board.js?v=contracts-1';
@@ -208,14 +209,14 @@ onReleaseKeys(() => lookKeys.clear());
 const firstShift = createFirstShift(document.querySelector('#firstShift'), {
   // 19.4 (§21): fist deeds (beaten by each worker, boss on anger, clean
   // hands) are flags too; a new one may earn a badge right away.
-  onFlag: (name) => { setFlag(name); if (/^(beatenBy-|angerBossWin|cleanHands)/.test(name)) maybeEarnBadges(); },
+  onFlag: (name) => { setFlag(name); if (/^(beatenBy-|angerBossWin|cleanHands|childLock|shocked)/.test(name)) maybeEarnBadges(); },
   onSound: name => audio.play(name),
   // 18.2 (§16): the hand remembered something; one gamer slip per scene.
   onReflex: (id) => reflexFired(id),
   gamerLine: (scene) => takeSlip(scene),
   onComplete: ({ delivered = 3, extra = 0, player = null } = {}) => {
     remember('quests', 'quest1');
-    if (!legacy) { weekChipIn({ delivered, extra, player }); return; }
+    if (!legacy) { weekArmWakes({ delivered, extra, player }); return; }
     state = createCheckpointState('chip');
     state = { ...state, warehouse: { ...state.warehouse, wage: Math.max(state.warehouse.wage, (delivered + extra) * CRATE_PAY) } };
     lastScene = state.scene;
@@ -962,6 +963,8 @@ function badgeFacts() {
     ordersDone: pythonioDone(campusProfile),
     tasters: Object.fromEntries(['security', 'web', 'ai', 'systems', 'lowlevel'].map((id) => [id, tasterFinished(campusProfile, id)])),
     reflexes: { save: Boolean(rr.reflexes?.save), crate: Boolean(rr.reflexes?.crate), pattern: Boolean(rr.reflexes?.pattern) },
+    // 19.5 (§22): the child-lock and the shock; an old save past the chip counts.
+    opening: openingFacts({ checkpoint: state.checkpoint, flags, reflexes: rr.reflexes ?? {}, quests: rr.quests ?? {} }),
     meaningHeard: Object.values(rr.heard ?? {}).some((l) => Number(l) > 0),
     fists: { beatenAll: beatenByAll(flags), angerWin: Boolean(flags[FIST_FLAGS.angerWin]), cleanHands: Boolean(flags[FIST_FLAGS.cleanHands]) },
     classJoined: Boolean(currentPlayer()?.classId || flags.classJoined),
@@ -986,8 +989,12 @@ function maybeEarnBadges(extra = {}) {
   if (evaluatingBadges) return [];
   evaluatingBadges = true;
   try {
-    const { profile, earned } = evaluateBadges(campusProfile, { ...badgeFacts(), ...extra });
-    if (!earned.length) return [];
+    const { profile, earned, migrated } = evaluateBadges(campusProfile, { ...badgeFacts(), ...extra });
+    if (!earned.length) {
+      // 19.5: an old badge id moved to the new ones -- keep it, quietly.
+      if (migrated) { campusProfile = profile; saveCampusProfile(campusProfile); accountSaveSoon(); }
+      return [];
+    }
     campusProfile = applyBadgeProofs(profile, earned);
     saveCampusProfile(campusProfile);
     accountSaveSoon();
@@ -1186,27 +1193,32 @@ function talkInHall(who) {
 const weekOn = () => !legacy && isWeekCheckpoint(state.checkpoint);
 const payCard = createPayCard(game, { onNext: () => weekCardNext(), sound: (n) => audio.play(n), onCard: () => openRing('card') });
 const weekPinEl = createWeekPin(game);
-// Shift 1 is over: «ВСТАВИТЬ ЧИП В РУКУ 07» really puts it in. You stand
-// in front of Arm 07, the chip clicks into the socket, the arm gets power
-// and waits for its green button.
-function weekChipIn({ delivered = 3, extra = 0, player = null } = {}) {
+// 19.5 (§22): Shift 1 is over -- you pressed print("wake") and it shocked
+// you. «РУКА 07 ПРОСНУЛАСЬ» puts you in the hall in front of Arm 07, which
+// takes the rest of the pile by itself. Then, at the end of the day, the
+// boss: «Всё делает автомат. Заплачу меньше.»
+function weekArmWakes({ delivered = 3, extra = 0, player = null } = {}) {
   state = createCheckpointState('d1-button');
-  state = {
-    ...state, scene: 'chip', sceneTime: 0,
-    arm: { ...state.arm, chip: 'inserting', awake: false },
-    warehouse: { ...state.warehouse, wage: Math.max(state.warehouse.wage, (delivered + extra) * CRATE_PAY) },
-  };
+  state = { ...state, warehouse: { ...state.warehouse, wage: Math.max(state.warehouse.wage, (delivered + extra) * CRATE_PAY) } };
   void player;
+  // The morning beat of a reloaded day 1 is not needed: you were just there.
+  beatsSeen.add(`${state.checkpoint}:${state.scene}:${state.warehouse.day2 ?? ''}:${state.warehouse.ruleStage ?? ''}:${state.warehouse.week ?? ''}`);
   lastScene = state.scene;
   factoryView.place(state);
+  recordSkill('print', 'tap', { stage: 1, key: 'print:button' });
+  state = applyGameAction(state, { type: 'press-start-button' });
   faceTarget({ type: 'insert-python-chip', x: 1010, y: 636 });
+  automationAcceptedAt = performance.now();
   started = true;
   lastTime = performance.now();
   startPanel.hidden = true;
   persistence.save(state);
   audio.setAmbient('warehouse');
   audio.play('power');
-  telemetry.mark('week-chip-in');
+  maybeEarnBadges();
+  // People saw it.
+  AFTER_SHOCK_HALL.forEach(([who, text], i) => setTimeout(() => { if (!storyActive) factoryView.say(who, text); }, 1200 + i * 3600));
+  telemetry.mark('week-arm-wakes');
 }
 // A day starts in the hall: the boss (days 2–5) and someone in the hall.
 function weekMorningBeat() {
@@ -1222,13 +1234,17 @@ function weekMorningBeat() {
     3: { kicker: 'ШОВ · МЫСЛЬ ПРИШЛА САМА', lines: ['белый → <b>бери</b>', 'красный → <b>оставь</b>', 'ЕСЛИ… ТО…'], from: '— это не совпадение. Ты сам оставил себе эту подсказку.' },
   }[day];
   const afterBoss = () => {
-    if (day === 2) { audio.play('impact'); hear('boss.button'); }
+    if (day === 2) hear('boss.button');
     hallLine();
     if (seam) setTimeout(() => showSeam(document.querySelector('#seamFlash'), seam, () => { const t = getInteractionTarget(state); if (t) faceTarget(t); }), 2800);
     persistence.save(state);
   };
   const boss = BOSS_MORNING[day];
-  if (boss) tellStory(day === 3 ? 'НАЧАЛЬНИК · ПО РАЦИИ' : 'НАЧАЛЬНИК', boss.title, boss.line, boss.button, afterBoss);
+  // 19.5 (§22): day 2 -- the button is gone, and the hero doesn't care any more.
+  const afterBossDay = day === 2
+    ? () => { audio.play('impact'); tellStory(DAY2_PRINCIPLE.who, DAY2_PRINCIPLE.title, DAY2_PRINCIPLE.line, DAY2_PRINCIPLE.button, afterBoss); }
+    : afterBoss;
+  if (boss) tellStory(day === 3 ? 'НАЧАЛЬНИК · ПО РАЦИИ' : 'НАЧАЛЬНИК', boss.title, boss.line, boss.button, afterBossDay);
   else afterBoss();
   // §16: one gamer slip for the first morning with the button.
   if (day === 1) setTimeout(() => { if (state.scene === 'machine' && !storyActive) factoryView.pair(takeSlip('day2-morning')); }, 6500);
@@ -1341,8 +1357,8 @@ function weekHud(nearby) {
     return true;
   }
   if (['machine', 'condition'].includes(state.scene) && w.week) {
-    hud.mission.textContent = { button: 'Кнопка «ПУСК»', copy: 'Листок электрика', assemble: 'Порванный листок', hand: 'Без листка', auto: 'Вся линия — сама' }[w.week];
-    hud.message.textContent = nearby?.label ? `E · ${nearby.label}` : (w.week === 'button' ? 'ПОДОЙДИ К ЗЕЛЁНОЙ КНОПКЕ У РУКИ · E' : 'ПОДОЙДИ К ТЕРМИНАЛУ У РУКИ · E');
+    hud.mission.textContent = { button: 'Кнопка print("wake")', copy: 'Листок электрика', assemble: 'Порванный листок', hand: 'Без листка', auto: 'Вся линия — сама' }[w.week];
+    hud.message.textContent = nearby?.label ? `E · ${nearby.label}` : (w.week === 'button' ? 'ПОДОЙДИ К КНОПКЕ У РУКИ · E' : 'ПОДОЙДИ К ТЕРМИНАЛУ У РУКИ · E');
     return true;
   }
   if (state.scene === 'automation' && state.arm.startSource === 'week') {
@@ -2511,7 +2527,7 @@ if (isLocal) {
     pythonio: { open: (opts) => pythonio.open(opts), close: () => pythonio.close(), active: () => pythonio.active, ready: () => pythonio.ready },
     blackice: { open: (opts) => blackice.open(opts), close: () => blackice.close(), enter: (n) => blackice.enter(n), lobby: () => blackice.lobby(), handle: (msg) => blackice.handle(msg), active: () => blackice.active, ready: () => blackice.ready, view: () => blackice.view, playing: () => blackice.playing, profile: () => ({ stats: campusProfile.stats, cleared: labyrinthCleared(campusProfile), xp: campusProfile.xp, wage: state.warehouse?.wage ?? 0 }) },
     hour: { openTerminal: () => openMachinePanel(), desk: () => hourDesk.step(), beat: () => hourBeat(), lesson: () => state.warehouse.lessonStage, state: () => ({ day2: state.warehouse.day2, button: state.warehouse.button, ruleStage: state.warehouse.ruleStage, scene: state.scene, storyActive }) },
-    firstShift: { debug: (patch) => firstShift.debug(patch), state: () => firstShift.state(), body: () => firstShift.body(), speech: () => firstShift.speech(), chip: () => firstShift.chip() },
+    firstShift: { debug: (patch) => firstShift.debug(patch), state: () => firstShift.state(), body: () => firstShift.body(), speech: () => firstShift.speech(), boss: () => firstShift.boss(), lock: () => firstShift.lock() },
     // 19.0: the first week.
     week: {
       state: () => ({ checkpoint: state.checkpoint, scene: state.scene, week: state.warehouse.week, day: state.warehouse.day, wage: state.warehouse.wage, autoDelivered: state.warehouse.autoDelivered, autoTarget: state.warehouse.autoTarget, button: state.warehouse.button, card: payCard.visible(), story: storyActive, desk: hourDesk.step(), flags: loadFlags(), pin: document.querySelector('#questLineText')?.textContent ?? '', clock: clockText(), legacy }),
@@ -2560,6 +2576,9 @@ function noteUnderHood() {
 }
 
 applyBuildLabels(document);
+// 19.5: a save from before the new start (past the chip) keeps its deeds:
+// renamed badge ids move over and the lock + the shock count as done.
+setTimeout(() => { try { maybeEarnBadges(); } catch (err) { console.error(err); } }, 1200);
 // 18.0: phones — a stick, look-drag, E and jump; a rotate hint in portrait.
 window.addEventListener('qq:look', (ev) => {
   if (!firstPersonActive()) return;

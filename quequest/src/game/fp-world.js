@@ -341,7 +341,7 @@ export function createFpWorld(root, {
       return;
     }
     if (AR_TOGGLE_KEYS.includes(code) && !ev.repeat && headsetOwned(hs)) { ev.preventDefault(); toggleHeadset(); return; }
-    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR', 'KeyF', 'PageUp', 'PageDown'].includes(code)) { held.add(code); ev.preventDefault(); }
+    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyR', 'KeyV', 'PageUp', 'PageDown'].includes(code)) { held.add(code); ev.preventDefault(); }
     if (ev.repeat) return;
     if (code === 'Space') { ev.preventDefault(); doJump(); return; }
     if (code === 'KeyE' || code === 'Enter') { ev.preventDefault(); act(); return; }
@@ -547,7 +547,7 @@ export function createFpWorld(root, {
       const s = (held.has('KeyD') ? 1 : 0) - (held.has('KeyA') ? 1 : 0);
       const turn = (held.has('ArrowRight') ? 1 : 0) - (held.has('ArrowLeft') ? 1 : 0);
       yaw = wrapYaw(yaw + turn * dt * 2.2);
-      const tilt = (held.has('KeyR') || held.has('PageUp') ? 1 : 0) - (held.has('KeyF') || held.has('PageDown') ? 1 : 0);
+      const tilt = (held.has('KeyR') || held.has('PageUp') ? 1 : 0) - (held.has('KeyV') || held.has('PageDown') ? 1 : 0);
       if (tilt) look(-tilt * dt * 1.8);
       if (f || s) {
         const len = Math.hypot(f, s), sin = Math.sin(yaw), cos = Math.cos(yaw), sp = 3.4 * dt;

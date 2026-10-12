@@ -92,10 +92,15 @@ export const BADGES = freeze([
   // ---- gamer reflexes (§16) ----
   { id: 'reflex-save', title: 'Рука помнит F5', how: 'Сохраниться рефлексом — рука потянулась сама.', glyph: '⟳', rarity: 'common',
     check: (p, f) => Boolean(f.reflexes?.save) },
-  { id: 'reflex-crate', title: 'За ящиком', how: 'Заглянуть за одинокий ящик — там чип.', glyph: '▢', rarity: 'rare',
-    check: (p, f) => Boolean(f.reflexes?.crate) },
   { id: 'reflex-pattern', title: 'Паттерн босса', how: 'Увидеть такт босса 1·2·3·БАМ и толкнуть вовремя.', glyph: '⦿', rarity: 'rare',
     check: (p, f) => Boolean(f.reflexes?.pattern) },
+
+  // ---- §22 the new start (19.5): the child-lock and the shock ----
+  // (they replace 18.2's «За ящиком» -- the chip behind the crate is gone)
+  { id: 'child-lock', title: 'Защита от детей', how: 'Отжать с корпуса руки 07 наклейку, которую забыли отрезать. Как на плите.', glyph: '⊡', rarity: 'common',
+    check: (p, f) => Boolean(f.opening?.childLock) },
+  { id: 'shocked', title: 'Удар током', how: 'Нажать print("wake") голыми руками. Шибануло — и ты увидел код под стенами.', glyph: 'ϟ', rarity: 'rare',
+    check: (p, f) => Boolean(f.opening?.shocked) },
 
   // ---- §21 the hands on the factory (19.4) ----
   { id: 'beaten-hall', title: 'Огрёб от всего цеха', how: 'Полезть с кулаками на каждого в цеху: сварщик, слесарь, электрик, грузчик — все тебя отделали.', glyph: '✕', rarity: 'rare',
@@ -137,6 +142,28 @@ export const BADGES = freeze([
 ].map((b) => freeze({ secret: false, ...b })));
 
 export const BADGE_IDS = freeze(BADGES.map((b) => b.id));
+
+// 19.5: badge ids that were renamed. 18.2's «За ящиком» (the chip behind the
+// crate) became the two badges of the new start: whoever had it was past
+// that moment, so the lock and the shock count as done, on the same date.
+export const RENAMED_BADGES = freeze({ 'reflex-crate': ['child-lock', 'shocked'] });
+export function migrateBadgeMap(badges = {}) {
+  let out = badges ?? {};
+  let changed = false;
+  for (const [old, next] of Object.entries(RENAMED_BADGES)) {
+    if (!out[old]) continue;
+    const at = out[old];
+    out = { ...out };
+    delete out[old];
+    for (const id of next) out[id] = out[id] ? Math.min(out[id], at) : at;
+    changed = true;
+  }
+  return { badges: out, changed };
+}
+export function migrateBadges(profile = {}) {
+  const { badges, changed } = migrateBadgeMap(profile.badges);
+  return changed ? { profile: { ...profile, badges }, changed } : { profile, changed: false };
+}
 export const badgeById = (id) => BADGES.find((b) => b.id === id) ?? null;
 
 // ------------------------------------------------------------- earn / merge
@@ -154,7 +181,8 @@ export function earnBadge(profile = {}, id, at = Date.now()) {
 // Check every badge against the profile + facts; earn any newly satisfied.
 // Returns { profile, earned: [badge, …] } — earned carries proofs for main.js.
 export function evaluateBadges(profile = {}, facts = {}, at = Date.now()) {
-  let p = profile;
+  const m = migrateBadges(profile);
+  let p = m.profile;
   const earned = [];
   for (const b of BADGES) {
     if (p.badges?.[b.id]) continue;
@@ -164,13 +192,13 @@ export function evaluateBadges(profile = {}, facts = {}, at = Date.now()) {
     p = { ...p, badges: { ...(p.badges ?? {}), [b.id]: at } };
     earned.push(b);
   }
-  return { profile: p, earned };
+  return { profile: p, earned, migrated: m.changed };
 }
 
 // Union of two badge maps (sync merge: earliest date wins, nothing is lost).
 export function mergeBadges(a = {}, b = {}) {
-  const out = { ...a };
-  for (const [id, at] of Object.entries(b ?? {})) {
+  const out = { ...migrateBadgeMap(a).badges };
+  for (const [id, at] of Object.entries(migrateBadgeMap(b).badges)) {
     if (!badgeById(id)) continue;
     out[id] = out[id] ? Math.min(out[id], at) : at;
   }
@@ -181,6 +209,7 @@ export function mergeBadges(a = {}, b = {}) {
 // For the ЗНАЧКИ grid on the diver card. Locked non-secret badges show «???»
 // with the how-to hint; secret badges are hidden entirely until earned.
 export function badgeGrid(profile = {}) {
+  profile = migrateBadges(profile).profile;
   const order = ['common', 'rare', 'epic', 'secret'];
   const rows = BADGES.map((b) => {
     const at = profile.badges?.[b.id] ?? null;

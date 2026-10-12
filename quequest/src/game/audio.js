@@ -78,6 +78,16 @@ export const SOUND_RECIPES = Object.freeze({
   anger: Object.freeze({ frequency: 110, end: 165, duration: .22, gain: .06, type: 'sawtooth' }),
   'anger-full': Object.freeze({ frequency: 98, end: 220, duration: .4, gain: .09, type: 'sawtooth', next: 'anger-full-2' }),
   'anger-full-2': Object.freeze({ frequency: 220, end: 330, duration: .3, gain: .07, type: 'square' }),
+  // 19.5 · §22 the new start: a plastic creak while you pry the child-lock,
+  // the pop when it comes off, the button, and the shock -- a crackle chain.
+  pry: Object.freeze({ frequency: 1500, end: 900, duration: .05, gain: .03, type: 'sawtooth' }),
+  'lock-pop': Object.freeze({ frequency: 900, end: 2400, duration: .07, gain: .06, type: 'square' }),
+  'button-press': Object.freeze({ frequency: 300, end: 180, duration: .06, gain: .05, type: 'square' }),
+  shock: Object.freeze({ frequency: 3200, end: 400, duration: .09, gain: .11, type: 'sawtooth', next: 'shock-2' }),
+  'shock-2': Object.freeze({ frequency: 120, end: 60, duration: .18, gain: .12, type: 'square', next: 'shock-3' }),
+  'shock-3': Object.freeze({ frequency: 2600, end: 700, duration: .07, gain: .09, type: 'sawtooth', next: 'shock-4' }),
+  'shock-4': Object.freeze({ frequency: 60, end: 50, duration: .5, gain: .09, type: 'sawtooth', next: 'shock-5' }),
+  'shock-5': Object.freeze({ frequency: 1800, end: 300, duration: .12, gain: .06, type: 'sawtooth' }),
 });
 
 export const AMBIENT_RECIPES = Object.freeze({

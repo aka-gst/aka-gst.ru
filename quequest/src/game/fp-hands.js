@@ -13,6 +13,7 @@ export const PUNCH_MS = 340;
 export const GRAB_MS = 320;
 export const PLACE_MS = 520;
 export const KO_MS = 900;          // the fists fly off as you go down
+export const SHOCK_MS = 1600;      // 19.5 (§22): 220 volts through the fists
 
 const FIST = { w: 85, h: 39 };     // punga0
 const CARRY = { w: 176, h: 112 };  // carry
@@ -20,7 +21,7 @@ const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOut = (k) => 1 - (1 - k) * (1 - k);
 
 export function createHands(now = 0) {
-  return { spawnAt: now, punchAt: -1e9, punchSide: 'left', grabAt: -1e9, placeAt: -1e9, koAt: -1e9, cracked: false };
+  return { spawnAt: now, punchAt: -1e9, punchSide: 'left', grabAt: -1e9, placeAt: -1e9, koAt: -1e9, shockAt: -1e9, cracked: false };
 }
 
 // The next punch swings the other fist.
@@ -43,7 +44,9 @@ const PUNCH_FRAMES = [
 ];
 
 // -> { layers: [{ name, x, y, flip, tint }], glow: [{ x, y, r, a }], carrying, busy }
-export function handsPose(hands, now, { W = 427, viewH = 208, walkPhase = 0, carrying = false, anger = 0, full = 3, reduceMotion = false, ko = false } = {}) {
+// 19.5 (§22): pry (0..1, while prying the child-lock: the fists meet in the
+// middle and strain) and hands.shockAt (the shock: they jitter, flicker cyan).
+export function handsPose(hands, now, { W = 427, viewH = 208, walkPhase = 0, carrying = false, anger = 0, full = 3, reduceMotion = false, ko = false, pry = 0 } = {}) {
   const layers = [];
   const glow = [];
   const mood = handsMood({ anger, full });
@@ -57,6 +60,23 @@ export function handsPose(hands, now, { W = 427, viewH = 208, walkPhase = 0, car
     rise = (1 - easeOut(clamp01(ts / 380))) * 28; // the knuckles show from frame one
     if (ts > 380 && ts < 700) squeeze = Math.sin(((ts - 380) / 320) * Math.PI) * 9;
     if (ts > CRACK_AT_MS && ts < 900 && !reduceMotion) jitter = ((Math.floor(ts / 40) % 2) ? 1 : -1) * 1.5;
+  }
+  // Prying: both fists close in on the lock and strain.
+  let pryLift = 0;
+  if (pry > 0) {
+    squeeze += 20 + pry * 6;
+    pryLift = 14 + pry * 8;
+    if (!reduceMotion) jitter += ((Math.floor(now / 50) % 2) ? 1 : -1) * (0.8 + pry * 1.6);
+  }
+  // The shock: the fists jitter hard, flickering cyan and white.
+  const tz = now - (hands.shockAt ?? -1e9);
+  let shockTint = null; let shockY = 0;
+  const shocked = tz >= 0 && tz < SHOCK_MS;
+  if (shocked) {
+    const k = 1 - tz / SHOCK_MS;
+    const flip = Math.floor(tz / 32) % 2 ? 1 : -1;
+    if (!reduceMotion) { jitter += flip * (2 + 6 * k); shockY = (Math.floor(tz / 46) % 3 - 1) * 4 * k; }
+    shockTint = Math.floor(tz / 70) % 2 ? [0.9, 1.5, 1.9] : [1.7, 1.7, 1.8];
   }
   // Full anger: the fists keep clenching, a beat a second.
   if (mood.full && !reduceMotion) squeeze += Math.max(0, Math.sin(now / 160)) * 3;
@@ -84,11 +104,12 @@ export function handsPose(hands, now, { W = 427, viewH = 208, walkPhase = 0, car
   }
   // Back from placing: the fists rise again.
   if (placing) rise = Math.max(rise, (1 - easeOut(clamp01((tp - 300) / 220))) * 48);
-  const baseY = viewH - FIST.h + bobY + rise + fall;
+  const baseY = viewH - FIST.h + bobY + rise + fall - pryLift + shockY;
   const gap = 30 - squeeze;
+  const tintNow = shockTint ?? mood.tint;
   const idle = {
-    right: { name: 'punga0', x: Math.round(cx + gap + bobX + jitter), y: Math.round(baseY), flip: false, tint: mood.tint },
-    left: { name: 'punga0', x: Math.round(cx - gap - FIST.w - bobX - jitter), y: Math.round(baseY), flip: true, tint: mood.tint },
+    right: { name: 'punga0', x: Math.round(cx + gap + bobX + jitter), y: Math.round(baseY), flip: false, tint: tintNow },
+    left: { name: 'punga0', x: Math.round(cx - gap - FIST.w - bobX - jitter), y: Math.round(baseY), flip: true, tint: tintNow },
   };
   const te = now - hands.punchAt;
   let punching = null;
@@ -102,11 +123,14 @@ export function handsPose(hands, now, { W = 427, viewH = 208, walkPhase = 0, car
   if (punching) {
     layers.push(hands.punchSide === 'left' ? idle.right : idle.left, punching);
   } else layers.push(idle.left, idle.right);
-  if (mood.k > 0) {
+  if (shocked) {
+    const k = 1 - tz / SHOCK_MS;
+    for (const l of layers) glow.push({ x: l.x + (l.name === 'punga0' ? FIST.w / 2 : (l.flip ? 30 : 60)), y: l.y + 14, r: 34 + 20 * k, a: 0.8 * k, color: [90, 220, 255] });
+  } else if (mood.k > 0) {
     const pulse = mood.full ? 0.75 + 0.25 * Math.sin(now / 140) : 0.6;
     for (const l of layers) glow.push({ x: l.x + (l.name === 'punga0' ? FIST.w / 2 : (l.flip ? 30 : 60)), y: l.y + 14, r: 20 + 22 * mood.k, a: 0.55 * mood.k * pulse });
   }
-  return { layers, glow, carrying: false, busy: Boolean(punching) };
+  return { layers, glow, carrying: false, busy: Boolean(punching), shocked };
 }
 
 // Paint the pose: glow first (additive, warm), then the sprites.
@@ -121,7 +145,8 @@ export function drawHands(renderer, atlas, pose, { W, viewH, scale = 1 } = {}) {
         if (d >= 1) continue;
         const a = (1 - d) * (1 - d) * g.a;
         const i = y * W + x; const c = buf[i];
-        const r = Math.min(255, (c & 255) + 255 * a) | 0, gg = Math.min(255, ((c >>> 8) & 255) + 90 * a) | 0, b = Math.min(255, ((c >>> 16) & 255) + 30 * a) | 0;
+        const [cr, cg, cb] = g.color ?? [255, 90, 30];
+        const r = Math.min(255, (c & 255) + cr * a) | 0, gg = Math.min(255, ((c >>> 8) & 255) + cg * a) | 0, b = Math.min(255, ((c >>> 16) & 255) + cb * a) | 0;
         buf[i] = (0xff000000 | (b << 16) | (gg << 8) | r) >>> 0;
       }
     }

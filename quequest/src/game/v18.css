@@ -340,3 +340,20 @@
   .game[data-touch="true"] .first-shift__fight { top: calc(22vh + 75vw + 8px) !important; bottom: auto !important; }
 }
 @media (prefers-reduced-motion: reduce) { .first-shift__anger[data-full="true"] { animation: none; } }
+
+/* ------------------------------------------- 19.5 · §22 the child-lock pry */
+/* Hold E (desktop) or press the thumb and slide it right (phone): the lock
+   comes off the arm's casing. Big thumb (≥64px), label ≥14px. */
+.first-shift__pry { position: absolute; z-index: 4; left: 50%; bottom: calc(29.6% + 6px); transform: translateX(-50%); width: min(360px, calc(100% - 24px)); padding: 8px 10px; border: 1px solid #ffc85766; border-radius: 8px; background: #0b0d10d9; color: #ffe7a1; font: 800 14px/1.2 ui-monospace, monospace; letter-spacing: .05em; text-align: center; touch-action: none; user-select: none; }
+.first-shift__pry[hidden] { display: none !important; }
+.first-shift__pry[data-active="true"] { border-color: #ffc857; box-shadow: 0 0 22px #ffc85755; }
+.first-shift__pry-track { position: relative; height: 64px; margin-top: 6px; border: 1px solid #ffffff2e; border-radius: 8px; background: #1b1f24; overflow: hidden; }
+.first-shift__pry-fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--pry, 0) * 100%); background: linear-gradient(90deg, #8a6d1e, #ffd34d); }
+.first-shift__pry-thumb { position: absolute; top: 0; left: calc(var(--pry, 0) * (100% - 64px)); width: 64px; height: 64px; padding: 0; border: 2px solid #ffc857; border-radius: 8px; background: #f2f0e6; color: #1a1a1a; font: 900 24px/1 ui-monospace, monospace; cursor: grab; touch-action: none; }
+.first-shift__pry[data-active="true"] .first-shift__pry-thumb { cursor: grabbing; background: #fff6c8; }
+@media (orientation: portrait) {
+  /* Below the picture, where the prompt was (it steps aside for the track). */
+  .first-shift__pry { bottom: auto; top: calc(22vh + 75vw + 8px); }
+}
+/* 19.5: the speaker's name in the Shift 1 dialogue is ≥14px too. */
+.first-shift__dialogue small { font-size: 14px; }

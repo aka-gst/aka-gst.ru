@@ -450,7 +450,7 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
     } else if (moment) moment = null;
     if (state.arm?.awake && state.arm.wakeRevealRemaining > 0) {
       const fromChip = state.arm.startSource === 'chip';
-      const weekTop = { button: 'КНОПКА «ПУСК»', copy: 'СТРОЧКА С ЛИСТКА', assemble: 'СОБРАННАЯ СТРОЧКА', hand: 'ТВОЁ ПРАВИЛО', auto: 'ВСЯ ЛИНИЯ САМА' }[state.warehouse?.week];
+      const weekTop = { button: 'КНОПКА print("wake")', copy: 'СТРОЧКА С ЛИСТКА', assemble: 'СОБРАННАЯ СТРОЧКА', hand: 'ТВОЁ ПРАВИЛО', auto: 'ВСЯ ЛИНИЯ САМА' }[state.warehouse?.week];
       banner(buf, viewH, weekTop ?? (fromChip ? 'СЕРВИСНЫЙ ЧИП ПРИНЯТ' : 'КОМАНДА ПРИНЯТА'), 'РУКА 07 · РАБОТАЕТ', fromChip || weekTop ? GOLD : CYAN);
     }
     if (!moment && state.scene === 'chip' && state.arm?.chip === 'inserting') banner(buf, viewH, 'ЩЁЛК', 'ЧИП В РУКЕ 07', GOLD);

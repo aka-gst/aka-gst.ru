@@ -201,3 +201,44 @@ export function paintSheet(torn = false) {
   g.outline();
   return { w, h, data: g.data, ppm: 40 };
 }
+
+// 19.5 (§22): the leftover sticker on the arm's casing nobody cut off -- a
+// CHILD-LOCK, like on a kitchen stove: a white plastic latch with a yellow
+// band, a little crossed-out child and a lock. 'on' sits flat; 'loose' hangs
+// off one corner after the boss's slam. 20 x 16 px at 64 px/m.
+export function paintChildLock(state = 'on') {
+  const w = 20, h = 16;
+  const g = painter(w, h);
+  const white = [228, 230, 224], band = [236, 196, 40], ink = [40, 40, 46], red = [210, 50, 40];
+  if (state === 'loose') {
+    // Hanging by the top-left corner, tipped ~25°.
+    g.poly([[2, 1], [16, 4], [13, 15], [0, 12]], white);
+    g.poly([[2, 1], [16, 4], [15, 7], [1, 4]], band);
+    g.ell(7, 9, 2, 2, ink); g.rect(9, 9, 3, 2, ink);
+    g.line([4, 6], [11, 13], red);
+  } else {
+    g.rect(1, 2, 18, 12, white);
+    g.rect(1, 2, 18, 3, band);
+    // A small child (head + body), crossed out, and a padlock.
+    g.ell(6, 8, 1, 1, ink); g.rect(5, 10, 3, 3, ink);
+    g.line([3, 6], [9, 13], red);
+    g.rect(12, 9, 5, 4, ink); g.rect(13, 7, 3, 1, ink); g.put(13, 8, ink); g.put(15, 8, ink);
+  }
+  g.outline();
+  return { w, h, data: g.data, ppm: 64 };
+}
+
+// Under the child-lock: the button print("wake") -- a red mushroom button on
+// a steel plate with a tiny label strip. 20 x 14 px at 64 px/m.
+export function paintWakeButton(lit = true) {
+  const w = 20, h = 14;
+  const g = painter(w, h);
+  g.rect(1, 3, 18, 10, [70, 76, 82]); g.rect(1, 3, 18, 1, [140, 148, 156]);
+  g.ell(10, 6, 5, 3, lit ? [230, 52, 40] : [120, 40, 34]);
+  g.rect(8, 4, 4, 1, lit ? [255, 170, 150] : [160, 80, 70]);
+  // The label strip: print("wake"), as pixels of ink.
+  g.rect(3, 10, 14, 2, [226, 222, 200]);
+  for (const x of [4, 5, 7, 8, 9, 11, 13, 14, 15]) g.put(x, 11, [30, 40, 60]);
+  g.outline();
+  return { w, h, data: g.data, ppm: 64 };
+}
