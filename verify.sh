@@ -296,7 +296,7 @@ echo "== внутреннее наружу не отдаётся =="
 # со страниц и отчитались «сделано».
 for p in /data/stories.json /data/projects.json /shots/dharma-ai.jpg \
          /qa-quest-lesson.jpg /psy-admin/test.mjs /verify.sh /build.mjs \
-         /deploy.sh /docs/ /tools/vylozhit.sh /package.json; do
+         /deploy.sh /docs/ /tools/vylozhit.sh /package.json /GDD.md /___START.command; do
   expect "$p" 404
 done
 # Положительный контроль к этому разделу: если сервер вдруг отвечает 404
