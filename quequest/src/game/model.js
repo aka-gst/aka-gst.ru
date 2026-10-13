@@ -1144,7 +1144,7 @@ export function getNearbyAction(state) {
     const step = state.warehouse.week;
     const nearButton = distance(state.player, LOOSE_START_BUTTON) <= INTERACTION_RADIUS + 25;
     const nearTerminal = distance(state.player, MACHINE_TERMINAL) <= INTERACTION_RADIUS + 70;
-    if (step === 'button') return nearButton ? { type: 'press-start-button', label: 'НАЖАТЬ ЗЕЛЁНУЮ КНОПКУ «ПУСК»' } : null;
+    if (step === 'button') return nearButton ? { type: 'press-start-button', label: 'НАЖАТЬ КНОПКУ print("wake")' } : null;
     if (state.warehouse.button === 'torn' && nearButton && (!nearTerminal || distance(state.player, LOOSE_START_BUTTON) < distance(state.player, MACHINE_TERMINAL))) {
       return { type: 'pick-torn-button', label: 'ПОДНЯТЬ ОТОРВАННУЮ КНОПКУ' };
     }

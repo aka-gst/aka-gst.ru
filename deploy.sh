@@ -17,6 +17,9 @@ ROOT="${DEPLOY_ROOT:-/opt/zakriva/caddy/site}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 # Без таймаута недоступный сервер вешает выкладку на минуты.
 SSHOPTS="-o ConnectTimeout=15 -o BatchMode=yes"
+# Один список исключений на все вызовы rsync (и у сторожа копий игр), иначе разойдутся молча.
+RSYNC_EXCL="--exclude=.DS_Store --exclude=**/.gitignore --exclude=**/.githooks --exclude=**/.githooks/** --exclude=psy-admin/tools/** --exclude=*/vendor/**/README.md --include=*/vendor/** --exclude=README.md --exclude=test.mjs --exclude=*.test.mjs --exclude=ФИНИШ.md --exclude=proizvodnye.json"
+export HOST ROOT RSYNC_EXCL
 cd "$HERE"
 
 go=false
@@ -231,6 +234,12 @@ else
 fi
 
 echo
+echo "== копии игр: на бой только готовое к показу (Сергей 13.10) =="
+# shellcheck disable=SC2086
+if ! sh tools/igry-gotovy-k-pokazu.sh $PAYLOAD; then
+  if $go; then echo "!! выкладка остановлена." >&2; exit 1; fi
+fi
+
 echo "== содержимое сайта =="
 # acid/ здесь намеренно нет: игра выкладывается из github.com/aka-gst/acid-uno
 # своей сессией. Моя копия отставала, и выкладка клала её поверх свежей —
@@ -240,10 +249,10 @@ echo "== содержимое сайта =="
 if $go; then
   # shellcheck disable=SC2086
   # shellcheck disable=SC2086
-  rsync -avz --omit-dir-times --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='**/.githooks' --exclude='**/.githooks/**' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/"
+  set -f; rsync -avz --omit-dir-times $RSYNC_EXCL $PAYLOAD "$HOST:$ROOT/"; set +f
 else
   # shellcheck disable=SC2086
-  rsync -avzn --omit-dir-times --itemize-changes --exclude='.DS_Store' --exclude='**/.gitignore' --exclude='**/.githooks' --exclude='**/.githooks/**' --exclude='psy-admin/tools/**' --exclude='*/vendor/**/README.md' --include='*/vendor/**' --exclude='README.md' --exclude='test.mjs' --exclude='*.test.mjs' --exclude='ФИНИШ.md' --exclude='proizvodnye.json' $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'
+  set -f; rsync -avzn --omit-dir-times --itemize-changes $RSYNC_EXCL $PAYLOAD "$HOST:$ROOT/" | sed 's/^/  /'; set +f
   echo
   echo "  (черновой прогон; повторите с --go)"
 fi

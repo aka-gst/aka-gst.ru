@@ -25,7 +25,7 @@ const STUDENTS = Object.freeze([
   { id: 'ex-06', nick: 'Егор П.', xp: 980, grid: [['print', 2, 3, 3], ['if', 2, 3, 3], ['lock', 2, 3, 2], ['guard', 1, 4, 3], ['bits', 1, 3, 2], ['cascade', 1, 2, 1]], misses: { web: 2 }, badges: ['sanya-lock', 'flag-input', 'flag-token', 'seam-found'] },
   { id: 'ex-07', nick: 'Женя Р.', xp: 260, grid: [['print', 1, 3, 2], ['for', 1, 1, 1], ['cascade', 1, 3, 2]], misses: { loop: 6 }, badges: ['reflex-save'] },
   { id: 'ex-08', nick: 'Зоя С.', xp: 1890, grid: [['print', 3, 3, 4], ['if', 2, 5, 5], ['for', 2, 4, 4], ['while', 2, 3, 2], ['def', 2, 3, 3], ['route', 2, 3, 2], ['bits', 1, 4, 2]], misses: {}, badges: ['fired-honor', 'self-automaton', 'engineer-pro', 'duel-clean', 'beat-spec', 'flag-sign', 'polygon-clear'] },
-  { id: 'ex-09', nick: 'Илья Т.', xp: 430, grid: [['print', 2, 2, 2], ['if', 2, 1, 1], ['guard', 1, 2, 2], ['bits', 1, 2, 1]], misses: { if: 3, guard: 2 }, badges: ['no-button', 'reflex-crate'] },
+  { id: 'ex-09', nick: 'Илья Т.', xp: 430, grid: [['print', 2, 2, 2], ['if', 2, 1, 1], ['guard', 1, 2, 2], ['bits', 1, 2, 1]], misses: { if: 3, guard: 2 }, badges: ['no-button', 'shocked'] },
   { id: 'ex-10', nick: 'Кира У.', xp: 700, grid: [['print', 2, 3, 2], ['site', 1, 3, 2], ['train', 1, 2, 2], ['cascade', 1, 4, 3], ['try', 1, 2, 1]], misses: { hw: 3 }, badges: ['taster-web', 'taster-systems', 'meaning-seam'] },
 ]);
 

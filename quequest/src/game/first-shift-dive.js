@@ -4,10 +4,14 @@
 // grey factory knowing it can be learned. The timeline is pure (tested); the
 // effects draw into the same 240-row Doom frame as the shift.
 import { rgb } from './raycaster.js';
+import { SHOCK_MS, SHOCK_THOUGHT } from './opening.js';
+
+// 19.5 (§22): the dive no longer starts from a chip in the hand -- it starts
+// from the shock: print("wake") and 220 volts, then the view goes «inside».
 
 export const DIVE_TIMELINE = Object.freeze([
-  Object.freeze({ stage: 'grip', ms: 1100 }),
-  Object.freeze({ stage: 'enter', ms: 1900 }),
+  Object.freeze({ stage: 'shock', ms: SHOCK_MS }),
+  Object.freeze({ stage: 'enter', ms: 1500 }),
   Object.freeze({ stage: 'vision', index: 0, ms: 2400 }),
   Object.freeze({ stage: 'vision', index: 1, ms: 2400 }),
   Object.freeze({ stage: 'vision', index: 2, ms: 2400 }),
@@ -28,24 +32,20 @@ export const DIVE_VISIONS = Object.freeze([
 // радужная спираль закрутилась перед глазами" -- and out with "Глубина,
 // глубина, я не твой…".
 export const DIVE_WORDS = Object.freeze({
-  grip: 'DEEP',
-  gripEnter: 'ВВОД',
-  enter: 'ПОГРУЖЕНИЕ...',
+  shock: 'ТРРРЩ!',
+  shockSub: 'УДАР ТОКОМ',
+  enter: 'ВНУТРЬ...',
   peak: 'ТЫ МОЖЕШЬ.',
   exit: 'ГЛУБИНА, ГЛУБИНА, Я НЕ ТВОЙ...',
-  after: 'ЭТОМУ МОЖНО НАУЧИТЬСЯ.',
-  afterSub: 'ИГРАЮЧИ. ПО ШАГУ. С РУКИ 07.',
+  after: 'Я ВИЖУ КОД.',
+  afterSub: 'ПОД СТЕНАМИ · В ПРОВОДАХ · В РУКЕ 07',
 });
 
 // The hero's own thought once he is back: [speaker, line, button].
-export const DIVE_THOUGHT = Object.freeze([
-  'ТЫ · ОШАРАШЕН',
-  'Ого… ЧТО это было?! Это же я — через годы? Не сон. Пару секунд это было «могу». Так умеют люди, у которых этот чип в голове, — и этому учатся: по шагу, играючи. Первый шаг — рука 07.',
-  'ВСТАВИТЬ ЧИП В РУКУ 07 →',
-]);
+export const DIVE_THOUGHT = SHOCK_THOUGHT;
 
 export function diveStageAt(ms) {
-  if (!(ms >= 0)) return { stage: 'grip', index: 0, k: 0, t: 0, step: 0 };
+  if (!(ms >= 0)) return { stage: 'shock', index: 0, k: 0, t: 0, step: 0 };
   let acc = 0;
   for (let i = 0; i < DIVE_TIMELINE.length; i++) {
     const s = DIVE_TIMELINE[i];

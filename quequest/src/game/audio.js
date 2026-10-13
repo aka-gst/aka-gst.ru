@@ -67,6 +67,27 @@ export const SOUND_RECIPES = Object.freeze({
   'duel-win': Object.freeze({ frequency: 392, end: 1568, duration: .8, gain: .12, type: 'sawtooth' }),
   'duel-lose': Object.freeze({ frequency: 330, end: 82, duration: .8, gain: .09, type: 'triangle' }),
   'duel-ring': Object.freeze({ frequency: 660, end: 1980, duration: .5, gain: .05, type: 'sine' }),
+  // 19.4 · §21 the hands: the knuckle crack on spawn, a swing, a punch that
+  // lands on someone, a thud on a crate or a wall, the anger filling up.
+  knuckles: Object.freeze({ frequency: 2400, end: 1700, duration: .04, gain: .05, type: 'square', next: 'knuckles-2' }),
+  'knuckles-2': Object.freeze({ frequency: 2100, end: 1300, duration: .04, gain: .045, type: 'square', next: 'knuckles-3' }),
+  'knuckles-3': Object.freeze({ frequency: 1800, end: 900, duration: .045, gain: .04, type: 'square' }),
+  'fist-swing': Object.freeze({ frequency: 420, end: 140, duration: .1, gain: .035, type: 'sawtooth' }),
+  'fist-hit': Object.freeze({ frequency: 140, end: 44, duration: .14, gain: .12, type: 'square' }),
+  'fist-thud': Object.freeze({ frequency: 66, end: 40, duration: .12, gain: .09, type: 'triangle' }),
+  anger: Object.freeze({ frequency: 110, end: 165, duration: .22, gain: .06, type: 'sawtooth' }),
+  'anger-full': Object.freeze({ frequency: 98, end: 220, duration: .4, gain: .09, type: 'sawtooth', next: 'anger-full-2' }),
+  'anger-full-2': Object.freeze({ frequency: 220, end: 330, duration: .3, gain: .07, type: 'square' }),
+  // 19.5 · §22 the new start: a plastic creak while you pry the child-lock,
+  // the pop when it comes off, the button, and the shock -- a crackle chain.
+  pry: Object.freeze({ frequency: 1500, end: 900, duration: .05, gain: .03, type: 'sawtooth' }),
+  'lock-pop': Object.freeze({ frequency: 900, end: 2400, duration: .07, gain: .06, type: 'square' }),
+  'button-press': Object.freeze({ frequency: 300, end: 180, duration: .06, gain: .05, type: 'square' }),
+  shock: Object.freeze({ frequency: 3200, end: 400, duration: .09, gain: .11, type: 'sawtooth', next: 'shock-2' }),
+  'shock-2': Object.freeze({ frequency: 120, end: 60, duration: .18, gain: .12, type: 'square', next: 'shock-3' }),
+  'shock-3': Object.freeze({ frequency: 2600, end: 700, duration: .07, gain: .09, type: 'sawtooth', next: 'shock-4' }),
+  'shock-4': Object.freeze({ frequency: 60, end: 50, duration: .5, gain: .09, type: 'sawtooth', next: 'shock-5' }),
+  'shock-5': Object.freeze({ frequency: 1800, end: 300, duration: .12, gain: .06, type: 'sawtooth' }),
 });
 
 export const AMBIENT_RECIPES = Object.freeze({

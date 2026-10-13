@@ -23,7 +23,7 @@ export const FACTORY_ROWS = [
   '#MM..RRRRRR.....####',
   '#MM.............P###',
   '#...............P###',
-  '#..ccc..........####',
+  '#..ccc.T........####',
   '#..ccc.A.=======Obb#',
   '#...............####',
   '#k..I.....I.....####',
@@ -58,6 +58,11 @@ export const SPOTS = Object.freeze({
   // 18.2 (§16 «заглянуть за ящик»): a lone crate by his way out (in sight
   // of his desk, no pillar in between); the chip clinks down behind it.
   loneCrate: { x: 10.0, z: 12.9 },
+  // 19.5 (§22): the table by the arm (cell 'T'), where the boss stands to
+  // slam it, and his way out from there (round the pillar and the lone crate).
+  armTable: { x: 7.5, z: 4.5, y: 0.9 },
+  bossToTable: [{ x: 8.5, z: 6.7 }, { x: 8.45, z: 4.55 }],
+  bossExitFromTable: [{ x: 8.5, z: 6.7 }, { x: 8.5, z: 9.4 }, { x: 9.3, z: 12.0 }, { x: 11.5, z: 12.2 }, { x: 13, z: 13.3 }, { x: 13, z: 14.6 }, { x: 13, z: 16.6 }],
 });
 
 // facing is a world yaw (0 = north, PI/2 = east): who looks at what. The
@@ -125,6 +130,8 @@ export function buildFactoryMap(rows = FACTORY_ROWS) {
       case 'k': c = createCell({ ...base, floor: CRATE_H * 2, wall: 'CRATE_G', ftex: 'CRATOP1' }); break;
       case 'K': c = createCell({ ...base, floor: CRATE_H * 3, wall: 'CRATE_G', ftex: 'CRATOP1' }); break;
       case 'W': c = createCell({ ...base, floor: 0.9, wall: 'SHAWN02', ftex: 'CRATOP2' }); break;
+      // 19.5 (§22): the little table by Arm 07 -- the one the boss slams.
+      case 'T': c = createCell({ ...base, floor: 0.9, wall: 'SHAWN02', ftex: 'CRATOP2' }); break;
       case 'c': c = createCell({ ...base, floor: CRATE_H * (pile.get(`${x},${z}`) ?? 0), wall: 'CRATE_B', ftex: 'CRATOP2' }); break;
       case 'A': c = createCell({ ...base, floor: 0.25, wall: 'CEMENT1', ftex: 'HAZARD' }); break;
       case '=': c = createCell({ ...base, floor: BELT_H, wall: 'BELT_SIDE', ftex: 'BELT_TOP', scroll: [0.55, 0] }); break;
