@@ -247,7 +247,7 @@ PRIVATE_TEST_DIRS="leela zoo psy-admin-v2 way torgash-gnjeev4lb7 katerina flow"
 # Psy Admin вернули на «Работу» 02.10 (Сергей: «это сделано… будет заплачено, с ними работаю»).
 # Правило 30д это допускает именно при названном решении. Списком, а не
 # выключением: новая сирота по-прежнему краснеет.
-OWNER_HIDDEN="coin maketchik put naotmash perelom stihii claw"
+OWNER_HIDDEN="coin maketchik put naotmash perelom stihii claw preview"
 #
 # У проверки ЕСТЬ ОБА ИСХОДА, и это записано здесь, чтобы следующий не
 # переоткрывал: красный получен переименованием ссылки на claw (проверка
