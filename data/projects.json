@@ -128,7 +128,7 @@
       "shots": [
         {
           "file": "allure-gateway.png",
-          "alt": "Allure-отчёт прогона Local Agent Gateway: 66 тест-кейсов, 100% пройдено, слои tests и tests.e2e",
+          "alt": "Allure-отчёт прогона Local Agent Gateway: 75 тест-кейсов, 100% пройдено, слои tests и tests.e2e",
           "caption": "Тот же прогон в Allure: 66 кейсов, 100%, разбивка по слоям и рост набора"
         },
         {
@@ -628,7 +628,7 @@
         {
           "type": "site",
           "label": "Открыть звонки",
-          "url": "https://meet.aka-gst.ru/"
+          "url": "https://aka-gst.ru/meet/"
         },
         {
           "type": "repo",

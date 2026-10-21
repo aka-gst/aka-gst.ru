@@ -1,24 +1,24 @@
 {
   "schema": "aka-gst.qa-metrics/1",
-  "generated_at": "2026-08-28T03:45:44Z",
+  "generated_at": "2026-10-02T23:22:38Z",
   "project": {
     "name": "local-agent-gateway",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "repository": "https://github.com/aka-gst/local-agent-gateway",
     "report": "https://aka-gst.github.io/local-agent-gateway/"
   },
   "commit": {
-    "sha": "8c0115b27253fdfe9d0ed2f4f6791f72076678e3",
-    "short": "8c0115b",
+    "sha": "918b22835aa7e1c4c281082a31bb99081eb7965c",
+    "short": "918b228",
     "branch": "main",
-    "run_url": "https://github.com/aka-gst/local-agent-gateway/actions/runs/33139799019"
+    "run_url": "https://github.com/aka-gst/local-agent-gateway/actions/runs/37077193942"
   },
   "status": "passed",
   "headline": [
     {
       "key": "tests",
-      "value": 66,
-      "display": "66",
+      "value": 75,
+      "display": "75",
       "unit": "count",
       "status": "passed",
       "label": {
@@ -26,13 +26,13 @@
         "ru": "Автотестов"
       },
       "note": {
-        "en": "Gateway API 28 · LLM evaluation 33 · End-to-end 5",
-        "ru": "Gateway API 28 · LLM evaluation 33 · End-to-end 5"
+        "en": "Gateway API 31 · LLM evaluation 39 · End-to-end 5",
+        "ru": "Gateway API 31 · LLM evaluation 39 · End-to-end 5"
       }
     },
     {
       "key": "coverage",
-      "value": 98.71,
+      "value": 98.75,
       "display": "99%",
       "unit": "percent",
       "status": "passed",
@@ -56,8 +56,8 @@
         "ru": "Pass rate"
       },
       "note": {
-        "en": "66 of 66 in the last run",
-        "ru": "66 из 66 в последнем прогоне"
+        "en": "75 of 75 in the last run",
+        "ru": "75 из 75 в последнем прогоне"
       }
     },
     {
@@ -77,24 +77,24 @@
     }
   ],
   "tests": {
-    "total": 66,
-    "passed": 66,
+    "total": 75,
+    "passed": 75,
     "failed": 0,
     "broken": 0,
     "skipped": 0,
     "pass_rate": 1.0,
-    "duration_ms": 1948,
+    "duration_ms": 2044,
     "suites": [
       {
         "name": "Gateway API",
-        "total": 28,
-        "passed": 28,
+        "total": 31,
+        "passed": 31,
         "failed": 0
       },
       {
         "name": "LLM evaluation",
-        "total": 33,
-        "passed": 33,
+        "total": 39,
+        "passed": 39,
         "failed": 0
       },
       {
@@ -107,10 +107,10 @@
     "status": "passed"
   },
   "coverage": {
-    "percent": 98.71,
+    "percent": 98.75,
     "threshold": 90.0,
-    "covered_lines": 458,
-    "total_lines": 464,
+    "covered_lines": 475,
+    "total_lines": 481,
     "missing_lines": 6,
     "status": "passed"
   },
