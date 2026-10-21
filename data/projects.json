@@ -129,7 +129,7 @@
         {
           "file": "allure-gateway.png",
           "alt": "Allure-отчёт прогона Local Agent Gateway: 75 тест-кейсов, 100% пройдено, слои tests и tests.e2e",
-          "caption": "Тот же прогон в Allure: 66 кейсов, 100%, разбивка по слоям и рост набора"
+          "caption": "Тот же прогон в Allure: 75 кейсов, 100%, разбивка по слоям и рост набора"
         },
         {
           "file": "gateway-console.jpg",
