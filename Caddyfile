@@ -498,6 +498,19 @@ aka-gst.ru, www.aka-gst.ru {
     }
   }
 
+  # Демо-стенд Ориона для показа потенциальным клиентам (решение Сергея 22.10.2026):
+  # контейнер orion-demo-site → orion-demo-booking (демо-сид, без Google-календаря,
+  # база обнуляется ночью). Закрыт от поиска. Админка — /orion-demo/admin без слеша.
+  redir /orion-demo /orion-demo/ 308
+  redir /orion-demo/admin/ /orion-demo/admin 308
+  handle_path /orion-demo/* {
+    header X-Robots-Tag "noindex, nofollow, noarchive"
+    reverse_proxy orion-demo-site:4280 {
+      header_up Host {host}
+      header_up X-Forwarded-Proto {scheme}
+    }
+  }
+
   # Orion loads the public assistant as an ES module from aka-gst.ru. Keep the
   # cross-origin grant narrow: only the widget dependency graph and its one
   # approved voice sample, never the booking admin/API routes.
