@@ -50,6 +50,32 @@
   .langtog{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
   .langtog button{appearance:none;border:0;background:transparent;color:var(--ink-dim);font-family:var(--disp);font-weight:600;font-size:12px;padding:6px 11px;cursor:pointer}
   .langtog button[aria-pressed="true"]{background:var(--accent);color:#190a2b}
+  /* ИИ-твиттер (фраза) — мельче и ближе к бренду */
+  .brand{text-decoration:none}
+  .phrase{display:flex;align-items:center;gap:6px;min-width:0;flex:1;font-size:12px;color:var(--ink-soft);font-family:var(--mono)}
+  .phrase .pl{color:var(--accent-ink);font-family:var(--disp);font-weight:600;letter-spacing:.04em;flex:none}
+  .phrase #phrase-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36ch}
+  .phrase .kursor{width:6px;height:13px;background:var(--accent);flex:none;animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .mainnav{display:flex;gap:2px;flex:none}
+  .mainnav a{font-family:var(--disp);font-weight:600;font-size:13.5px;color:var(--ink-soft);text-decoration:none;padding:6px 10px;border-radius:8px}
+  .mainnav a:hover{color:var(--ink)}
+  .mainnav a[aria-current="page"]{color:#fff;background:rgba(168,85,247,.16)}
+  @media(max-width:1120px){.phrase{display:none}}
+  @media(max-width:620px){.mainnav{order:3;width:100%;justify-content:center;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}}
+  /* компактная строка истории/короткого портфолио */
+  .histstrip{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;flex-wrap:wrap}
+  .histstrip .thumbs{display:flex;gap:8px;flex:none}
+  .histstrip .thumbs a{display:block;width:82px;height:104px;border-radius:8px;overflow:hidden;border:1px solid var(--line);position:relative}
+  .histstrip .thumbs img{width:100%;height:100%;object-fit:cover}
+  .histstrip .thumbs .play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:18px;background:rgba(0,0,0,.28)}
+  .histstrip .htxt{flex:1;min-width:240px;display:flex;flex-direction:column;gap:6px}
+  .histstrip .htxt h4{font-size:15px}
+  .histstrip .htxt p{margin:0;color:var(--ink-soft);font-size:13.5px}
+  .histstrip .htxt p b{color:var(--ink)}
+  .histstrip .hlinks{display:flex;flex-wrap:wrap;gap:14px;margin-top:3px}
+  .histstrip .hlinks a{font-family:var(--disp);font-weight:600;font-size:12.5px;color:var(--accent-ink);text-decoration:none}
+  .histstrip .hlinks a:hover{text-decoration:underline}
 
   /* ---------- HERO ---------- */
   .hero{padding:40px 0 10px}
@@ -155,14 +181,20 @@
 <header class="top">
   <div class="wrap">
     <div class="idrow">
-      <div class="brand">
+      <a class="brand" href="/preview/portfolio/" aria-label="aka-gst — главная">
         <div class="dot">С</div>
         <div class="who">
           <b>Сергей Гостов</b>
-          <span class="ru">AI-инженер · Разработчик игр · Санкт-Петербург</span>
+          <span class="ru">AI-инженер · Разработчик игр · СПб</span>
           <span class="en">AI engineer · Game developer · St. Petersburg</span>
         </div>
-      </div>
+      </a>
+      <div class="phrase" aria-label="Фразы из рабочих заметок"><span class="pl">ИИ:</span><span id="phrase-text">Проверено поломкой</span><span class="kursor" aria-hidden="true"></span></div>
+      <nav class="mainnav" aria-label="Разделы сайта">
+        <a href="/preview/portfolio/" aria-current="page">Работа</a>
+        <a href="/games.html">Игры</a>
+        <a href="/stories.html">Рассказы</a>
+      </nav>
       <div class="hright">
         <a class="mail" href="mailto:sers2109@gmail.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span class="ru">Обсудить проект</span><span class="en">Get in touch</span></a>
         <a class="iconlink" href="https://github.com/aka-gst" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.8v2.7c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg></a>
@@ -197,7 +229,7 @@
     <button role="tab" aria-selected="true" data-tab="ai"><span class="ru">AI-инженерия</span><span class="en">AI engineering</span></button>
     <button role="tab" aria-selected="false" data-tab="sec"><span class="ru">AI-безопасность</span><span class="en">AI security</span></button>
     <button role="tab" aria-selected="false" data-tab="prod"><span class="ru">Продукты для клиентов</span><span class="en">Client products</span></button>
-    <button role="tab" aria-selected="false" data-tab="games"><span class="ru">Игры</span><span class="en">Games</span></button>
+    <button role="tab" aria-selected="false" data-tab="games"><span class="ru">Геймдев</span><span class="en">Game dev</span></button>
     <button role="tab" aria-selected="false" data-tab="how"><span class="ru">Как я работаю</span><span class="en">How I work</span></button>
   </nav>
 </div>
@@ -487,24 +519,21 @@
         <div class="chips"><span class="chip"><span class="ru">ИИ-бойцы</span><span class="en">AI fighters</span> · GOAP <b>18</b>/<b>10</b></span><span class="chip">netkod-arena · <span class="ru">дельта-снапшоты, rewind</span><span class="en">delta snapshots, rewind</span></span><span class="chip">flow-seed · <span class="ru">один seed = тот же бит в Python и JS</span><span class="en">one seed = same bit in Python &amp; JS</span></span><span class="chip"><span class="ru">стелс: конус/свет/тревога</span><span class="en">stealth: cone/light/alarm</span></span><span class="chip"><span class="ru">жесты рукой с камеры</span><span class="en">hand gestures from camera</span></span></div>
       </div>
 
-      <div class="blockhead"><span class="ru">История: геймдизайн VitalSchool (2018–2020)</span><span class="en">History: VitalSchool game design (2018–2020)</span></div>
-      <div class="grid g2">
-        <article class="card">
-          <div class="shot"><img src="img/vs-teaser.jpg" alt="VitalSchool: обучающая MMORPG, игровой мир" loading="lazy"></div>
-          <div class="body">
-            <div class="ctop"><h3><span class="ru">VitalSchool — обучающая MMORPG</span><span class="en">VitalSchool — educational MMORPG</span></h3><span class="pill pilot"><span class="ru">карьера</span><span class="en">career</span></span></div>
-            <p class="say"><span class="ru">Геймдизайнер, Project Manager и креативный руководитель инди-студии: <b>обучающая MMORPG, 100+ квестов</b>, где школьная программа становится игрой. Запатентованная механика обучения.</span><span class="en">Game designer, Project Manager and creative lead of an indie studio: an <b>educational MMORPG with 100+ quests</b>, turning the school curriculum into play. A patented learning mechanic.</span></p>
-            <div class="stackline"><span class="ru">Патент РФ <b>RU2695829C1</b> · геймплей на YouTube · карьера с 2018</span><span class="en">RU patent <b>RU2695829C1</b> · gameplay on YouTube · since 2018</span></div>
+      <div class="blockhead"><span class="ru">История — короткое портфолио</span><span class="en">Background — a short note</span></div>
+      <div class="histstrip">
+        <div class="thumbs">
+          <a href="https://youtu.be/b7SGNR0p0sQ" target="_blank" rel="noopener" aria-label="Тизер VitalSchool на YouTube"><img src="img/vs-teaser.jpg" alt="Кадр из тизера VitalSchool"><span class="play" aria-hidden="true">▶</span></a>
+          <a href="/game-design/" target="_blank" rel="noopener" aria-label="Обзор Resistance: Fall of Man, PlayStation Magazine Russia, 2008"><img src="/assets/shots/psm-2008.jpg" alt="Разворот журнала PlayStation Magazine Russia 2008 с обзором Resistance: Fall of Man"></a>
+        </div>
+        <div class="htxt">
+          <h4><span class="ru">Геймдизайн VitalSchool (2018–2020) · первая публикация (2008)</span><span class="en">VitalSchool game design (2018–2020) · first publication (2008)</span></h4>
+          <p><span class="ru"><b>Обучающая MMORPG, 100+ квестов</b>, где школьная программа становится игрой — геймдизайнер, PM и креативный руководитель инди-студии, запатентованная механика обучения (патент РФ RU2695829C1). А начиналось с текста: первая публикация — обзор Resistance: Fall of Man в PlayStation Magazine Russia, 2008. Также Unity: скейт-прототип (20 сцен, 558 файлов C#).</span><span class="en"><b>An educational MMORPG, 100+ quests</b>, turning the school curriculum into play — game designer, PM and creative lead of an indie studio, a patented learning mechanic (RU patent RU2695829C1). It started with writing: a Resistance: Fall of Man review in PlayStation Magazine Russia, 2008. Also Unity: a skate prototype (20 scenes, 558 C# files).</span></p>
+          <div class="hlinks">
+            <a href="https://youtu.be/b7SGNR0p0sQ" target="_blank" rel="noopener"><span class="ru">Тизер на YouTube ↗</span><span class="en">Teaser on YouTube ↗</span></a>
+            <a href="/game-design/" target="_blank" rel="noopener"><span class="ru">Кейс VitalSchool ↗</span><span class="en">VitalSchool case ↗</span></a>
+            <a href="https://www.youtube.com/c/VitalSchool" target="_blank" rel="noopener"><span class="ru">Канал ↗</span><span class="en">Channel ↗</span></a>
           </div>
-        </article>
-        <article class="card">
-          <div class="shot"><img src="img/vs-skills.jpg" alt="VitalSchool: панель навыков игрока" loading="lazy"></div>
-          <div class="body">
-            <div class="ctop"><h3><span class="ru">И раньше — первая публикация, 2008</span><span class="en">And earlier — first publication, 2008</span></h3></div>
-            <p class="say"><span class="ru">Путь в играх начался с текста: первая публикация — обзор Resistance: Fall of Man в журнале PlayStation Magazine Russia, январь 2008. С тех пор — от слов об играх к их проектированию и коду.</span><span class="en">The path into games started with writing: my first publication was a Resistance: Fall of Man review in PlayStation Magazine Russia, January 2008. From words about games to designing and coding them.</span></p>
-            <div class="stackline"><span class="ru">Также Unity: скейт-прототип — 20 сцен, 558 файлов C#, автопробы физики</span><span class="en">Also Unity: a skate prototype — 20 scenes, 558 C# files, physics auto-probes</span></div>
-          </div>
-        </article>
+        </div>
       </div>
     </section>
 
@@ -550,6 +579,13 @@
     var l='ru'; try{var s=localStorage.getItem('pf_lang'); if(s==='en'||s==='ru')l=s;}catch(e){} setLang(l);
     var t='ai'; try{var st=localStorage.getItem('pf_tab'); if(st)t=st;}catch(e){} setTab(t,false);
   })();
+</script>
+<script src="/phrases.js"></script>
+<script>
+  (function(){var el=document.getElementById('phrase-text');if(!el)return;
+   var ph=(window.sitePhrases&&window.sitePhrases.length)?window.sitePhrases.slice():['Проверено поломкой'];
+   function pick(){return ph[Math.floor(Math.random()*ph.length)];}
+   el.textContent=pick();setInterval(function(){el.textContent=pick();},4500);})();
 </script>
 </body>
 </html>
