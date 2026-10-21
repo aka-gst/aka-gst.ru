@@ -448,6 +448,21 @@ aka-gst.ru, www.aka-gst.ru {
     }
     reverse_proxy ashennote-app:8000
   }
+  # Сикретики — браузерный E2E-чат 1:1 поверх veilwire (aka-gst/veilwire). Контейнеры
+  # veilwire-app/veilwire-db (/opt/zakriva/veilwire, сеть zakriva-net). Статика клиента —
+  # в /srv/sikretiki (на сервере вне выкладки сайта, как /preview и игры из своих репо).
+  # API same-origin под /sikretiki/api/v1/* — префикс /sikretiki срезается перед veilwire.
+  # Клиент выводит базу из адреса модуля (../api/v1): работает и под подкаталогом, и от корня.
+  redir /sikretiki /sikretiki/ 308
+  handle /sikretiki/api/* {
+    uri strip_prefix /sikretiki
+    reverse_proxy veilwire-app:8000
+  }
+  handle_path /sikretiki/* {
+    root * /srv/sikretiki
+    file_server
+  }
+
   # Booking is a separate service, not static content: the prefix is stripped
   # so V2 can keep its own small application routes and SQLite data volume.
   redir /psy-admin/booking /psy-admin/booking/ 308
