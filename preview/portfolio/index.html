@@ -273,22 +273,8 @@
           </div>
         </article>
 
-        <article class="card">
-          <div class="termshot">
-            <div><span class="r-dim"># ForgeLM — своя модель с нуля</span></div>
-            <div><span class="r-key">params</span> 918 656 · 4 <span class="ru">слоя</span><span class="en">layers</span> · ByteBPE 512</div>
-            <div><span class="r-dim">promotion gate:</span> <span class="r-no">3 → 4 / 12  (p=1)  NOT PASSED</span></div>
-            <div><span class="r-ok">✓</span> <span class="r-dim">честный отрицательный результат задокументирован</span></div>
-          </div>
-          <div class="body">
-            <div class="ctop"><h3>ForgeLM</h3><span class="pill proof"><span class="ru">метод</span><span class="en">method</span></span></div>
-            <p class="say"><span class="ru">Языковая модель, обученная <b>с нуля</b>: свой токенизатор ByteBPE, DPO по статье. Гейт промоушена честно <b>не пройден</b> — и это записано, а не спрятано. Продаёт научную добросовестность, а не «качество».</span><span class="en">A language model trained <b>from scratch</b>: own ByteBPE tokenizer, DPO from the paper. The promotion gate honestly <b>failed</b> — and that's documented, not hidden. It sells scientific integrity, not "quality".</span></p>
-            <div class="stackline"><span class="ru"><b>140 тестов</b> · MODEL_CARD · 0 внешних зависимостей от результата</span><span class="en"><b>140 tests</b> · MODEL_CARD · a pre-registered experiment</span></div>
-          </div>
-        </article>
-
       </div>
-      <p class="note"><span class="ru">Также: маршрутизатор моделей с переносом контекста при смене модели посреди диалога (ai-router, 51 тест); Project Brain — внутренний оркестратор «задача → маршрут → исполнитель → проверяемый отчёт», внутри которого живёт тот же Gateway. Эти части закрыты — код по запросу.</span><span class="en">Also: a model router that carries context across a mid-conversation model switch (ai-router, 51 tests); Project Brain — an internal orchestrator "task → route → executor → verifiable report" with the same Gateway embedded. These parts are closed — code on request.</span></p>
+      <p class="note"><span class="ru">Также: <b>ForgeLM</b> — своя языковая модель с нуля (918 656 параметров, свой ByteBPE, DPO по статье); гейт промоушена честно <b>не пройден</b> (3→4 из 12, p=1) — продаёт научную добросовестность, а не «качество», 140 тестов. Маршрутизатор моделей с переносом контекста при смене модели посреди диалога (ai-router, 51 тест). Project Brain — внутренний оркестратор «задача → маршрут → исполнитель → проверяемый отчёт», внутри которого живёт тот же Gateway. Эти части закрыты — код по запросу.</span><span class="en">Also: <b>ForgeLM</b> — a language model trained from scratch (918,656 parameters, own ByteBPE, DPO from the paper); the promotion gate honestly <b>failed</b> (3→4 of 12, p=1) — selling scientific integrity, not "quality", 140 tests. A model router that carries context across a mid-conversation model switch (ai-router, 51 tests). Project Brain — an internal orchestrator "task → route → executor → verifiable report" with the same Gateway embedded. These parts are closed — code on request.</span></p>
     </section>
 
     <!-- ============ TAB: AI SECURITY ============ -->
@@ -387,14 +373,16 @@
       <div class="blockhead"><span class="ru">В разработке и боты</span><span class="en">In progress &amp; bots</span></div>
       <div class="grid g2">
         <article class="card">
-          <div class="body" style="padding-top:18px">
+          <div class="shot"><span class="pill dev toppill"><span class="ru">демо · данные тестовые</span><span class="en">demo · test data</span></span><img src="img/orion-demo-kalendar-1280.jpg" alt="Демо-стенд ИИ-ресепшн: живой календарь записи на приём (данные тестовые)" loading="lazy"></div>
+          <div class="body">
             <div class="ctop"><h3><span class="ru">Лапка — ИИ-ресепшн</span><span class="en">Lapka — AI reception</span></h3><span class="pill dev"><span class="ru">в разработке</span><span class="en">in progress</span></span></div>
             <p class="say"><span class="ru">B2B-ресепшн и диспетчер: запись на приём, живой календарь (Google Calendar), маршрут обращения. Продаваемый сценарий для клиник и салонов — пока без публичного адреса.</span><span class="en">A B2B receptionist and dispatcher: appointment booking, a live Google Calendar, request routing. A sellable scenario for clinics and salons — no public URL yet.</span></p>
             <div class="stackline"><span class="ru"><b>32 теста</b>, 61 коммит · OpenClaw-агент</span><span class="en"><b>32 tests</b>, 61 commits · OpenClaw agent</span></div>
           </div>
         </article>
         <article class="card">
-          <div class="body" style="padding-top:18px">
+          <div class="shot"><img src="img/bot-kletka.svg" alt="Схема: движок бота с доступом к файлам заперт в песочнице, журнал, честные отказы" loading="lazy" style="object-fit:contain;background:#0d0a16;padding:10px"></div>
+          <div class="body">
             <div class="ctop"><h3><span class="ru">Рабочие телеграм-боты</span><span class="en">Working Telegram bots</span></h3></div>
             <p class="say"><span class="ru">Движок с доступом к файлам заперт в песочнице, <b>проверяемой механикой</b> (запуск cat под профилем, а не отказ модели); честные отказы вместо тихого молчания; приватность как инвариант кода. Среди них — первый оплаченный ИИ-кейс: приватный помощник писателя (облачный + локальный fallback из клетки без сети).</span><span class="en">A file-touching engine locked in a sandbox <b>verified by mechanism</b> (running cat under the profile, not a model's refusal); honest refusals instead of silent failure; privacy as a code invariant. Among them — my first paid AI case: a private writer's assistant (cloud + a local fallback from a network-less cage).</span></p>
             <div class="chips"><span class="chip">@aka_claude_bot · <span class="ru">голос→файлы</span><span class="en">voice→files</span></span><span class="chip"><span class="ru">Помощник писателя · <b>оплачен</b> · 294 кейса</span><span class="en">Writer's assistant · <b>paid</b> · 294 cases</span></span><span class="chip">@psyzapisi_bot · B2B</span></div>

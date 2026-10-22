@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <radialGradient id="g" cx="20%" cy="0%" r="90%"><stop offset="0" stop-color="#a855f7" stop-opacity=".22"/><stop offset=".6" stop-color="#a855f7" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="#1b1528"/><rect width="1280" height="720" fill="url(#g)"/>
+  <text x="64" y="92" fill="#caa8ff" font-size="30" font-weight="700" letter-spacing="2">ДНЕВНИК ПРАКТИКИ · СХЕМА</text>
+  <!-- сегодня -->
+  <rect x="64" y="130" width="520" height="430" rx="26" fill="#15111f" stroke="#a855f7" stroke-width="3"/>
+  <text x="96" y="188" fill="#ece8f5" font-size="34" font-weight="700">Сегодня — 6 отметок</text>
+  <g font-size="27">
+    <rect x="96" y="214" width="456" height="54" rx="14" fill="#12261f" stroke="#34d39e" stroke-width="2"/><text x="120" y="250" fill="#6ee7b7">✓ обет дня — 1 из 6</text>
+    <rect x="96" y="280" width="456" height="54" rx="14" fill="#12261f" stroke="#34d39e" stroke-width="2"/><text x="120" y="315" fill="#6ee7b7" font-size="22">✓ наблюдение · сложность · намерение</text>
+    <rect x="96" y="346" width="456" height="54" rx="14" fill="#241c36" stroke="#2a2440" stroke-width="2"/><text x="120" y="382" fill="#ece8f5">○ следующее — по напоминанию</text>
+    <rect x="96" y="412" width="456" height="54" rx="14" fill="#241c36" stroke="#2a2440" stroke-width="2"/><text x="120" y="448" fill="#9a90b2">○ …</text>
+  </g>
+  <text x="96" y="520" fill="#9a90b2" font-size="24">запись видна только самому человеку</text>
+  <!-- дневники -->
+  <rect x="616" y="130" width="600" height="200" rx="26" fill="#15111f" stroke="#2a2440" stroke-width="3"/>
+  <text x="648" y="188" fill="#ece8f5" font-size="32" font-weight="700">Медитация · Йога</text>
+  <text x="648" y="236" fill="#9a90b2" font-size="26">свой план: 1–4 практики в день,</text>
+  <text x="648" y="272" fill="#9a90b2" font-size="26">в будни и выходные — по-разному</text>
+  <rect x="616" y="360" width="600" height="200" rx="26" fill="#15111f" stroke="#2a2440" stroke-width="3"/>
+  <text x="648" y="418" fill="#ece8f5" font-size="32" font-weight="700">Напоминания</text>
+  <text x="648" y="466" fill="#9a90b2" font-size="26">в своё время, без повторов;</text>
+  <text x="648" y="502" fill="#9a90b2" font-size="26">язык — русский и английский</text>
+  <g font-size="26" text-anchor="middle">
+    <rect x="64" y="596" width="340" height="62" rx="31" fill="#15111f" stroke="#2a2440" stroke-width="2"/><text x="234" y="636" fill="#ece8f5">выгрузка себе</text>
+    <rect x="422" y="596" width="420" height="62" rx="31" fill="#15111f" stroke="#34d39e" stroke-width="2"/><text x="632" y="636" fill="#6ee7b7">удаление — по одной команде</text>
+    <rect x="860" y="596" width="356" height="62" rx="31" fill="#15111f" stroke="#2a2440" stroke-width="2"/><text x="1038" y="636" fill="#ece8f5">бот в Телеграме</text>
+  </g>
+</svg>
