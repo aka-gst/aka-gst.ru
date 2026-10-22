@@ -130,7 +130,7 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
   .card:hover{border-color:rgba(168,85,247,.45);transform:translateY(-2px)}
   .card .shot{position:relative;aspect-ratio:16/10;background:#0e0a17;border-bottom:1px solid var(--line);overflow:hidden}
-  .card .shot img{width:100%;height:100%;object-fit:cover}
+  .card .shot img,.card .shot video{width:100%;height:100%;object-fit:cover;display:block}
   .card .shot .toppill{position:absolute;top:10px;left:10px}
   /* code/terminal visual for cards without a screenshot */
   .termshot{position:relative;aspect-ratio:16/10;border-bottom:1px solid var(--line);background:
@@ -255,7 +255,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill"><span class="ru">живой практикум</span><span class="en">live demo</span></span><img src="/assets/shots/praktikum-llm.jpg" alt="Страница практикума «Настройка LLM и AI-агентов»: разделы, эксперименты, маршрут обучения" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill"><span class="ru">живой практикум</span><span class="en">live demo</span></span><img src="img/site-praktikum-llm.jpg" alt="Страница практикума «Настройка LLM и AI-агентов»: разделы, эксперименты, маршрут обучения" loading="lazy"></div>
           <div class="body">
             <div class="ctop"><h3>AI Service Lab <span class="ru">+ практикум</span><span class="en">+ course</span></h3></div>
             <p class="say"><span class="ru">«AI-инженер» в миниатюре: локальная модель, structured output по схеме, цикл агент-инструмент с allowlist, память и audit в SQLite, RAG с проверяемыми источниками. И опубликованный практикум, как это собрать и проверить.</span><span class="en">A pocket-sized "AI engineer": local model, schema-structured output, a tool-agent loop with allowlist, memory and audit in SQLite, RAG with verifiable sources. Plus a published course on how to build and verify it.</span></p>
@@ -265,7 +265,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill"><span class="ru">живой практикум</span><span class="en">live course</span></span><img src="/assets/shots/praktikum-testing.jpg" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов и эксперименты" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill"><span class="ru">живой практикум</span><span class="en">live course</span></span><img src="img/site-praktikum-testing.jpg" alt="Страница практикума «Локальные AI-агенты, Git и DevOps»: 19 разделов и эксперименты" loading="lazy"></div>
           <div class="body">
             <div class="ctop"><h3><span class="ru">Практикум: локальные AI-агенты, Git и DevOps</span><span class="en">Course: local AI agents, Git &amp; DevOps</span></h3></div>
             <p class="say"><span class="ru">Пошагово: как поднять нейросеть у себя на машине, подключить к ней программу и убедиться, что всё работает. 19 разделов, доказательство вместо демо.</span><span class="en">Step by step: how to run a model on your own machine, wire a program to it, and prove it works. 19 units, evidence instead of a demo.</span></p>
@@ -368,7 +368,7 @@
       <div class="grid g2">
 
         <article class="card">
-          <div class="shot"><span class="pill paid toppill"><span class="ru">живой у клиента · оплачен</span><span class="en">live at client · paid</span></span><img src="img/orion-live.png" alt="Живой сайт центра «Орион-С» с открытым AI-помощником, отвечающим по страницам центра" loading="lazy"></div>
+          <div class="shot"><span class="pill paid toppill"><span class="ru">живой у клиента · оплачен</span><span class="en">live at client · paid</span></span><img src="img/orion-assistant-live-web.jpg" alt="Живой сайт центра «Орион-С» с открытым AI-помощником, отвечающим по страницам центра" loading="lazy"></div>
           <div class="body">
             <div class="ctop"><h3><span class="ru">AI-администратор психоцентра «Орион-С»</span><span class="en">AI admin for the "Orion-S" clinic</span></h3></div>
             <p class="say"><span class="ru">Голосовой помощник, <b>встроенный в живой сайт центра</b>: отвечает только из утверждённой базы, записывает на приём с согласием, ловит кризисные сообщения — и никогда не ставит диагнозов. <b>Единственный оплаченный AI-продукт, работающий на сайте клиента.</b></span><span class="en">A voice assistant <b>embedded in the clinic's live site</b>: answers only from an approved base, books appointments with consent, catches crisis messages — and never diagnoses. <b>My only paid AI product running on a client's site.</b></span></p>
@@ -378,7 +378,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill"><span class="ru">живой кейс</span><span class="en">live case</span></span><img src="/assets/shots/psy-admin-2026.jpg" alt="Помощник центра «Орион-С»: отвечает по страницам центра, рядом кнопки выбора голоса" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill"><span class="ru">живой кейс</span><span class="en">live case</span></span><img src="img/orion-admin-zhivoy.jpg" alt="Помощник центра «Орион-С»: отвечает по страницам центра, рядом кнопки выбора голоса" loading="lazy"></div>
           <div class="body">
             <div class="ctop"><h3><span class="ru">Запись на консультации (коробочный модуль)</span><span class="en">Appointment booking (boxed module)</span></h3></div>
             <p class="say"><span class="ru">Серверная запись для инфраструктуры клиники <b>без платного AI</b>: расписание, удержание слота, заявка с согласием, вход менеджера (HMAC-кука, анти-brute-force, CSRF). LLM — «вторым рубежом»: 6/6 кризисных против 0/6 у шаблонов. Продаётся отдельно клиникам.</span><span class="en">Server-side booking for a clinic's infrastructure <b>with no paid AI</b>: schedule, slot holding, consent form, manager login (HMAC cookie, anti-brute-force, CSRF). An LLM as a "second line": 6/6 crisis vs 0/6 for templates. Sold separately to clinics.</span></p>
@@ -388,7 +388,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill"><span class="ru">продукт · local-first</span><span class="en">product · local-first</span></span><img src="/assets/shots/photodata.jpg" alt="ФотоДата: открытая папка, отмеченные файлы, поле новой даты съёмки" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill"><span class="ru">продукт · local-first</span><span class="en">product · local-first</span></span><img src="img/site-photodata.jpg" alt="ФотоДата: открытая папка, отмеченные файлы, поле новой даты съёмки" loading="lazy"></div>
           <div class="body">
             <div class="ctop"><h3><span class="ru">ФотоДата · Photo Meta Editor</span><span class="en">Photo Meta Editor</span></h3></div>
             <p class="say"><span class="ru">Меняет дату съёмки сразу у пачки фотографий и видео. Работает в браузере: <b>файлы никуда не уходят с устройства</b>. Законченный публичный продукт с честной заметкой о роли ИИ.</span><span class="en">Changes the capture date for a whole batch of photos and videos at once. Runs in the browser: <b>files never leave your device</b>. A finished public product with an honest note on the role of AI.</span></p>
@@ -398,7 +398,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill pilot toppill"><span class="ru">международный · демо + предложение</span><span class="en">international · demo + proposal</span></span><img src="/assets/shots/buddhist-diary.jpg" alt="Буддийский дневник-бот YSI: карточка записи, экспорт и удаление" loading="lazy"></div>
+          <div class="shot"><span class="pill pilot toppill"><span class="ru">международный · демо + предложение</span><span class="en">international · demo + proposal</span></span><img src="img/site-ysi.jpg" alt="YSI: связанная система курсов, практики и AI-гида" loading="lazy"></div>
           <div class="body">
             <div class="ctop"><h3><span class="ru">YSI — одна связанная система</span><span class="en">YSI — one connected system</span></h3></div>
             <p class="say"><span class="ru">Для образовательного института за рубежом: курсы, практика, команда и видео связаны в один поток с гарантированной доставкой заданий и AI-гидом. <b>Демо и кейс — живые; это предложение, а не внедрённый контракт</b> (честно). Движок гида переиспользован из Ориона.</span><span class="en">For an overseas education institute: courses, practice, team and video joined into one flow with guaranteed task delivery and an AI guide. <b>The demo and case are live; this is a proposal, not an installed contract</b> (honest). The guide engine is reused from Orion.</span></p>
@@ -435,7 +435,7 @@
       <div class="grid g3">
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill">live</span><img src="/assets/quequest-warehouse-current.png" alt="QueQuest: 3D-склад от первого лица, игрок таскает ящики" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill">live</span><video autoplay muted loop playsinline preload="metadata" poster="img/quequest-zavod.jpg" aria-label="QueQuest: цех с роборукой — вся линия работает сама"><source src="img/quequest-zavod.mp4" type="video/mp4"></video></div>
           <div class="body"><div class="ctop"><h3>QueQuest</h3></div>
             <p class="say"><span class="ru"><b>Учишься программировать, потому что соседа прижали.</b> Сначала таскаешь ящики руками, потом видишь код — и настоящий Python выполняется прямо в браузере (Pyodide), ставить ничего не надо. Там, где отваливаются новички.</span><span class="en"><b>You learn to code because your neighbour got cornered.</b> First you haul crates by hand, then you see the code — and real Python runs right in the browser (Pyodide), nothing to install. Exactly where beginners drop off.</span></p>
             <div class="stackline"><span class="ru">настоящий CPython · 3D-склад · кампания 8 глав · 530+ тест-кейсов</span><span class="en">real CPython · 3D warehouse · 8-chapter campaign · 530+ test cases</span></div>
@@ -444,7 +444,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill">live</span><img src="/assets/shots/game-technomagic.jpg" alt="ТехноМагия: неоновая ночь, маг и стихии на полу" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill">live</span><video autoplay muted loop playsinline preload="metadata" poster="img/technomagic-pozhar.jpg" aria-label="ТехноМагия: стихии растекаются по полу и реагируют — огонь"><source src="img/technomagic-pozhar.mp4" type="video/mp4"></video></div>
           <div class="body"><div class="ctop"><h3><span class="ru">ТехноМагия</span><span class="en">Technomagic</span></h3></div>
             <p class="say"><span class="ru"><b>Магия по счётчику, последствия — бесплатно.</b> У мага нет оружия — есть очередь из стихий, и вещество остаётся на полу и реагирует со следующим заклинанием. Неон, ночь, immersive-sim.</span><span class="en"><b>Magic runs on a meter; consequences are free.</b> The mage has no weapon — a queue of elements, and matter stays on the floor, reacting to the next spell. Neon, night, immersive-sim.</span></p>
             <div class="stackline"><span class="ru">547 коммитов · 115 озвученных реплик · 83 тайла</span><span class="en">547 commits · 115 voiced lines · 83 tiles</span></div>
@@ -453,7 +453,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill">live</span><img src="/assets/shots/game-acid.jpg" alt="ACID UNO: мобильная карточная игра, комната на четыре буквы" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill">live</span><img src="img/site-acid.jpg" alt="ACID UNO: мобильная карточная игра, комната на четыре буквы" loading="lazy"></div>
           <div class="body"><div class="ctop"><h3>ACID UNO</h3></div>
             <p class="say"><span class="ru">Мобильная UNO по ссылке: комната на четыре буквы, физичный drag карт. <b>Сервер комнат авторитетный — «чужие руки не покидают сервер»</b>, это анти-чит, а не честное слово.</span><span class="en">Mobile UNO by a link: a four-letter room, physical card drag. <b>An authoritative room server — "other players' hands never leave the server"</b>: that's anti-cheat, not a promise.</span></p>
             <div class="stackline"><span class="ru">Node WS-сервер · 118 тест-кейсов</span><span class="en">Node WS server · 118 test cases</span></div>
@@ -462,7 +462,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill">live</span><img src="/assets/shots/game-lines.jpg" alt="Неон Линии: поле 9×9, шары одного цвета в ряд" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill">live</span><video autoplay muted loop playsinline preload="metadata" poster="img/site-lines.jpg" aria-label="Неон Линии: поле 9×9, сбор шаров в ряд"><source src="img/site-clip-lines.mp4" type="video/mp4"></video></div>
           <div class="body"><div class="ctop"><h3><span class="ru">Неон Линии</span><span class="en">Neon Lines</span></h3></div>
             <p class="say"><span class="ru">Классические «Линии» 9×9 с ежедневным seed и <b>глобальным лидербордом</b> (свой сервер, SQLite + HMAC). Офлайн-PWA — ставится на телефон и работает без сети. Кандидат на Яндекс.Игры.</span><span class="en">Classic 9×9 "Lines" with a daily seed and a <b>global leaderboard</b> (own server, SQLite + HMAC). An offline PWA — installs on a phone and runs without a network.</span></p>
             <div class="foot"><a class="btn primary" href="https://aka-gst.ru/lines/" target="_blank" rel="noopener"><span class="ru">Играть →</span><span class="en">Play →</span></a><a class="btn ghost" href="https://github.com/aka-gst/neon-lines" target="_blank" rel="noopener">GitHub →</a></div>
@@ -470,7 +470,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><span class="pill live toppill">live</span><img src="/assets/shots/game-tetcolor.jpg" alt="Тетколор: падающие тройные фишки разных цветов" loading="lazy"></div>
+          <div class="shot"><span class="pill live toppill">live</span><video autoplay muted loop playsinline preload="metadata" poster="img/site-tetcolor.jpg" aria-label="Тетколор: падающие тройные фишки разных цветов"><source src="img/site-clip-tetcolor.mp4" type="video/mp4"></video></div>
           <div class="body"><div class="ctop"><h3><span class="ru">Тетколор</span><span class="en">Tetcolor</span></h3></div>
             <p class="say"><span class="ru">Columns на Next.js: 11 наборов фишек, озвучка голосом автора, настраивается в админ-панели. Законченная — второй кандидат на Яндекс.Игры.</span><span class="en">Columns on Next.js: 11 chip sets, voiced by the author, tuned in an admin panel. Finished — a second Yandex.Games candidate.</span></p>
             <div class="foot"><a class="btn primary" href="https://aka-gst.ru/tetcolor/" target="_blank" rel="noopener"><span class="ru">Играть →</span><span class="en">Play →</span></a><a class="btn ghost" href="https://github.com/aka-gst/tetcolor-columns" target="_blank" rel="noopener">GitHub →</a></div>
@@ -478,7 +478,7 @@
         </article>
 
         <article class="card">
-          <div class="shot"><img src="/assets/pulse-arena.png" alt="Pulse Arena / FEAR: тактический FPS с ИИ-отрядами" loading="lazy"></div>
+          <div class="shot"><img src="img/site-fear.jpg" alt="Pulse Arena / FEAR: тактический FPS с ИИ-отрядами" loading="lazy"></div>
           <div class="body"><div class="ctop"><h3>FEAR / Pulse Arena</h3><span class="pill alpha"><span class="ru">движок</span><span class="en">engine</span></span></div>
             <p class="say"><span class="ru">Самый инженерный игровой проект: <b>авторитетный сервер</b>, дельта-снапшоты, rewind, лизы реконнекта, ИИ-отряды GOAP в духе F.E.A.R. Нативные лаунчеры Mac / Win / Linux.</span><span class="en">My most engineering-heavy game: an <b>authoritative server</b>, delta snapshots, rewind, reconnect leases, GOAP AI squads in the spirit of F.E.A.R. Native launchers for Mac / Win / Linux.</span></p>
             <div class="stackline"><span class="ru">TEST-REPORT: Python 414 · JS 105 · Go <b>-race</b> PASS · acceptance 47/47</span><span class="en">TEST-REPORT: Python 414 · JS 105 · Go <b>-race</b> PASS · acceptance 47/47</span></div>
@@ -490,25 +490,25 @@
       <div class="blockhead"><span class="ru">Альфы и арт — на моей машине, не онлайн</span><span class="en">Alphas &amp; art — on my machine, not online</span></div>
       <div class="grid g3">
         <article class="card">
-          <div class="shot"><span class="pill alpha toppill">alpha</span><img src="img/noxi.png" alt="Noxi: экшен-RPG вид сверху, бой" loading="lazy"></div>
+          <div class="shot"><span class="pill alpha toppill">alpha</span><img src="img/site-noxi.jpg" alt="Noxi: экшен-RPG вид сверху, бой" loading="lazy"></div>
           <div class="body"><div class="ctop"><h3>Noxi</h3></div>
             <p class="say"><span class="ru"><b>Тратишь не ману, а возраст тела</b> — 2,8 года в секунду под лучом. Старение и наказывает, и открывает силу. Экшен-RPG вид сверху.</span><span class="en"><b>You spend body-age, not mana</b> — 2.8 years per second under the beam. Ageing both punishes and unlocks power. Top-down action-RPG.</span></p>
           </div>
         </article>
         <article class="card">
-          <div class="shot"><span class="pill alpha toppill">alpha</span><img src="img/nightracer.png" alt="Night Racer: ночная гонка по городу из реальных карт" loading="lazy"></div>
+          <div class="shot"><span class="pill alpha toppill">alpha</span><img src="img/site-nightracer.jpg" alt="Night Racer: ночная гонка по городу из реальных карт" loading="lazy"></div>
           <div class="body"><div class="ctop"><h3>Night Racer</h3></div>
             <p class="say"><span class="ru"><b>Гонка по твоему настоящему району</b> — город строится из реальных карт OpenStreetMap. Ночь, неон, ощущение NFS.</span><span class="en"><b>Race through your real neighbourhood</b> — the city is built from real OpenStreetMap data. Night, neon, an NFS feel.</span></p>
           </div>
         </article>
         <article class="card">
-          <div class="shot"><span class="pill alpha toppill">alpha</span><img src="img/gromolesye.png" alt="Громолесье Перунов: 3D-приключение про юного мага, двор замка" loading="lazy"></div>
+          <div class="shot"><span class="pill alpha toppill">alpha</span><img src="img/site-gromolesye.jpg" alt="Громолесье Перунов: 3D-приключение про юного мага, двор замка" loading="lazy"></div>
           <div class="body"><div class="ctop"><h3><span class="ru">Громолесье Перунов</span><span class="en">Gromolesye</span></h3></div>
             <p class="say"><span class="ru">3D-приключение про юного мага: <b>стихии перестраивают мир</b> — искра строит мосты, вода кормит сад, шестерни следуют за колесом. Свой WebGL-движок.</span><span class="en">A 3D adventure about a young mage: <b>elements reshape the world</b> — a spark builds bridges, water feeds a garden, gears follow the wheel. My own WebGL engine.</span></p>
           </div>
         </article>
         <article class="card">
-          <div class="shot"><span class="pill alpha toppill"><span class="ru">арт</span><span class="en">art</span></span><img src="img/znaki.png" alt="Знаки: мир нарисован светящимися глифами" loading="lazy"></div>
+          <div class="shot"><span class="pill alpha toppill"><span class="ru">арт</span><span class="en">art</span></span><img src="img/site-znaki.jpg" alt="Знаки: мир нарисован светящимися глифами" loading="lazy"></div>
           <div class="body"><div class="ctop"><h3><span class="ru">Знаки</span><span class="en">Znaki</span></h3></div>
             <p class="say"><span class="ru">Мир <b>целиком нарисован глифами</b> — светящийся дождливый лес из символов. Техно-художественный эксперимент с рендером.</span><span class="en">A world <b>drawn entirely in glyphs</b> — a glowing rainy forest made of symbols. A technical-art experiment in rendering.</span></p>
           </div>
