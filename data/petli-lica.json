@@ -1,7 +1,9 @@
 {
-  "kogda": "2026-10-22T05:26",
+  "kogda": "2026-10-22T07:23",
   "chem": "Vision VNDetectFaceRectanglesRequest, кадр раз в 0.5 с",
   "petli": [
+    {"petlya": "beatdancer.mp4", "sha256": "2fcd449bc27dbf90", "kadrov": 18, "lic": 0},
+    {"petlya": "black-ice.mp4", "sha256": "759c5fb868a8e669", "kadrov": 12, "lic": 0},
     {"petlya": "clip-acid.mp4", "sha256": "750a39b94d94c20d", "kadrov": 11, "lic": 0},
     {"petlya": "clip-coin.mp4", "sha256": "b05a8e691352c3fc", "kadrov": 10, "lic": 0},
     {"petlya": "clip-hotline-abakan.mp4", "sha256": "883ca21374f2ade8", "kadrov": 5, "lic": 0},
@@ -16,6 +18,19 @@
     {"petlya": "clip-stihii.mp4", "sha256": "cc386126a0dec146", "kadrov": 7, "lic": 0},
     {"petlya": "clip-technomagic.mp4", "sha256": "2306db8c8d4d9b17", "kadrov": 11, "lic": 0},
     {"petlya": "clip-tetcolor.mp4", "sha256": "7c7a6efc98345951", "kadrov": 16, "lic": 0},
-    {"petlya": "clip-worm.mp4", "sha256": "58498945e1543e01", "kadrov": 12, "lic": 0}
+    {"petlya": "clip-worm.mp4", "sha256": "58498945e1543e01", "kadrov": 12, "lic": 0},
+    {"petlya": "good-skate.mp4", "sha256": "2b8f8042f8a997e7", "kadrov": 13, "lic": 0},
+    {"petlya": "gromolesye.mp4", "sha256": "9d287c24a0f8f768", "kadrov": 15, "lic": 0},
+    {"petlya": "neon-lines.mp4", "sha256": "bf029a54483773b2", "kadrov": 8, "lic": 0},
+    {"petlya": "nightracer-latest.mp4", "sha256": "9ca3efa69ad967bd", "kadrov": 16, "lic": 0},
+    {"petlya": "noxi.mp4", "sha256": "0f5a2bfa8d047388", "kadrov": 16, "lic": 0},
+    {"petlya": "pauk.mp4", "sha256": "d6da9115c2f7b3cc", "kadrov": 16, "lic": 0},
+    {"petlya": "project-brain.mp4", "sha256": "85781f29ddad075f", "kadrov": 14, "lic": 0},
+    {"petlya": "pulse-spb.mp4", "sha256": "d73241ef500e6925", "kadrov": 13, "lic": 0},
+    {"petlya": "pythonio.mp4", "sha256": "3035abe392f9c34d", "kadrov": 15, "lic": 0},
+    {"petlya": "quequest-zavod.mp4", "sha256": "6a763cedc1e06cc3", "kadrov": 14, "lic": 0},
+    {"petlya": "semugenesis.mp4", "sha256": "e7bc0246631a64c9", "kadrov": 16, "lic": 0},
+    {"petlya": "super-smash.mp4", "sha256": "dc779387134b4fc4", "kadrov": 14, "lic": 0},
+    {"petlya": "tetcolor.mp4", "sha256": "7c7a6efc98345951", "kadrov": 16, "lic": 0}
   ]
 }

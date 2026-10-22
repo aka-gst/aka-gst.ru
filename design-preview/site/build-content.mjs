@@ -79,14 +79,40 @@ const card=(p,section,kind='')=>{
  if(demo) return `<article class="project-card${k?` is-${k}`:''}" data-project="${esc(p.id)}"><a class="project-image" href="${esc(href)}" ${ext} aria-label="${esc(title)}">${media}</a><div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a><a href="${esc(url(demo.url))}">Демо ↗</a></span></div></article>`;
  return `<${tag} class="project-card ${p.pending?'is-pending':''}${k?` is-${k}`:''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${ext}><div class="project-image">${media}</div><div class="project-copy">${copy}<span class="card-action">${label}</span></div></${tag}>`;
 };
-const work=selectProjects(projects,'work');
-// Размеры карточек — слово Сергея 03.10 06:25 (после утренних «3/4»): «всё крупное уменьшить»:
-// QueQuest вдвое меньше, «сайт на картинку» (Psy AI Admin) меньше — обе в полширины рядом;
-// BEATDANCER, ФотоДата, практикумы — мелкие, как Воки-Токи/AiRouter/AshenNote (is-compact).
-const shirokie=[];
-const melkie=['beatdancer','photo-meta-editor','praktikum-testing','ai-agent-service-lab'];
-// qa-quest, psy-ai-admin вынесены в ряд флагманов (первый экран, задача Рта от Сергея 22.10) — из каталога убраны, чтобы не дублировались.
-replace('index.html','WORK',work.filter(p=>!['local-agent-gateway','dharma-ai','qa-quest','psy-ai-admin'].includes(p.id)).map(p=>card(p,'work',shirokie.includes(p.id)?'wide':melkie.includes(p.id)?'compact':'')).join('\n'));
+// Главная «Работа» собирается из отбора сильнейших продающих проектов
+// (data/glavnaya-otbor.json, сильный агент 22.10): три блока — флагманы (первый экран),
+// доказательство-AI (для роли Head of AI), витрина (законченные игры/продукты + широта).
+// Поля: nazvanie, ugol (киллер-подпись), status (готов/в разработке — честно), kadr/kadr_petlya
+// (свежие, осмотрены на лица tools/lica-v-petlyah.sh), potrogat (кнопка, только где адрес 200), kod.
+// Скрытые ТехноМагия/Творч/Кик (Сергей «продавать позже») в отбор не попали.
+const otbor = JSON.parse(readFileSync(path.join(root, 'data', 'glavnaya-otbor.json'), 'utf8'));
+const statLabel = s => /^готов/.test(s || '') ? 'готов' : 'в разработке';
+const statCls = s => /^готов/.test(s || '') ? 'ok' : 'wip';
+const baseName = f => f ? f.split('/').pop() : null;
+const homeCard = (p) => {
+  const shot = p.kadr ? `../../assets/shots/${baseName(p.kadr)}` : null;
+  const loopName = baseName(p.kadr_petlya);
+  const loop = loopName ? `../../assets/clips/${loopName}` : null;
+  const badge = `<span class="hcard-status ${statCls(p.status)}">${statLabel(p.status)}</span>`;
+  // Петля — click-to-play (не autoplay): тот же .animation-frame и логика site.js
+  // (пауза вне экрана, при prefers-reduced-motion и на скрытой вкладке). Постер — свежий кадр той же вещи.
+  const media = (loop && shot && existsSync(path.join(root, 'assets', 'clips', loopName)))
+    ? `<div class="hcard-media animation-frame"><video muted playsinline loop preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video><button class="pill animation-toggle" type="button" aria-pressed="false">Запустить анимацию</button>${badge}</div>`
+    : shot
+      ? `<div class="hcard-media"><img src="${shot}" alt="${esc(p.nazvanie)}" loading="lazy">${badge}</div>`
+      : `<div class="hcard-media hcard-noimg"><span class="project-symbol" aria-hidden="true">AI</span>${badge}</div>`;
+  const ctas = [];
+  if (p.potrogat) ctas.push(`<a href="${esc(p.potrogat)}" ${p.potrogat.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>Попробовать ↗</a>`);
+  if (p.kod) ctas.push(`<a href="${esc(p.kod)}" target="_blank" rel="noopener">Код ↗</a>`);
+  // Приватный репозиторий (negative-control/CapaTrail) — «Код по запросу», а не битая ссылка (решение Рта 22.10).
+  if (!ctas.length && p.blok === 'доказательство-AI') ctas.push(`<span class="cta-muted">Код по запросу</span>`);
+  const cta = ctas.length ? `<span class="hcard-cta">${ctas.join('')}</span>` : '';
+  return `<article class="hcard" data-project="${esc(p.slug || String(p.rank))}" data-blok="${esc(p.blok)}">${media}<div class="hcard-body"><h3>${esc(p.nazvanie)}</h3><p class="hcard-ugol">${esc(p.ugol)}</p>${cta}</div></article>`;
+};
+const byBlok = b => otbor.filter(p => p.blok === b).sort((x, y) => x.rank - y.rank).map(homeCard).join('\n');
+replace('index.html', 'FLAGSHIPS', byBlok('флагман'));
+replace('index.html', 'PROOFAI', byBlok('доказательство-AI'));
+replace('index.html', 'SHOWCASE', byBlok('витрина'));
 replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`<article class="resume-item"><span>${esc(i.period)}</span><div><h3>${esc(i.org)}</h3><p>${esc(i.role)}</p>${i.org.includes('Инди-студия')?'<a class="pill" href="./game-design/">Кейс VitalSchool · геймдизайн ↗</a>':''}</div></article>`).join('\n'));
 replace('index.html','SKILLS',site.profile.skills.map(g=>`<div class="skill-group"><h4>${esc(g.group)}</h4><p>${g.items.map(esc).join(' · ')}</p></div>`).join('\n'));
 const games=selectProjects(projects,'games');
@@ -106,4 +132,4 @@ for (const page of ['index.html', 'games.html', 'stories.html']) {
   const out2 = out.replace(/((?:src|poster)=")(\.\/assets\/)([\w.-]+\.(?:jpg|jpeg|png|webp|mp4|webm))(\?v=(?:[0-9a-f]{10}|net))?/g, (m, attr, pre, file) => `${attr}${pre}${file}?v=${ownVer(file)}`);
   if (out2 !== src) writeFileSync(f, out2);
 }
-console.log(`Generated ${work.length} work entries, ${games.length} games, 3 collections, ${phrases.length} phrases.`);
+console.log(`Generated ${otbor.length} home cards (флагман/доказательство-AI/витрина), ${games.length} games, 3 collections, ${phrases.length} phrases.`);
