@@ -23,13 +23,13 @@
     --mono:ui-monospace,"SF Mono",Menlo,monospace;
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;font-size:clamp(16px,0.5vw + 7.5px,20px)}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;
     background-image:radial-gradient(1200px 600px at 78% -8%,rgba(124,58,237,.16),transparent 60%),radial-gradient(900px 500px at 8% 0%,rgba(52,211,158,.06),transparent 55%);
     background-attachment:fixed;background-repeat:no-repeat}
   body.lang-ru .en{display:none}
   body.lang-en .ru{display:none}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+  .wrap{width:min(2400px,94vw);margin:0 auto;padding:0 clamp(16px,1.4vw,22px)}
   h1,h2,h3,h4{font-family:var(--disp);font-weight:600;letter-spacing:-.01em;line-height:1.12;margin:0}
   a{color:inherit}
   img{display:block}
@@ -122,8 +122,8 @@
   .pill.dev{background:var(--warn-bg);color:var(--warn)}.pill.dev::before{background:var(--warn)}
 
   .grid{display:grid;gap:18px}
-  .g2{grid-template-columns:repeat(2,1fr)}
-  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(460px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
   @media(max-width:900px){.g3{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:620px){.g2,.g3{grid-template-columns:1fr}}
 
@@ -174,6 +174,8 @@
   footer a{color:var(--ink-soft)}
   .note{font-size:12px;color:var(--ink-dim);margin-top:18px;max-width:72ch}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  /* Крупный экран (Сергей 22.10): основной текст хаба растёт со страницей, не остаётся мелким. В конце — чтобы перебить px-правила карточек. */
+  @media(min-width:1100px){.card .say,.lead,.ps .d,.pr p,.histstrip .htxt p{font-size:clamp(14px,0.72vw + 3.2px,18px)}}
 </style>
 </head>
 <body class="lang-ru">
