@@ -14,6 +14,8 @@ const url = value => value?.startsWith('/') ? `https://aka-gst.ru${value}` : val
 // Почта контакта не строкой в HTML, а base64 в data-mail: site.js собирает mailto через atob.
 // Так тест responsive-layout (запрет почты строкой на страницах) проходит, а клик открывает письмо.
 // Сама строка живёт только здесь — build-content.mjs на бой не выкладывается. Правило 60б, решение Рта 22.10.
+// ОТЛОЖЕНО (Рот 22.10): Сергей просил на сайте другую (личную) почту, но privacy-хук метит её как
+// личные данные — ждём явного «да» Сергея на публикацию. Пока остаётся sers2109 (обфусцированная).
 const pochta = Buffer.from('sers2109@gmail.com').toString('base64');
 const replace = (file, key, html) => {
  const filename = path.join(here,file), source = readFileSync(filename,'utf8');
@@ -83,7 +85,8 @@ const work=selectProjects(projects,'work');
 // BEATDANCER, ФотоДата, практикумы — мелкие, как Воки-Токи/AiRouter/AshenNote (is-compact).
 const shirokie=[];
 const melkie=['beatdancer','photo-meta-editor','praktikum-testing','ai-agent-service-lab'];
-replace('index.html','WORK',work.filter(p=>!['local-agent-gateway','dharma-ai'].includes(p.id)).map(p=>card(p,'work',shirokie.includes(p.id)?'wide':melkie.includes(p.id)?'compact':'')).join('\n'));
+// qa-quest, psy-ai-admin вынесены в ряд флагманов (первый экран, задача Рта от Сергея 22.10) — из каталога убраны, чтобы не дублировались.
+replace('index.html','WORK',work.filter(p=>!['local-agent-gateway','dharma-ai','qa-quest','psy-ai-admin'].includes(p.id)).map(p=>card(p,'work',shirokie.includes(p.id)?'wide':melkie.includes(p.id)?'compact':'')).join('\n'));
 replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`<article class="resume-item"><span>${esc(i.period)}</span><div><h3>${esc(i.org)}</h3><p>${esc(i.role)}</p>${i.org.includes('Инди-студия')?'<a class="pill" href="./game-design/">Кейс VitalSchool · геймдизайн ↗</a>':''}</div></article>`).join('\n'));
 replace('index.html','SKILLS',site.profile.skills.map(g=>`<div class="skill-group"><h4>${esc(g.group)}</h4><p>${g.items.map(esc).join(' · ')}</p></div>`).join('\n'));
 const games=selectProjects(projects,'games');
