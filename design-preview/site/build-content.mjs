@@ -88,7 +88,7 @@ replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`
 replace('index.html','SKILLS',site.profile.skills.map(g=>`<div class="skill-group"><h4>${esc(g.group)}</h4><p>${g.items.map(esc).join(' · ')}</p></div>`).join('\n'));
 const games=selectProjects(projects,'games');
 replace('games.html','GAMES',games.map(p=>card(p,'games')).join('\n'));
-replace('stories.html','BOOKS',stories['сборники'].map(c=>`<a class="book" href="#${esc(c.id)}" aria-label="Сборник «${esc(c.title)}»"><img src="../../assets/covers/${esc(c.cover)}" alt="Обложка ${esc(c.title)}"><span>${esc(c.title)}</span></a>`).join('\n'));
+replace('stories.html','BOOKS',stories['сборники'].map(c=>`<a class="book" data-book="${esc(c.id)}" href="#${esc(c.id)}" aria-label="Сборник «${esc(c.title)}»"><img src="../../assets/covers/${esc(c.cover)}" alt="Обложка ${esc(c.title)}"><span>${esc(c.title)}</span></a>`).join('\n'));
 replace('stories.html','STORIES',stories['сборники'].map(c=>`<section class="collection" id="${esc(c.id)}"><div class="collection-heading"><span>${esc(c.year)} · ${c.stories.length} историй</span><h3>${esc(c.title)}</h3></div><div class="collection-links">${c.stories.map((s,i)=>`<a href="https://aka-gst.ru/rasskazy/${encodeURIComponent(s.slug)}/"><span>${String(i+1).padStart(2,'0')}</span><strong>${esc(s.title)}</strong><span aria-hidden="true">↗</span></a>`).join('')}</div></section>`).join('\n'));
 // Все адреса постеров и петель на страницах — с меткой содержимого, включая статичные
 // места шаблона (hero ACID UNO на «Играх»): файлы отдаются с кэшем на год (immutable).
