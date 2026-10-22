@@ -16,7 +16,7 @@ const url = value => value?.startsWith('/') ? `https://aka-gst.ru${value}` : val
 // Сама строка живёт только здесь — build-content.mjs на бой не выкладывается. Правило 60б, решение Рта 22.10.
 // ОТЛОЖЕНО (Рот 22.10): Сергей просил на сайте другую (личную) почту, но privacy-хук метит её как
 // личные данные — ждём явного «да» Сергея на публикацию. Пока остаётся sers2109 (обфусцированная).
-const pochta = Buffer.from('sers2109@gmail.com').toString('base64');
+const pochta = Buffer.from('lolsale111@gmail.com').toString('base64');
 const replace = (file, key, html) => {
  const filename = path.join(here,file), source = readFileSync(filename,'utf8');
  const start = `<!-- GENERATED:${key} -->`, end = `<!-- /GENERATED:${key} -->`;
@@ -77,7 +77,7 @@ const card=(p,section,kind='')=>{
  const clipBase = isGame && shot && !spryatatPetlya.includes(p.id) ? (shot.file.match(/^game-(.+)\.jpe?g$/)?.[1]) : null;
  const gridClip = clipBase ? `clip-${clipBase}.mp4` : null;
  if (gridClip && shot && href && !p.pending && existsSync(path.join(root, 'assets', 'clips', gridClip))) {
-  const frame = `<div class="project-image animation-frame"><video muted playsinline loop preload="metadata" poster="../../assets/shots/${esc(shot.file)}" aria-label="Анимация ${esc(title)}"><source src="../../assets/clips/${esc(gridClip)}" type="video/mp4"></video><button class="pill animation-toggle" type="button" aria-pressed="false">Запустить анимацию</button></div>`;
+  const frame = `<div class="project-image animation-frame"><video autoplay muted loop playsinline preload="metadata" poster="../../assets/shots/${esc(shot.file)}" aria-label="Анимация ${esc(title)}"><source src="../../assets/clips/${esc(gridClip)}" type="video/mp4"></video></div>`;
   return `<article class="project-card has-loop" data-project="${esc(p.id)}">${frame}<div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a></span></div></article>`;
  }
  if(demo) return `<article class="project-card${k?` is-${k}`:''}" data-project="${esc(p.id)}"><a class="project-image" href="${esc(href)}" ${ext} aria-label="${esc(title)}">${media}</a><div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a><a href="${esc(url(demo.url))}">Демо ↗</a></span></div></article>`;
@@ -101,7 +101,7 @@ const homeCard = (p) => {
   // Петля — click-to-play (не autoplay): тот же .animation-frame и логика site.js
   // (пауза вне экрана, при prefers-reduced-motion и на скрытой вкладке). Постер — свежий кадр той же вещи.
   const media = (loop && shot && existsSync(path.join(root, 'assets', 'clips', loopName)))
-    ? `<div class="hcard-media animation-frame"><video muted playsinline loop preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video><button class="pill animation-toggle" type="button" aria-pressed="false">Запустить анимацию</button>${badge}</div>`
+    ? `<div class="hcard-media animation-frame"><video autoplay muted loop playsinline preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video>${badge}</div>`
     : shot
       ? `<div class="hcard-media"><img src="${shot}" alt="${esc(p.nazvanie)}" loading="lazy">${badge}</div>`
       : `<div class="hcard-media hcard-noimg"><span class="project-symbol" aria-hidden="true">AI</span>${badge}</div>`;

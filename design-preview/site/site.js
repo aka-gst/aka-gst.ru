@@ -2,36 +2,24 @@
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
+  // Петли витрины — autoplay muted loop (Сергей 22.10: хочет видеть движение сразу, как в Смотрителе).
+  // Играет только в видимой области; пауза вне экрана, при prefers-reduced-motion и на скрытой вкладке —
+  // чтобы не грузить мобилу десятком видео разом. Кнопки запуска нет.
   for (const frame of document.querySelectorAll('.animation-frame')) {
     const video = frame.querySelector('video');
-    const toggle = frame.querySelector('.animation-toggle');
-    if (!video || !toggle) continue;
-    const sync = () => {
-      toggle.setAttribute('aria-pressed', String(!video.paused));
-      toggle.textContent = video.paused ? 'Запустить анимацию' : 'Остановить анимацию';
-    };
-    toggle.addEventListener('click', async () => {
-      if (!video.paused) video.pause();
-      else {
-        try { await video.play(); }
-        catch { toggle.textContent = 'Повторить запуск'; return; }
-      }
-      sync();
-    });
-    video.addEventListener('play', sync);
-    video.addEventListener('pause', sync);
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) video.pause();
-    });
-    reducedMotion.addEventListener('change', () => {
-      if (reducedMotion.matches) video.pause();
-    });
+    if (!video) continue;
+    // Начальная видимость — по реальной позиции, чтобы петли в кадре играли сразу на загрузке,
+    // не дожидаясь первого срабатывания IntersectionObserver (иначе первый экран стартует с паузы).
+    const visible = () => { const r = frame.getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; };
+    let inView = visible();
+    const wanted = () => inView && !reducedMotion.matches && !document.hidden;
+    const update = () => { if (wanted()) { const p = video.play(); if (p) p.catch(() => {}); } else video.pause(); };
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver(entries => {
-        if (!entries[0].isIntersecting) video.pause();
-      }).observe(frame);
+      new IntersectionObserver((entries) => { inView = entries[0].isIntersecting; update(); }, { threshold: 0.25 }).observe(frame);
     }
-    sync();
+    document.addEventListener('visibilitychange', update);
+    reducedMotion.addEventListener('change', update);
+    update();
   }
 
   // Почта контакта лежит в data-mail как base64 (в сыром HTML её нет строкой —
