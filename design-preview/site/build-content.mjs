@@ -71,7 +71,11 @@ const card=(p,section,kind='')=>{
  // Клик-к-запуску, не autoplay: тот же .animation-frame и та же мобильно-безопасная логика в site.js
  // (пауза вне экрана, при prefers-reduced-motion и на скрытой вкладке). Постер — свежий кадр той же игры.
  // ACID здесь не петля: он уже крутится в hero сверху, второй раз на одном экране не нужен.
- const gridClip = isGame ? ({ tetcolor: 'clip-tetcolor.mp4', 'neon-lines': 'clip-lines.mp4' })[p.id] : null;
+ // Петля для ЛЮБОЙ игры со свежим роликом: game-X.jpg → clip-X.mp4 (Сергей 22.10 «гифки везде, единообразно»).
+ // Скрытые три (Сергей «продавать позже») петлёй на витрину не идут.
+ const spryatatPetlya = ['technomagic', 'creative-lab', 'kick-boom'];
+ const clipBase = isGame && shot && !spryatatPetlya.includes(p.id) ? (shot.file.match(/^game-(.+)\.jpe?g$/)?.[1]) : null;
+ const gridClip = clipBase ? `clip-${clipBase}.mp4` : null;
  if (gridClip && shot && href && !p.pending && existsSync(path.join(root, 'assets', 'clips', gridClip))) {
   const frame = `<div class="project-image animation-frame"><video muted playsinline loop preload="metadata" poster="../../assets/shots/${esc(shot.file)}" aria-label="Анимация ${esc(title)}"><source src="../../assets/clips/${esc(gridClip)}" type="video/mp4"></video><button class="pill animation-toggle" type="button" aria-pressed="false">Запустить анимацию</button></div>`;
   return `<article class="project-card has-loop" data-project="${esc(p.id)}">${frame}<div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a></span></div></article>`;
