@@ -34,6 +34,13 @@
     sync();
   }
 
+  // Почта контакта лежит в data-mail как base64 (в сыром HTML её нет строкой —
+  // анти-скрейп + тест responsive-layout). Собираем mailto на загрузке, чтобы клик
+  // «Обсудить проект» открывал письмо с первого раза. Без JS ссылка молча неактивна.
+  for (const a of document.querySelectorAll('a.header-contact[data-mail]')) {
+    try { a.href = 'mailto:' + atob(a.dataset.mail); } catch { /* битый base64 — оставляем # */ }
+  }
+
   const phraseNode = document.getElementById('phrase-text');
   const phrases = Array.isArray(window.sitePhrases) ? window.sitePhrases : [];
   if (phraseNode && phrases.length) {
