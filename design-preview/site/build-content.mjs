@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -61,6 +61,15 @@ const card=(p,section,kind='')=>{
  const demo=href&&!p.pending?p.links?.find(l=>l.type==='demo'&&url(l.url)!==href):null;
  const ext=href?.startsWith('http')?'target="_blank" rel="noopener"':'';
  const copy=`<small>${esc(p.kicker)}</small><h3>${demo?`<a href="${esc(href)}" ${ext}>${esc(title)}</a>`:esc(title)}</h3>${q&&!isGame?`<p class="tagline-lead">${esc(strokaQ)}</p>`:''}<p class="tagline">${esc(String(description??'').replace(/(?<!\.)\.$/,''))}</p>${extra}`;
+ // Петля прямо в карточке — для законченных живых игр со свежим роликом (Тетколор, Неон Линии).
+ // Клик-к-запуску, не autoplay: тот же .animation-frame и та же мобильно-безопасная логика в site.js
+ // (пауза вне экрана, при prefers-reduced-motion и на скрытой вкладке). Постер — свежий кадр той же игры.
+ // ACID здесь не петля: он уже крутится в hero сверху, второй раз на одном экране не нужен.
+ const gridClip = isGame ? ({ tetcolor: 'clip-tetcolor.mp4', 'neon-lines': 'clip-lines.mp4' })[p.id] : null;
+ if (gridClip && shot && href && !p.pending && existsSync(path.join(root, 'assets', 'clips', gridClip))) {
+  const frame = `<div class="project-image animation-frame"><video muted playsinline loop preload="metadata" poster="../../assets/shots/${esc(shot.file)}" aria-label="Анимация ${esc(title)}"><source src="../../assets/clips/${esc(gridClip)}" type="video/mp4"></video><button class="pill animation-toggle" type="button" aria-pressed="false">Запустить анимацию</button></div>`;
+  return `<article class="project-card has-loop" data-project="${esc(p.id)}">${frame}<div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a></span></div></article>`;
+ }
  if(demo) return `<article class="project-card${k?` is-${k}`:''}" data-project="${esc(p.id)}"><a class="project-image" href="${esc(href)}" ${ext} aria-label="${esc(title)}">${media}</a><div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a><a href="${esc(url(demo.url))}">Демо ↗</a></span></div></article>`;
  return `<${tag} class="project-card ${p.pending?'is-pending':''}${k?` is-${k}`:''}" data-project="${esc(p.id)}" ${href?`href="${esc(href)}"`:''} ${ext}><div class="project-image">${media}</div><div class="project-copy">${copy}<span class="card-action">${label}</span></div></${tag}>`;
 };

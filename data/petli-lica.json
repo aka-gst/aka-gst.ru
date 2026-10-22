@@ -1,11 +1,11 @@
 {
-  "kogda": "2026-10-03T03:21",
+  "kogda": "2026-10-22T05:26",
   "chem": "Vision VNDetectFaceRectanglesRequest, кадр раз в 0.5 с",
   "petli": [
     {"petlya": "clip-acid.mp4", "sha256": "750a39b94d94c20d", "kadrov": 11, "lic": 0},
     {"petlya": "clip-coin.mp4", "sha256": "b05a8e691352c3fc", "kadrov": 10, "lic": 0},
     {"petlya": "clip-hotline-abakan.mp4", "sha256": "883ca21374f2ade8", "kadrov": 5, "lic": 0},
-    {"petlya": "clip-lines.mp4", "sha256": "4988e50937d25cf4", "kadrov": 5, "lic": 0},
+    {"petlya": "clip-lines.mp4", "sha256": "bf029a54483773b2", "kadrov": 8, "lic": 0},
     {"petlya": "clip-neon-claw.mp4", "sha256": "692d78cefbf7dc0f", "kadrov": 11, "lic": 0},
     {"petlya": "clip-photodata.mp4", "sha256": "6df41534523b65ee", "kadrov": 8, "lic": 0},
     {"petlya": "clip-psy-admin.mp4", "sha256": "cc3cdb8a31eae53c", "kadrov": 14, "lic": 0},
@@ -15,7 +15,7 @@
     {"petlya": "clip-stealth.mp4", "sha256": "935e7112e8bb31b2", "kadrov": 14, "lic": 0},
     {"petlya": "clip-stihii.mp4", "sha256": "cc386126a0dec146", "kadrov": 7, "lic": 0},
     {"petlya": "clip-technomagic.mp4", "sha256": "2306db8c8d4d9b17", "kadrov": 11, "lic": 0},
-    {"petlya": "clip-tetcolor.mp4", "sha256": "9e3cf75687f894f7", "kadrov": 16, "lic": 0},
+    {"petlya": "clip-tetcolor.mp4", "sha256": "7c7a6efc98345951", "kadrov": 16, "lic": 0},
     {"petlya": "clip-worm.mp4", "sha256": "58498945e1543e01", "kadrov": 12, "lic": 0}
   ]
 }
