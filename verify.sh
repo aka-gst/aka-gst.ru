@@ -385,6 +385,21 @@ for f in /assets/site.css /assets/read.css /assets/app.js /assets/read.js /site.
   fi
 done
 
+# TLS: срок сертификата снаружи (разбор Хабра 1099678). Меньше 14 дней до конца — красный.
+# Через openssl x509 -checkend, без разбора дат (date-парсинг на macOS ломался бы на «Jan  1»).
+# Отрицательный контроль: expired.badssl.com обязан покраснеть — проверено 26.10 (checkend там
+# возвращает 1 → say_bad). Правило 7л: у измерителя есть свой отрицательный контроль.
+proverit_tls() {
+  _host="$1"; _nazv="$2"
+  if printf '' | openssl s_client -connect "$_host:443" -servername "$_host" 2>/dev/null \
+       | openssl x509 -checkend "$((14 * 86400))" -noout >/dev/null 2>&1; then
+    say_ok "$_nazv: TLS-сертификат годен ещё больше 14 дней"
+  else
+    say_bad "$_nazv: TLS-сертификат истекает в пределах 14 дней, уже истёк или не прочитан"
+  fi
+}
+proverit_tls aka-gst.ru "TLS aka-gst.ru"
+
 echo
 printf '%s пройдено, %s провалено\n' "$ok" "$bad"
 [ "$bad" -eq 0 ]
