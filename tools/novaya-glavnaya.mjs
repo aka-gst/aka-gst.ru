@@ -62,7 +62,7 @@ for (const [file, urlPath] of Object.entries(pages)) {
   writeFileSync(path.join(root, file), html);
 }
 
-for (const f of ['site.css', 'site.js', 'phrases.js']) cpSync(path.join(src, f), path.join(root, f));
+for (const f of ['site.css', 'site.js', 'phrases.js', 'glavnaya.js']) cpSync(path.join(src, f), path.join(root, f));
 for (const d of ['fonts', 'game-design']) cpSync(path.join(src, d), path.join(root, d), { recursive: true });
 // Страница геймдизайна тоже выкладывается — счётчик и на ней (правило 30).
 const gd = path.join(root, 'game-design', 'index.html');

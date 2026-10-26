@@ -41,10 +41,17 @@ const bezTochki=f=>f.trim().replace(/(?<![.…])\.$/,'');
 const vShapku=[...new Set([...phrases,...shapka].map(bezTochki))];
 writeFileSync(path.join(here,'phrases.js'),`window.sitePhrases = ${JSON.stringify(vShapku)};\n`);
 const icons={github:'<path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.58 9.58 0 0 1 12 6.81c.85 0 1.71.12 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.58 4.94.36.31.68.92.68 1.85v2.76c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/>',x:'<path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-7.5L5.5 22H2.3l8.3-9.5L1 2h6.2l4.4 6.9L18.9 2Zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20Z"/>',telegram:'<path d="m21.7 3.3-3.4 17c-.3 1.2-.9 1.5-1.9.9l-5.2-3.9-2.5 2.4c-.3.3-.5.5-1 .5l.4-5.3L17.8 5.5c.4-.4-.1-.6-.6-.3L5.2 12.8.1 11.2c-1.1-.3-1.1-1.1.2-1.6L20.5 1.8c.9-.3 1.7.2 1.2 1.5Z"/>'};
-for(const [file,section] of [['index.html','work'],['games.html','games'],['stories.html','stories']]){
+// Шапка игр/рассказов — на site.css (их дизайн пока прежний). Главная «Работа» — на теме (ниже).
+for(const [file,section] of [['games.html','games'],['stories.html','stories']]){
  const nav=[['index.html','Работа','work'],['games.html','Игры','games'],['stories.html','Рассказы','stories']].map(([f,label,s])=>`<a href="./${f}?v=20261001-6" ${s===section?'aria-current="page"':''}>${label}</a>`).join('');
  const social=[['github','GitHub','https://github.com/aka-gst'],['x','Twitter / X','https://x.com/aka_gst'],['telegram','Telegram','https://t.me/gostinka27']].map(([icon,label,href])=>`<a class="social" href="${href}" target="_blank" rel="noopener" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[icon]}</svg></a>`).join('');
  replace(file,'HEADER',`<header class="site-header"><div class="header-inner site-width"><a class="brand" href="./index.html?v=20261001-6" aria-label="aka-gst — главная"><img src="../../assets/mark-${section==='games'?'games':section}.svg" alt="" width="32" height="32">aka<span>-</span>gst</a><div class="phrase" aria-label="Фразы из рабочих заметок"><span class="phrase-label">ии:</span><span class="phrase-text" id="phrase-text" tabindex="0" aria-describedby="phrase-pop">Проверено поломкой.</span><span class="phrase-kursor" aria-hidden="true"></span><span class="phrase-pop" id="phrase-pop" role="tooltip" hidden></span></div><nav class="main-nav" aria-label="Разделы сайта">${nav}</nav><div class="social-links"><a class="social language" href="https://aka-gst.ru/en/" aria-label="English version">EN</a>${social}</div><a class="pill header-contact" data-mail="${pochta}" href="#">Обсудить проект</a></div></header>`);
+}
+// Шапка главной на теме (решение Сергея/Рта 26.10): бренд, разделы, язык, соцсети, контакт. Без «·» и капс-ярлыков (С3).
+{
+ const navT=[['index.html','Работа','work'],['games.html','Игры','games'],['stories.html','Рассказы','stories']].map(([f,label,s])=>`<a href="./${f}?v=20261001-6"${s==='work'?' aria-current="page"':''}>${label}</a>`).join('');
+ const socT=[['github','GitHub','https://github.com/aka-gst'],['x','Twitter / X','https://x.com/aka_gst'],['telegram','Telegram','https://t.me/gostinka27']].map(([icon,label,href])=>`<a href="${href}" target="_blank" rel="noopener" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[icon]}</svg></a>`).join('');
+ replace('index.html','HEADER',`<header class="site-head"><div class="wrap"><a class="brand" href="./index.html?v=20261001-6" aria-label="aka-gst — главная">aka<b>-</b>gst</a><nav class="nav" aria-label="Разделы сайта">${navT}</nav><div class="soc"><a class="lang" href="https://aka-gst.ru/en/" aria-label="English version">EN</a>${socT}<a class="ghost" data-mail="${pochta}" href="#">Написать</a></div></div></header>`);
 }
 // kind: 'wide' — большая карточка во всю ширину (картинка 3/4, текст сбоку; Сергей 03.10: «картинки 3 четвертых»),
 // 'compact' — карточка без снимка на «Работе» (свой сервер, в разработке): маленькая, чтобы не стоять пустой рамкой.
@@ -95,63 +102,51 @@ const otbor = JSON.parse(readFileSync(path.join(root, 'data', 'glavnaya-otbor.js
 const statLabel = s => /^готов/.test(s || '') ? 'готов' : 'в разработке';
 const statCls = s => /^готов/.test(s || '') ? 'ok' : 'wip';
 const baseName = f => f ? f.split('/').pop() : null;
-const homeCard = (p) => {
-  const shot = p.kadr ? `../../assets/shots/${baseName(p.kadr)}` : null;
-  const loopName = baseName(p.kadr_petlya);
-  const loop = loopName ? `../../assets/clips/${loopName}` : null;
-  const badge = `<span class="hcard-status ${statCls(p.status)}">${statLabel(p.status)}</span>`;
-  // Петля — hover + «случайно» (Сергей 22.10): оживает при наведении, плюс 2–3 видимых играют сами,
-  // чередуясь; на телефоне hover нет — там только «случайно» + тап. Логика в site.js; пауза вне экрана,
-  // при prefers-reduced-motion и на скрытой вкладке. Без autoplay-атрибута — играет управляемо.
-  const media = (loop && shot && existsSync(path.join(root, 'assets', 'clips', loopName)))
-    ? `<div class="hcard-media animation-frame"><video muted loop playsinline preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video>${badge}</div>`
-    : shot
-      ? `<div class="hcard-media"><img src="${shot}" alt="${esc(p.nazvanie)}" loading="lazy">${badge}</div>`
-      : `<div class="hcard-media hcard-noimg"><span class="project-symbol" aria-hidden="true">AI</span>${badge}</div>`;
-  const ctas = [];
-  if (p.potrogat) ctas.push(`<a href="${esc(p.potrogat)}" ${p.potrogat.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>Попробовать ↗</a>`);
-  if (p.kod) ctas.push(`<a href="${esc(p.kod)}" target="_blank" rel="noopener">Код ↗</a>`);
-  // Приватный репозиторий (negative-control/CapaTrail) — «Код по запросу», а не битая ссылка (решение Рта 22.10).
-  if (!ctas.length && p.blok === 'доказательство-AI') ctas.push(`<span class="cta-muted">Код по запросу</span>`);
-  const cta = ctas.length ? `<span class="hcard-cta">${ctas.join('')}</span>` : '';
-  // Большие блоки — QueQuest, Паук (Сергей 22.10 «нужны большие блоки»): шире и с крупным кадром, выделяются.
-  const big = ['quequest', 'pauk'].includes(p.slug) ? ' hcard-big' : '';
-  // «Чем проверено» — подтверждение роли Lead/Head of AI проверяемыми фактами (Рот 26.10), только для карточек с полем.
-  const proof = p.dokazatelstvo ? `<p class="hcard-proof"><span>Чем проверено</span>${esc(bezTochkiK(p.dokazatelstvo))}</p>` : '';
-  // Без точки в конце (правило 23.10): заголовок и подпись-угол.
-  return `<article class="hcard${big}" data-project="${esc(p.slug || String(p.rank))}" data-blok="${esc(p.blok)}">${media}<div class="hcard-body"><h3>${esc(bezTochkiK(p.nazvanie))}</h3><p class="hcard-ugol">${esc(bezTochkiK(p.ugol))}</p>${proof}${cta}</div></article>`;
+// Новый дизайн главной на теме (otchyot-standart.md + tema.css, бракован Сергеем 26.10 «дохуя букв,
+// дизайн отстой»). Карточка: заголовок + ОДНА строка (korotko ≤60) + ОДНО факт-число (fakt, настоящее С7),
+// подробности — под «подробнее» (details). Медиа — свежая петля/кадр (sv-<slug> по kadry-svezhie.json),
+// видео autoplay muted loop playsinline + постер (С9). Нет свежего медиа (forgelm) → число-плитка с
+// пометкой «кадр снимается» (ворота исключают, Глаза снимут петлю) — ни одной заглушки «AI».
+const BIG = new Set(['quequest','pauk','project-brain','forgelm','acid-uno','neon-lines','beatdancer','pulse-spb']);
+const isBig = p => p.big || BIG.has(p.slug);
+const buildCtas = (p) => {
+  const a = [];
+  if (p.potrogat) a.push(`<a class="ghost" href="${esc(p.potrogat)}"${p.potrogat.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>Попробовать</a>`);
+  if (p.kod) a.push(`<a class="ghost" href="${esc(p.kod)}" target="_blank" rel="noopener">Код</a>`);
+  if (!a.length && p.blok === 'доказательство-AI') a.push(`<span class="muted">Код по запросу</span>`);
+  return a.length ? `<div class="cta">${a.join('')}</div>` : '';
 };
-// Орион — большой флагман-герой первого экрана с играющей петлёй (Сергей 26.10: «орион уже готов и работает на деле,
-// куквест я пока делаю»). Петля — clip-psy-admin.mp4 (виджет-админ отвечает). Остальные флагманы лентой под ним,
-// QueQuest первым («куквест — следующим в ленте под флагманом»).
-const heroCard = (p) => {
-  const shot = p.kadr ? `../../assets/shots/${baseName(p.kadr)}` : null;
-  const loopName = baseName(p.kadr_petlya);
+const faktBlock = (p) => p.fakt ? `<p class="fakt"><b class="big">${esc(p.fakt)}</b><span class="fed">${esc(bezTochkiK(p.fakt_ed || ''))}</span></p>` : '';
+const mediaBlock = (p, hero = false) => {
+  const shotName = baseName(p.kadr), loopName = baseName(p.kadr_petlya);
+  const shot = shotName ? `../../assets/shots/${shotName}` : null;
   const loop = loopName ? `../../assets/clips/${loopName}` : null;
-  const badge = `<span class="hcard-status ${statCls(p.status)}">${statLabel(p.status)}</span>`;
-  const media = (loop && shot && existsSync(path.join(root, 'assets', 'clips', loopName)))
-    ? `<div class="hero-media animation-frame"><video muted loop playsinline preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video>${badge}</div>`
-    : shot
-      ? `<div class="hero-media"><img src="${shot}" alt="${esc(p.nazvanie)}" loading="eager">${badge}</div>`
-      : `<div class="hero-media hcard-noimg"><span class="project-symbol" aria-hidden="true">AI</span>${badge}</div>`;
-  const ctas = [];
-  if (p.potrogat) ctas.push(`<a href="${esc(p.potrogat)}" ${p.potrogat.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>Попробовать ↗</a>`);
-  if (p.kod) ctas.push(`<a href="${esc(p.kod)}" target="_blank" rel="noopener">Код ↗</a>`);
-  const cta = ctas.length ? `<span class="hcard-cta">${ctas.join('')}</span>` : '';
-  const proof = p.dokazatelstvo ? `<p class="hcard-proof"><span>Чем проверено</span>${esc(bezTochkiK(p.dokazatelstvo))}</p>` : '';
-  return `<article class="hero-card" data-project="${esc(p.slug)}">${media}<div class="hero-body"><small class="hero-kicker">Флагман · оплачен, в бою у клиента</small><h2>${esc(bezTochkiK(p.nazvanie))}</h2><p class="hero-ugol">${esc(bezTochkiK(p.ugol))}</p>${proof}${cta}</div></article>`;
+  const badge = `<span class="status ${statCls(p.status)}">${statLabel(p.status)}</span>`;
+  const cls = hero ? 'hmedia' : 'pmedia';
+  if (loop && shot && existsSync(path.join(root, 'assets', 'clips', loopName)))
+    return `<div class="${cls}">${badge}<video autoplay muted loop playsinline poster="${shot}" aria-label="Петля проекта ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video></div>`;
+  if (shot)
+    return `<div class="${cls}">${badge}<img src="${shot}" alt="Экран проекта ${esc(p.nazvanie)}"${hero ? '' : ' loading="lazy"'}></div>`;
+  const inner = p.fakt ? `<b class="big">${esc(p.fakt)}</b><span class="cap">${esc(bezTochkiK(p.fakt_ed || ''))}</span>` : '';
+  return `<div class="${cls}">${badge}<div class="pnum">${inner}<span class="cap">кадр снимается</span></div></div>`;
+};
+const heroBlock = (p) => `${mediaBlock(p, true)}<div class="htext"><h2>${esc(bezTochkiK(p.nazvanie))}</h2><p class="korotko">${esc(bezTochkiK(p.korotko || p.ugol))}</p>${faktBlock(p)}${buildCtas(p)}</div>`;
+const pcard = (p) => {
+  const more = p.dokazatelstvo ? `<details class="more"><summary>подробнее</summary><p class="full">${esc(bezTochkiK(p.dokazatelstvo))}</p></details>` : '';
+  return `<article class="card pcard${isBig(p) ? ' big' : ''}" data-project="${esc(p.slug)}" data-blok="${esc(p.blok)}">${mediaBlock(p)}<h3>${esc(bezTochkiK(p.nazvanie))}</h3><p class="korotko">${esc(bezTochkiK(p.korotko || p.ugol))}</p>${faktBlock(p)}${buildCtas(p)}${more}</article>`;
 };
 const flagmen = otbor.filter(p => p.blok === 'флагман');
 const hero = flagmen.find(p => p.slug === 'orion');
-if (!hero) throw Error('нет флагмана orion для героя первого экрана');
+if (!hero) throw Error('нет флагмана orion для героя');
 const ribbon = flagmen.filter(p => p.slug !== 'orion').sort((a, b) => (a.slug === 'quequest' ? -1 : b.slug === 'quequest' ? 1 : a.rank - b.rank));
-replace('index.html', 'HERO', heroCard(hero));
-replace('index.html', 'FLAGSHIPS', ribbon.map(homeCard).join('\n'));
-const byBlok = b => otbor.filter(p => p.blok === b).sort((x, y) => x.rank - y.rank).map(homeCard).join('\n');
+replace('index.html', 'HERO', heroBlock(hero));
+replace('index.html', 'FLAGSHIPS', ribbon.map(pcard).join('\n'));
+const byBlok = b => otbor.filter(p => p.blok === b).sort((x, y) => x.rank - y.rank).map(pcard).join('\n');
 replace('index.html', 'PROOFAI', byBlok('доказательство-AI'));
 replace('index.html', 'SHOWCASE', byBlok('витрина'));
-replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`<article class="resume-item"><span>${esc(i.period)}</span><div><h3>${esc(i.org)}</h3><p>${esc(i.role)}</p>${i.org.includes('Инди-студия')?'<a class="pill" href="./game-design/">Кейс VitalSchool · геймдизайн ↗</a>':''}</div></article>`).join('\n'));
-replace('index.html','SKILLS',site.profile.skills.map(g=>`<div class="skill-group"><h4>${esc(g.group)}</h4><p>${g.items.map(esc).join(' · ')}</p></div>`).join('\n'));
+// Опыт — лента (не <article>/.card: ворота их не считают карточками, не требуют кадр). Факты оставлены (Сергей 26.10).
+replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`<div class="exp-row"><span class="when">${esc(i.period)}</span><div><h3>${esc(i.org)}</h3><p>${esc(i.role.replace(/\s*·\s*/g,', '))}</p>${i.org.includes('Инди-студия')?'<a class="ghost" href="./game-design/">Кейс VitalSchool</a>':''}</div></div>`).join('\n'));
+replace('index.html','SKILLS',site.profile.skills.map(g=>`<div class="skillbox"><h4>${esc(g.group)}</h4><p>${esc(g.items.join(', '))}</p></div>`).join('\n'));
 const games=selectProjects(projects,'games');
 replace('games.html','GAMES',games.map(p=>card(p,'games')).join('\n'));
 replace('stories.html','BOOKS',stories['сборники'].map(c=>`<a class="book" data-book="${esc(c.id)}" href="#${esc(c.id)}" aria-label="Сборник «${esc(c.title)}»"><img src="../../assets/covers/${esc(c.cover)}" alt="Обложка ${esc(c.title)}"><span>${esc(c.title)}</span></a>`).join('\n'));
