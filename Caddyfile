@@ -320,6 +320,27 @@ aka-gst.ru, www.aka-gst.ru {
   @icon path /favicon.svg
   header @icon Cache-Control "public, max-age=604800"
 
+  # >>> oblako (aka-gst/igry-oblako)
+  # Облако игр — PocketBase, одна служба на все игры (п.30б: заводские настройки владельца,
+  # облачные сохранения, рекорды; «да» Сергея 26.10.2026). Контейнер oblako (/opt/zakriva/oblako,
+  # сеть zakriva-net). Наружу — только API. Панель PocketBase (/_/), вход суперпользователя,
+  # настройки, журналы, копии и cron закрыты 404 (как stats.aka-gst.ru); владельцу — туннель
+  # ssh -N -L 8095:127.0.0.1:8095 bonita → http://127.0.0.1:8095/_/
+  redir /oblako /oblako/ 308
+  handle_path /oblako/* {
+    @oblako_zakryto path /_ /_/* /api/collections/_superusers/* /api/settings /api/settings/* /api/logs /api/logs/* /api/backups /api/backups/* /api/crons /api/crons/* /api/batch
+    handle @oblako_zakryto {
+      respond 404
+    }
+    handle {
+      request_body {
+        max_size 1000000
+      }
+      reverse_proxy oblako:8090
+    }
+  }
+  # <<< oblako
+
   handle_path /api/leaderboard/* {
     reverse_proxy leaderboard:8080
   }
@@ -448,6 +469,21 @@ aka-gst.ru, www.aka-gst.ru {
     }
     reverse_proxy ashennote-app:8000
   }
+  # Сикретики — браузерный E2E-чат 1:1 поверх veilwire (aka-gst/veilwire). Контейнеры
+  # veilwire-app/veilwire-db (/opt/zakriva/veilwire, сеть zakriva-net). Статика клиента —
+  # в /srv/sikretiki (на сервере вне выкладки сайта, как /preview и игры из своих репо).
+  # API same-origin под /sikretiki/api/v1/* — префикс /sikretiki срезается перед veilwire.
+  # Клиент выводит базу из адреса модуля (../api/v1): работает и под подкаталогом, и от корня.
+  redir /sikretiki /sikretiki/ 308
+  handle /sikretiki/api/* {
+    uri strip_prefix /sikretiki
+    reverse_proxy veilwire-app:8000
+  }
+  handle_path /sikretiki/* {
+    root * /srv/sikretiki
+    file_server
+  }
+
   # Booking is a separate service, not static content: the prefix is stripped
   # so V2 can keep its own small application routes and SQLite data volume.
   redir /psy-admin/booking /psy-admin/booking/ 308
@@ -493,6 +529,19 @@ aka-gst.ru, www.aka-gst.ru {
   handle_path /orion_2/* {
     header X-Robots-Tag "noindex, nofollow, noarchive"
     reverse_proxy orion2-site:4280 {
+      header_up Host {host}
+      header_up X-Forwarded-Proto {scheme}
+    }
+  }
+
+  # Демо-стенд Ориона для показа потенциальным клиентам (решение Сергея 22.10.2026):
+  # контейнер orion-demo-site → orion-demo-booking (демо-сид, без Google-календаря,
+  # база обнуляется ночью). Закрыт от поиска. Админка — /orion-demo/admin без слеша.
+  redir /orion-demo /orion-demo/ 308
+  redir /orion-demo/admin/ /orion-demo/admin 308
+  handle_path /orion-demo/* {
+    header X-Robots-Tag "noindex, nofollow, noarchive"
+    reverse_proxy orion-demo-site:4280 {
       header_up Host {host}
       header_up X-Forwarded-Proto {scheme}
     }
