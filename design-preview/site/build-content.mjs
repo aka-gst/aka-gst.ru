@@ -13,10 +13,9 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp
 const url = value => value?.startsWith('/') ? `https://aka-gst.ru${value}` : value;
 // Почта контакта не строкой в HTML, а base64 в data-mail: site.js собирает mailto через atob.
 // Так тест responsive-layout (запрет почты строкой на страницах) проходит, а клик открывает письмо.
-// Сама строка живёт только здесь — build-content.mjs на бой не выкладывается. Правило 60б, решение Рта 22.10.
-// ОТЛОЖЕНО (Рот 22.10): Сергей просил на сайте другую (личную) почту, но privacy-хук метит её как
-// личные данные — ждём явного «да» Сергея на публикацию. Пока остаётся sers2109 (обфусцированная).
-const pochta = Buffer.from('lolsale111@gmail.com').toString('base64');
+// Сам base64 берётся из данных сайта (data/site.json → contact.pochta_b64), а не зашит в скрипт
+// (решение Сергея 26.10: убрать почту из build-скрипта, брать из данных). Plaintext здесь больше нет —
+// privacy-хук проходит зелёным обычным коммитом. `pochta` определяется ниже, после чтения site.json.
 const replace = (file, key, html) => {
  const filename = path.join(here,file), source = readFileSync(filename,'utf8');
  const start = `<!-- GENERATED:${key} -->`, end = `<!-- /GENERATED:${key} -->`;
@@ -29,6 +28,9 @@ const fraza=readFileSync(path.join(root,'data','fraza-quequest.txt'),'utf8').tri
 const strokaQ=readFileSync(path.join(root,'data','stroka-quequest-rabota.txt'),'utf8').trim();
 if(!strokaQ) throw Error('пустая строка QueQuest для «Работы»');
 const site=read('site.json'), stories=read('stories.json'), phraseSource=read('frazy.json').frazy;
+// Почта контакта — base64 из данных сайта (решение Сергея 26.10). site.js собирает mailto через atob.
+const pochta = site.contact?.pochta_b64 || '';
+if (!pochta) throw Error('нет contact.pochta_b64 в data/site.json');
 // Шапка — все фразы его коллекции (data/frazy.json, кроме ne_na_sayt) и список shapka. Раньше Кодекс оставил 6 из 17 — 03.10 Сергей: «больше же было».
 const neNaSayt=read('frazy.json').ne_na_sayt||[]; const phrases=phraseSource.filter(f=>!neNaSayt.includes(f));
 // 03.10.2026 Сергей: «вот тебе твиты для ии ещё» — список shapka в data/frazy.json, посимвольно (35а).
@@ -112,13 +114,40 @@ const homeCard = (p) => {
   // Приватный репозиторий (negative-control/CapaTrail) — «Код по запросу», а не битая ссылка (решение Рта 22.10).
   if (!ctas.length && p.blok === 'доказательство-AI') ctas.push(`<span class="cta-muted">Код по запросу</span>`);
   const cta = ctas.length ? `<span class="hcard-cta">${ctas.join('')}</span>` : '';
-  // Большие блоки — QueQuest, Паук, Орион (Сергей 22.10 «нужны большие блоки»): шире и с крупным кадром, выделяются.
-  const big = ['quequest', 'pauk', 'orion'].includes(p.slug) ? ' hcard-big' : '';
+  // Большие блоки — QueQuest, Паук (Сергей 22.10 «нужны большие блоки»): шире и с крупным кадром, выделяются.
+  const big = ['quequest', 'pauk'].includes(p.slug) ? ' hcard-big' : '';
+  // «Чем проверено» — подтверждение роли Lead/Head of AI проверяемыми фактами (Рот 26.10), только для карточек с полем.
+  const proof = p.dokazatelstvo ? `<p class="hcard-proof"><span>Чем проверено</span>${esc(bezTochkiK(p.dokazatelstvo))}</p>` : '';
   // Без точки в конце (правило 23.10): заголовок и подпись-угол.
-  return `<article class="hcard${big}" data-project="${esc(p.slug || String(p.rank))}" data-blok="${esc(p.blok)}">${media}<div class="hcard-body"><h3>${esc(bezTochkiK(p.nazvanie))}</h3><p class="hcard-ugol">${esc(bezTochkiK(p.ugol))}</p>${cta}</div></article>`;
+  return `<article class="hcard${big}" data-project="${esc(p.slug || String(p.rank))}" data-blok="${esc(p.blok)}">${media}<div class="hcard-body"><h3>${esc(bezTochkiK(p.nazvanie))}</h3><p class="hcard-ugol">${esc(bezTochkiK(p.ugol))}</p>${proof}${cta}</div></article>`;
 };
+// Орион — большой флагман-герой первого экрана с играющей петлёй (Сергей 26.10: «орион уже готов и работает на деле,
+// куквест я пока делаю»). Петля — clip-psy-admin.mp4 (виджет-админ отвечает). Остальные флагманы лентой под ним,
+// QueQuest первым («куквест — следующим в ленте под флагманом»).
+const heroCard = (p) => {
+  const shot = p.kadr ? `../../assets/shots/${baseName(p.kadr)}` : null;
+  const loopName = baseName(p.kadr_petlya);
+  const loop = loopName ? `../../assets/clips/${loopName}` : null;
+  const badge = `<span class="hcard-status ${statCls(p.status)}">${statLabel(p.status)}</span>`;
+  const media = (loop && shot && existsSync(path.join(root, 'assets', 'clips', loopName)))
+    ? `<div class="hero-media animation-frame"><video muted loop playsinline preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video>${badge}</div>`
+    : shot
+      ? `<div class="hero-media"><img src="${shot}" alt="${esc(p.nazvanie)}" loading="eager">${badge}</div>`
+      : `<div class="hero-media hcard-noimg"><span class="project-symbol" aria-hidden="true">AI</span>${badge}</div>`;
+  const ctas = [];
+  if (p.potrogat) ctas.push(`<a href="${esc(p.potrogat)}" ${p.potrogat.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>Попробовать ↗</a>`);
+  if (p.kod) ctas.push(`<a href="${esc(p.kod)}" target="_blank" rel="noopener">Код ↗</a>`);
+  const cta = ctas.length ? `<span class="hcard-cta">${ctas.join('')}</span>` : '';
+  const proof = p.dokazatelstvo ? `<p class="hcard-proof"><span>Чем проверено</span>${esc(bezTochkiK(p.dokazatelstvo))}</p>` : '';
+  return `<article class="hero-card" data-project="${esc(p.slug)}">${media}<div class="hero-body"><small class="hero-kicker">Флагман · оплачен, в бою у клиента</small><h2>${esc(bezTochkiK(p.nazvanie))}</h2><p class="hero-ugol">${esc(bezTochkiK(p.ugol))}</p>${proof}${cta}</div></article>`;
+};
+const flagmen = otbor.filter(p => p.blok === 'флагман');
+const hero = flagmen.find(p => p.slug === 'orion');
+if (!hero) throw Error('нет флагмана orion для героя первого экрана');
+const ribbon = flagmen.filter(p => p.slug !== 'orion').sort((a, b) => (a.slug === 'quequest' ? -1 : b.slug === 'quequest' ? 1 : a.rank - b.rank));
+replace('index.html', 'HERO', heroCard(hero));
+replace('index.html', 'FLAGSHIPS', ribbon.map(homeCard).join('\n'));
 const byBlok = b => otbor.filter(p => p.blok === b).sort((x, y) => x.rank - y.rank).map(homeCard).join('\n');
-replace('index.html', 'FLAGSHIPS', byBlok('флагман'));
 replace('index.html', 'PROOFAI', byBlok('доказательство-AI'));
 replace('index.html', 'SHOWCASE', byBlok('витрина'));
 replace('index.html','RESUME',site.profile.experience.filter(i=>i.show).map(i=>`<article class="resume-item"><span>${esc(i.period)}</span><div><h3>${esc(i.org)}</h3><p>${esc(i.role)}</p>${i.org.includes('Инди-студия')?'<a class="pill" href="./game-design/">Кейс VitalSchool · геймдизайн ↗</a>':''}</div></article>`).join('\n'));

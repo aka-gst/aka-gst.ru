@@ -198,7 +198,7 @@
         <a href="/stories.html">Рассказы</a>
       </nav>
       <div class="hright">
-        <a class="mail" href="mailto:lolsale111@gmail.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span class="ru">Обсудить проект</span><span class="en">Get in touch</span></a>
+        <a class="mail" data-mail="bG9sc2FsZTExMUBnbWFpbC5jb20=" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span class="ru">Обсудить проект</span><span class="en">Get in touch</span></a>
         <a class="iconlink" href="https://github.com/aka-gst" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.8v2.7c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg></a>
         <a class="iconlink" href="https://x.com/aka_gst" target="_blank" rel="noopener" aria-label="Twitter / X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-7.5L5.5 22H2.3l8.3-9.5L1 2h6.2l4.4 6.9L18.9 2Z"/></svg></a>
         <div class="langtog" role="group" aria-label="Язык / Language">
@@ -520,7 +520,7 @@
 
 <footer>
   <div class="wrap">
-    <span>© 2026 Сергей Гостов · <a href="mailto:lolsale111@gmail.com">lolsale111@gmail.com</a> · <a href="https://github.com/aka-gst" target="_blank" rel="noopener">github.com/aka-gst</a></span>
+    <span>© 2026 Сергей Гостов · <a data-mail="bG9sc2FsZTExMUBnbWFpbC5jb20=" data-mail-text href="#">почта ↗</a> · <a href="https://github.com/aka-gst" target="_blank" rel="noopener">github.com/aka-gst</a></span>
     <span class="ru">Живые адреса и числа — проверяемые. Закрытый код — по запросу (NDA).</span>
     <span class="en">Live URLs and numbers are verifiable. Closed source on request (NDA).</span>
   </div>
@@ -552,6 +552,12 @@
    var ph=(window.sitePhrases&&window.sitePhrases.length)?window.sitePhrases.slice():['Проверено поломкой'];
    function pick(){return ph[Math.floor(Math.random()*ph.length)];}
    el.textContent=pick();setInterval(function(){el.textContent=pick();},4500);})();
+</script>
+<script>
+  // Почта — base64 в data-mail, собирается в mailto через atob (не plaintext в разметке).
+  document.querySelectorAll('a[data-mail]').forEach(function(a){
+    try{var m=atob(a.dataset.mail);a.href='mailto:'+m;if(a.hasAttribute('data-mail-text'))a.textContent=m;}catch(e){}
+  });
 </script>
 </body>
 </html>

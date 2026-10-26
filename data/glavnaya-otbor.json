@@ -7,11 +7,12 @@
   "ugol": "Голосовой ИИ-администратор психоцентра, который отвечает только из утверждённой базы, ловит кризис и записывает на приём — в бою на сайте живого клиента.",
   "status": "готов (оплачен, в бою у клиента)",
   "kadr": "psy-admin-2026.jpg",
-  "kadr_petlya": null,
+  "kadr_petlya": "clip-psy-admin.mp4",
   "potrogat": "https://aka-gst.ru/orion-demo/",
   "kod": null,
   "pochemu_silnyy": "Единственный оплаченный AI-продукт, работающий на сайте клиента: виджет реально встроен в orion-center.ru (script-тег psy-widget.js проверен curl 22.10). 160 тест-кейсов, 7 heldout-наборов с честной таблицей попаданий, детект кризиса, отказ от диагнозов. Для Head of AI — пруф, что ведёт AI-продукт до живого клиента.",
-  "primechanie": "Живое демо вести на orion-demo/ и orion-center.ru, НЕ на psy-admin* (слово Сергея). Второй кадр виджета на бою — orion-boy.jpg. Код приватен."
+  "primechanie": "Живое демо вести на orion-demo/ и orion-center.ru, НЕ на psy-admin* (слово Сергея). Второй кадр виджета на бою — orion-boy.jpg. Код приватен.",
+  "dokazatelstvo": "160 тест-кейсов и 7 heldout-наборов с честной таблицей попаданий, детект кризиса, отказ от диагнозов; виджет реально встроен в сайт клиента orion-center.ru (script-тег проверен curl 22.10)"
  },
  {
   "rank": 2,
@@ -25,7 +26,8 @@
   "potrogat": "https://aka-gst.github.io/local-agent-gateway/",
   "kod": "https://github.com/aka-gst/local-agent-gateway",
   "pochemu_silnyy": "Единственный пруф, проверяемый кликом без доверия к автору: публичный репозиторий + живой фид qa-metrics.json (75 тестов = API 31 + LLM-eval 39 + E2E 5, покрытие 98.75% при пороге 90%, pass 100%, коммит 918b228, Allure-отчёт). CI с Playwright и Docker-сборкой. Плюс проверки на prompt-injection и таблица «риск → автопроверка».",
-  "primechanie": "Числа брать с живого фида qa-metrics.json, не из README (там устарело 79/97%)."
+  "primechanie": "Числа брать с живого фида qa-metrics.json, не из README (там устарело 79/97%).",
+  "dokazatelstvo": "Публичный репозиторий + живой фид qa-metrics.json: 75 тестов (API + LLM-eval + E2E), покрытие 98.75% при пороге 90%, pass 100%, Allure-отчёт; CI с Playwright и Docker, проверки на prompt-injection"
  },
  {
   "rank": 3,
@@ -81,7 +83,8 @@
   "potrogat": null,
   "kod": null,
   "pochemu_silnyy": "negative-control: 38 проверок + саботаж ломает каждый измеритель за 2 с; два реальных вравших измерителя задокументированы (live-eval засчитал выдумку 9/9; сканер дал 0 находок на dist/). CapaTrail: офлайн-сканер возможностей AI-агентов/скиллов/MCP, 79 тестов, CI-матрица, 0 зависимостей, SARIF. Самое запоминающееся «как я думаю» для Head of AI.",
-  "primechanie": "Блокер: оба репо приватны, статья на Хабр — черновик, не опубликована. У negative-control нет свежего кадра (есть только negative-control-sabotage.jpg — схема, в свежие не входит). Чтобы стало пруфом по ссылке — открыть репо и дожать статью."
+  "primechanie": "Блокер: оба репо приватны, статья на Хабр — черновик, не опубликована. У negative-control нет свежего кадра (есть только negative-control-sabotage.jpg — схема, в свежие не входит). Чтобы стало пруфом по ссылке — открыть репо и дожать статью.",
+  "dokazatelstvo": "negative-control: 38 проверок, саботаж ломает каждый измеритель за 2 с, два вравших измерителя задокументированы; CapaTrail: офлайн-сканер возможностей, 79 тестов, CI-матрица, SARIF, 0 зависимостей"
  },
  {
   "rank": 7,
@@ -95,7 +98,8 @@
   "potrogat": "https://aka-gst.ru/ashennote/",
   "kod": null,
   "pochemu_silnyy": "Самый чистый software-security кейс и он живой: 158 тест-кейсов (e2e/property/security), AES-256-GCM в браузере (WebCrypto), PBKDF2 600k, атомарный DELETE…RETURNING, CI с Playwright, Docker non-root. LIVE на aka-gst.ru/ashennote/.",
-  "primechanie": "Оговорка: импорт архива (история вне git), код приватен."
+  "primechanie": "Оговорка: импорт архива (история вне git), код приватен.",
+  "dokazatelstvo": "158 тест-кейсов (e2e/property/security), AES-256-GCM в браузере (WebCrypto), PBKDF2 600k, CI с Playwright, Docker non-root; живой на aka-gst.ru/ashennote"
  },
  {
   "rank": 8,
@@ -108,7 +112,8 @@
   "kadr_petlya": null,
   "potrogat": "https://aka-gst.ru/praktikum/llm/",
   "kod": "https://github.com/aka-gst/ai-agent-service-lab",
-  "pochemu_silnyy": "Публичный репозиторий, 76 автотестов, eval 6/6, retrieval hit-rate 100%; CI падает при расхождении курса с исходником. Живой практикум из 16 юнитов на aka-gst.ru/praktikum/llm/ и GitHub Pages."
+  "pochemu_silnyy": "Публичный репозиторий, 76 автотестов, eval 6/6, retrieval hit-rate 100%; CI падает при расхождении курса с исходником. Живой практикум из 16 юнитов на aka-gst.ru/praktikum/llm/ и GitHub Pages.",
+  "dokazatelstvo": "Публичный репозиторий, 76 автотестов, eval 6/6, retrieval hit-rate 100%, CI падает при расхождении курса с исходником; живой практикум из 16 юнитов"
  },
  {
   "rank": 9,
@@ -122,7 +127,8 @@
   "potrogat": null,
   "kod": null,
   "pochemu_silnyy": "Продаёт не модель, а научную честность: 140 тест-кейсов, MODEL_CARD, SECURITY_FINAL, преднамеренно отрицательный результат (3→4 из 12, p=1, гейт промоушена НЕ пройден) задокументирован, а не спрятан. Редкость в портфолио.",
-  "primechanie": "Нет свежего кадра в portfolio-assets — нужен скрин MODEL_CARD/отчёта. Код приватен, импорт архива."
+  "primechanie": "Нет свежего кадра в portfolio-assets — нужен скрин MODEL_CARD/отчёта. Код приватен, импорт архива.",
+  "dokazatelstvo": "140 тест-кейсов, MODEL_CARD и SECURITY_FINAL; преднамеренно отрицательный результат (гейт качества НЕ пройден) задокументирован, а не спрятан"
  },
  {
   "rank": 10,
@@ -136,7 +142,8 @@
   "potrogat": null,
   "kod": null,
   "pochemu_silnyy": "81 тест-кейс, verify.sh, жёсткая рамка SCOPE.md, пассивный Wi-Fi. Оборонительно и этично сформулировано — безопасный для публикации кейс; хорошо дополняет связку negative-control + CapaTrail.",
-  "primechanie": "Код приватен."
+  "primechanie": "Код приватен.",
+  "dokazatelstvo": "81 тест-кейс, verify.sh, жёсткая рамка SCOPE.md, пассивный Wi-Fi; работает только по своим активам из списка"
  },
  {
   "rank": 11,
@@ -150,7 +157,8 @@
   "potrogat": null,
   "kod": null,
   "pochemu_silnyy": "16 релизов «по одному на релиз» (v43…v53), оркестратор с Knowledge Vault; внутри встроена копия Gateway. Подавать как внутренний инструмент оркестрации, не как продукт.",
-  "primechanie": "Не выложен онлайн как центр. Внутри него живёт мини-игра «Муха» (aka-gst.ru/muha/) — можно как лёгкий потрогать."
+  "primechanie": "Не выложен онлайн как центр. Внутри него живёт мини-игра «Муха» (aka-gst.ru/muha/) — можно как лёгкий потрогать.",
+  "dokazatelstvo": "16 релизов «по одному на релиз» (v43…v53), оркестратор с Knowledge Vault и встроенным шлюзом к локальным моделям"
  },
  {
   "rank": 12,
@@ -164,7 +172,8 @@
   "potrogat": "https://aka-gst.ru/ysi/",
   "kod": null,
   "pochemu_silnyy": "Подтверждает «2 платящих клиента по ИИ» (с «Орион-С»). Живые страницы: aka-gst.ru/ysi/ («one connected system») и orion-case-en/. Усиливает Head of AI — ведёт AI до клиентов за рубежом.",
-  "primechanie": "Подавать как «демо + предложение», не «внедрено». Суммы $4.5k→$18k→$35k — ПРЕДЛОЖЕНИЯ, не контракты. Буддийский дневник-бот из этого репо — личное, НЕ показывать."
+  "primechanie": "Подавать как «демо + предложение», не «внедрено». Суммы $4.5k→$18k→$35k — ПРЕДЛОЖЕНИЯ, не контракты. Буддийский дневник-бот из этого репо — личное, НЕ показывать.",
+  "dokazatelstvo": "Живые страницы aka-gst.ru/ysi/ и orion-case-en/; демо ролей и предложение по этапам (суммы — предложения, не контракты)"
  },
  {
   "rank": 13,
