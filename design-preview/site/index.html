@@ -115,8 +115,10 @@ html{overflow-x:clip}
 .intro .role{margin-top:var(--s2);color:var(--ink-2);font-size:var(--t-m);max-width:46ch}
 .intro .lead{margin-top:var(--s2);max-width:70ch;font-size:var(--t-m)}
 /* герой-флагман: минимум половина первого экрана, целиком виден на 1512×860 */
-.hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:var(--s4);align-items:center;margin-top:var(--s3)}
-.hero .hmedia{position:relative;aspect-ratio:16/10;max-height:min(56vh,520px);border-radius:var(--r);overflow:hidden;background:var(--night-2);color:var(--ink);border:1px solid var(--line)}
+.hero{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:var(--s4);align-items:center;margin-top:var(--s3)}
+/* 2:1 под кадрированную петлю чата (600×300) — весь чат без среза левого края и без пустоты */
+.hero .hmedia{position:relative;aspect-ratio:2/1;max-height:min(52vh,480px);border-radius:var(--r);overflow:hidden;background:var(--night-2);color:var(--ink);border:1px solid var(--line)}
+.hero .hmedia .status{left:auto;right:.6rem}
 .hero .hmedia img,.hero .hmedia video{width:100%;height:100%;object-fit:cover;display:block}
 .hero h2{margin-top:var(--s1)}
 .hero .korotko{color:var(--ink-2);font-size:var(--t-l);margin-top:var(--s2);max-width:34ch}
@@ -181,10 +183,10 @@ details.more .full{color:var(--ink-2);font-size:var(--t-s);margin-top:var(--s1);
 <section class="intro">
 <h1>AI-продукты, которые работают у живых клиентов</h1>
 <p class="role">Сергей Гостов — ИИ-инженер уровня Lead / Head of AI, разработчик игр</p>
-<p class="lead">ИИ-администратор в бою на сайте клиента, свой шлюз к нейросетям без облака, игра-учебник по коду. Живые адреса и числа — проверяемые</p>
+<p class="lead">Голосовой администратор в бою на сайте клиента, свой шлюз к нейросетям без облака, игра-учебник по коду. Живые адреса и числа — проверяемые</p>
 </section>
 <section class="hero" data-reveal><!-- GENERATED:HERO -->
-<div class="hmedia"><span class="status ok">готов</span><video autoplay muted loop playsinline poster="../../assets/shots/sv-orion.jpg?v=5e670f1873" aria-label="Петля проекта Орион — ИИ-администратор психоцентра"><source src="../../assets/clips/sv-orion.mp4?v=cc3cdb8a31" type="video/mp4"></video></div><div class="htext"><h2>Орион — ИИ-администратор психоцентра</h2><p class="korotko">ИИ-администратор психоцентра в бою на сайте клиента</p><p class="fakt"><b class="big">160</b><span class="fed">тест-кейсов, 7 heldout</span></p><div class="cta"><a class="ghost" href="https://aka-gst.ru/orion-demo/" target="_blank" rel="noopener">Попробовать</a></div></div>
+<div class="hmedia"><span class="status ok">готов</span><video autoplay muted loop playsinline poster="../../assets/shots/sv-orion.jpg?v=9f2a4bc97d" aria-label="Петля проекта Орион — голосовой ИИ-администратор"><source src="../../assets/clips/sv-orion.mp4?v=ccc8a3e399" type="video/mp4"></video></div><div class="htext"><h2>Орион — голосовой ИИ-администратор</h2><p class="korotko">Отвечает голосом и текстом из базы, записывает на приём</p><p class="fakt"><b class="big">160</b><span class="fed">тест-кейсов, 7 heldout</span></p><div class="cta"><a class="ghost" href="https://aka-gst.ru/orion-demo/" target="_blank" rel="noopener">Попробовать</a></div></div>
 <!-- /GENERATED:HERO --></section>
 <section class="sec"><div class="sec-h"><h2>Сильнейшие проекты</h2></div><div class="pgrid"><!-- GENERATED:FLAGSHIPS -->
 <article class="card pcard big" data-project="quequest" data-blok="флагман"><div class="pmedia"><span class="status wip">в разработке</span><video autoplay muted loop playsinline poster="../../assets/shots/sv-quequest.jpg?v=4fbf7b24a6" aria-label="Петля проекта QueQuest"><source src="../../assets/clips/sv-quequest.mp4?v=206f2e5605" type="video/mp4"></video></div><h3>QueQuest</h3><p class="korotko">Учишь Python в браузере, вытаскивая друга кодом</p><p class="fakt"><b class="big">настоящий</b><span class="fed">CPython в браузере</span></p><div class="cta"><a class="ghost" href="https://aka-gst.ru/preview/quequest/?demo=1" target="_blank" rel="noopener">Попробовать</a></div></article>

@@ -1,5 +1,5 @@
 {
-  "kogda": "2026-10-26T23:33",
+  "kogda": "2026-10-26T23:42",
   "chem": "Vision VNDetectFaceRectanglesRequest, кадр раз в 0.5 с",
   "petli": [
     {"petlya": "beatdancer.mp4", "sha256": "2fcd449bc27dbf90", "kadrov": 18, "lic": 0},
@@ -39,7 +39,7 @@
     {"petlya": "sv-neon-lines.mp4", "sha256": "bf029a54483773b2", "kadrov": 8, "lic": 0},
     {"petlya": "sv-night-racer.mp4", "sha256": "9ca3efa69ad967bd", "kadrov": 16, "lic": 0},
     {"petlya": "sv-noxi.mp4", "sha256": "0f5a2bfa8d047388", "kadrov": 16, "lic": 0},
-    {"petlya": "sv-orion.mp4", "sha256": "cc3cdb8a31eae53c", "kadrov": 14, "lic": 0},
+    {"petlya": "sv-orion.mp4", "sha256": "ccc8a3e399dc4de0", "kadrov": 14, "lic": 0},
     {"petlya": "sv-pauk.mp4", "sha256": "d6da9115c2f7b3cc", "kadrov": 16, "lic": 0},
     {"petlya": "sv-photo-meta-editer.mp4", "sha256": "6df41534523b65ee", "kadrov": 8, "lic": 0},
     {"petlya": "sv-project-brain.mp4", "sha256": "85781f29ddad075f", "kadrov": 14, "lic": 0},
