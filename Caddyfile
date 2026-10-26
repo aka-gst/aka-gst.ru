@@ -320,6 +320,26 @@ aka-gst.ru, www.aka-gst.ru {
   @icon path /favicon.svg
   header @icon Cache-Control "public, max-age=604800"
 
+  # >>> oblako (aka-gst/igry-oblako)
+  # Облако игр — PocketBase, одна служба на все игры (п.30б: заводские настройки владельца,
+  # облачные сохранения, рекорды; «да» Сергея 26.10.2026). Контейнер oblako (/opt/zakriva/oblako,
+  # сеть zakriva-net). Наружу — только API. Панель PocketBase (/_/), вход суперпользователя,
+  # настройки, журналы, копии и cron закрыты 404 (как stats.aka-gst.ru); владельцу — туннель
+  # ssh -N -L 8095:127.0.0.1:8095 bonita → http://127.0.0.1:8095/_/
+  redir /oblako /oblako/ 308
+  handle_path /oblako/* {
+    @oblako_zakryto path /_ /_/* /api/collections/_superusers/* /api/settings /api/settings/* /api/logs /api/logs/* /api/backups /api/backups/* /api/crons /api/crons/* /api/batch
+    handle @oblako_zakryto {
+      respond 404
+    }
+    handle {
+      request_body {
+        max_size 1000000
+      }
+      reverse_proxy oblako:8090
+    }
+  }
+  # <<< oblako
   handle_path /api/leaderboard/* {
     reverse_proxy leaderboard:8080
   }
