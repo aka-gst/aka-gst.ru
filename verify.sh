@@ -21,6 +21,19 @@ bad=0
 say_ok()  { ok=$((ok + 1));  printf '  ok    %s\n' "$1"; }
 say_bad() { bad=$((bad + 1)); printf '  FAIL  %s\n' "$1"; }
 
+# Заслонка (WAF): Cloudflare/AWS отвечают 200/403 своей страницей — по коду её не
+# отличить от живой, и verify.sh принял бы её за живую игру. Третий исход (разбор
+# sherlock, MIT, 27.10.2026, тем же языком, что правило 4 «200 ≠ выложено»): не
+# зелёный «есть» и не красный «нет», а жёлтый «заслонило». В bad не идёт.
+waf=0
+say_waf() { waf=$((waf + 1)); printf '  ЗАСЛОНКА  %s\n' "$1"; }
+# Отпечатки страницы-заслонки в ТЕЛЕ ответа (не в коде). Возвращает имя WAF или пусто.
+waf_otpechatok() {
+  if printf '%s' "$1" | grep -qiE 'cf-chl|cf_chl_opt|/cdn-cgi/challenge|challenge-error-text|just a moment|attention required|checking your browser'; then echo 'Cloudflare'; return; fi
+  if printf '%s' "$1" | grep -qiE 'awswafintegration|awselb|aws-waf|token\.awswaf|request blocked'; then echo 'AWS WAF'; return; fi
+  echo ''
+}
+
 # Сеть даёт 2-7% случайных обрывов, и это НЕ свойство сайта. Повторы нужны
 # каждому запросу, а не только проверке кодов: раньше сверка хеша и разбор
 # страницы 404 ходили голым curl, и их случайный обрыв читался как
@@ -50,10 +63,42 @@ expect() {
   else say_bad "$path -> $got, ждали $want"; fi
 }
 
+# Живая HTML-страница: 200 — но не заслонка ли это? Заслонка отдаёт 200 своей
+# страницей, тогда исход жёлтый «заслонило», а не зелёный «есть». 000 — сеть, не «нет».
+expect_live() {
+  path="$1"
+  got=$(code "$BASE$path")
+  if [ "$got" = "000" ]; then say_bad "$path -> ответа нет (сеть), проверить не удалось"; return; fi
+  if [ "$got" != "200" ]; then say_bad "$path -> $got, ждали 200"; return; fi
+  # shellcheck disable=SC2086
+  b=$(curl -s $RETRY "$BASE$path" || echo '')
+  w=$(waf_otpechatok "$b")
+  if [ -n "$w" ]; then say_waf "$path -> 200, но это страница-заслонка ($w) — живость не подтверждена"
+  else say_ok "$path -> 200"; fi
+}
+
+echo "== детектор заслонки (контроль) =="
+# Правила 7и/7л: на сохранённой заслонке детектор обязан сказать «заслонило», на
+# чистой странице — молчать. Без этого «ноль заслонок» ниже ничего не значит.
+_cf='<title>Just a moment...</title><div class="cf-chl-bypass" id="challenge-error-text"></div>'
+_aws='Request blocked. <script src="https://token.awswaf.com/x.js"></script>'
+_chisto='<h1>Орион — голосовой ИИ-администратор</h1><video src="/a.mp4"></video>'
+if [ -z "$(waf_otpechatok "$_cf")" ] || [ -z "$(waf_otpechatok "$_aws")" ]; then
+  say_bad "детектор заслонки НЕ опознаёт сохранённую заслонку — проверка на заслонку сломана"
+elif [ -n "$(waf_otpechatok "$_chisto")" ]; then
+  say_bad "детектор заслонки срабатывает на чистой странице — ложная заслонка"
+else
+  say_ok "детектор заслонки: заслонку видит, чистую пропускает (контроли сошлись)"
+fi
+echo
+
 echo "== страницы =="
-for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /quequest/ /acid/ /ashennote/ /static/app.js \
-         /psy-admin/ /photodata/ /tetcolor/ /stihii/ /lines/ /coin/ \
-         /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
+# HTML-страницы — через expect_live (ловит заслонку); текст/ассеты/картинки — по коду.
+for p in / /praktikum/ /praktikum/testirovanie/ /praktikum/llm/ /quequest/ /acid/ /ashennote/ \
+         /psy-admin/ /photodata/ /tetcolor/ /stihii/ /lines/ /coin/; do
+  expect_live "$p"
+done
+for p in /static/app.js /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /favicon.svg /503.html; do
   expect "$p" 200
 done
 
@@ -401,5 +446,7 @@ proverit_tls() {
 proverit_tls aka-gst.ru "TLS aka-gst.ru"
 
 echo
-printf '%s пройдено, %s провалено\n' "$ok" "$bad"
+printf '%s пройдено, %s провалено' "$ok" "$bad"
+[ "$waf" -gt 0 ] && printf ', %s заслонено (жёлтое — живость не подтверждена, проверить вручную)' "$waf"
+printf '\n'
 [ "$bad" -eq 0 ]
