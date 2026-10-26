@@ -77,7 +77,7 @@ const card=(p,section,kind='')=>{
  const clipBase = isGame && shot && !spryatatPetlya.includes(p.id) ? (shot.file.match(/^game-(.+)\.jpe?g$/)?.[1]) : null;
  const gridClip = clipBase ? `clip-${clipBase}.mp4` : null;
  if (gridClip && shot && href && !p.pending && existsSync(path.join(root, 'assets', 'clips', gridClip))) {
-  const frame = `<div class="project-image animation-frame"><video autoplay muted loop playsinline preload="metadata" poster="../../assets/shots/${esc(shot.file)}" aria-label="Анимация ${esc(title)}"><source src="../../assets/clips/${esc(gridClip)}" type="video/mp4"></video></div>`;
+  const frame = `<div class="project-image animation-frame"><video muted loop playsinline preload="metadata" poster="../../assets/shots/${esc(shot.file)}" aria-label="Анимация ${esc(title)}"><source src="../../assets/clips/${esc(gridClip)}" type="video/mp4"></video></div>`;
   return `<article class="project-card has-loop" data-project="${esc(p.id)}">${frame}<div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a></span></div></article>`;
  }
  if(demo) return `<article class="project-card${k?` is-${k}`:''}" data-project="${esc(p.id)}"><a class="project-image" href="${esc(href)}" ${ext} aria-label="${esc(title)}">${media}</a><div class="project-copy">${copy}<span class="card-action card-actions"><a href="${esc(href)}" ${ext}>${label}</a><a href="${esc(url(demo.url))}">Демо ↗</a></span></div></article>`;
@@ -98,10 +98,11 @@ const homeCard = (p) => {
   const loopName = baseName(p.kadr_petlya);
   const loop = loopName ? `../../assets/clips/${loopName}` : null;
   const badge = `<span class="hcard-status ${statCls(p.status)}">${statLabel(p.status)}</span>`;
-  // Петля — click-to-play (не autoplay): тот же .animation-frame и логика site.js
-  // (пауза вне экрана, при prefers-reduced-motion и на скрытой вкладке). Постер — свежий кадр той же вещи.
+  // Петля — hover + «случайно» (Сергей 22.10): оживает при наведении, плюс 2–3 видимых играют сами,
+  // чередуясь; на телефоне hover нет — там только «случайно» + тап. Логика в site.js; пауза вне экрана,
+  // при prefers-reduced-motion и на скрытой вкладке. Без autoplay-атрибута — играет управляемо.
   const media = (loop && shot && existsSync(path.join(root, 'assets', 'clips', loopName)))
-    ? `<div class="hcard-media animation-frame"><video autoplay muted loop playsinline preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video>${badge}</div>`
+    ? `<div class="hcard-media animation-frame"><video muted loop playsinline preload="metadata" poster="${shot}" aria-label="Анимация ${esc(p.nazvanie)}"><source src="${loop}" type="video/mp4"></video>${badge}</div>`
     : shot
       ? `<div class="hcard-media"><img src="${shot}" alt="${esc(p.nazvanie)}" loading="lazy">${badge}</div>`
       : `<div class="hcard-media hcard-noimg"><span class="project-symbol" aria-hidden="true">AI</span>${badge}</div>`;
@@ -111,7 +112,10 @@ const homeCard = (p) => {
   // Приватный репозиторий (negative-control/CapaTrail) — «Код по запросу», а не битая ссылка (решение Рта 22.10).
   if (!ctas.length && p.blok === 'доказательство-AI') ctas.push(`<span class="cta-muted">Код по запросу</span>`);
   const cta = ctas.length ? `<span class="hcard-cta">${ctas.join('')}</span>` : '';
-  return `<article class="hcard" data-project="${esc(p.slug || String(p.rank))}" data-blok="${esc(p.blok)}">${media}<div class="hcard-body"><h3>${esc(p.nazvanie)}</h3><p class="hcard-ugol">${esc(p.ugol)}</p>${cta}</div></article>`;
+  // Большие блоки — QueQuest, Паук, Орион (Сергей 22.10 «нужны большие блоки»): шире и с крупным кадром, выделяются.
+  const big = ['quequest', 'pauk', 'orion'].includes(p.slug) ? ' hcard-big' : '';
+  // Без точки в конце (правило 23.10): заголовок и подпись-угол.
+  return `<article class="hcard${big}" data-project="${esc(p.slug || String(p.rank))}" data-blok="${esc(p.blok)}">${media}<div class="hcard-body"><h3>${esc(bezTochkiK(p.nazvanie))}</h3><p class="hcard-ugol">${esc(bezTochkiK(p.ugol))}</p>${cta}</div></article>`;
 };
 const byBlok = b => otbor.filter(p => p.blok === b).sort((x, y) => x.rank - y.rank).map(homeCard).join('\n');
 replace('index.html', 'FLAGSHIPS', byBlok('флагман'));

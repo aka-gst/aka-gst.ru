@@ -2,24 +2,44 @@
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
-  // Петли витрины — autoplay muted loop (Сергей 22.10: хочет видеть движение сразу, как в Смотрителе).
-  // Играет только в видимой области; пауза вне экрана, при prefers-reduced-motion и на скрытой вкладке —
-  // чтобы не грузить мобилу десятком видео разом. Кнопки запуска нет.
-  for (const frame of document.querySelectorAll('.animation-frame')) {
-    const video = frame.querySelector('video');
-    if (!video) continue;
-    // Начальная видимость — по реальной позиции, чтобы петли в кадре играли сразу на загрузке,
-    // не дожидаясь первого срабатывания IntersectionObserver (иначе первый экран стартует с паузы).
-    const visible = () => { const r = frame.getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; };
-    let inView = visible();
-    const wanted = () => inView && !reducedMotion.matches && !document.hidden;
-    const update = () => { if (wanted()) { const p = video.play(); if (p) p.catch(() => {}); } else video.pause(); };
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((entries) => { inView = entries[0].isIntersecting; update(); }, { threshold: 0.25 }).observe(frame);
+  // Петли витрины — hover + «случайно» (Сергей 22.10): наведение оживляет петлю; плюс 2–3 видимых
+  // играют сами, чередуясь каждые ~6 с, чтобы страница жила, но не мельтешила вся разом. На телефоне
+  // hover нет — там только «случайно» + тап по карточке. Пауза вне экрана, при reduced-motion, на
+  // скрытой вкладке — мобилу не грузим. Кнопки запуска нет.
+  const items = [...document.querySelectorAll('.animation-frame')]
+    .map((frame) => ({ frame, video: frame.querySelector('video'), hovered: false, random: false }))
+    .filter((it) => it.video);
+  const canMotion = () => !reducedMotion.matches && !document.hidden;
+  const inView = (it) => { const r = it.frame.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
+  const apply = (it) => {
+    if (canMotion() && inView(it) && (it.hovered || it.random)) { const p = it.video.play(); if (p) p.catch(() => {}); }
+    else it.video.pause();
+  };
+  const applyAll = () => items.forEach(apply);
+  if (finePointer.matches) {
+    for (const it of items) {
+      it.frame.addEventListener('mouseenter', () => { it.hovered = true; apply(it); });
+      it.frame.addEventListener('mouseleave', () => { it.hovered = false; apply(it); });
     }
-    document.addEventListener('visibilitychange', update);
-    reducedMotion.addEventListener('change', update);
-    update();
+  } else {
+    for (const it of items) it.frame.addEventListener('click', () => { it.hovered = !it.hovered; apply(it); });
+  }
+  const rotateRandom = () => {
+    items.forEach((it) => { it.random = false; });
+    if (canMotion()) {
+      const vis = items.filter(inView);
+      for (let i = vis.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vis[i], vis[j]] = [vis[j], vis[i]]; }
+      vis.slice(0, Math.min(vis.length, 2 + (Math.random() < 0.5 ? 1 : 0))).forEach((it) => { it.random = true; });
+    }
+    applyAll();
+  };
+  rotateRandom();
+  setInterval(rotateRandom, 6000);
+  document.addEventListener('visibilitychange', applyAll);
+  reducedMotion.addEventListener('change', applyAll);
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(applyAll, { threshold: 0.2 });
+    items.forEach((it) => io.observe(it.frame));
   }
 
   // Почта контакта лежит в data-mail как base64 (в сыром HTML её нет строкой —
