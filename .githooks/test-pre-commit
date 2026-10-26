@@ -51,9 +51,21 @@ case_is pass  'чужие публичные контакты не ловятс�
 case_is pass  'обычный текст' 'Практикум состоит из 19 разделов.'
 
 if [ -f "$words" ]; then
-  word=$(grep -v '^#' "$words" | grep -v '^$' | head -1)
+  word=$(grep -vE '^#|^$|^allow:' "$words" | head -1)
   if [ -n "$word" ]; then
     case_is block 'значение из локального списка' "Автор: $word, тестировщик."
+  fi
+  # base64-спрятанное тоже проверяется (правило 7ж): запрещённое краснеет, одобренное
+  # (allow:) проходит. Значения берём из списка и кодируем — целого в файле нет.
+  allw=$(grep '^allow:' "$words" | head -1 | sed 's/^allow:[[:space:]]*//; s/[[:space:]]*#.*$//')
+  forb=$(grep -vE '^#|^$|^allow:' "$words" | grep -vxF "${allw:-нет-такого}" | head -1)
+  if [ -n "$forb" ]; then
+    b=$(printf '%s' "$forb" | base64 | tr -d '\n')
+    case_is block 'запрещённое, спрятанное в base64, краснеет' "data-x=\"$b\""
+  fi
+  if [ -n "$allw" ]; then
+    b=$(printf '%s' "$allw" | base64 | tr -d '\n')
+    case_is pass  'одобренное (allow) в base64 проходит' "data-mail=\"$b\""
   fi
 else
   printf '  skip  список личных данных отсутствует\n'
