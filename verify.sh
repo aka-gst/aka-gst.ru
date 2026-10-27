@@ -103,6 +103,18 @@ for p in /static/app.js /robots.txt /sitemap.xml /sitemap-pages.xml /og.png /fav
 done
 
 echo
+echo "== почта контакта =="
+# На бою почта — lolsale (base64 в data-mail), не старая sers2109. Решение Сергея 27.10:
+# «Личный Gmail low sale 111? Тогда да». Почта обфусцирована base64 (plaintext в разметке нет),
+# поэтому ищем её base64, а не адрес строкой. До выкладки новой главной здесь ожидаемо красное.
+# shellcheck disable=SC2086
+pm=$(curl -s $RETRY "$BASE/" || echo '')
+if printf '%s' "$pm" | grep -q 'bG9sc2FsZTExMUBnbWFpbC5jb20='; then say_ok "почта контакта на бою — lolsale (base64 в data-mail)"
+else say_bad "почта контакта base64 на бою не найдена — выкладка не доведена"; fi
+if printf '%s' "$pm" | grep -qi 'sers2109'; then say_bad "на бою ещё старая почта sers2109"
+else say_ok "старой почты sers2109 на бою нет"; fi
+
+echo
 echo "== служебное наружу не отдаётся =="
 # Папки проектов выкладываются целиком, и с ними однажды уехало служебное:
 # README и тесты psy-admin отдавались наружу с 28 августа, пока их не
