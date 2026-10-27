@@ -116,7 +116,9 @@ const buildCtas = (p) => {
   if (!a.length && p.blok === 'доказательство-AI') a.push(`<span class="muted">Код по запросу</span>`);
   return a.length ? `<div class="cta">${a.join('')}</div>` : '';
 };
-const faktBlock = (p) => p.fakt ? `<p class="fakt"><b class="big">${esc(p.fakt)}</b><span class="fed">${esc(bezTochkiK(p.fakt_ed || ''))}</span></p>` : '';
+// Факт-число — настоящее, с источником (С7). Источник (fakt_istochnik) — HTML-комментарием
+// в коде страницы, чтобы крупное число нельзя было поставить без указания, откуда оно.
+const faktBlock = (p) => p.fakt ? `${p.fakt_istochnik ? `<!-- источник числа: ${String(p.fakt_istochnik).replace(/--+/g, '—')} -->` : ''}<p class="fakt"><b class="big">${esc(p.fakt)}</b><span class="fed">${esc(bezTochkiK(p.fakt_ed || ''))}</span></p>` : '';
 const mediaBlock = (p, hero = false) => {
   const shotName = baseName(p.kadr), loopName = baseName(p.kadr_petlya);
   const shot = shotName ? `../../assets/shots/${shotName}` : null;
