@@ -544,7 +544,8 @@ textarea:focus-visible {
 .start-panel p, .story-beat p { font-size: 17px; line-height: 1.5; color: #c0ceda; }
 .start-panel small { display: block; margin-top: 16px; color: #a3bccb; line-height: 1.4; }
 .story-beat { z-index: 11; }
-.wallet { position: absolute; z-index: 4; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: grid; grid-template-columns: auto auto; align-items: center; gap: 3px 14px; border: 1px solid #64ffad55; background: #061710ee; border-radius: 12px; padding: 12px 20px; min-width: 250px; pointer-events: none; }
+/* 20.x (Сергей 22.10 «каэш мешает»): bottom-right like Doom's ammo, not between the fists */
+.wallet { position: absolute; z-index: 4; right: clamp(14px, 2.2vw, 32px); bottom: max(18px, env(safe-area-inset-bottom)); display: grid; grid-template-columns: auto auto; align-items: center; gap: 3px 14px; border: 1px solid #64ffad55; background: #061710ee; border-radius: 12px; padding: 12px 20px; min-width: 250px; pointer-events: none; }
 .wallet small { color: #a1bcb0; font: 10px ui-monospace, monospace; }
 .wallet b { grid-row: span 2; color: #70ffac; font: 900 30px ui-monospace, monospace; }
 .wallet span { font: 11px ui-monospace, monospace; color: #d3f5e0; }

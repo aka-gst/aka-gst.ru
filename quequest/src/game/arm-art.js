@@ -77,7 +77,17 @@ const POSES = {
 
 // One awake arm sprite, 96 x 112 px at 40 px/m (the dead one is 96 x 104).
 export function paintArm(pose = 'idle', { led = true } = {}) {
-  const P = POSES[pose] ?? POSES.idle;
+  return paintArmFree({ ...(POSES[pose] ?? POSES.idle), s: 1, led });
+}
+
+// 20.x (Сергей 23.10: «роборука не крутится, когда перекладывает ящики»): the same arm drawn from joint angles,
+// so a haul is smooth instead of three jumping poses. s (−1..1) turns the arm on its base: it is how much the
+// arm's reach points to the right of the screen (1: full side view to the right, −1: to the left, near 0: towards
+// or away from the viewer, foreshortened). a1/a2/grip/crate as in POSES.
+export function paintArmFree(opts = {}) {
+  const { s = 1, led = true } = opts;
+  const P = { a1: opts.a1 ?? 12, a2: opts.a2 ?? -118, grip: opts.grip ?? 'open', crate: Boolean(opts.crate) };
+  const k = Math.sign(s || 1) * Math.max(0.14, Math.abs(s));
   const w = 96, h = 112;
   const g = painter(w, h);
   // Base drum, hazard stripes, turntable.
@@ -87,9 +97,9 @@ export function paintArm(pose = 'idle', { led = true } = {}) {
   const rad = (d) => (d * Math.PI) / 180;
   const sh = [48, 78];
   const L1 = 44, L2 = 38;
-  const el = [sh[0] + Math.sin(rad(P.a1)) * L1, sh[1] - Math.cos(rad(P.a1)) * L1];
+  const el = [sh[0] + Math.sin(rad(P.a1)) * L1 * k, sh[1] - Math.cos(rad(P.a1)) * L1];
   const a2 = P.a1 + 180 + P.a2;
-  const wr = [el[0] + Math.sin(rad(a2)) * L2, el[1] - Math.cos(rad(a2)) * L2];
+  const wr = [el[0] + Math.sin(rad(a2)) * L2 * k, el[1] - Math.cos(rad(a2)) * L2];
   // Cable loom behind the arm.
   g.line([sh[0] + 6, sh[1] - 2], [el[0] + 4, el[1] + 6], [30, 30, 30], 2);
   g.limb(sh, el, 12, ARM_O_L, ARM_O, ARM_O_D);
@@ -97,7 +107,8 @@ export function paintArm(pose = 'idle', { led = true } = {}) {
   g.limb(el, wr, 9, ARM_O_L, ARM_O, ARM_O_D);
   g.ell(sh[0], sh[1], 7, 7, ARM_O_D); g.ell(sh[0], sh[1], 4, 4, STEEL_D);
   // Wrist + gripper, pointing along the forearm.
-  const fx = Math.sin(rad(a2)), fy = -Math.cos(rad(a2));
+  const fl = Math.hypot(Math.sin(rad(a2)) * k, Math.cos(rad(a2))) || 1;
+  const fx = Math.sin(rad(a2)) * k / fl, fy = -Math.cos(rad(a2)) / fl;
   const px = -fy, py = fx;
   g.ell(wr[0], wr[1], 5, 5, STEEL);
   const tip = [wr[0] + fx * 8, wr[1] + fy * 8];
@@ -133,6 +144,32 @@ export function buildArmSprites() {
   }
   return out;
 }
+
+// 20.x · one haul as continuous joint angles + where the base points (world angle, radians, atan2(dz, dx)).
+// Keyframes in «towards the target» terms: reach down to the pile, grab, lift, swing on the base to the belt,
+// lower, let go. The crate is in the gripper from the grab (t 0.3) to the release (t 0.85).
+const HAUL = [
+  { t: 0, a1: 10, a2: -120, grip: 'open' },
+  { t: 0.24, a1: 40, a2: -70, grip: 'open' },
+  { t: 0.3, a1: 40, a2: -70, grip: 'closed' },
+  { t: 0.42, a1: 15, a2: -100, grip: 'closed' },
+  { t: 0.7, a1: 15, a2: -100, grip: 'closed' },
+  { t: 0.82, a1: 35, a2: -75, grip: 'closed' },
+  { t: 0.85, a1: 35, a2: -75, grip: 'open' },
+  { t: 1, a1: 10, a2: -120, grip: 'open' },
+];
+export const SWING = Object.freeze({ from: 0.42, to: 0.7 });
+const smooth = (k) => k * k * (3 - 2 * k);
+export function armMotion(t = 0, fromAngle = Math.PI, toAngle = 0) {
+  const tt = Math.max(0, Math.min(1, t));
+  let i = 0; while (i < HAUL.length - 2 && tt > HAUL[i + 1].t) i++;
+  const A = HAUL[i], B = HAUL[i + 1], k = smooth(Math.max(0, Math.min(1, (tt - A.t) / ((B.t - A.t) || 1))));
+  let d = toAngle - fromAngle; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+  const sw = smooth(Math.max(0, Math.min(1, (tt - SWING.from) / (SWING.to - SWING.from))));
+  return { a1: A.a1 + (B.a1 - A.a1) * k, a2: A.a2 + (B.a2 - A.a2) * k, grip: k < 0.5 ? A.grip : B.grip, crate: tt >= 0.3 && tt < 0.85, angle: fromAngle + d * sw };
+}
+// How the base angle looks from a camera with this yaw (screen-right = (cos yaw, sin yaw) in x/z): −1..1.
+export function armFacing(angle, camYaw) { return Math.cos(angle - camYaw); }
 
 // Which pose for a hauling cycle at progress t (0..1).
 export function armPoseAt(t) {

@@ -3,12 +3,15 @@ import { CAREER_PITCH } from './career-sims.js';
 import { getCampusRank } from './campus-profile.js';
 import { GUILD_SKILLS, guildLedgerPoints } from './quest-guild.js';
 import { GARAGE_DAYS, garageDay, simGarage } from './garage-night.js';
-import { createGarageStage } from './garage-stage.js';
+import { createGarageStage } from './garage-stage.js?v=20.0.2';
 import { worldGate } from './progress-map.js';
-import { levelOf, masteryEvent } from './mastery.js';
-import { PYTHONIO_ORDERS, pythonioDone } from './pythonio-bridge.js';
+import { levelOf, masteryEvent, SKILLS as MASTERY_SKILLS } from './mastery.js';
+import { PYTHONIO_ORDERS, pythonioDone } from './pythonio-bridge.js?v=qq205';
 import { MEGACORP, HACKER_QUESTS, ENGINEER_QUESTS, PROFESSIONS, FULL_MARK, TASTER_MARK, hackerStatus, engineerStatus, engineerOpen, questById, hackerQuestForDay } from './career-story.js';
+import { ice64Quests } from './chess/overlay.js?v=ice3';
 import { TASTERS, tasterById, tasterStatus, tasterOpen, tasterProof, tasterFinished, nextDoor, TASTER_GATE, WAY_WORDS } from './career-tasters.js';
+import { MORE_TASTERS } from './tasters/index.js';
+const SKILLS_GUILD=(skill)=>MASTERY_SKILLS[skill]?.guild??'automation';
 import { createTasterStage } from './taster-stage.js';
 import { createTasterCanvas } from './taster-scene.js';
 
@@ -30,6 +33,12 @@ export const CAREER_REALMS=freeze([
  freeze({id:'lowlevel',glyph:'01',role:T('lowlevel').name,title:T('lowlevel').title,subtitle:`${T('lowlevel').name} · проба: три уровня`,mechanic:'BITS',taster:true,after:HACKER_QUESTS[0].id,run:'ПРОВЕРИТЬ СИГНАЛ →',gate:['print','if'],prompt:T('lowlevel').story,controls:[['bit0','Переключить правый','правый'],['bit1','Переключить второй справа','второй'],['reset','Сбросить всё','сброс']],wins:[['bit0','bit1']],skill:'lowlevel',art:'low'}),
 ]);
 
+// 20.x · the newer tasters (src/game/tasters/) have no day simulation of their own: a door
+// built from their data, the same gate as every taster, kept out of CAREER_REALMS.
+const TASTER_REALMS=Object.fromEntries(MORE_TASTERS.map((m)=>{const t=m.taster;return [t.id,freeze({id:t.id,glyph:t.glyph,role:t.name,title:t.title,subtitle:`${t.name} · проба: три уровня`,mechanic:'TASTER',taster:true,after:HACKER_QUESTS[0].id,gate:['print','if'],prompt:t.story,controls:[],wins:[],skill:SKILLS_GUILD(t.skill)})];}));
+// 20.x · ЛЁД-64 (src/game/chess/): its own screen, no day simulation — kept out of CAREER_REALMS like the newer tasters.
+const NIGHT_REALMS=Object.freeze({ice64:freeze({id:'ice64',glyph:'⌗',role:'Сторож сети',title:'ЛЁД-64 · НОЧНОЙ ШТУРМ',subtitle:'Сторож сети · шесть ночных уровней',mechanic:'ICE-64',ice64:true,gate:[]})});
+export const realmOf=(id)=>CAREER_REALMS.find(r=>r.id===id)??TASTER_REALMS[id]??NIGHT_REALMS[id]??null;
 // 17.0 · a branch level gives the next day of the profession: a heavier
 // day, a new part, better pay. Day 1 is the realm itself.
 export const REALM_DAYS=freeze({
@@ -57,21 +66,23 @@ export function foundationStatus(learning={},realm){
 }
 // 19.0 · can the player go in? Learning gate, the story gate (ИНЖЕНЕР after
 // Витя's night) and «скоро». reason: 'soon' | 'story' | 'learning' | null.
-export function realmAvailability(realm,profile={},learning={}){
+export function realmAvailability(realm,profile={},learning={},opts={}){
  if(!realm)return {ok:false,reason:'unknown',text:''};
  const f=foundationStatus(learning,realm);
  if(!f.ok)return {ok:false,reason:'learning',text:worldGate(f.missing)};
- if(realm.taster&&!tasterOpen(heldRealmDay(profile,'vehicle')))return {ok:false,reason:'story',text:TASTER_GATE};
- if(realm.after&&!engineerOpen(heldRealmDay(profile,'vehicle')))return {ok:false,reason:'story',text:`Сначала помоги Вите в гараже — он подскажет, к кому идти.`};
+ if(realm.taster&&!opts.tastersOpen&&!tasterOpen(heldRealmDay(profile,'vehicle')))return {ok:false,reason:'story',text:TASTER_GATE};
+ if(realm.after&&!(realm.taster&&opts.tastersOpen)&&!engineerOpen(heldRealmDay(profile,'vehicle')))return {ok:false,reason:'story',text:`Сначала помоги Вите в гараже — он подскажет, к кому идти.`};
  return {ok:true,reason:null,text:''};
 }
 // The quests of a profession with done / active / locked.
-export function professionQuests(id,profile={}){
+// opts.tastersOpen: the demo's «Пробы профессий» level opens the tasters without Витя's night (the demo profile stays honest).
+export function professionQuests(id,profile={},opts={}){
  const held=heldRealmDay(profile,'vehicle');
  if(id==='vehicle')return hackerStatus(held);
+ if(id==='ice64')return ice64Quests();
  if(id==='automation')return engineerStatus(held,pythonioDone(profile),(i)=>PYTHONIO_ORDERS[i]?.pay??0);
  const t=tasterById(id);
- if(t){const open=tasterOpen(held);return tasterStatus(profile,id).map((l)=>({id:`${id}:l${l.index+1}`,title:`${l.index+1} · ${l.title}`,story:`${WAY_WORDS[l.way]}: ${l.goal}`,status:open?l.status:'locked'}));}
+ if(t){const open=Boolean(opts.tastersOpen)||tasterOpen(held);return tasterStatus(profile,id).map((l)=>({id:`${id}:l${l.index+1}`,title:`${l.index+1} · ${l.title}`,story:`${WAY_WORDS[l.way]}: ${l.goal}`,status:open?l.status:'locked'}));}
  return [];
 }
 
@@ -162,7 +173,7 @@ const SUCCESS_COPY={automation:'✓ Ни один заказ не исчез. Л
 // ИНЖЕНЕР → мастерская Pythonio (pythonio-bridge.js).
 const DEEPER={automation:'ДАЛЬШЕ — МАСТЕРСКАЯ → ПИТОНИО'};
 const simCfg=(session)=>({selected:[...(session?.selected??[])],bits:[...(session?.bits??[0,0,0,0])],day:session?.day??1});
-const CSS_HREF=new URL('./career-worlds.css',import.meta.url).href;
+const CSS_HREF=new URL('./career-worlds.css?v=career-22',import.meta.url).href;
 
 // The one instance main.js created: other modules (the factory hand-off at
 // the end of the first week) can call enterGarageQuest without a handle.
@@ -176,7 +187,7 @@ export function enterGarageQuest(id='q-garage-vitya'){return current?current.ent
 // 16.8 → 19.0: a class-select screen. Left, the two real professions and the
 // five «скоро»; right, the picked one: its story line and its quests.
 // Inside the garage the same live scene answers every edit of the rule.
-export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}),getWallet=()=>0,onProfile=()=>{},onSound=()=>{},onClose=()=>{},world=null,onDeeper=null}={}){
+export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}),getWallet=()=>0,tastersOpen=()=>false,onIce64=null,onProfile=()=>{},onSound=()=>{},onClose=()=>{},world=null,onDeeper=null}={}){
  if(!root)return{open(){},close(){},enterGarageQuest(){return false;}};
  const doc=root.ownerDocument;
  if(doc&&!doc.querySelector('link[data-career-css]')){const l=doc.createElement('link');l.rel='stylesheet';l.href=CSS_HREF;l.dataset.careerCss='';doc.head.append(l);}
@@ -217,7 +228,8 @@ export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}
   pauseEl.addEventListener('click',(e)=>{const b=e.target.closest?.('[data-pause]');if(!b)return;if(b.dataset.pause==='surface'){setPause(false);surface();}else setPause(false);});}
  function setPause(on){paused=Boolean(on)&&diving;if(pauseEl)pauseEl.hidden=!paused;root.dataset.paused=String(paused);garage.pause(paused);if(paused)pauseEl?.querySelector('[data-pause="resume"]')?.focus({preventScroll:true});onSound('ui-click');}
  function wins(){return new Set(getProfile().labs?.guild?.realmWins??[]);}
- function gateOf(realm){return realmAvailability(realm,getProfile(),getLearning());}
+ const qOpts=()=>({tastersOpen:Boolean(tastersOpen())});
+ function gateOf(realm){return realmAvailability(realm,getProfile(),getLearning(),qOpts());}
  function renderSheet(){
   const box=root.querySelector('.career-foundation');if(!box)return;
   const c=characterSheet(getProfile(),getLearning(),getWallet());
@@ -232,11 +244,11 @@ export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}
   grid.innerHTML='';const profile=getProfile();
   const next=doorNext(profile);
   for(const p of PROFESSIONS){
-   const realm=CAREER_REALMS.find(r=>r.id===p.id),gate=gateOf(realm),qs=professionQuests(p.id,profile),done=qs.filter(q=>q.status==='done').length;
+   const realm=realmOf(p.id),gate=gateOf(realm),qs=professionQuests(p.id,profile,qOpts()),done=qs.filter(q=>q.status==='done').length;
    const b=doc.createElement('button');
-   b.type='button';b.dataset.realm=p.id;b.dataset.locked=String(!gate.ok);b.dataset.kind=p.taster?'taster':'full';b.dataset.next=String(p.id===next);b.setAttribute('role','option');b.setAttribute('aria-selected',String(p.id===picked));
-   const unit=p.taster?'уровни':'квесты',all=p.taster?`✓ все ${qs.length} уровня`:`✓ все ${qs.length} квеста`;
-   const status=gate.ok?(done===qs.length?all:`${unit}: ${done} из ${qs.length}`):(gate.reason==='story'?'откроется после Вити':gate.text);
+   b.type='button';b.dataset.realm=p.id;b.dataset.locked=String(!gate.ok);b.dataset.kind=p.taster?'taster':p.night?'night':'full';b.dataset.next=String(p.id===next);b.setAttribute('role','option');b.setAttribute('aria-selected',String(p.id===picked));
+   const unit=p.taster||p.night?'уровни':'квесты',all=p.taster?'✓ пройдена':p.night?'✓ ночь удержана':`✓ все ${qs.length} квеста`;
+   const status=gate.ok?(done===qs.length?all:`${unit}: ${done} из ${qs.length}`):(gate.reason==='story'?(p.taster?'после Вити':'откроется после Вити'):gate.text);
    b.innerHTML=`<b>${realm.glyph}</b><span><strong>${esc(p.name)}</strong><em><i class="career-kind">${p.taster?TASTER_MARK:FULL_MARK}</i> ${p.id===next?'▶ сюда дальше':esc(status)}</em></span>`;
    b.title=p.title;
    b.addEventListener('click',()=>{if(picked===p.id&&!list.hidden)enter(p.id);else pick(p.id,{sound:true});});
@@ -250,7 +262,7 @@ export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}
  }
  function pick(id,{sound=false,focus=false}={}){
   const prof=PROFESSIONS.find(p=>p.id===id);if(!prof)return;
-  picked=id;const realm=CAREER_REALMS.find(r=>r.id===id),gate=gateOf(realm),pitch=CAREER_PITCH[id],qs=professionQuests(id,getProfile());
+  picked=id;const realm=realmOf(id),gate=gateOf(realm),pitch=CAREER_PITCH[id]??tasterById(id)?.pitch??{life:''},qs=professionQuests(id,getProfile(),qOpts());
   for(const b of grid.querySelectorAll('[data-realm]')){b.setAttribute('aria-selected',String(b.dataset.realm===id));if(focus&&b.dataset.realm===id)b.focus({preventScroll:true});}
   root.dataset.picked=id;
   $('#careerPickSub').textContent=`${prof.taster?`${TASTER_MARK}: три коротких уровня`:`${FULL_MARK} целиком`} · месть ${MEGACORP.of}`;
@@ -265,10 +277,11 @@ export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}
   if(sound)onSound('ui-click');
  }
  function enter(id){
-  const realm=CAREER_REALMS.find(r=>r.id===id),gate=gateOf(realm);
+  const realm=realmOf(id),gate=gateOf(realm);
   if(!gate.ok){onSound('blocked');$('#careerPickDeep').textContent=gate.text;return;}
   if(realm.pythonio&&onDeeper){showcase.stop();onDeeper(id);return;}
   if(realm.taster){openTaster(id);return;}
+  if(realm.ice64&&onIce64){showcase.stop();onIce64();return;}
   if(realm.code&&world&&!diving){const q=professionQuests('vehicle',getProfile()).find(x=>x.status==='active')??HACKER_QUESTS.at(-1);enterQuest(q.id);return;}
   openRealm(id);
  }
@@ -285,7 +298,7 @@ export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}
   return 'Саня зовёт: у «ТИСКОВ» в прошивке мастер-ключ. Ноутбук на верстаке — покажи ему дыру.';
  }
  function openTaster(id){
-  const realm=CAREER_REALMS.find(r=>r.id===id);
+  const realm=realmOf(id);
   showcase.stop();live.stop();garage.stop();running=false;
   active={...realm,day:1};session=null;stage.hidden=false;list.hidden=true;
   root.dataset.realm=id;root.dataset.mechanic=realm.mechanic;root.dataset.inside=id;root.dataset.taster='true';delete root.dataset.day;
@@ -374,7 +387,7 @@ export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}
  // Into the program from a computer in the 3D world.
  function dive(program){
   diving=true;lastResult=null;openedForDive=root.hidden;root.hidden=false;root.dataset.dive='true';$('#careerSurface').hidden=false;$('#careerSurface').textContent='↑ ВЫНЫРНУТЬ В ГАРАЖ';setPause(false);
-  const id=program==='garage'?'vehicle':program;const realm=CAREER_REALMS.find(r=>r.id===id);
+  const id=program==='garage'?'vehicle':program;const realm=realmOf(id);
   if(!realm){surface();return;}
   const gate=gateOf(realm);
   // ИНЖЕНЕР from the laptop: the workshop takes the dive over.
@@ -429,12 +442,12 @@ export function createCareerWorlds(root,{getProfile=()=>({}),getLearning=()=>({}
   open(){root.hidden=false;stage.hidden=true;list.hidden=false;delete root.dataset.inside;delete root.dataset.taster;tasters.stop();retitle();renderSheet();renderGrid();const n=doorNext(getProfile());const firstOpen=n?PROFESSIONS.find(p=>p.id===n):PROFESSIONS.find(p=>gateOf(CAREER_REALMS.find(r=>r.id===p.id)).ok&&professionQuests(p.id,getProfile()).some(q=>q.status==='active'));pick(firstOpen?.id??picked,{focus:true});},
   close(){showcase.stop();live.stop();garage.stop();tasters.stop();root.hidden=true;},
   // 19.0 C · straight into a taster (tests, links): id = security|web|ai|systems|lowlevel.
-  openTaster(id){if(!tasterById(id))return false;const gate=gateOf(CAREER_REALMS.find(r=>r.id===id));if(!gate.ok)return false;root.hidden=false;openTaster(id);return true;},
+  openTaster(id){if(!tasterById(id))return false;const gate=gateOf(realmOf(id));if(!gate.ok)return false;root.hidden=false;openTaster(id);return true;},
   get taster(){return tasters.state;},
   dive,surface,release,get diving(){return diving;},get lastResult(){return lastResult;},get paused(){return paused;},
   // 19.0 · the story's way in (see the exported enterGarageQuest above).
   enterGarageQuest(id='q-garage-vitya'){if(!root.hidden&&!diving){showcase.stop();root.hidden=true;}return enterQuest(id);},
-  quests:(id)=>professionQuests(id,getProfile()),
+  quests:(id)=>professionQuests(id,getProfile(),qOpts()),
   // Back from the 3D world without diving: the professions list again.
   fromWorld(){pendingDay=null;if(root.hidden)return;delete root.dataset.inside;stage.hidden=true;list.hidden=false;active=null;session=null;renderSheet();renderGrid();pick(picked,{focus:true});},
   refresh(){renderGrid();if(!list.hidden)pick(picked);},

@@ -1,0 +1,14 @@
+(() => {
+  'use strict';
+  const QQ=window.QQ;
+  class PatchSessionSystem{
+    constructor(ctx){this.ctx=ctx;this.preview=null;this.commits=[];this.maxCommits=12;}
+    previewA17(){const r=this.ctx.re,t=r.target;if(!r.near){this.ctx.ui.msg('NO RE TARGET');return false;}if(r.analysisDepth<3){this.ctx.ui.msg('PATCH LOCKED // F6 DEEPER');this.ctx.emit('PATCH_PREVIEW_DENIED',{entity:t.id,analysisDepth:r.analysisDepth,requiredDepth:3});return false;}const after=!t.locked;this.preview={entity:t.id,field:'locked',before:t.locked,after,writer:t.writer,caller:t.caller,createdAt:performance.now()};this.ctx.emit('PATCH_PREVIEW',{...this.preview});this.ctx.ui.msg(`PATCH PREVIEW // locked ${t.locked} → ${after}`);this.ctx.ui.objective('PATCH PREVIEW // A17','F5 again to COMMIT. F2 rolls back the last committed patch.');return true;}
+    commit(){const p=this.preview;if(!p)return false;const current=this.ctx.re.target.locked;if(current!==p.before){this.ctx.emit('PATCH_PREVIEW_STALE',{entity:p.entity,field:p.field,expected:p.before,actual:current});this.preview=null;this.ctx.ui.msg('PATCH PREVIEW STALE');return false;}const ok=this.ctx.re.patchLocked(p.after,'PATCH_SESSION_COMMIT');if(!ok)return false;const c={...p,committedAt:performance.now()};this.commits.push(c);if(this.commits.length>this.maxCommits)this.commits.shift();this.ctx.emit('PATCH_COMMIT',{entity:p.entity,field:p.field,before:p.before,after:p.after,writer:p.writer,caller:p.caller});this.preview=null;this.ctx.ui.msg('PATCH COMMITTED');return true;}
+    previewOrCommit(){return this.preview?this.commit():this.previewA17();}
+    cancel(reason='CANCEL'){if(!this.preview)return false;const p=this.preview;this.preview=null;this.ctx.emit('PATCH_PREVIEW_CANCEL',{entity:p.entity,field:p.field,reason});return true;}
+    rollback(){const last=this.commits.at(-1);if(!last){this.ctx.ui.msg('NO PATCH TO ROLLBACK');return false;}if(!this.ctx.re.near){this.ctx.ui.msg('RETURN TO PATCH TARGET');return false;}const current=this.ctx.re.target.locked;if(current!==last.after){this.ctx.ui.msg('ROLLBACK BLOCKED // STATE DIVERGED');this.ctx.emit('PATCH_ROLLBACK_DENIED',{entity:last.entity,field:last.field,expected:last.after,actual:current});return false;}const ok=this.ctx.re.patchLocked(last.before,'PATCH_ROLLBACK');if(!ok)return false;this.commits.pop();this.ctx.emit('PATCH_ROLLBACK',{entity:last.entity,field:last.field,before:last.after,after:last.before});this.ctx.ui.msg('PATCH ROLLED BACK');return true;}
+    statusText(){const p=this.preview,last=this.commits.at(-1);return [p?`PREVIEW\n${p.entity}.${p.field}\n${p.before} → ${p.after}`:'NO PATCH PREVIEW',last?`LAST COMMIT\n${last.entity}.${last.field}\n${last.before} → ${last.after}`:'NO COMMITTED PATCH'].join('\n\n');}
+  }
+  QQ.PatchSessionSystem=PatchSessionSystem;
+})();

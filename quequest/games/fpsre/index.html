@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>FPS-RE // Engine Lab</title>
+<link rel="stylesheet" href="style.css?v=qq201">
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="weapon"></canvas>
+<canvas id="weapon3d"></canvas>
+<canvas id="twilightCanvas"></canvas>
+<div id="damageFlash"></div><div id="screenBloom"></div><div id="portalEdge"></div><div id="filmGrain"></div><div id="vignette"></div><div id="twilightVeil"></div>
+<div id="crosshair"><i></i><i></i><i></i><i></i></div>
+<div id="pickupText"></div>
+<div id="objective" class="visible"><b id="objectiveTitle">V14 // ПРИБЫТИЕ</b><span id="objectiveText">Пройди коридор и пост охраны.</span></div>
+<div id="weaponHud"><b id="weaponName">RAIL</b><span id="weaponDesc">точный импульс</span></div>
+<div id="itemTimers"></div>
+<div id="directorState"></div>
+<div id="controlsHint">WASD · мышь · E — взаимодействовать · F3 — увидеть устройство мира · F4 — отладчик</div>
+<div id="logStatus"></div>
+
+<div id="focusCard" class="hidden" aria-live="polite">
+  <div id="focusEyebrow">СИСТЕМА</div>
+  <div id="focusTitle">—</div>
+  <div id="focusState"></div>
+  <div id="focusAction"></div>
+</div>
+<div id="twilightMode" class="hidden"><span>СУМЕРЕЧНЫЙ СЛОЙ</span><b id="twilightDepth">видны связи</b></div>
+<div id="modeToast" class="hidden"></div>
+
+
+<!-- Полный анализ не показывается в обычной игре. Эти блоки оставлены только для F4/совместимости. -->
+<div id="lens" class="hidden"><div class="lensHead"><b>TRUE SIGHT</b><span>F3</span></div><div class="lensGrid"><section><h3>ЦЕЛЬ</h3><pre id="lensPlayer"></pre></section><section><h3>СВЯЗИ</h3><pre id="lensBot"></pre></section><section><h3>ДОКАЗАТЕЛЬСТВА</h3><pre id="lensWorld"></pre></section><section><h3>ДАЛЬШЕ</h3><pre id="lensEvents"></pre></section></div></div>
+<div id="replay" class="hidden"><div class="lensHead"><b>ОТЛАДЧИК</b><span>F4 закрыть · ←/→ история · Enter продолжить</span></div><div class="debuggerGrid"><section><h3>НАБЛЮДЕНИЕ</h3><pre id="watchText"></pre></section><section><h3>ОСТАНОВКА ПРИ ИЗМЕНЕНИИ</h3><pre id="breakText"></pre></section><section class="timelinePane"><h3>ИСТОРИЯ ПОЛЯ</h3><pre id="timelineText"></pre></section><section><h3>ИЗМЕНЕНИЕ</h3><pre id="patchText"></pre></section><section class="eventsPane"><h3>ПОСЛЕДНИЕ СОБЫТИЯ</h3><pre id="replayText"></pre></section></div></div>
+<div id="dreamHud" class="hidden"><b id="dreamTitle">ANOMALY LAB</b><span id="dreamDepth">DEPTH 01</span><span id="dreamCheckpoint">CHECKPOINT 0</span></div>
+<div id="dreamVeil"></div>
+
+<script src="core/namespace.js"></script>
+<script src="core/events.js"></script>
+<script src="math/math.js"></script>
+<script src="config/game-config.js"></script>
+<script src="core/logger.js"></script>
+<script src="core/context.js"></script>
+<script src="core/save-store.js"></script>
+<script src="core/audio.js"></script>
+<script src="audio/spatial-audio.js"></script>
+<script src="world/materials.js"></script>
+<script src="world/world.js"></script>
+<script src="world/noise-system.js"></script>
+<script src="world/trigger-system.js"></script>
+<script src="world/door-system.js"></script>
+<script src="world/portal-system.js"></script>
+<script src="world/topology-graph.js"></script>
+<script src="world/impossible-geometry.js"></script>
+<script src="world/altered-return.js"></script>
+<script src="world/projection-system.js"></script>
+<script src="world/projection-room-system.js"></script>
+<script src="world/level.js"></script>
+<script src="world/set-dressing.js"></script>
+<script src="world/v13-vertical-slice.js"></script>
+<script src="fx/vfx.js"></script>
+<script src="fx/ambient-fx.js"></script>
+<script src="gameplay/player.js"></script>
+<script src="gameplay/interaction.js"></script>
+<script src="gameplay/system-archaeology.js"></script>
+<script src="gameplay/slice-progress.js"></script>
+<script src="combat/damage.js"></script>
+<script src="combat/material-impact.js"></script>
+<script src="combat/ballistics.js"></script>
+<script src="combat/weapon-mechanism.js"></script>
+<script src="world/physics-props.js"></script>
+<script src="gameplay/items.js"></script>
+<script src="combat/weapons.js"></script>
+<script src="ai/memory.js"></script>
+<script src="ai/utility.js"></script>
+<script src="ai/navigation.js"></script>
+<script src="ai/perception.js"></script>
+<script src="ai/qbot.js"></script>
+<script src="npc/npc-system.js"></script>
+<script src="director/sequence-runner.js"></script>
+<script src="director/world-director.js"></script>
+<script src="director/topology-encounter.js"></script>
+<script src="dream/dream-system.js"></script>
+<script src="re/reverse-engineering.js"></script>
+<script src="ui/hud.js"></script>
+<script src="ui/twilight-ux.js"></script>
+<script src="debug/evidence-system.js"></script>
+<script src="debug/field-history.js"></script>
+<script src="debug/debug-info.js"></script>
+<script src="debug/watch-system.js"></script>
+<script src="debug/timeline-system.js"></script>
+<script src="debug/breakpoint-system.js"></script>
+<script src="debug/patch-session.js"></script>
+<script src="debug/causal-navigator.js"></script>
+<script src="debug/debug-ui.js"></script>
+<script src="debug/self-test.js"></script>
+<script src="debug/telemetry.js"></script>
+<script src="core/game-loop.js"></script>
+<script src="render/texture-system.js"></script>
+<script src="render/renderer-archaeology.js"></script>
+<script src="render/visual-system.js"></script>
+<script src="render/screen-fx.js"></script>
+<script src="render/weapon-view.js"></script>
+<script src="render/weapon-model-view.js"></script>
+<script src="render/static-mesh-assets.js"></script>
+<script src="render/renderer.js"></script>
+<script src="input/input.js?v=qq201"></script>
+<script src="app.js"></script>
+</body>
+</html>

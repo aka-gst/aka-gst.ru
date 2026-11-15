@@ -2,8 +2,43 @@
 (function (g) {
     'use strict';
     const D = g.WorkshopData;
+    // QueQuest host theme (local to the QueQuest copy, see ../VERSION). Inside QueQuest the workshop was
+    // olive-on-olive and its canvas text ~4–5 px on screen (Сергей 13.10: «зелёное на зелёном, нечитабельно»).
+    // When the host bridge marks <html data-host="quequest"> every canvas colour goes through tone():
+    // the roles below get an explicit navy / amber / teal palette, other greens are moved to blue,
+    // and canvas text is drawn larger. Standalone Pythonio is untouched.
+    const QQ_ROLE = {
+        '#263e2b': '#0a121b', '#12271c': '#05090e', '#3c4b36': '#0f1b28', '#8b855b': '#2f5677', '#526049': '#172a3d', '#44573d': '#132436',
+        '#776748': '#1e3a55', '#7c9371': '#7d9ab4', '#172b20': '#060c13', '#777655': '#c8963a', '#313e2b': '#7a5418', '#d7c58c': '#ffe3a3',
+        '#102819a0': '#020609b0', '#263f30': '#1b2d42', '#738163': '#4d8fc4', '#344c39': '#24405c', '#233a2a': '#0e1a28', '#182e20': '#0b1622',
+        '#afbea0': '#a9c3da', '#13271dcc': '#03070bcc', '#6b6242': '#1f3a55', '#9a8b5b': '#5f9ed3', '#314330': '#0c1622', '#475f3e': '#26476a',
+        '#d3d4a6': '#f2f8fd', '#9eb18a': '#9ab6cf', '#839477': '#7f9cb6', '#b7c49c': '#ffc35c', '#cad989': '#5fe3a1', '#6c7a55': '#3a5168',
+        '#d8dfb4': '#d6f7e6', '#8ea381': '#8ea9c0', '#13251a': '#04080d', '#8b7850': '#8f5d16', '#527b58': '#16708f', '#283e2b': '#132233',
+        '#b3a66d': '#ffcf70', '#617250': '#3a5b7a', '#f4eccb': '#ffffff', '#8fa57f': '#87a3bc', '#4b6955': '#26476a', '#a2b794': '#5f9ed3',
+        '#172f24': '#0a1420', '#d6e5ba': '#eef6fb', '#b7c99a': '#9ab6cf', '#8eab89': '#7f9cb6', '#d7e4b4': '#e8f2fa', '#72986c': '#2b5a82',
+        '#10271bee': '#050b12ee', '#344e35': '#0f1b28', '#243f2be8': '#0d1a28e8', '#12271c77': '#03070b77'
+    };
+    const qqTone = new Map();
+    function toneHex(col) {
+        if (typeof col !== 'string' || col[0] !== '#' || (col.length !== 7 && col.length !== 9)) return col;
+        const key = col.toLowerCase(); if (QQ_ROLE[key]) return QQ_ROLE[key];
+        const r = parseInt(key.slice(1, 3), 16) / 255, gg = parseInt(key.slice(3, 5), 16) / 255, b = parseInt(key.slice(5, 7), 16) / 255, a = key.slice(7);
+        const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), l = (mx + mn) / 2, d = mx - mn;
+        if (d < 1e-6) return col;
+        const sat = d / (1 - Math.abs(2 * l - 1));
+        let h = mx === r ? ((gg - b) / d) % 6 : mx === gg ? (b - r) / d + 2 : (r - gg) / d + 4; h = (h * 60 + 360) % 360;
+        if (h < 62 || h > 175) return col;                                   // warm golds / creams / reds stay: they are the accents
+        const nh = 208, ns = Math.min(.55, sat * .9 + .1), nl = l < .4 ? l * .75 : Math.min(.94, l * 1.08);
+        const k = n => (n + nh / 30) % 12, f = n => nl - ns * Math.min(nl, 1 - nl) * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+        return '#' + [f(0), f(8), f(4)].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('') + a;
+    }
+    const qqOn = () => g.document?.documentElement?.dataset.host === 'quequest';
+    let qqRaw = 0;                                                         // plants and pots keep their green: life on the floor
+    const tone = col => { if (qqRaw || !qqOn()) return col; if (!qqTone.has(col)) qqTone.set(col, toneHex(col)); return qqTone.get(col); };
+    g.WorkshopTheme = { toneHex };                                        // tools/pythonio-skin.mjs builds quequest-skin.css from the same rule
+    const textScale = size => qqOn() ? Math.round(size < 14 ? size * 1.22 : size * 1.1) : size;
     class WorkshopView {
-        constructor(canvas, callbacks) { this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.cb = callbacks; this.w = 0; this.h = 0; this.zoom = 1; this.pan = { x: 0, y: 0 }; this.hits = []; this.mouse = null; this.drag = null; this.tab = 'factory'; this.tool = 'select'; this.selected = null; this.linkFrom = null; this.held = null; this.hover = null; this.lastSize = ''; this.heat = false; this.pulse = []; new ResizeObserver(() => this.resize()).observe(canvas.parentElement); this.bind(); this.resize(); }
+        constructor(canvas, callbacks) { for (const k of ['tree', 'pot']) { const f = this[k].bind(this); this[k] = (...a) => { qqRaw++; try { return f(...a); } finally { qqRaw--; } }; } this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.cb = callbacks; this.w = 0; this.h = 0; this.zoom = 1; this.pan = { x: 0, y: 0 }; this.hits = []; this.mouse = null; this.drag = null; this.tab = 'factory'; this.tool = 'select'; this.selected = null; this.linkFrom = null; this.held = null; this.hover = null; this.lastSize = ''; this.heat = false; this.pulse = []; new ResizeObserver(() => this.resize()).observe(canvas.parentElement); this.bind(); this.resize(); }
         resize() { const r = this.canvas.getBoundingClientRect(); this.w = r.width; this.h = r.height; const d = Math.min(2, devicePixelRatio || 1); this.dpr = d; this.canvas.width = Math.round(this.w * d); this.canvas.height = Math.round(this.h * d); this.fitScale = Math.min(this.w / 1380, this.h / 810); }
         origin() { return { x: (this.w - 1380 * this.scale()) / 2 + this.pan.x, y: (this.h - 810 * this.scale()) / 2 + this.pan.y }; }
         scale() { return this.fitScale * this.zoom; }
@@ -53,14 +88,14 @@
         rect(x, y, w, h, fill, r = 0, stroke = null) { const c = this.ctx; c.beginPath(); if (r)
             c.roundRect(x, y, w, h, r);
         else
-            c.rect(x, y, w, h); c.fillStyle = fill; c.fill(); if (stroke) {
-            c.strokeStyle = stroke;
+            c.rect(x, y, w, h); c.fillStyle = tone(fill); c.fill(); if (stroke) {
+            c.strokeStyle = tone(stroke);
             c.lineWidth = 1.5;
             c.stroke();
         } }
-        text(text, x, y, size = 16, color = '#e4dec2', weight = 500, align = 'left') { const c = this.ctx; c.font = `${weight} ${size}px system-ui,sans-serif`; c.fillStyle = color; c.textAlign = align; c.textBaseline = 'middle'; c.fillText(text, x, y); }
-        circle(x, y, r, color) { const c = this.ctx; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = color; c.fill(); }
-        line(points, color, width = 2, dash = []) { const c = this.ctx; c.strokeStyle = color; c.lineWidth = width; c.setLineDash(dash); c.beginPath(); points.forEach((p, i) => i ? c.lineTo(...p) : c.moveTo(...p)); c.stroke(); c.setLineDash([]); }
+        text(text, x, y, size = 16, color = '#e4dec2', weight = 500, align = 'left') { const c = this.ctx; c.font = `${weight} ${textScale(size)}px system-ui,sans-serif`; c.fillStyle = tone(color); c.textAlign = align; c.textBaseline = 'middle'; c.fillText(text, x, y); }
+        circle(x, y, r, color) { const c = this.ctx; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = tone(color); c.fill(); }
+        line(points, color, width = 2, dash = []) { const c = this.ctx; c.strokeStyle = tone(color); c.lineWidth = width; c.setLineDash(dash); c.beginPath(); points.forEach((p, i) => i ? c.lineTo(...p) : c.moveTo(...p)); c.stroke(); c.setLineDash([]); }
         tree(x, y, scale = 1) { this.rect(x - 4 * scale, y - 4 * scale, 8 * scale, 28 * scale, '#5b5137', 2); this.circle(x + 5 * scale, y + 7 * scale, 25 * scale, '#152e23'); this.circle(x, y - 10 * scale, 25 * scale, '#3d603b'); this.circle(x - 10 * scale, y - 18 * scale, 18 * scale, '#577345'); this.circle(x + 9 * scale, y - 24 * scale, 20 * scale, '#496c3d'); this.circle(x - 7 * scale, y - 30 * scale, 10 * scale, '#66834c'); }
         pot(x, y) { this.rect(x - 11, y, 22, 20, '#ad7952', 4); this.rect(x - 14, y - 3, 28, 8, '#c59263', 2); this.circle(x, y - 12, 12, '#7d9a60'); this.circle(x - 10, y - 7, 9, '#516e43'); this.circle(x + 7, y - 18, 8, '#abc47a'); }
         packet(p, x, y, big = false) { const c = this.ctx, k = big ? 1.6 : 1; c.save(); c.translate(x, y); c.scale(k, k); this.rect(-7, -9, 14, 18, p.type === 'image' ? '#8fc9c4' : '#d3aed6', 3, '#213b2b'); if (p.type === 'image') {
@@ -171,7 +206,7 @@
                 if (!a || !b)
                     continue;
                 const p = this.curve(a, b);
-                const draw = (col, w, d = []) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(d); c.beginPath(); c.moveTo(p[0].x, p[0].y); c.bezierCurveTo(p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y); c.stroke(); c.setLineDash([]); };
+                const draw = (col, w, d = []) => { c.strokeStyle = tone(col); c.lineWidth = w; c.setLineDash(d); c.beginPath(); c.moveTo(p[0].x, p[0].y); c.bezierCurveTo(p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y); c.stroke(); c.setLineDash([]); };
                 draw('#172b20', 17);
                 draw('#777655', 11);
                 draw('#313e2b', 7, [7, 9]);
@@ -275,7 +310,7 @@
             }
  }
         draw(s) { if (!this.w || !s)
-            return; this.state = s; const c = this.ctx; this.hits = []; c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.clearRect(0, 0, this.w, this.h); c.fillStyle = '#263e2b'; c.fillRect(0, 0, this.w, this.h); const o = this.origin(); c.save(); c.translate(o.x, o.y); c.scale(this.scale(), this.scale()); if (this.tab === 'yard')
+            return; this.state = s; const c = this.ctx; this.hits = []; c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.clearRect(0, 0, this.w, this.h); c.fillStyle = tone('#263e2b'); c.fillRect(0, 0, this.w, this.h); const o = this.origin(); c.save(); c.translate(o.x, o.y); c.scale(this.scale(), this.scale()); if (this.tab === 'yard')
             this.drawYard(s);
         else if (this.tab === 'town')
             this.drawTown(s);

@@ -280,6 +280,17 @@ aka-gst.ru, www.aka-gst.ru {
   redir /acid /acid/ 308
   # Строку запроса надо переносить руками: явный redir её выбрасывает,
   # хотя собственная нормализация Caddy сохраняет (проверено на /claw).
+  # One canonical QueQuest URL, Sergey 2026-11-15. Preserve old test links.
+  @preview_quequest_query {
+    path /preview/quequest
+    expression {query} != ""
+  }
+  redir @preview_quequest_query /quequest/?{query} 308
+  redir /preview/quequest /quequest/ 308
+  route /preview/quequest/* {
+    uri replace /preview/quequest/ /quequest/
+    redir * {uri} 308
+  }
   # QueQuest переехал на /quequest/ (QueQuest 18.1–18.2, 05.10.2026). Старый адрес ведёт на
   # новый с сохранением пути и строки запроса: /qa-quest/x?y → /quequest/x?y — «да» Сергея
   # 05.10 через Рта. Папка qa-quest на сервере не удаляется (его же слово).

@@ -13,11 +13,12 @@
 // tools/career-tasters.test.mjs checks levels, sentences, gates and proofs.
 
 import { compileRule, formatRuleError, normalizeRuleSource } from './garage-rule.js';
+import { MORE_TASTERS } from './tasters/index.js';
 
 const freeze = (v) => Object.freeze(v);
 const deep = (v) => { if (v && typeof v === 'object') { for (const k of Object.keys(v)) deep(v[k]); Object.freeze(v); } return v; };
 
-export const TASTER_IDS = freeze(['security', 'web', 'ai', 'systems', 'lowlevel']);
+export const TASTER_IDS = freeze(['security', 'web', 'ai', 'systems', 'lowlevel', ...MORE_TASTERS.map((m) => m.taster.id)]);
 export const TASTER_END = 'Это начало профессии. Дальше:';
 
 // Russian plural: 1 примета, 2 приметы, 5 примет.
@@ -336,6 +337,7 @@ export const TASTERS = deep([
     thanks: 'Дед Миша: «„Неремонтопригодно“, говорили! А оно поёт. И лампочка теперь не врёт».',
     next: ['понимать машину на уровне сигналов: биты, память, как процессор считает', 'паять и программировать маленькие платы — как настоящие микроконтроллеры', 'чинить для всего двора то, что «ТИСКИ» назвали неремонтопригодным'],
   },
+  ...MORE_TASTERS.map((m) => m.taster),
 ]);
 
 export function tasterById(id) { return TASTERS.find((t) => t.id === id) ?? null; }
@@ -353,6 +355,7 @@ function judgeTap(level, choiceId) {
 // Level 2 · knobs. One sentence: the first thing that broke, in the order
 // a person would notice it.
 const KNOBS = {
+  ...Object.fromEntries(MORE_TASTERS.map((m) => [m.taster.id, m.knobs])),
   security(v) {
     const invite = v.invite === 'да', limit = Number(v.limit) || Infinity;
     if (!invite) return { ok: false, why: 'Без приглашения внутрь пошли все боты подряд — их сотни, сервер лёг.', run: secRun(['pass', 'pass', limit < 2 ? 'block' : 'pass', 'pass', 'pass', 'pass'], 'down') };

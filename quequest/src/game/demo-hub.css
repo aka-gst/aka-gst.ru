@@ -1,0 +1,407 @@
+/* 20.x · «Три профессии» v2 (Сергей 22.10: «красиво, а не техтаблицей; со скриншотами; разными вариантами»).
+   Width and type grow with the screen (SHIRINA-EKRANA.md): the page is min(2400px, 94vw) — 1760 gave 0.69 of a 2560 screen, the check wants ≥0.88, text ≥18px on 2560.
+   One card per profession: a real frame from the game, «что делаешь», «что будет», the levels.
+   data-variant: a «Афиша» (cards in a row) · b «Кино» (one per row, big frame) · c «Главная + три». */
+.demo-hub{position:fixed;inset:0;z-index:200;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;padding:clamp(14px,2vw,44px) 0 32px;
+  font-size:clamp(15px,calc(.45vw + 9px),21px);line-height:1.4;color:#f3ead8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:radial-gradient(circle at 50% 120%,#ffc85733,transparent 55%),repeating-linear-gradient(90deg,#ffc8570c 0 1px,transparent 1px 48px),repeating-linear-gradient(0deg,#ffc8570c 0 1px,transparent 1px 48px),linear-gradient(180deg,#07070c,#12101a)}
+.demo-hub[hidden]{display:none!important}
+.demo-hub *{box-sizing:border-box}
+.demo-hub>*{width:min(2400px,94vw);margin-inline:auto}
+.demo-hub__head{margin-bottom:clamp(14px,1.4vw,28px)}
+.demo-hub__head small{display:block;color:#ffc857;letter-spacing:.14em;font:700 max(14px,.8em) ui-monospace,monospace}
+.demo-hub__head h1{margin:.1em 0 .25em;font:900 clamp(30px,3.6vw,72px)/1.05 ui-monospace,monospace;letter-spacing:.03em;color:#fff}
+.demo-hub__head h1 span{color:#ffc857}
+.demo-hub__head p{margin:0;max-width:90em;color:#d9cdb4;font-size:1.05em}
+.w-tap{color:#7dff9a}.w-knobs{color:#69d2ff}.w-code{color:#ffc857}
+em.w-tap{background:#7dff9a1f}em.w-knobs{background:#69d2ff1f}em.w-code{background:#ffc8571f}
+.demo-hub__cols{display:grid;gap:clamp(12px,1.2vw,26px)}
+.demo-hub__col{position:relative;display:flex;flex-direction:column;min-width:0;border:1px solid #ffc85744;border-radius:14px;background:#0d0b12e6;overflow:hidden;box-shadow:0 14px 40px #0008}
+.demo-hub__media{position:relative;margin:0;aspect-ratio:16/9;background:#000;overflow:hidden}
+.demo-hub__shot{display:block;width:100%;height:100%;object-fit:cover}
+.demo-hub__media figcaption{position:absolute;left:.6em;top:.5em;display:grid;place-items:center;width:1.9em;height:1.9em;border-radius:50%;background:#ffc857;color:#1a1204;font:900 1.1em ui-monospace,monospace;box-shadow:0 2px 10px #000a}
+.demo-hub__body{display:flex;flex-direction:column;gap:.7em;padding:1em 1.1em 1.1em;flex:1 1 auto}
+.demo-hub__body header b{display:block;font:900 1.45em/1.1 ui-monospace,monospace;letter-spacing:.06em;color:#ffc857}
+.demo-hub__body header small{display:block;margin-top:.2em;color:#cfc3aa;font-size:max(14px,.9em)}
+.demo-hub__does,.demo-hub__next{margin:0;font-size:1em;color:#efe6d3}
+.demo-hub__does i,.demo-hub__next i{display:block;margin-bottom:.15em;font:800 max(14px,.72em) ui-monospace,monospace;font-style:normal;letter-spacing:.12em;color:#8fd8ff}
+.demo-hub__next i{color:#7dff9a}
+.demo-hub__col ol{margin:auto 0 0;padding:0;list-style:none;display:grid;gap:.45em}
+.demo-hub__lvl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.7em;align-items:center;min-height:44px;padding:.55em .7em;border:1px solid #ffffff22;border-radius:9px;background:#17141f;color:#f3ead8;text-decoration:none;transition:border-color .15s,background .15s}
+.demo-hub__lvl:hover,.demo-hub__lvl:focus-visible{border-color:#ffc857;background:#231d10;outline:2px solid #ffc857;outline-offset:1px}
+.demo-hub__lvl kbd{display:grid;place-items:center;width:2em;height:2em;border-radius:8px;background:#ffc8571a;font:900 1.05em ui-monospace,monospace;color:#ffc857}
+.demo-hub__thumb{width:4.6em;aspect-ratio:16/9;object-fit:cover;border-radius:6px;border:1px solid #ffffff2a}
+.demo-hub__lvl b{display:block;color:#fff;font-size:1em}
+.demo-hub__lvl small{display:block;color:#cfc3aa;font-size:max(14px,.86em)}
+.demo-hub__lvl u{text-decoration:none;font:800 max(14px,.78em) ui-monospace,monospace;color:#ffc857;white-space:nowrap;opacity:.7}
+.demo-hub__lvl:hover u{opacity:1}
+.demo-hub__ways{display:flex;flex-wrap:wrap;gap:.35em;margin-top:.3em;font-style:normal}
+.demo-hub__ways em{font:900 max(14px,.78em) ui-monospace,monospace;font-style:normal;padding:0 .4em;border-radius:4px;letter-spacing:.06em}
+.demo-hub__lvl[data-won="true"] kbd{background:#3ee08f;color:#06130c}
+.demo-hub__lvl[data-won="true"] kbd::after{content:"✓";font-size:.7em;margin-left:1px}
+.demo-hub__lvl[data-won="true"] .demo-hub__thumb{outline:3px solid #3ee08f}
+.demo-hub__foot{margin-top:clamp(14px,1.4vw,28px)!important;color:#a99f8a;font-size:max(14px,.9em)}
+.demo-hub__foot a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:1px solid #ffc85766;border-radius:6px;color:#ffc857;text-decoration:none}
+
+/* A «Афиша»: the four cards side by side (two on a laptop, one on a phone) */
+.demo-hub[data-variant="a"] .demo-hub__cols{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1500px){ .demo-hub[data-variant="a"] .demo-hub__cols{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+/* B «Кино»: one profession per row, a big frame and the story beside it, sides alternate */
+.demo-hub[data-variant="b"] .demo-hub__col{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.demo-hub[data-variant="b"] .demo-hub__media{aspect-ratio:auto;min-height:100%}
+.demo-hub[data-variant="b"] .demo-hub__col:nth-child(even) .demo-hub__media{order:2}
+.demo-hub[data-variant="b"] .demo-hub__body{padding:1.4em 1.6em;justify-content:center}
+.demo-hub[data-variant="b"] .demo-hub__body header b{font-size:1.9em}
+.demo-hub[data-variant="b"] .demo-hub__does,.demo-hub[data-variant="b"] .demo-hub__next{font-size:1.08em}
+.demo-hub[data-variant="b"] .demo-hub__col ol{margin-top:.4em}
+
+/* C «Главная + три»: the warehouse is the hero across the whole width, the other three under it */
+.demo-hub[data-variant="c"] .demo-hub__cols{grid-template-columns:repeat(3,minmax(0,1fr))}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child .demo-hub__media{aspect-ratio:auto;min-height:100%}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child .demo-hub__body{padding:1.5em 1.7em;justify-content:center}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child header b{font-size:2.2em}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child .demo-hub__does{font-size:1.15em}
+.demo-hub[data-variant="c"] .demo-hub__col:not(:first-child) .demo-hub__lvl small{display:none}
+@media (max-width:1100px){ .demo-hub[data-variant="c"] .demo-hub__cols{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+/* phone: one column for every variant, the frame on top */
+@media (max-width:760px){
+  .demo-hub{padding:12px 0 24px}
+  .demo-hub>*{width:calc(100vw - 24px)}
+  .demo-hub__head p{font-size:15px}
+  .demo-hub[data-variant] .demo-hub__cols{grid-template-columns:minmax(0,1fr)}
+  .demo-hub[data-variant] .demo-hub__col,.demo-hub[data-variant] .demo-hub__col:first-child{display:flex;flex-direction:column}
+  .demo-hub[data-variant] .demo-hub__media,.demo-hub[data-variant] .demo-hub__col:first-child .demo-hub__media{aspect-ratio:16/9;min-height:0;order:0}
+  .demo-hub[data-variant] .demo-hub__body,.demo-hub[data-variant] .demo-hub__col:first-child .demo-hub__body{padding:12px 14px}
+  .demo-hub[data-variant] .demo-hub__body header b,.demo-hub[data-variant] .demo-hub__col:first-child header b{font-size:20px}
+  .demo-hub__lvl small{display:none}
+  .demo-hub__lvl u{display:none}
+  .demo-hub__lvl{grid-template-columns:auto minmax(0,1fr)}
+}
+.demo-back{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:210;min-height:44px;min-width:44px;display:inline-flex;align-items:center;padding:0 16px;border:1px solid #ffc857;border-radius:6px;background:#1a1408e6;color:#ffc857;font:900 14px ui-monospace,monospace;letter-spacing:.08em;text-decoration:none}
+.demo-back[hidden]{display:none}
+/* inside a dive (Pythonio, FPS-RE, BLACK ICE) the right edge is the game's own panel — «≡ ДЕМО» goes to the dive bar's free middle */
+body:has(#pythonioDive:not([hidden])) .demo-back,body:has(#hackPolygon:not([hidden])) .demo-back,body:has(#careerWorlds:not([hidden])) .demo-back,body:has(#fpsreDive:not([hidden])) .demo-back,body:has(#blackiceDive:not([hidden])) .demo-back{top:8px;right:auto;left:50%;transform:translateX(-50%)}
+/* phone, inside the polygon: the top is its title — «≡ ДЕМО» goes to the free bottom-right corner */
+@media (max-width:760px){ body:has(#hackPolygon:not([hidden])) .demo-back{top:8px;left:auto;right:62px;transform:none;padding:0 10px} }
+/* 20.0 · «✓ ПРОЙДЕНО»: a strip under the top bar, never over a level's own buttons */
+.demo-win{position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:220;display:flex;align-items:center;gap:12px;width:min(860px,calc(100vw - 32px));box-sizing:border-box;padding:8px 8px 8px 16px;border:1px solid #3ee08f;border-radius:8px;background:#06130ce8;color:#e8fff2;font:600 15px system-ui,sans-serif;box-shadow:0 6px 24px #0008}
+.demo-win[hidden]{display:none}
+.demo-win>b{font:900 15px ui-monospace,monospace;color:#3ee08f;letter-spacing:.06em;white-space:nowrap}
+.demo-win>span{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
+.demo-win small{font-size:14px;font-weight:500;color:#b9e8cf}
+.demo-win__go{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border:0;border-radius:6px;background:#ffc857;color:#1a1204;font:800 14px system-ui,sans-serif;text-decoration:none;cursor:pointer;white-space:nowrap}
+.demo-win__x{min-width:44px;min-height:44px;border:0;background:transparent;color:#b9e8cf;font-size:22px;cursor:pointer}
+@media (max-width:760px){
+  .demo-win{top:56px;width:calc(100vw - 16px);flex-wrap:wrap;gap:6px 8px;padding:8px}
+  .demo-win>span{flex:1 1 calc(100% - 140px)}
+  .demo-win__go{flex:1 1 auto;white-space:normal;text-align:left;padding:6px 12px}
+  /* the dive bar on a phone has «↑ ВЫНЫРНУТЬ» on the left: «≡ ДЕМО» takes the right corner */
+  body:has(#pythonioDive:not([hidden])) .demo-back,body:has(#careerWorlds:not([hidden])) .demo-back,body:has(#fpsreDive:not([hidden])) .demo-back,body:has(#blackiceDive:not([hidden])) .demo-back{left:auto;right:8px;transform:none}
+  /* the polygon has its own × in that corner: «≡ ДЕМО» sits just left of it (rule above the media blocks) */
+}
+/* 20.x (Сергей 22.10 03:34, Мак 1512×860: «не влезает в экран даже один блок»; SHIRINA-EKRANA.md «по высоте»):
+   every card fits the window (≤ innerHeight − 24) and the title + the hero card fit the first screen.
+   The frame's width follows the window's HEIGHT, the title is capped by height too. */
+.demo-hub__head h1{font-size:min(clamp(30px,3.6vw,72px),6.5vh)}
+.demo-hub__head{margin-bottom:min(clamp(14px,1.4vw,28px),2vh)}
+.demo-hub{padding-top:min(clamp(14px,2vw,44px),3vh)}
+.demo-hub__head p{font-size:.95em}
+.demo-hub__media{max-height:58vh}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child{grid-template-columns:min(60%,calc(50vh * 16 / 9)) minmax(0,1fr);align-items:center}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child .demo-hub__media{aspect-ratio:16/9;width:100%;min-height:0;height:auto;align-self:center}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child .demo-hub__body{padding:min(1.5em,2.4vh) 1.6em}
+.demo-hub[data-variant="c"] .demo-hub__col:first-child header b{font-size:min(2.2em,5vh)}
+.demo-hub[data-variant="c"] .demo-hub__col:not(:first-child) .demo-hub__media{max-height:28vh}
+.demo-hub__body{gap:min(.7em,1.2vh)}
+.demo-hub__col ol{gap:min(.45em,.8vh)}
+.demo-hub__lvl{padding:min(.55em,.9vh) .7em}
+.demo-hub[data-variant="c"] .demo-hub__col:not(:first-child) .demo-hub__media{max-height:24vh}
+.demo-hub[data-variant="c"] .demo-hub__col:not(:first-child) header small{display:none} /* repeats «что делаешь» */
+@media (min-width:761px) and (max-height:760px){ .demo-hub[data-variant="c"] .demo-hub__col:first-child .demo-hub__lvl small{display:none} }
+
+/* A win is a row outside the workshop frame, never an overlay on its controls. */
+body .pyio-dive:has(>.demo-win:not([hidden])){grid-template-rows:auto auto minmax(0,1fr)}
+body .pyio-dive>.demo-win{position:static;transform:none;width:100%;margin:0;box-shadow:none}
+/* The demo row already states the same reward; keep the letter underneath unobscured. */
+body .pyio-dive:has(>.demo-win:not([hidden])) .pyio-dive__toast{display:none}
+
+/* Demo navigation owns space in these host headers, never their text. */
+body:has(#pythonioDive:not([hidden])) .demo-back,body:has(#careerWorlds:not([hidden])) .demo-back{top:8px;left:auto;right:8px;transform:none}
+body:has(#demoBack:not([hidden])) #pythonioDive .pyio-dive__bar{padding-right:112px}
+body:has(#demoBack:not([hidden])) #careerWorlds .career-stage__head{padding-right:112px;box-sizing:border-box}
+/* All demo returns use the header corner reserved by each host. */
+body:has(#demoBack:not([hidden])) .demo-back{top:8px;bottom:auto;left:auto;right:8px;transform:none}
+body:has(#demoBack:not([hidden])) #fpsreDive .re-dive__bar{padding-right:112px}
+body:has(#demoBack:not([hidden])) #hourDesk .desk__head{padding-right:112px}
+body:has(#demoBack:not([hidden])) #hackPolygon .hk__top{padding-right:112px}
+body:has(#demoBack:not([hidden])) #hackPolygon .demo-back{right:8px}
+/* Short wide terminals: instructions on the left, editor and actions on the right. */
+@media(min-width:640px) and (max-height:500px){
+ body:has(#demoBack:not([hidden])) .desk{padding:6px}
+ body:has(#demoBack:not([hidden])) .desk__card{width:min(1200px,100%);max-height:calc(100% - 2px);padding:6px 10px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto 1fr auto auto;gap:4px 14px;font-size:14px;line-height:1.25;overflow:visible}
+ body:has(#demoBack:not([hidden])) .desk__head{grid-column:1/-1}
+ body:has(#demoBack:not([hidden])) .desk__head h2{font-size:20px;margin:2px 0 0}
+ body:has(#demoBack:not([hidden])) .desk__week{grid-column:1/-1;margin:0}
+ body:has(#demoBack:not([hidden])) .desk__week li{padding:2px;font-size:14px}
+ body:has(#demoBack:not([hidden])) .desk__story{grid-column:1;grid-row:3}
+ body:has(#demoBack:not([hidden])) .desk__story p{margin:2px 0}
+ body:has(#demoBack:not([hidden])) .desk__long{display:none}
+ body:has(#demoBack:not([hidden])) .desk__short{display:block}
+ body:has(#demoBack:not([hidden])) :is(.desk__sheet,.desk__torn){grid-column:1;grid-row:4/7;margin:0;padding:6px}
+ body:has(#demoBack:not([hidden])) .desk__sheet>code{font-size:18px}
+ body:has(#demoBack:not([hidden])) .desk__keys{margin:4px 0;font-size:14px;line-height:1.2}
+ body:has(#demoBack:not([hidden])) .desk__steps{margin:4px 0}
+ body:has(#demoBack:not([hidden])) .desk__steps li{padding:2px}
+ body:has(#demoBack:not([hidden])) .desk__editor{grid-column:2;grid-row:3/5;margin:0;min-height:100px}
+ body:has(#demoBack:not([hidden])) .desk__editor .ce__input{min-height:100px;height:100%;font-size:14px;line-height:1.4}
+ body:has(#demoBack:not([hidden])) .desk__tools{grid-column:2;grid-row:5;margin:0;gap:4px;flex-wrap:wrap}
+ body:has(#demoBack:not([hidden])) .desk__tools button{font-size:14px;padding:0 6px}
+ body:has(#demoBack:not([hidden])) .desk__tab{display:none}
+ body:has(#demoBack:not([hidden])) .desk__actions{grid-column:2;grid-row:6;margin:0;gap:4px}
+ body:has(#demoBack:not([hidden])) .desk__actions button{font-size:14px;padding:0 8px}
+ body:has(#demoBack:not([hidden])) .desk__feedback{grid-column:2;grid-row:7;margin:0;font-size:14px}
+ body:has(#demoBack:not([hidden])) .pl__sheet{padding:4px}
+ body:has(#demoBack:not([hidden])) .pl__tray{margin-top:4px;gap:4px;min-height:44px}
+ body:has(#demoBack:not([hidden])) .pl__piece{min-height:44px;padding:2px 6px}
+ body:has(#demoBack:not([hidden])) .pl__piece code{font-size:16px}
+}
+body:has(#demoBack:not([hidden])) .desk__sheet{transform:none}
+@media(min-width:640px) and (max-height:500px){
+ body:has(#demoBack:not([hidden])) .desk__card{height:calc(100dvh - 12px);box-sizing:border-box;grid-template-rows:auto auto minmax(0,1fr) auto auto auto auto}
+ body:has(#demoBack:not([hidden])) .desk__torn{grid-column:2;grid-row:3/7}
+ body:has(#demoBack:not([hidden])) .pl__line{flex-wrap:nowrap;gap:4px}
+ body:has(#demoBack:not([hidden])) .pl__slot{min-width:0;min-height:44px;padding:2px;flex:1}
+ body:has(#demoBack:not([hidden])) .pl__slot--typed{flex:2}
+ body:has(#demoBack:not([hidden])) :is(.pl__slot code,.pl__q,.pl__input){font-size:14px}
+ body:has(#demoBack:not([hidden])) .pl__input{width:5.5ch}
+ body:has(#demoBack:not([hidden])) .pl__line[data-line="2"]{padding-left:18px}
+ body:has(#demoBack:not([hidden])) .desk__editor.ce{overflow:visible}
+ body:has(#demoBack:not([hidden])) .desk__feedback:empty{display:none}
+}
+@media(max-width:480px){
+ body:has(#demoBack:not([hidden])) .desk__card{padding:8px 10px;font-size:14px;line-height:1.3}
+ body:has(#demoBack:not([hidden])) .desk__head{gap:4px}
+ body:has(#demoBack:not([hidden])) .desk__head small{letter-spacing:0}
+ body:has(#demoBack:not([hidden])) .desk__head h2{font-size:20px}
+ body:has(#demoBack:not([hidden])) .desk__week{margin:4px 0}
+ body:has(#demoBack:not([hidden])) .desk__actions{margin-top:6px}
+}
+/* Victory belongs to the host layout, never a guessed empty rectangle. */
+body :is(#careerStage,#fpsreDive,#hackPolygon,.pay__card)>.demo-win{position:static;inset:auto;transform:none;width:100%;margin:0;box-sizing:border-box;flex:0 0 auto}
+body #fpsreDive:has(>.demo-win:not([hidden])){grid-template-rows:auto auto minmax(0,1fr)}
+body #careerStage>.demo-win{grid-area:win}
+body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage:has(>.demo-win:not([hidden])){grid-template-areas:"surface head" "visual controls" "win controls" "result run";grid-template-rows:auto minmax(50px,1fr) auto auto}
+body #careerStage>.demo-win{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:4px;padding:6px;font-size:14px}
+body #careerStage>.demo-win[hidden]{display:none}
+body #careerStage>.demo-win>b{grid-column:1;grid-row:1;font-size:14px}
+body #careerStage>.demo-win>span{grid-column:1;grid-row:2;font-size:14px}
+body #careerStage>.demo-win>.demo-win__go{grid-column:1/-1;grid-row:3;font-size:14px;justify-content:center}
+body #careerStage>.demo-win>.demo-win__x{grid-column:2;grid-row:1/3}
+/* The existing native garage tabs keep explanations and editing on separate screens. */
+body .garage-tabs{display:flex;gap:4px;background:#0b0e10}
+body .garage-tabs button{flex:1 1 0;min-height:44px;border:1px solid #ffffff1a;border-radius:8px;background:#0e1316;color:#9fb0ab;font:800 14px ui-monospace,monospace}
+body .garage-tabs button[aria-selected="true"]{border-color:#ffc857;color:#ffc857;background:#1a140a}
+body .career-stage:not([data-gtab="story"]) .garage-story{display:none}
+body .career-stage:is([data-gtab="story"],[data-gtab="log"]) .garage-code{display:none}
+body .career-stage[data-gtab="code"] :is(.garage-legend,.garage-chips){display:none}
+body .career-stage[data-gtab="words"] .garage-code{display:flex}
+body .career-stage[data-gtab="words"] .garage-code :is(.code-editor,#garageCodeLabel){display:none}
+body .career-stage:not([data-gtab="words"]) .garage-tabs [data-gtab="words"]{color:#c9d9cf}
+body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-controls{overflow:visible}
+@media(max-width:760px){
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage:has(>.demo-win:not([hidden])){grid-template-areas:"surface" "head" "win" "visual" "controls" "run" "result";grid-template-rows:auto auto auto auto minmax(0,1fr) auto auto}
+ body #careerStage:not([data-gtab="story"]):not([data-gtab="log"]) #careerVisual{display:none}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] #careerResult{max-height:none;overflow:visible}
+ body .garage-to-code{display:block}
+}
+@media(min-width:761px) and (max-height:500px){
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage{gap:4px 12px;padding:6px 8px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ body #careerStage #careerResult{max-height:none;overflow:visible;font-size:14px;line-height:1.2;padding:4px}
+ body #careerStage .garage-code .code-editor,body #careerStage .garage-code textarea{min-height:80px!important;font-size:14px}
+ body #careerStage .garage-code .code-editor{max-height:140px}
+ body #careerStage .garage-sniffer{min-height:50px}
+ body #careerStage .garage-sniffer ol{overflow:visible;font-size:14px;line-height:1.2;margin:2px 0}
+ body #careerStage:not([data-gtab="log"]) .garage-sniffer{display:none}
+ body #careerStage .garage-chips{gap:4px;margin-top:4px}
+ body #careerStage .garage-chips button{min-height:44px;padding:2px 6px}
+ body #careerStage .garage-legend{font-size:14px;line-height:1.2;padding:4px;margin:4px 0}
+ body #careerStage .career-stage__head{padding-right:112px}
+ body #careerStage .career-stage__head small{letter-spacing:0}
+}
+body:has(#demoBack:not([hidden])) :is(.desk__lesson,.desk__work){display:contents}
+body:has(#demoBack:not([hidden])) .desk__actions{position:static;bottom:auto;margin:6px 0 0;padding:0;background:none}
+body:has(#demoBack:not([hidden])) .desk__feedback:empty{display:none}
+@media(min-width:640px) and (max-height:500px){
+ body:has(#demoBack:not([hidden])) .desk__card{grid-template-rows:auto auto minmax(0,1fr);height:auto;max-height:calc(100dvh - 12px)}
+ body:has(#demoBack:not([hidden])) .desk__lesson{display:block;grid-column:1;grid-row:3;min-height:0}
+ body:has(#demoBack:not([hidden])) .desk__work{display:flex;flex-direction:column;grid-column:2;grid-row:3;gap:4px;min-height:0}
+ body:has(#demoBack:not([hidden])) .desk__work>.desk__editor{flex:1;min-height:120px;order:-1}
+ body:has(#demoBack:not([hidden])) .desk__work>.desk__actions{margin:0}
+ body:has(#demoBack:not([hidden])) .desk__work .ce__box{min-height:100px}
+ body:has(#demoBack:not([hidden])) .desk__lesson .desk__sheet{margin-top:4px}
+ body:has(#demoBack:not([hidden])) .desk__lesson .desk__keys{height:auto}
+}
+@media(min-width:640px) and (max-height:500px){
+ body:has(#demoBack:not([hidden])) #hourDesk[data-step="assemble"] .desk__card{grid-template-rows:auto auto auto auto auto}
+ body:has(#demoBack:not([hidden])) #hourDesk[data-step="assemble"] :is(.desk__lesson,.desk__work,.desk__torn){display:contents}
+ body:has(#demoBack:not([hidden])) #hourDesk[data-step="assemble"] .desk__story{grid-column:1;grid-row:3}
+ body:has(#demoBack:not([hidden])) #hourDesk[data-step="assemble"] .pl__sheet{grid-column:1;grid-row:4/6}
+ body:has(#demoBack:not([hidden])) #hourDesk[data-step="assemble"] .pl__tray{grid-column:2;grid-row:3/5;align-self:start}
+ body:has(#demoBack:not([hidden])) #hourDesk[data-step="assemble"] .desk__actions{grid-column:2;grid-row:5}
+}
+body:has(#demoBack:not([hidden])) .desk__keys{line-height:1.3}
+@media(max-width:480px){
+ body:has(#demoBack:not([hidden])) .desk__actions{gap:4px}
+ body:has(#demoBack:not([hidden])) .desk__actions button{font-size:14px;padding:0 6px;flex-shrink:0}
+}
+body #careerStage .garage-ui{height:100%;min-height:0;gap:4px}
+body #careerStage .garage-code{min-height:0}
+body #careerStage .garage-code .code-editor{min-height:80px;max-height:none;flex:1}
+body #careerStage .garage-code textarea{height:100%;min-height:80px!important;line-height:1.3;padding:6px 8px;box-sizing:border-box}
+body #careerStage .garage-lint{margin:4px 0 0;font-size:14px;line-height:1.2}
+body #careerStage .garage-story{font-size:14px;line-height:1.25}
+body #careerStage .garage-tabs{flex:0 0 44px}
+body #careerStage .garage-story p{line-height:1.25}
+body #careerStage .garage-sniffer li[hidden]{display:none!important}
+body #careerStage .garage-sniffer li code{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;font-size:14px}
+body #careerStage .garage-sniffer li i{font-size:14px;line-height:1.2}
+body #careerStage .garage-sniffer li b{font-size:14px}
+body #careerStage .garage-sniffer ol{max-height:none;overflow:visible}
+.ui-pages{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;font:700 14px system-ui,sans-serif;flex:0 0 auto}
+.ui-pages button{min-width:80px;min-height:44px;border:1px solid #6d8c88;border-radius:6px;background:#0b1d22;color:#d8f5ed;font:800 14px system-ui,sans-serif;cursor:pointer}
+.ui-pages button:disabled{opacity:.45;cursor:default}
+@media(max-width:760px){
+ body #careerStage:not([data-gtab="log"]) #careerVisual{display:flex!important;flex:0 0 auto}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] #careerVisual .career-preview{width:auto;height:75px;max-width:100%;margin:auto}
+ body #careerStage:not([data-gtab="log"]) .garage-sniffer{display:none}
+ body #careerStage .garage-code .code-editor{min-height:110px;max-height:150px}
+ body #careerStage[data-gtab="log"] .career-preview{display:none}
+ body #careerStage[data-gtab="log"] .garage-sniffer{max-height:none;min-height:0}
+ body #careerStage .career-stage__head{padding-right:0}
+ body #careerStage .career-stage__head small{white-space:normal;overflow:visible;text-overflow:clip;letter-spacing:0}
+}
+@media(min-width:761px) and (max-height:500px){
+ body:has(#careerStage:not([hidden])) .demo-back{left:calc(50% - 120px);right:auto}
+ body #careerStage .career-stage__head{padding-right:0}
+ body #careerStage .career-stage__head small{font-family:system-ui,sans-serif;font-size:14px;letter-spacing:0}
+ body #careerStage .garage-ui{gap:4px}
+ body #careerStage .garage-code .code-editor{margin-top:4px;max-height:none}
+ body #careerStage .garage-code textarea{font-size:14px;line-height:1.3;min-height:80px!important;flex:1}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage:not([data-gtab="words"]):not([data-gtab="log"]):not([data-gtab="result"]):not(:has(>.demo-win:not([hidden]))){grid-template-areas:"surface head" "visual controls" "visual controls" "result run"}
+ body #careerStage:is([data-gtab="words"],[data-gtab="log"]) #careerVisual{display:none}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="words"]{grid-template-areas:"surface head" "controls controls" "controls controls" "result run";grid-template-rows:auto minmax(0,1fr) auto auto}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="words"]:has(>.demo-win:not([hidden])){grid-template-areas:"surface head" "win win" "controls controls" "result run";grid-template-rows:auto auto minmax(0,1fr) auto}
+ body #careerStage[data-gtab="words"] .garage-code{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+ body #careerStage[data-gtab="words"] .garage-chips{display:flex;flex-wrap:wrap;align-content:start;margin:4px 0}
+ body #careerStage[data-gtab="words"] .garage-legend{margin:4px 0}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="log"]{grid-template-areas:"surface head" "controls controls" "visual visual" "result run";grid-template-rows:auto 44px minmax(0,1fr) auto}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="log"]:has(>.demo-win:not([hidden])){grid-template-areas:"surface head" "controls controls" "win win" "visual visual" "result run";grid-template-rows:auto 44px auto minmax(0,1fr) auto}
+ body #careerStage[data-gtab="log"] #careerVisual{display:flex;min-height:0}
+ body #careerStage[data-gtab="log"] .career-preview{display:none}
+ body #careerStage[data-gtab="log"] .garage-sniffer{display:flex;min-height:0;gap:0}
+ body #careerStage[data-gtab="log"] .garage-sniffer ol{flex:0 0 auto;margin:2px 0}
+ body #careerStage[data-gtab="log"] .garage-sniffer li{padding:0 4px;line-height:1.1}
+ body #careerStage[data-gtab="log"] .garage-sniffer li code{font-size:14px;line-height:1.1}
+ body #careerStage[data-gtab="log"] .garage-sniffer li i{display:inline;margin-left:8px}
+ body #careerStage:is([data-gtab="words"],[data-gtab="log"])>.demo-win{display:flex;flex-wrap:nowrap;gap:6px;align-items:center}
+ body #careerStage:is([data-gtab="words"],[data-gtab="log"])>.demo-win[hidden]{display:none}
+ body #careerStage:is([data-gtab="words"],[data-gtab="log"])>.demo-win>.demo-win__go{white-space:normal;padding:4px 8px}
+}
+/* Long outcome text is its own ordinary tab rather than a clipped editor footer. */
+body #careerStage:not([data-gtab="result"]) #careerResult{display:none}
+body #careerStage[data-gtab="result"] :is(.garage-code,.garage-pick,.garage-story,#careerVisual){display:none!important}
+body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="result"]{grid-template-areas:"surface head" "controls controls" "result result" "run run";grid-template-rows:auto 44px minmax(0,1fr) auto}
+body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="result"]:has(>.demo-win:not([hidden])){grid-template-areas:"surface head" "win win" "controls controls" "result result" "run run";grid-template-rows:auto auto 44px minmax(0,1fr) auto}
+body #careerStage[data-gtab="result"] #careerResult{display:block;max-height:none;overflow:visible;align-self:start;font-size:14px;line-height:1.3}
+body #careerStage[data-gtab="result"] .garage-ui{height:44px}
+body #careerStage[data-gtab="result"]>.demo-win{display:flex;flex-wrap:nowrap;gap:6px}
+body #careerStage[data-gtab="result"]>.demo-win[hidden]{display:none}
+body #careerStage .garage-tabs button{padding:0 4px;min-width:44px;letter-spacing:0}
+@media(max-width:760px){
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="result"]{grid-template-areas:"surface" "head" "controls" "result" "run";grid-template-rows:auto auto 44px minmax(0,1fr) auto}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="result"]:has(>.demo-win:not([hidden])){grid-template-areas:"surface" "head" "win" "controls" "result" "run";grid-template-rows:auto auto auto 44px minmax(0,1fr) auto}
+ body #careerStage[data-gtab="result"]>.demo-win{display:grid}
+}
+@media(min-width:761px) and (max-height:500px){
+ body #careerStage .career-stage__head small{line-height:1.1}
+ body #careerStage .garage-code textarea{line-height:1.2}
+ body #careerStage .career-preview{max-height:60px!important;width:auto!important;object-fit:contain}
+ body #careerStage[data-gtab="log"] .garage-sniffer{max-height:none}
+}
+body #careerStage #careerRun{height:44px;min-height:44px;max-height:44px;padding:0 8px;line-height:1.2}
+body #careerStage:not([data-gtab="log"]) .garage-sniffer{display:none!important}
+body #careerStage[data-gtab="log"] .career-preview{display:none!important}
+body #careerStage[data-gtab="log"] .garage-sniffer{display:flex;min-height:0;max-height:none}
+body #careerStage .garage-sniffer ol{flex:0 0 auto;height:auto;max-height:none;overflow:visible}
+body #careerStage[data-gtab="words"] .garage-lint{display:none}
+@media(max-width:760px){
+ body #careerStage .garage-code .code-editor{max-height:180px}
+}
+@media(min-width:761px) and (max-height:500px){
+ body #careerStage .garage-sniffer{padding:4px 6px}
+ body #careerStage .garage-legend{padding:2px 4px;margin:2px 0;line-height:1.1}
+ body #careerStage:is([data-gtab="words"],[data-gtab="log"],[data-gtab="result"])>.demo-win>.demo-win__go{line-height:1.1;min-height:44px;padding:4px 8px}
+}
+/* The same polygon actions in short native panels, without nested scroll areas. */
+.hk-screens{display:none}
+@media(max-width:760px),(max-height:500px){
+ body #hackPolygon .hk-screens{display:flex;gap:4px;flex:0 0 44px}
+ body #hackPolygon .hk-screens button{flex:1;min-width:44px;min-height:44px;padding:0 4px;border:1px solid #6b8389;border-radius:6px;background:#0c1b21;color:#def2f0;font:800 14px system-ui,sans-serif}
+ body #hackPolygon .hk-screens button[aria-pressed="true"]{border-color:#ffc857;color:#ffc857}
+ body #hackPolygon .hk__body{gap:6px}
+ body #hackPolygon .hk-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0}
+ body #hackPolygon :is(.hk-stage,.hk-flag,.hk-site,.hk-term,.hk-flags){overflow:visible;max-height:none}
+ body #hackPolygon .hk-flag{display:flex;flex-direction:column;height:100%;gap:0}
+ body #hackPolygon:not([data-hk-panel="intro"]) .hk-intro{display:none}
+ body #hackPolygon[data-hk-panel="intro"] .hk-grid{display:none}
+ body #hackPolygon:not([data-hk-panel="flags"]) .hk-side{display:none}
+ body #hackPolygon[data-hk-panel="flags"] .hk-stage{display:none}
+ body #hackPolygon:not([data-hk-panel="tools"]) .hk-flag__tools{display:none}
+ body #hackPolygon[data-hk-panel="tools"] .hk-win{display:none}
+ body #hackPolygon:not([data-hk-panel="answer"]) .hk-msg{display:none}
+ body #hackPolygon[data-hk-panel="answer"] :is(.hk-shop,.hk-site__nav,.hk-site__page,.hk-site__foot,.hk-win__bar){display:none}
+ body #hackPolygon[data-hk-panel="answer"] .hk-msg:empty{display:block}
+ body #hackPolygon[data-hk-panel="answer"] .hk-msg:empty::before{content:"Отправь заказ на вкладке САЙТ — здесь появится ответ."}
+ body #hackPolygon .hk-side{flex-direction:column;gap:4px}
+ body #hackPolygon .hk-prog{padding:4px 8px}
+ body #hackPolygon .hk-prog b{font-size:22px}
+ body #hackPolygon .hk-prog span,body #hackPolygon .hk-prog i{display:none}
+ body #hackPolygon .hk-flags{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+ body #hackPolygon .hk-flags button{min-width:44px;min-height:44px;height:100%;padding:4px 8px}
+ body #hackPolygon .hk-flags span{font-size:14px}
+ body #hackPolygon .hk-win{flex:1}
+ body #hackPolygon .hk-site{flex:1}
+ body #hackPolygon :is(.hk-site__nav,.hk-site__foot,.hk-win__bar){display:none}
+ body #hackPolygon .hk-site__page{padding:6px}
+ body #hackPolygon .hk-shop{padding:8px;gap:6px;max-width:none}
+ body #hackPolygon .hk-shop h4{font-size:18px}
+ body #hackPolygon .hk-shop p{font-size:14px;line-height:1.2}
+ body #hackPolygon .hk-shop input{min-height:44px}
+ body #hackPolygon .hk-shop .hk-go{min-height:44px;padding:6px 12px;font-size:14px}
+ body #hackPolygon .hk-msg{margin:6px;font-size:14px;line-height:1.25}
+ body #hackPolygon .hk-term{padding:8px;gap:6px;line-height:1.25;flex:1}
+ body #hackPolygon .hk-intro{font-size:14px;line-height:1.3}
+ body #hackPolygon .hk-nav{gap:4px}
+ body #hackPolygon .hk-nav button{font-size:14px;padding:0 8px;min-height:44px}
+ body #hackPolygon .hk__top small{line-height:1.35}
+}
+body #careerStage .garage-lint:empty{display:none}
+@media(min-width:761px) and (max-height:500px){
+ body #careerStage[data-gtab="log"]>.demo-win{display:none}
+ body #careerWorlds[data-realm="vehicle"][data-inside="vehicle"] .career-stage[data-gtab="log"]:has(>.demo-win:not([hidden])){grid-template-areas:"surface head" "controls controls" "visual visual" "run run";grid-template-rows:auto 44px minmax(0,1fr) 44px}
+}
+@media(max-width:760px),(max-height:500px){
+ body #hackPolygon:not([data-hk-panel="answer"])>.demo-win{display:none}
+ body #hackPolygon .hk-term p{font-size:14px;line-height:1.2}
+ body #hackPolygon .hk-term .hk-lesson{padding:6px 8px}
+ body #hackPolygon .hk-term .hk-lesson p{margin:2px 0 0}
+ body #hackPolygon .hk-shop{gap:4px;padding:6px}
+}
+/* A page change is immediate; an arrival fade must not blank an existing record. */
+body #careerStage .garage-sniffer li{animation:none;opacity:1;transform:none}
+@media(min-width:761px) and (max-height:500px){
+ body #careerStage .garage-code textarea{line-height:1.1;padding:4px 8px}
+}

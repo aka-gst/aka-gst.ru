@@ -1,3 +1,4 @@
+import { createDragLook } from './drag-look.js';
 // 17.3 · The garage and the apartment, walked in first person like Duke
 // Nukem 3D, drawn by the same raycaster as Shift 1 -- at the engine era the
 // player has earned (engine-eras.js): Wolfenstein flats and no looking up,
@@ -18,7 +19,7 @@ import { createDiveFx } from './first-shift-dive.js';
 import {
   LEVELS, ARRIVALS, THINGS, buildLevelMap, activeLamps, createWorldState, interact, afterProgram, alarmActive,
   pickThing, surfaceKind, surfaceUnder, doorTarget, wrapYaw, CAR, HOME_BASE, DOOR_OPEN_H,
-} from './fp-levels.js';
+} from './fp-levels.js?v=20.1.0';
 import { downsample, paintLaptop, paintPc, paintTvScreen, SPRITES, buildTexturesWith } from './fp-textures.js';
 import { ERAS, eraSettings, clampEra } from './engine-eras.js';
 // 17.4: the engine is a ladder of real rendering features (engine-ladder.js),
@@ -39,7 +40,7 @@ import { GARAGE, garageDay, simGarage, slowmoMoments, garageVerdict } from './ga
 import { compileRule, formatRuleError } from './garage-rule.js';
 // Доска Сани: выдуманные механизмы-замки на верстаке и шкаф (src/game/locks/).
 import { BENCH_THINGS, isBenchThing, benchSprites, LOCK_CHATTER } from './locks/bench.js';
-import { createLockBench } from './locks/overlay.js';
+import { createLockBench } from './locks/overlay.js?v=zamki-120';
 import { onReleaseKeys } from './key-guard.js';
 
 const WHITE = rgb(236, 236, 228);
@@ -103,6 +104,7 @@ const PROGRAMS = Object.freeze([
   Object.freeze({ id: 'engine', key: '3', title: 'ДВИЖОК.EXE', sub: 'Прокачка движка: эпохи шутеров от Wolfenstein до Half-Life' }),
   Object.freeze({ id: 'pythonio', key: '4', title: 'ПИТОНИО', sub: 'Мастерская AUTO: 22 настоящих заказа — файлы, таблицы, API' }),
   Object.freeze({ id: 'blackice', key: '5', title: 'JUMP KILL', sub: 'Лабиринт: 13 уровней — прыжки, рельса, ракеты; Витя, рабочие, начальник' }),
+  Object.freeze({ id: 'fpsre', key: '6', title: 'ЧУЖОЙ МИР', sub: 'FPS-RE: пойми, как думает робот Q-Bot, — и заставь его систему работать на тебя' }),
 ]);
 export const WORLD_PROGRAMS = PROGRAMS;
 
@@ -122,6 +124,7 @@ export function createFpWorld(root, {
   // ({ who, text, seam }); onSeam(code) flickers the code under a changed line;
   // homeChanges() -> what is a little different at home; onHomeNoticed(id).
   meaning = () => null, onSeam = () => {}, homeChanges = () => [], onHomeNoticed = () => {},
+  getHome = () => null, onHomeAction = () => null,
 } = {}) {
   if (!root) return { open() {}, close() {}, surface() {}, state: () => null };
   const canvas = root.querySelector('#fpWorldCanvas'); const ctx = canvas.getContext('2d');
@@ -235,10 +238,11 @@ export function createFpWorld(root, {
   // ------------------------------------------------------------- levels
   function loadLevel(id, { arrive = false } = {}) {
     levelId = id;
-    map = buildLevelMap(id);
+    const starterHome = id === 'home' && getHome()?.starter;
+    map = buildLevelMap(id, { starterHome });
     const prev = ws;
     ws = { ...createWorldState(id), alarm: prev.level === id ? prev.alarm : null, lastProgram: prev.lastProgram };
-    const at = arrive ? ARRIVALS[id] : LEVELS[id].spawn;
+    const at = starterHome ? { x: 7.5, z: 5.4, yaw: -Math.PI / 2 } : arrive ? ARRIVALS[id] : LEVELS[id].spawn;
     body = createBody(at.x, at.z, id === 'home' ? HOME_BASE : 0);
     yaw = at.yaw; pitch = 0; lightKey = '';
     if (whereEl) whereEl.textContent = LEVELS[id].title;
@@ -370,10 +374,11 @@ export function createFpWorld(root, {
     if (lim <= 0) { if (Math.abs(dy) > 0.02) comment('no-jump-look'); pitch = 0; return; }
     pitch = clampPitch(pitch - dy, lim);
   }
-  canvas.addEventListener('click', () => { if (active && screen.phase === 'walk' && !paused) canvas.requestPointerLock?.(); });
+  canvas.addEventListener('click', () => { if (active && screen.phase === 'walk' && !paused) canvas.requestPointerLock?.()?.catch?.(() => {}); });
   window.addEventListener('keydown', keyDown, { passive: false });
   window.addEventListener('keyup', keyUp);
   window.addEventListener('mousemove', mouseMove);
+  createDragLook(canvas, { active: () => active && screen.phase === 'walk' && !paused, onLook: (dx, dy) => { yaw = wrapYaw(yaw + dx * .0024); look(dy * .0024); } });
   onReleaseKeys(() => held.clear());
   // 18.0: touch look (touch-controls.js).
   window.addEventListener('qq:look', (ev) => { if (!active || screen.phase !== 'walk') return; yaw = wrapYaw(yaw + ev.detail.dx); look(ev.detail.dy); });
@@ -398,6 +403,8 @@ export function createFpWorld(root, {
   }
   arBtn?.addEventListener('click', () => { if (active && screen.phase === 'walk') toggleHeadset(); });
   menuEl?.addEventListener('click', (ev) => {
+    const homeButton = ev.target.closest?.('[data-home-action]');
+    if (homeButton) { homeAction(homeButton.dataset.homeAction); renderMenu('main'); return; }
     const b = ev.target.closest?.('[data-program]');
     if (b) { choose(b.dataset.program); return; }
     if (ev.target.closest?.('[data-engine-buy]')) { buy(); return; }
@@ -413,6 +420,11 @@ export function createFpWorld(root, {
 
   function act(now = performance.now()) {
     if (!target) return null;
+    if (levelId === 'home' && getHome()) {
+      if (target.id === 'cat') return homeAction('feed');
+      if (target.id === 'bed') return homeAction('sleep');
+      if (target.id === 'door-garage' && !getHome().garage) return homeAction('garage-locked');
+    }
     // With the headset on, E on a thing that has code opens the holo editor.
     const tag = headsetWorn(hs) ? tagFor(levelId, target.id) : null;
     if (tag?.edit) { openEditor(tag, now); return { editor: tag.id }; }
@@ -439,6 +451,14 @@ export function createFpWorld(root, {
   }
   let flash = null;
 
+  function homeAction(action) {
+    const result = onHomeAction(action);
+    if (result?.text) speech = { who: 'me', name: WORLD_SPEAKERS.me, text: result.text, until: performance.now() + 6500 };
+    if (result?.ok) onSound(action === 'feed' ? 'meow' : 'cash'); else if (result?.ok === false) onSound('blocked');
+    if (action === 'room' && result?.ok) { loadLevel('home'); relight(); }
+    return result;
+  }
+
   // ------------------------------------------------------- screen dive
   function enterScreen(thing, program, now) {
     zoomFrom = { x: body.x, z: body.z, yaw, eye: body.y + 1.6, pitch };
@@ -448,6 +468,8 @@ export function createFpWorld(root, {
     if (document.pointerLockElement === canvas) document.exitPointerLock?.();
   }
   function choose(program, now = performance.now()) {
+    const home = levelId === 'home' ? getHome() : null;
+    if (home && (!home.garage || !home.life?.electricity)) { homeAction('garage-locked'); return; }
     if (program === 'engine') { renderMenu('engine'); onSound('ui-click'); return; }
     screen = { ...screenStep(screen, 'choose', now, { program }), thing: screen.thing };
     if (menuEl) menuEl.hidden = true;
@@ -469,6 +491,17 @@ export function createFpWorld(root, {
     if (!menuEl) return;
     if (upgradeEl) upgradeEl.hidden = true;
     const e = eraSettings(era);
+    const home = levelId === 'home' ? getHome() : null;
+    if (home && (!home.garage || !home.life?.electricity) && view === 'main') {
+      menuEl.hidden = false;
+      menuEl.innerHTML = `<header><b>ДОМА · ДЕНЬ ${home.day}</b><button type="button" data-menu-back>ОТОЙТИ · Esc</button></header>
+        <p>В кошельке: <b>${Number(getWallet() || 0).toLocaleString('ru-RU')} ₽</b></p>
+        <ul class="fp-menu__list"><li><button type="button" data-home-action="electricity" ${home.life?.electricity ? 'disabled' : ''}><b>${home.life?.electricity ? 'СВЕТ ОПЛАЧЕН' : 'ОПЛАТИТЬ СВЕТ · 40 ₽'}</b><small>Один раз. Квитанция сохраняется.</small></button></li>
+        <li><button type="button" data-home-action="room" ${home.life?.room ? 'disabled' : ''}><b>${home.life?.room ? 'ОСТАЛЬНЫЕ КОМНАТЫ ОТКРЫТЫ' : 'ОТКРЫТЬ ОСТАЛЬНЫЕ КОМНАТЫ · 60 ₽'}</b></button></li>
+        <li><button type="button" data-home-action="quests"><b>БЛОКНОТ · ВСЕ ЛИНИИ КВЕСТОВ</b></button></li></ul>
+        <p>${home.life?.electricity ? 'Компьютер включён. Витя откроет рабочие программы после пятой смены.' : 'Пока доступна квитанция за электричество. Рабочие программы появятся с ключом Вити после пятой смены.'}</p>`;
+      return;
+    }
     menuEl.hidden = false;
     menuEl.dataset.os = e.n <= 1 ? 'dos' : e.n <= 3 ? 'win95' : 'xp';
     if (view === 'engine') {
@@ -603,6 +636,7 @@ export function createFpWorld(root, {
     const e = eraSettings(era);
     if (target) {
       let label = target.label;
+      if (levelId === 'home' && target.id === 'cat' && getHome()) label = getHome().life?.fedDays?.includes(getHome().day) ? 'КОТ · УЖЕ ПОЕЛ СЕГОДНЯ' : 'КОТ · ПОКОРМИТЬ ЗА 20 ₽';
       if (target.kind === 'switch') label = `${ws.lights[target.group] !== false ? 'ВЫКЛЮЧИТЬ' : 'ВКЛЮЧИТЬ'} · ${label}`;
       if (target.kind === 'rolldoor') label = ws.doors.rolldoor ? 'ЗАКРЫТЬ ВОРОТА' : 'ОТКРЫТЬ ВОРОТА';
       if (target.kind === 'door') label = ws.doors['door-bath'] ? 'ЗАКРЫТЬ ДВЕРЬ' : 'ОТКРЫТЬ ДВЕРЬ';
@@ -624,6 +658,7 @@ export function createFpWorld(root, {
   // ------------------------------------------------------- AR headset
   function thingsNow() {
     let list = THINGS[levelId] ?? [];
+    if (levelId === 'home' && getHome()?.starter) list = list.filter(t => ['pc', 'bed', 'cat', 'sw-bed'].includes(t.id));
     if (levelId === 'garage') list = [...list, ...BENCH_THINGS];
     return headsetOwned(hs) ? list.filter((t) => t.kind !== 'headset') : list;
   }
@@ -1176,6 +1211,7 @@ export function createFpWorld(root, {
     if (opts.era !== undefined && opts.era !== null) forcedLevel = levelForEra(opts.era);
     if (opts.engine !== undefined && opts.engine !== null) forcedLevel = clampLevel(opts.engine);
     active = true; root.hidden = false;
+    if (leaveBtn) leaveBtn.textContent = level === 'home' && getHome()?.nextWork ? 'СПАТЬ И НА РАБОТУ →' : '← ВЫЙТИ';
     screen = createScreenState(); root.dataset.phase = 'walk';
     if (menuEl) menuEl.hidden = true;
     if (!map || opts.reset !== false || level !== levelId) loadLevel(level, { arrive: Boolean(opts.arrive) });
@@ -1216,7 +1252,7 @@ export function createFpWorld(root, {
     if (patch.engine !== undefined) { forcedLevel = patch.engine === null ? null : clampLevel(patch.engine); setLvl(currentLevel()); lightKey = ''; renderEraLabel(); }
     if (patch.lights) { ws = { ...ws, lights: { ...ws.lights, ...patch.lights } }; lightKey = ''; }
     if (patch.world) ws = { ...ws, ...patch.world };
-    if (patch.interact) { target = THINGS[levelId].find((t) => t.id === patch.interact) ?? null; act(); }
+    if (patch.interact) { target = thingsNow().find((t) => t.id === patch.interact) ?? null; act(); }
     if ('speech' in patch) speech = patch.speech ? { ...patch.speech, until: performance.now() + 5000 } : null;
     if (patch.comment) comment(patch.comment, true);
     if (patch.upgrade) startUpgrade(clampLevel(patch.upgrade[0]), clampLevel(patch.upgrade[1]), null, performance.now());

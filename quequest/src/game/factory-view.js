@@ -15,12 +15,12 @@ import {
   buildFactoryMap, SPOTS, WORKER_SPOTS, LAMPS, EYE, CRATE_H, BELT_H, HALL_CEIL, viewIndex, nearBossDoor, castCenter,
 } from './first-shift-map.js';
 // 19.4 (§21): the same two fists as in Shift 1.
-import { createHands, handsPose, drawHands, swing } from './fp-hands.js';
+import { createHands, handsPose, drawHands, swing } from './fp-hands.js?v=qq22';
 import { WORKER_FISTS, PUNCH_REACH } from './fists.js';
 import { loadAtlas } from './first-shift-atlas.js';
 import { drawText, textWidth } from './pixel-font.js';
 import { dressHall, drawSpeech, surfaceOf, subtitleFloorRow } from './fp-overlay.js';
-import { buildArmSprites, armPoseAt, tint, paintTerminal, paintButton, paintSheet } from './arm-art.js';
+import { buildArmSprites, armPoseAt, armMotion, armFacing, paintArmFree, tint, paintTerminal, paintButton, paintSheet } from './arm-art.js?v=qq26';
 import { createBody, moveBody, stepBody, openAt, jump as bodyJump, landingDip, clampPitch, pitchShear } from './fp-body.js';
 import { createChatter, createMomentWatcher, SPEAKERS } from './npc-chatter.js';
 // 17.4: the hall is drawn at the player's rung of the engine ladder too.
@@ -323,6 +323,7 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
     return img ? { img, x, z, y, ppm: img.ppm || 40, ...extraProps } : null;
   }
 
+  let camYaw = 0;
   function armSprite(state, now) {
     const blink = Math.floor(now / 600) % 2;
     const failure = state.arm?.failure?.phase;
@@ -331,8 +332,26 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
     let pose = 'idle';
     if (failure === 'reach' || failure === 'scan') pose = 'reach';
     else if (failure === 'reject-one' || failure === 'reject-two') pose = 'drop';
+    else if (state.arm?.active && !failure) return haulSprite(state, camYaw);
     else if (state.arm?.active) pose = armPoseAt(state.arm.active.progress ?? 0);
     return arms[`arm07_${pose}_${failure ? blink : 0}`];
+  }
+  // 20.x · a haul: the arm turns on its base from the crate's pile cell to the belt, the crate rides in its gripper.
+  const haulCache = new Map();
+  function haulTargets(state) {
+    const from = pileLayout(state.warehouse?.crates ?? []).slotOf.get(state.arm.active.boxId) ?? { cx: 5, cz: 5 };
+    const fa = Math.atan2(from.cz + 0.5 - SPOTS.arm.z, from.cx + 0.5 - SPOTS.arm.x);
+    const ta = Math.atan2(SPOTS.beltDrop.z - SPOTS.arm.z, SPOTS.beltDrop.x - SPOTS.arm.x);
+    return [fa, ta];
+  }
+  function haulSprite(state, yaw) {
+    const m = armMotion(state.arm.active.progress ?? 0, ...haulTargets(state));
+    const s = armFacing(m.angle, yaw);
+    const q = (v, step) => Math.round(v / step) * step;
+    const key = `${q(m.a1, 2)}|${q(m.a2, 2)}|${q(s, 0.06)}|${m.grip}|${m.crate}`;
+    let img = haulCache.get(key);
+    if (!img) { img = paintArmFree({ a1: q(m.a1, 2), a2: q(m.a2, 2), grip: m.grip, crate: m.crate, s: q(s, 0.06) }); if (haulCache.size > 400) haulCache.clear(); haulCache.set(key, img); }
+    return img;
   }
 
   // 18.0: in portrait the picture is letterboxed at 4:3 instead of being
@@ -353,6 +372,7 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
     const viewH = VIEW_ROWS;
     const bob = reducedMotion || !body.grounded ? 0 : Math.sin(walkPhase * 2) * 1.6;
     const dip = reducedMotion ? 0 : landingDip(dipImpact, (now - dipAt) / 320);
+    camYaw = yaw;
     const cam = { x: body.x, z: body.z, yaw, eye: body.y + EYE - dip * 0.22, bob: bob + dip * 6, pitch: pitchShear(pitch, viewH) };
     const sprites = [];
     const push = (s) => { if (s) sprites.push(s); };
@@ -389,10 +409,9 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
         const t = Math.max(0, Math.min(1, state.arm?.active?.progress ?? 0));
         const a = { x: from.cx + 0.5, z: from.cz + 0.5, y: 0 };
         const b = { x: SPOTS.beltDrop.x, z: SPOTS.beltDrop.z, y: BELT_H };
-        const k = t < 0.3 ? 0 : t > 0.85 ? 1 : (t - 0.3) / 0.55;
-        const e = k * k * (3 - 2 * k);
-        const lift = Math.sin(Math.PI * e) * 1.3 + (t >= 0.3 && t < 0.85 ? 0.15 : 0);
-        push(sprite(img, a.x + (b.x - a.x) * e, a.z + (b.z - a.z) * e, a.y + (b.y - a.y) * e + lift, crateProp));
+        // 20.x: from the grab to the release the crate is in the arm's gripper (drawn with the arm), not flying alone.
+        if (state.arm?.failure || t < 0.3) push(sprite(img, a.x, a.z, a.y, crateProp));
+        else if (t >= 0.85) push(sprite(img, b.x, b.z, b.y, crateProp));
       }
     }
     if (state.arm?.chip === 'fallen') {

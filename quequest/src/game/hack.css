@@ -14,36 +14,78 @@
 .hk__body{flex:1 1 auto;min-height:0;width:100%;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
 .hk-intro,.hk-ethics__win{margin:0;padding:8px 12px;border:1px solid var(--h-line);border-radius:10px;background:#0e1620;font-size:15px}
 .hk-intro b{color:var(--h-gold)}
-.hk-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px}
+.hk-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:232px minmax(0,1fr);gap:14px}
+/* left: the score, then the five holes */
+.hk-side{display:flex;flex-direction:column;gap:10px;min-height:0}
+.hk-prog{display:grid;grid-template-columns:auto 1fr;align-items:end;gap:2px 10px;padding:12px 14px;border:1px solid #64e9ff44;border-radius:12px;background:linear-gradient(135deg,#0d1c22,#081014)}
+.hk-prog b{font:900 44px/1 ui-monospace,monospace;color:var(--h-cyan);text-shadow:0 0 18px #64e9ff55}
+.hk-prog b small{font-size:22px;color:#5d7f86}
+.hk-prog span{font:800 14px ui-monospace,monospace;letter-spacing:.08em;color:var(--h-dim);text-transform:uppercase;padding-bottom:6px}
+.hk-prog i{grid-column:1/-1;height:6px;margin-top:8px;border-radius:3px;background:linear-gradient(90deg,var(--h-green) calc(var(--k)*100%),#1b2a2e 0)}
 .hk-flags{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0}
-.hk-flags button{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:6px 10px;border:1px solid var(--h-line);border-radius:10px;background:var(--h-panel);text-align:left}
-.hk-flags button[aria-pressed="true"]{border-color:var(--h-cyan);background:#0f1a1f}
-.hk-flags button[data-done="true"] b{color:var(--h-green)}
-.hk-flags b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#161d21;color:var(--h-cyan);font:900 15px ui-monospace,monospace}
+.hk-flags button{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 10px;border:1px solid var(--h-line);border-radius:10px;background:#0b1013;text-align:left;transition:border-color .15s,background .15s}
+.hk-flags button:hover{border-color:#64e9ff77}
+.hk-flags button[aria-pressed="true"]{border-color:var(--h-cyan);background:#0f1d23;box-shadow:inset 3px 0 0 var(--h-cyan)}
+.hk-flags b{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:7px;background:#161d21;color:var(--h-cyan);font:900 15px ui-monospace,monospace}
+.hk-flags button[data-done="true"] b{background:#173322;color:var(--h-green)}
+.hk-flags button[data-done="true"] span{color:#cfe8d6}
 .hk-flags span{font-size:15px;font-weight:700}
 .hk-stage{min-height:0;overflow:auto}
-.hk-flag{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;height:100%}
-.hk-flag__sys,.hk-flag__tools{border:1px solid var(--h-line);border-radius:12px;background:var(--h-panel);padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto}
-.hk-flag__tools b{color:var(--h-gold);font:800 14px ui-monospace,monospace;letter-spacing:.06em}
-.hk-flag__tools p{margin:0;font-size:14px;color:#c8d1ce}
-.hk-shop h4{margin:0 0 4px;font:900 18px system-ui,sans-serif;color:#fff}
-.hk-shop p,.hk-note{margin:0;font-size:15px;color:#c8d1ce}
-.hk-shop label{display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--h-dim)}
-.hk input,.hk textarea{min-height:40px;padding:6px 10px;border:1px solid var(--h-line);border-radius:8px;background:#060a0c;color:#fff;font:15px ui-monospace,monospace}
+.hk-flag{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;height:100%;min-height:0}
+/* centre: THEIR system — a browser window with a plain corporate site */
+.hk-win{display:flex;flex-direction:column;min-height:0;border-radius:12px;overflow:hidden;border:1px solid #ffffff33;box-shadow:0 18px 50px #000a}
+.hk-win__bar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#2a2d33;border-bottom:1px solid #00000066}
+.hk-win__bar i{width:11px;height:11px;border-radius:50%;background:#ff5f57}.hk-win__bar i+i{background:#febc2e}.hk-win__bar i+i+i{background:#28c840}
+.hk-win__url{flex:1 1 auto;min-width:0;margin-left:8px;padding:5px 12px;border-radius:7px;background:#1b1d21;color:#d6d9de;font:14px ui-monospace,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hk-win__url::before{content:"⚠ http://";color:#ff8a80}
+.hk-win__bar em{font:800 14px/1 system-ui,sans-serif;font-style:normal;letter-spacing:.06em;padding:5px 8px;border-radius:5px;background:#ff5a52;color:#fff;white-space:nowrap}
+.hk-site{flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;background:#eef0f3;color:#20242b}
+.hk-site__nav{display:flex;align-items:center;gap:18px;padding:12px 22px;background:#fff;border-bottom:3px solid #c9302c;font:600 15px system-ui,sans-serif;color:#555}
+.hk-site__nav b{margin-right:auto;font:900 22px/1 Georgia,serif;letter-spacing:.12em;color:#c9302c}
+.hk-site__page{padding:22px 22px 8px}
+.hk-site>*{flex-shrink:0}
+.hk-site__foot{margin-top:auto;padding:10px 22px;background:#dfe2e7;color:#6b7280;font-size:14px}
+.hk-shop{max-width:560px;display:flex;flex-direction:column;gap:12px;padding:20px 22px;border:1px solid #d5d9df;border-radius:6px;background:#fff;box-shadow:0 1px 2px #0000000f}
+.hk-shop h4{margin:0;font:800 22px system-ui,sans-serif;color:#1b1f26}
+.hk-shop p,.hk-note{margin:0;font-size:15px;color:#4b5260}
+.hk-shop b{color:#1b1f26}
+.hk-shop label{display:flex;flex-direction:column;gap:5px;font-size:14px;font-weight:600;color:#4b5260}
+.hk-shop input{min-height:42px;padding:8px 12px;border:1px solid #b9bfc8;border-radius:4px;background:#fff;color:#111;font:16px system-ui,sans-serif}
+.hk-shop code{color:#b42318;background:#fdecea;padding:1px 5px;border-radius:3px;white-space:nowrap;word-break:normal}
+.hk-shop .hk-go{align-self:flex-start;border:0;border-radius:4px;background:#c9302c;color:#fff;padding:10px 20px}
+.hk-shop .hk-go:hover{background:#a8241f}
+.hk-msg{margin:0 22px;font-size:15px;min-height:0}
+.hk-msg:empty{display:none}
+.hk-msg[data-ok="true"]{padding:12px 14px;border:2px solid #1f9d55;border-radius:6px;background:#e7f7ee;color:#14532d;font-weight:700}
+.hk-msg[data-ok="false"]{padding:10px 14px;border:1px solid #e0a100;border-radius:6px;background:#fff7e0;color:#6b4f00}
+/* right: OUR tools — a terminal */
+.hk-term{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto;padding:14px 16px;border:1px solid #2bff8833;border-radius:12px;background:radial-gradient(120% 60% at 50% 0%,#0c2016,#030806 70%);font:14px/1.5 ui-monospace,monospace;color:#b6f5c9}
+.hk-term>b{color:#5dff9a;font:800 14px ui-monospace,monospace;letter-spacing:.04em}
+.hk-term>b::after{content:"▌";margin-left:4px;animation:hk-blink 1s steps(1) infinite}
+@keyframes hk-blink{50%{opacity:0}}
+.hk-term p{margin:0;font:14px/1.5 ui-monospace,monospace;color:#b6f5c9}
+.hk-term p::before{content:"// ";color:#3f8f5d}
+.hk-term code{color:#ffe08a}
+.hk-tool{align-self:stretch;text-align:left;min-height:44px;padding:8px 12px;border:1px solid #5dff9a88;border-radius:6px;background:#06140c;color:#5dff9a;font:800 14px ui-monospace,monospace}
+.hk-tool::before{content:"> ";color:#3f8f5d}
+.hk-tool:hover{background:#0b2617}
+.hk-admin{align-self:flex-start;min-height:44px;padding:8px 16px;border:1px solid #c5cad2;border-radius:4px;background:#e9ecef;color:#9aa1ab;font:800 15px system-ui,sans-serif}
+.hk-admin:not([disabled]){border-color:#c9302c;color:#fff;background:#c9302c}
+.hk-lesson{padding:10px 12px;border:1px solid #5dff9a66;border-radius:8px;background:#0a2014}
+.hk-lesson b{color:#5dff9a}
+.hk-lesson p{margin:4px 0 0}
+.hk-lesson p::before{content:none}
+.hk-def{color:#9fc8ad!important}
+.hk-nav{display:flex;gap:10px;align-items:center;flex:0 0 auto;flex-wrap:wrap;max-width:1200px;width:100%;margin:0 auto}
+.hk-nav span{font-size:15px;color:var(--h-gold);font-weight:800}
+.hk-link{min-height:44px;padding:4px 14px;border:1px solid var(--h-line);border-radius:8px;background:#0f1519;color:var(--h-cyan);font:800 14px system-ui,sans-serif}
+.hk-go{min-height:44px;padding:8px 14px;border:1px solid var(--h-cyan);border-radius:8px;background:#0b1316;color:var(--h-cyan);font:800 15px system-ui,sans-serif;letter-spacing:.03em}
+.hk input,.hk textarea{min-height:44px;padding:6px 10px;border:1px solid var(--h-line);border-radius:8px;background:#060a0c;color:#fff;font:15px ui-monospace,monospace}
+.hk .hk-shop input{border-color:#b9bfc8;background:#fff;color:#111;font:16px system-ui,sans-serif;border-radius:4px}
 .hk textarea{font-family:system-ui,sans-serif}
 .hk code{font:14px ui-monospace,monospace;color:var(--h-cyan);word-break:break-all}
-.hk-go{min-height:44px;padding:8px 14px;border:1px solid var(--h-cyan);border-radius:8px;background:#0b1316;color:var(--h-cyan);font:800 15px system-ui,sans-serif;letter-spacing:.03em}
-.hk-tool{align-self:flex-start;min-height:40px;padding:6px 12px;border:1px dashed var(--h-gold);border-radius:8px;background:#17130a;color:var(--h-gold);font:800 14px system-ui,sans-serif}
-.hk-admin{min-height:44px;padding:8px 14px;border:1px solid var(--h-line);border-radius:8px;background:#20242c;color:#9aa4a1;font:800 15px system-ui,sans-serif}
-.hk-admin:not([disabled]){border-color:var(--h-red);color:#fff;background:#3a1416}
-.hk-msg{margin:0;font-size:14px;color:var(--h-gold);min-height:18px}
-.hk-lesson{margin-top:auto;padding:8px 10px;border:1px solid #8ff0a655;border-radius:8px;background:#0d1a12}
-.hk-lesson b{color:var(--h-green)}
-.hk-lesson p{margin:3px 0 0;font-size:14px;color:#cfe8d6}
-.hk-def{color:#a9b3b0!important}
-.hk-nav{display:flex;gap:10px;align-items:center;flex:0 0 auto;flex-wrap:wrap}
-.hk-nav span{font-size:15px;color:var(--h-gold);font-weight:800}
-.hk-link{min-height:40px;padding:4px 12px;border:1px solid var(--h-line);border-radius:8px;background:#0f1519;color:var(--h-cyan);font:800 14px system-ui,sans-serif}
+.hk .hk-shop code{color:#b42318}
+.hk .hk-term code{color:#ffe08a}
 .hk-ethics ul,.hk-hall__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0}
 .hk-ethics li{padding:8px 12px;border-left:3px solid var(--h-gold);background:#0e1620;border-radius:0 8px 8px 0;font-size:15px}
 .hk-ethics{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
@@ -57,12 +99,45 @@
 .hk-hall__list b{color:var(--h-gold)}
 .hk-hall__list span{color:var(--h-dim);font-size:14px;text-align:right}
 
+/* a laptop window (761–1180): the browser keeps most of the width */
+@media (min-width:761px) and (max-width:1180px){
+  .hk-grid{grid-template-columns:196px minmax(0,1fr);gap:10px}
+  .hk-flag{grid-template-columns:minmax(0,1fr) 250px;gap:10px}
+  .hk-prog b{font-size:34px}
+  .hk-site__nav span:nth-of-type(n+2){display:none}
+  .hk-site__page{padding:16px 16px 6px}
+  .hk-shop{padding:16px}
+  .hk-msg{margin:0 16px}
+  .hk-win__bar em{display:none}
+  .hk-term{padding:12px}
+}
+/* a short window: the site's page is tighter so its answer stays in view */
+@media (min-width:761px) and (max-height:700px){
+  .hk-site__nav{padding:8px 16px}
+  .hk-site__page{padding:12px 16px 6px}
+  .hk-shop{gap:8px;padding:12px 16px}
+  .hk-shop h4{font-size:19px}
+  .hk-site__foot{padding:6px 16px}
+  .hk-intro{padding:6px 12px}
+}
 @media (max-width:760px){
   .hk{padding:8px 16px calc(8px + var(--safe-bottom,0px));gap:6px}
-  .hk__top h2{font-size:20px}
-  .hk-grid{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .hk__top h2{font-size:20px;white-space:nowrap}
+  .hk__top small{display:none} /* the browser bar already says «test.tiski.local · тестовый сервер» */
+  .hk__top{min-height:44px}
+  .hk-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .hk-side{flex-direction:row;gap:8px;min-height:auto}
+  .hk-prog{flex:0 0 auto;padding:6px 10px;grid-template-columns:auto}
+  .hk-prog b{font-size:26px}.hk-prog b small{font-size:15px}
+  .hk-prog span,.hk-prog i{display:none}
   .hk-flags{flex-direction:row;overflow-x:auto;padding-bottom:2px}
   .hk-flags button{min-width:150px}
-  .hk-flag{grid-template-columns:1fr;grid-template-rows:auto auto;overflow:auto}
+  .hk-flag{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;overflow:auto;height:auto}
+  .hk-win{min-height:auto}
+  .hk-site__nav span{display:none}
+  .hk-site__page{padding:14px 12px 6px}
+  .hk-shop{padding:14px}
+  .hk-win__bar em{display:none}
+  .hk-msg{margin:0 12px}
   .hk__back{font-size:14px;padding:0 10px}
 }

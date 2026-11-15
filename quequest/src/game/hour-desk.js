@@ -111,6 +111,7 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
       </header>
       <ol class="desk__floors" aria-label="Этажи навыка"><li data-f="tap">КНОПКА</li><li data-f="knobs">СЛОВА / ПРАВИЛА</li><li data-f="code">КОД</li></ol>
       <ol class="desk__week" id="deskWeek" aria-label="Неделя на заводе" hidden>${WEEK.map((d) => `<li data-day="${d.day}"><b>${d.day}</b> <span>${d.way}</span></li>`).join('')}</ol>
+      <div class="desk__lesson">
       <div class="desk__story" id="deskStory"></div>
       <div class="desk__sheet" id="deskSheet" hidden>
         <small>ЛИСТОК ЭЛЕКТРИКА · НА СКОТЧЕ</small>
@@ -129,10 +130,12 @@ export function createHourDesk(root, { onWake = () => {}, onRules = () => {}, on
       </div>
       <div class="desk__choice" id="deskChoice" hidden><p id="deskQuestion"></p><div id="deskOptions"></div></div>
       <div class="desk__bridge" id="deskBridge" hidden></div>
+      </div><div class="desk__work">
       <div class="desk__tools" id="deskTools" hidden><button type="button" data-shift="all">⇥ ВСЁ ВПРАВО</button><button type="button" data-shift="line">⇥ СТРОЧКУ</button><button type="button" data-shift="back">⇤ СТРОЧКУ</button><span class="desk__tab">или Tab / Shift+Tab</span></div>
       <div class="desk__editor" id="deskEditor" hidden></div>
       <div class="desk__feedback" id="deskFeedback" role="status"></div>
       <div class="desk__actions"><button class="desk__hint" type="button" id="deskHint">ПОДСКАЗКА</button><button class="desk__run" type="button" id="deskRun">▶ ЗАПУСТИТЬ</button></div>
+      </div>
     </div>`;
   const $ = (s) => root.querySelector(s);
   const editor = createCodeEditor($('#deskEditor'), { label: 'Терминал руки 07', onRun: () => run(), onInput: () => { feedback(''); } });

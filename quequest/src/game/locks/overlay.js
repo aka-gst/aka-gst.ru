@@ -10,11 +10,11 @@
 //   Пробел / R — отпустить вороток; X — рентген; N — следующее; Esc — отойти.
 import {
   MECHANISMS, mechanismById, createLock, setPressure, releasePressure, probeSector, tick, bandAt, feel, tempoLeft, liftAt, variant, EASE_DEPTH,
-} from './core.js';
+} from '../../../vendor/zamki@v1.2.0/src/polosy.js';
 import { createState as createCabinet, attemptOpen, cabinetAction, ROUTE_NAMES } from './cabinet.js';
-import { LOCK_PY_TASKS, lockTaskById, checkLockTask } from './python-tasks.js';
+import { LOCK_PY_TASKS, lockTaskById, checkLockTask } from './python-tasks.js?v=zamki-120';
 import { LOCK_CARDS } from './bench.js';
-import { xrayTier } from './rewards.js';
+import { xrayTier } from './rewards.js?v=zamki-120';
 import { locksBus, LOCKS_OPEN } from './events.js';
 
 const CSS_HREF = new URL('./overlay.css', import.meta.url).href;

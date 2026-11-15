@@ -9,6 +9,7 @@
     'use strict';
     const OFF_KEY = 'pythonio.qqguide.off';
     const css = `
+html[data-host="quequest"] body.qqg-words #wordBank [data-word]:not([data-word="image"]):not([data-word="photo"]),html[data-host="quequest"] body.qqg-words [data-pick]:not([data-pick="image"]):not([data-pick="photo"]):not([data-pick=""]){display:none!important}
 html[data-host="quequest"] body.qqg-on .topbar nav,html[data-host="quequest"] body.qqg-on #discoveriesButton,html[data-host="quequest"] body.qqg-on .scorebar,
 html[data-host="quequest"] body.qqg-on .zoom,html[data-host="quequest"] body.qqg-on .sim-controls,html[data-host="quequest"] body.qqg-on #advancedTools,
 html[data-host="quequest"] body.qqg-on #pythonConcept,html[data-host="quequest"] body.qqg-on #guideAction,html[data-host="quequest"] body.qqg-on .coach,
@@ -26,10 +27,11 @@ html[data-host="quequest"] body.qqg-on .map-caption,html[data-host="quequest"] b
 .qqg-bubble b{display:block;margin-bottom:4px;color:#ffd36b;font:800 14px ui-monospace,monospace;letter-spacing:.06em}
 .qqg-bubble button{margin-top:8px;min-height:36px;padding:0 10px;border:1px solid #ffffff44;border-radius:8px;background:#0e1a12;color:#c9d6c0;font:600 14px system-ui,sans-serif;cursor:pointer}
 @media(prefers-reduced-motion:reduce){.qqg-ring{transition:none;animation:none}}`;
-    let ring = null, bubble = null, lastStep = '', on = false;
+    let ring = null, bubble = null, lastStep = '', lastTitle = '', on = false;
 
     function off() { try { return localStorage.getItem(OFF_KEY) === '1'; } catch (_) { return false; } }
     function active() {
+        if(document.documentElement.dataset.qqDemoUi==='true')return false; // Inline task guide owns the demo panels.
         const W = globalThis.Workshop, S = W && W.state;
         if (!S || document.documentElement.dataset.host !== 'quequest' || off()) return false;
         if (!document.body.classList.contains('first-contract')) return false;
@@ -78,7 +80,7 @@ html[data-host="quequest"] body.qqg-on .map-caption,html[data-host="quequest"] b
         document.body.append(ring, bubble);
         bubble.addEventListener('click', (e) => { if (e.target.closest('[data-qqg-off]')) { try { localStorage.setItem(OFF_KEY, '1'); } catch (_) { /* ignore */ } hide(); } });
     }
-    function hide() { on = false; document.body.classList.remove('qqg-on'); if (ring) ring.hidden = true; if (bubble) bubble.hidden = true; lastStep = ''; document.body.dataset.qqGuide = ''; }
+    function hide() { narrowWords(false); on = false; document.body.classList.remove('qqg-on'); if (ring) ring.hidden = true; if (bubble) bubble.hidden = true; lastStep = ''; lastTitle = ''; document.body.dataset.qqGuide = ''; }
     function place(s) {
         let r;
         if (s.spot) { const p = globalThis.Workshop.view.screen(s.spot[0], s.spot[1]); r = { left: p.x - 26, top: p.y - 26, width: 52, height: 52 }; }
@@ -97,14 +99,32 @@ html[data-host="quequest"] body.qqg-on .map-caption,html[data-host="quequest"] b
         ensure();
         if (!on) { on = true; document.body.classList.add('qqg-on'); }
         const s = step();
-        if (s.id !== lastStep) {
-            lastStep = s.id; document.body.dataset.qqGuide = s.id;
+        // QueQuest 20.0: the step's own counter («ШАГ 1 · РУКАМИ (1 из 3)») is redrawn too — it stayed «0 из 3».
+        if (s.id !== lastStep || s.title !== lastTitle) {
+            const newStep = s.id !== lastStep;
+            lastStep = s.id; lastTitle = s.title; document.body.dataset.qqGuide = s.id;
             bubble.innerHTML = `<b>${s.title}</b><span>${s.text}</span><br><button type="button" data-qqg-off>Без подсказок</button>`;
             bubble.hidden = false;
+            if (newStep) {
             const target = s.spot ? document.getElementById('world') : s.el;
             try { target && target.scrollIntoView({ block: 'center', behavior: 'instant' }); } catch (_) { /* old browsers */ }
+            }
         }
         place(s);
+        narrowWords(s.id === 'rule');
+    }
+    // QueQuest 20.0: the first rule needs two words, the lists offered seventeen. While the guide is on
+    // the rule step only «ФОТО» and «В ФОТО» are offered; the rest come back as soon as the step is done.
+    const RULE_WORDS = { condition: ['', 'image'], action: ['', 'photo'] };
+    let narrowed = false;
+    function narrowWords(on) {
+        if (on === narrowed) return;
+        narrowed = on;
+        document.body.classList.toggle('qqg-words', on);
+        for (const [id, keep] of Object.entries(RULE_WORDS)) {
+            const sel = document.getElementById(id); if (!sel) continue;
+            for (const o of sel.options) o.hidden = on && !keep.includes(o.value);
+        }
     }
     function start() { if (!globalThis.Workshop) return; setInterval(tick, 150); addEventListener('resize', tick); }
     globalThis.PythonioQQGuide = { step: () => (active() ? step() : null), get on() { return on; } };

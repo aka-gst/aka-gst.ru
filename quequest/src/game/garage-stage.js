@@ -1,3 +1,4 @@
+import { attachLogPages } from './ui-pages.js?v=20.0.2';
 // 17.1 → 19.0 · ГАРАЖ · СТОРОЖ МАШИНЫ — the playable stage inside the hacker
 // profession (canon §18: revenge on «ТИСКИ»). Each night is one quest about
 // one named person (career-story.js): Витя's car, Дина's radio, Санин lock.
@@ -75,17 +76,21 @@ export function createGarageStage({ canvas, visual, controls, runButton, result,
   function tab(name = 'code') {
     if (!stageEl) return;
     stageEl.dataset.gtab = name;
+    if (name === 'log') logPages?.refresh();
     for (const b of controls.querySelectorAll('.garage-tabs [data-gtab]')) b.setAttribute('aria-selected', String(b.dataset.gtab === name));
   }
 
   // ------------------------------------------------------------- DOM
+  let logPages = null;
   function build() {
+    logPages?.destroy();
     const card = questCard(day);
     const logBox = document.createElement('section');
     logBox.className = 'garage-sniffer';
     logBox.innerHTML = '<small>ЧТО ПРИЛЕТАЕТ В МАШИНУ · ПО ПОРЯДКУ</small><ol id="garageLog" aria-live="off"></ol>';
     visual.querySelector('.garage-sniffer')?.remove();
     visual.append(logBox);
+    logPages = attachLogPages(logBox.querySelector('#garageLog'));
     const legend = legendRows(day).map((r) => `<div><code>${esc(r.name)}</code><span>${esc(r.means)}: ${esc(r.values)}</span></div>`).join('');
     const pick = d.factory ? `
       <section class="garage-pick" data-phase="${phase}">
@@ -98,7 +103,7 @@ export function createGarageStage({ canvas, visual, controls, runButton, result,
     controls.innerHTML = `
       <div class="garage-ui" data-day="${day}" data-phase="${phase}">
         <nav class="garage-tabs" role="tablist" aria-label="Что показать">
-          <button type="button" role="tab" data-gtab="story">ИСТОРИЯ</button><button type="button" role="tab" data-gtab="code">ПРАВИЛО</button><button type="button" role="tab" data-gtab="log">ЖУРНАЛ</button>
+          <button type="button" role="tab" data-gtab="story">ИСТОРИЯ</button><button type="button" role="tab" data-gtab="code">ПРАВИЛО</button><button type="button" role="tab" data-gtab="words">СЛОВА</button><button type="button" role="tab" data-gtab="log">ЖУРНАЛ</button><button type="button" role="tab" data-gtab="result">ИТОГ</button>
         </nav>
         <section class="garage-story" data-quest="${esc(card.quest.id)}">
           <b>${esc(card.label)}</b>
@@ -109,7 +114,7 @@ export function createGarageStage({ canvas, visual, controls, runButton, result,
         </section>
         ${pick}
         <section class="garage-code" data-phase="${phase}">
-          <small id="garageCodeLabel">ПРАВИЛО СТОРОЖА · Ctrl+Enter — проверить ночью</small>
+          <small id="garageCodeLabel">ПРАВИЛО СТОРОЖА · Ctrl+Enter</small>
           <div class="garage-legend" aria-label="Что значат слова в правиле">${legend}</div>
           <div class="garage-chips" aria-label="Вставить кусок кода в правило (туда, где курсор)">${(d.chips ?? []).map(([label], i) => `<button type="button" data-chip="${i}">${esc(label)}</button>`).join('')}</div>
           <div class="code-editor"><span aria-hidden="true">PY</span><textarea id="garageCode" rows="9" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Правило сторожа машины на Python"></textarea></div>
@@ -150,7 +155,7 @@ export function createGarageStage({ canvas, visual, controls, runButton, result,
 
   function lint() {
     const c = compileRule(ruleSource);
-    if (c.ok) { goodRule = ruleSource; els.lint.dataset.ok = 'true'; els.lint.textContent = '✓ Сторож понимает правило. Сцена уже крутит его.'; }
+    if (c.ok) { goodRule = ruleSource; els.lint.dataset.ok = 'true'; els.lint.textContent = '✓ Правило понятно. Сцена проверяет его.'; }
     else { els.lint.dataset.ok = 'false'; els.lint.textContent = formatRuleError(c.error); }
     if (mode?.kind === 'watch') mode.night = judgeNight(goodRule, day);
     return c.ok;

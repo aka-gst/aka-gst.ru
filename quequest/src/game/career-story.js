@@ -101,6 +101,8 @@ export const PROFESSIONS = freeze([
   freeze({ id: 'vehicle', name: 'Хакер', title: 'ХАКЕР · ГАРАЖ', line: 'Вскрываешь то, чем «ТИСКИ» вскрывают людей, — и закрываешь им дорогу.', quests: HACKER_QUESTS, enter: 'ИДТИ В ГАРАЖ →', full: true }),
   freeze({ id: 'automation', name: 'Инженер', title: 'ИНЖЕНЕР · МАСТЕРСКАЯ', line: 'Собираешь людям свой цех — лучше, чем у «ТИСКОВ», и без их платформы.', quests: ENGINEER_QUESTS, enter: 'К ВЕРСТАКУ ПИТОНИО →', after: HACKER_ENTRY, full: true }),
   ...TASTERS.map((t) => freeze({ id: t.id, name: t.name, title: t.title, line: t.line, enter: 'НАЧАТЬ ПРОБУ →', after: HACKER_ENTRY, taster: true })),
+  // 20.x (Сергей 26.10 «шахматы — часть скиллов-профессий»): ЛЁД-64, the night assault (src/game/chess/).
+  freeze({ id: 'ice64', name: 'Сторож сети', title: 'СТОРОЖ · ЛЁД-64', line: 'Ночью в районную сеть лезут взломщики. Твои сторожа держат ядро до утра', enter: 'ДЕРЖАТЬ НОЧЬ →', night: true }),
 ]);
 // The final seven names, in screen order.
 export const PROFESSION_TITLES = freeze(Object.fromEntries(PROFESSIONS.map((p) => [p.id, p.name])));

@@ -22,7 +22,8 @@ import { awardCampusXp } from './campus-profile.js';
 import { pythonioStory, ENGINEER_QUESTS, MEGACORP } from './career-story.js';
 
 export const PYTHONIO_PROTOCOL = 1;
-export const PYTHONIO_SRC = 'games/pythonio/index.html';
+// ?v= — the iframe page and its files are cached by browsers; bump with games/pythonio/index.html's ?v=
+export const PYTHONIO_SRC = 'games/pythonio/index.html?v=20.0.5';
 export const PYTHONIO_SKILL = 'automation';
 
 // Сверено с games/pythonio/src/data.js (tools/pythonio-bridge.test.mjs).
@@ -49,14 +50,15 @@ export function helloMessage({ learning = {}, player = null, story = pythonioSto
   return { source: 'quequest', type: 'hello', protocol: PYTHONIO_PROTOCOL, player: player ? String(player).slice(0, 32) : '', known: knownMoves(learning), story };
 }
 
-// Anything that is not exactly one of our two messages is dropped.
+// Only validated ready, active-order and completed-order messages are accepted.
 export function validatePythonioMessage(data) {
   if (!data || typeof data !== 'object' || data.source !== 'pythonio' || data.protocol !== PYTHONIO_PROTOCOL) return null;
   if (data.type === 'ready') return { type: 'ready', version: typeof data.version === 'string' ? data.version.slice(0, 24) : '' };
-  if (data.type !== 'order-complete') return null;
+  if (!['order-complete', 'order-active'].includes(data.type)) return null;
   if (!Number.isInteger(data.index) || data.index < 0 || data.index >= PYTHONIO_ORDERS.length) return null;
   const order = PYTHONIO_ORDERS[data.index];
   if (data.id !== order.id) return null;
+  if (data.type === 'order-active') return { type: 'order-active', id: order.id, index: order.index, order };
   if (data.reward !== undefined && !(Number.isFinite(data.reward) && data.reward >= 0)) return null;
   // 18.1 (canon §13): how the order was done → the floor in mastery.js:
   // manual → tap, rules/table → knobs, def route → code. Optional.
@@ -68,6 +70,12 @@ const ledgerKey = (id) => `pythonio:${id}`;
 export function pythonioDone(profile = {}) {
   const ledger = profile.labs?.guild?.skillLedger ?? {};
   return PYTHONIO_ORDERS.filter((o) => ledger[ledgerKey(o.id)]).map((o) => o.id);
+}
+// 20.0: the dive bar shows rubles earned in Pythonio, from the saved profile. It showed the shift
+// wallet (state.warehouse.wage), which lives only until a reload: 100 ₽ after two orders became 0 ₽.
+export function pythonioEarned(profile = {}) {
+  const done = new Set(pythonioDone(profile));
+  return PYTHONIO_ORDERS.filter((o) => done.has(o.id)).reduce((sum, o) => sum + o.pay, 0);
 }
 
 // Pure, idempotent: the second call for the same id changes nothing and pays 0.
@@ -82,13 +90,25 @@ export function markPythonioOrder(profile = {}, id) {
   return { profile: next, first: true, pay: order.pay, xp: order.xp, skillGain: order.skillGain, order };
 }
 
+// Deduplicate repeated state reports within one actual workshop visit.
+export function createOrderStartGate(onStart = () => {}) {
+  let current = null;
+  return {
+    observe(index) {
+      if (!Number.isInteger(index) || index < 0 || index >= PYTHONIO_ORDERS.length || current === index) return false;
+      current = index; onStart(index); return true;
+    },
+    reset() { current = null; },
+  };
+}
+
 // ------------------------------------------------------------------ DOM
-const CSS_HREF = new URL('./pythonio-bridge.css', import.meta.url).href;
+const CSS_HREF = new URL('./pythonio-bridge.css?v=qq206', import.meta.url).href;
 function esc(v) { return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 export function createPythonioBridge(host = globalThis.document?.body, {
   getLearning = () => ({}), getPlayer = () => null, getProfile = () => ({}), getWallet = () => 0, getLevel = () => 0,
-  onOrder = () => ({ first: false }), onExit = () => {}, onSound = () => {}, src = PYTHONIO_SRC,
+  onOrder = () => ({ first: false }), onActiveOrder = () => {}, onExit = () => {}, onSound = () => {}, src = PYTHONIO_SRC,
 } = {}) {
   if (!host?.ownerDocument && !host?.querySelector) return { open() {}, close() {}, get active() { return false; } };
   const doc = host.ownerDocument ?? host;
@@ -109,15 +129,47 @@ export function createPythonioBridge(host = globalThis.document?.body, {
   const frame = root.querySelector('[data-pyio-frame]');
   const stat = root.querySelector('[data-pyio-stat]');
   const toastEl = root.querySelector('[data-pyio-toast]');
+  const orderStarts = createOrderStartGate(onActiveOrder);
   let active = false; let fromDive = false; let earned = []; let toastTimer = 0; let ready = false;
 
   function renderStat() {
     const done = pythonioDone(getProfile()).length;
-    stat.innerHTML = `<span>ЗАКАЗЫ <b>${done}/${PYTHONIO_ORDERS.length}</b></span><span>ИНЖЕНЕР <b>ур. ${esc(getLevel())}</b></span><span><b>${Number(getWallet() || 0).toLocaleString('ru-RU')}</b> ₽</span>`;
+    stat.innerHTML = `<span>ЗАКАЗЫ <b>${done}/${PYTHONIO_ORDERS.length}</b></span><span>ИНЖЕНЕР <b>ур. ${esc(getLevel())}</b></span><span>ЗАРАБОТАНО <b>${pythonioEarned(getProfile()).toLocaleString('ru-RU')}</b> ₽</span>`;
   }
+  // 20.0: the reward line sat at the bottom, where Pythonio's own letter keeps its button. The frame
+  // is same-origin, so its buttons are visible from here: the line takes the first spot over none.
+  const toastSpots = () => [{ top: 'auto', bottom: '22px' }, { top: `${Math.round(frame.getBoundingClientRect().top + 8)}px`, bottom: 'auto' }, { top: '45%', bottom: 'auto' }];
+  function frameButtonsUnder(r) {
+    const hit = (L, T, w, h) => w && L < r.right && L + w > r.left && T < r.bottom && T + h > r.top;
+    let n = [...root.querySelectorAll('button,a[href]')].filter((e) => e.offsetParent && !frame.contains(e)).filter((e) => { const b = e.getBoundingClientRect(); return hit(b.left, b.top, b.width, b.height); }).length;
+    try {
+      const fr = frame.getBoundingClientRect(); const d = frame.contentDocument; if (!d) return n;
+      n += [...d.querySelectorAll('button,a[href],input,select,textarea,[role="button"]')].filter((e) => e.offsetParent).filter((e) => {
+        const b = e.getBoundingClientRect(); return hit(fr.left + b.left, fr.top + b.top, b.width, b.height);
+      }).length;
+    } catch { /* frame gone */ }
+    return n;
+  }
+  function placeToast() {
+    let best = null;
+    for (const spot of toastSpots()) {
+      Object.assign(toastEl.style, spot);
+      const n = frameButtonsUnder(toastEl.getBoundingClientRect());
+      if (!best || n < best.n) best = { spot, n };
+      if (!n) return;
+    }
+    Object.assign(toastEl.style, best.spot);
+  }
+  let toastPlaceTimer = 0;
   function toast(text, ok = true) {
-    toastEl.textContent = text; toastEl.dataset.ok = String(ok); toastEl.hidden = false;
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 5200);
+    toastEl.textContent = text; toastEl.dataset.ok = String(ok); toastEl.hidden = true;
+    clearInterval(toastPlaceTimer); clearTimeout(toastTimer);
+    // Pythonio's letter opens a beat after the order: show the line once it is there, and keep it clear of it
+    toastTimer = setTimeout(() => {
+      toastEl.hidden = false; placeToast();
+      toastPlaceTimer = setInterval(() => { if (toastEl.hidden) clearInterval(toastPlaceTimer); else placeToast(); }, 250);
+      toastTimer = setTimeout(() => { toastEl.hidden = true; clearInterval(toastPlaceTimer); }, 5200);
+    }, 600);
   }
   function sendHello() {
     try { frame.contentWindow?.postMessage(helloMessage({ learning: getLearning(), player: getPlayer() }), location.origin); } catch { /* frame gone */ }
@@ -127,6 +179,7 @@ export function createPythonioBridge(host = globalThis.document?.body, {
     const msg = validatePythonioMessage(ev.data);
     if (!msg) return;
     if (msg.type === 'ready') { ready = true; sendHello(); return; }
+    if (msg.type === 'order-active') { orderStarts.observe(msg.index); return; }
     const res = onOrder(msg) ?? { first: false };
     if (res.first) {
       earned.push(msg.id);
@@ -172,15 +225,26 @@ export function createPythonioBridge(host = globalThis.document?.body, {
   root.querySelector('[data-pyio-surface]').addEventListener('click', () => close());
   globalThis.addEventListener?.('message', onMessage);
 
-  function open({ fromDive: dive = false } = {}) {
-    active = true; fromDive = Boolean(dive); earned = []; ready = false;
+  function open({ fromDive: dive = false, demoOrder = null } = {}) {
+    active = true; fromDive = Boolean(dive); earned = []; ready = false; orderStarts.reset();
     root.hidden = false; root.dataset.from = fromDive ? 'dive' : 'menu';
     renderStat();
-    frame.src = src;
+    const entry = new URL(src, doc.baseURI);
+    if (/^(?:[1-9]|1\d|2[0-2])$/.test(String(demoOrder??''))) entry.searchParams.set('qq-demo-order', demoOrder);
+    frame.src = entry.href;
     globalThis.addEventListener?.('keydown', onHostKey, true);
     onSound('boot');
     setTimeout(() => { try { frame.focus(); } catch { /* ignore */ } }, 50);
     return true;
+  }
+  // A trusted host Next continues through the existing child UI handler.
+  function nextOrder() {
+    if (!active || paused) return false;
+    try {
+      const button = frame.contentDocument?.querySelector('#modal[open] #advance');
+      if (!button || button.disabled || !button.getClientRects().length) return false;
+      button.click(); return true;
+    } catch { return false; }
   }
   function close() {
     if (!active) return false;
@@ -192,7 +256,7 @@ export function createPythonioBridge(host = globalThis.document?.body, {
     return true;
   }
   return {
-    open, close, sendHello,
+    open, close, sendHello, nextOrder,
     get active() { return active; }, get ready() { return ready; }, get root() { return root; }, get frame() { return frame; },
   };
 }

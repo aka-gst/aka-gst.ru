@@ -35,6 +35,7 @@ export const PROFESSION_NAMES = Object.freeze({ automation: 'Инженер', ve
 
 import { floorsOf } from './mastery.js';
 import { isWeekCheckpoint, weekDayOf, weekPin, WEEK, FIRED } from './week.js';
+import { HACKER_QUESTS, ENGINEER_QUESTS, PROFESSIONS } from './career-story.js';
 
 const FLOOR_NAMES = Object.freeze(['ТЫК', 'РУЧКИ', 'КОД', 'С НУЛЯ']);
 export { FLOOR_NAMES };
@@ -124,8 +125,9 @@ const weekAt = (s) => weekDayOf(s.checkpoint);
 const weekPaid = (s, day) => s.checkpoint !== 'start' && s.checkpoint !== 'warehouse' && (weekAt(s) > day || (weekAt(s) === day && s.checkpoint === WEEK[day - 1].pay));
 const MAIN_WEEK = Object.freeze([
   { id: 'q-manual', title: 'Не твой участок', giver: 'Начальник', goal: 'Перенеси три ящика на ленту и подойди к начальнику.', short: 'Перенеси 3 ящика на ленту', reward: '60 ₽', done: (s) => isWeekCheckpoint(s.checkpoint) },
-  { id: 'q-chip', title: 'Чип за ящиком', giver: 'Звук «дзынь»', goal: 'Загляни за ящик, подними чип — и вставь его в руку 07.', short: 'Чип: загляни за ящик', reward: 'рука 07 оживает', done: (s) => isWeekCheckpoint(s.checkpoint) && !(s.checkpoint === 'd1-button' && s.scene === 'chip') },
-  { id: 'q-button', title: 'День 1 · Кнопка «ПУСК»', giver: 'Электрик', goal: 'Нажми зелёную кнопку — рука сама перетаскает ящики.', short: 'Нажми зелёную кнопку «ПУСК»', reward: 'зарплата (урезанная)', done: (s) => weekPaid(s, 1) },
+  { id: 'q-chip', title: 'Защита от детей', giver: 'Начальник и рука 07', goal: 'После трёх ящиков поговори с начальником. Он ударит по столу: поддень и сними защиту с кнопки.', short: 'Сними защиту с кнопки', reward: 'доступ к кнопке', done: (s) => Boolean(s.flags.childLock) || (isWeekCheckpoint(s.checkpoint) && !(s.checkpoint === 'd1-button' && s.scene === 'chip')) },
+  { id: 'q-button', title: 'День 1 · Удар током', giver: 'Кнопка print("wake")', goal: 'Нажми кнопку: удар током покажет будущее и код под стенами. После этого ты очнёшься дома.', short: 'Нажми кнопку и увидь код', reward: '120 ₽ · квартира', done: (s) => weekPaid(s, 1) },
+  { id: 'q-home', title: 'Первый вечер дома', giver: 'Кот и завтрашняя смена', goal: 'Покорми кота за20 ₽, осмотри компьютер. Свет стоит40 ₽, остальные комнаты60 ₽. Можно отложить покупки. Ляг спать — утром начнётся день2.', short: 'Осмотрись дома и ложись спать', reward: 'дом между сменами', done: (s) => weekAt(s) > 1 },
   { id: 'q-copy', title: 'День 2 · Листок электрика', giver: 'Электрик', goal: 'Кнопку оторвали. Перенеси строчку с листка в терминал: выдели, скопируй, вставь.', short: 'Скопируй строчку с листка', reward: 'зарплата', done: (s) => weekPaid(s, 2) },
   { id: 'q-assemble', title: 'День 3 · Порванный листок', giver: 'Начальник по рации', goal: 'Только белые! Собери порванную строчку из кусков, одно слово впиши сам.', short: 'Собери порванную строчку', reward: 'зарплата', done: (s) => weekPaid(s, 3) },
   { id: 'q-hand', title: 'День 4 · Без листка', giver: 'Начальник', goal: 'Листка нет. Напиши правило «если ящик белый — возьми» сам.', short: 'Напиши правило сам', reward: 'премия', done: (s) => weekPaid(s, 4) },
@@ -163,7 +165,7 @@ export function questLog({ learning = {}, warehouse = {}, checkpoint = 'start', 
     const missing = (r.gate ?? []).filter((k) => !learning[{ print: 'printUnlocked', if: 'ifUnlocked', for: 'forUnlocked', while: 'whileUnlocked', func: 'funcUnlocked' }[k]]);
     return { id: `m-${r.id}`, realm: r.id, title: r.title, giver: r.subtitle?.split('·')[0]?.trim() || 'Профессия', goal: String(r.prompt ?? '').split(/(?<=[.!?])\s/)[0], reward: `${realmPay} ₽ за день`, status: wins.has(r.id) ? 'done' : (missing.length ? 'locked' : 'active'), gate: missing.length ? worldGate(missing) : '' };
   });
-  const garageOpen = !(realms.find((r) => r.id === 'vehicle')?.gate ?? ['print', 'if']).some((k) => !learning[`${k}Unlocked`]);
+  const garageOpen = (!week || flags.vityaCalled || flags.vityaGarage) && !(realms.find((r) => r.id === 'vehicle')?.gate ?? ['print', 'if']).some((k) => !learning[`${k}Unlocked`]);
   const freelance = [
     { id: 'f-pythonio', title: 'Питонио · сортировочный цех', giver: 'Компьютер дома', goal: 'Заказы на сортировку: руками, таблицей правил или своим def route().', reward: 'за каждый заказ' },
     { id: 'f-jumpkill', title: 'JUMP KILL · 13 уровней', giver: 'Автомат в гараже', goal: 'Пройди арену уровень за уровнем.', reward: 'рубли за уровень' },
@@ -175,7 +177,14 @@ export function questLog({ learning = {}, warehouse = {}, checkpoint = 'start', 
     const pin = weekPin({ checkpoint, scene, arm, warehouse }, flags);
     if (pin) current = { ...current, short: pin };
   }
-  return { tabs: { main, side, money, freelance }, current };
+  const plan = [
+    ...main,
+    ...HACKER_QUESTS.map(q => ({ ...q, giver: `${q.victim} · гараж, ночь ${q.day}`, status: flags.vityaGarage ? 'active' : 'locked', reward: `${q.pay} ₽`, gate: 'После пятой смены: звонок Вити и ключ от гаража' })),
+    ...ENGINEER_QUESTS.map((q, i) => ({ ...q, giver: 'Мастерская Питонио', status: 'locked', reward: 'оплата за заказ', gate: i ? 'После предыдущего заказа мастерской' : 'После защиты машины Вити' })),
+    ...PROFESSIONS.filter(p => p.taster || p.night).map(p => ({ id: `plan-${p.id}`, title: p.title, giver: 'Профессии', goal: p.line, status: 'locked', reward: p.taster ? 'проба профессии и опыт' : 'ночь защиты сети', gate: 'После первого задания Вити' })),
+    ...freelance,
+  ];
+  return { tabs: { main, side, money, freelance, plan }, current };
 }
 
 // The one-line HUD pin for the current main quest.

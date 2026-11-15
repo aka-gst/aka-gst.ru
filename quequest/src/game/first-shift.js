@@ -14,9 +14,9 @@ import { onReleaseKeys } from './key-guard.js';
 import { drawFace, faceIdFor } from './faces.js';
 import { REFLEXES, fightBeat, BAR_BEATS } from './gamer-reflex.js';
 import { ANGER_FULL, PUNCH_PHASES, PUNCHES_TO_BEATING, WORKER_FISTS, BOSS_FISTS, fightGain, FIGHT_MISS, angerFull, angerLabel, PUNCH_REACH, THUD_LINES, FIST_FLAGS } from './fists.js';
-import { createHands, drawHands, handsPose, swing, CRACK_AT_MS, KO_MS } from './fp-hands.js';
+import { createHands, drawHands, handsPose, swing, CRACK_AT_MS, KO_MS } from './fp-hands.js?v=qq22';
 import { armDeadIn, OPENING_LINES, OPENING_FLAGS, SHOCK_WORDS, SHOCK_THOUGHT, DEEP_CODE, pryStep, pryRelease, pryFromSlide } from './opening.js';
-import { paintChildLock, paintWakeButton, buildArmSprites, armPoseAt } from './arm-art.js';
+import { paintChildLock, paintWakeButton, buildArmSprites, armPoseAt } from './arm-art.js?v=qq26';
 
 // One price for a crate across the whole game; the first shift pays the same piece rate.
 export const FIRST_SHIFT_PAY = CRATE_PAY;
@@ -527,7 +527,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     talk = null;
     setDialogue(); renderText();
     canvas?.focus({ preventScroll: true });
-    canvas?.requestPointerLock?.();
+    canvas?.requestPointerLock?.()?.catch?.(() => {});
   }
 
   function action() {
@@ -761,6 +761,8 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
   }
   function skipDive() {
     if (!dive || dive.after) return;
+    const mustSee = DIVE_TIMELINE.filter(s => ['shock', 'enter', 'vision'].includes(s.stage)).reduce((n, s) => n + s.ms, 0);
+    if (performance.now() - dive.start < mustSee) return;
     dive.start = performance.now() - DIVE_MS - 1;
   }
   function finishDive() {
@@ -780,6 +782,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     dive.step = st.step;
     const sound = st.stage === 'vision' ? VISION_SOUNDS[st.index] : DIVE_SOUNDS[st.stage];
     if (sound) onSound(sound);
+    if (st.stage === 'vision') onFlag('futureSeen');
     if (st.stage === 'after' && !dive.after) {
       dive.after = true;
       setDialogue(); renderText();
@@ -1586,7 +1589,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (active && dive && !dive.after) { skipDive(); return; }
     // 19.4 (§21): with the mouse captured, a click is a punch.
     if (active && dialogue.hidden && document.pointerLockElement === canvas) { punch(); return; }
-    if (active && dialogue.hidden) canvas.requestPointerLock?.();
+    if (active && dialogue.hidden) canvas.requestPointerLock?.()?.catch?.(() => {});
   });
   window.addEventListener('keydown', keyDown, { passive: false }); window.addEventListener('keyup', keyUp); window.addEventListener('mousemove', mouseMove);
   onReleaseKeys(() => held.clear());
@@ -1598,7 +1601,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (state.phase === 'briefing') { state = stepFirstShift(state, 'briefing-done'); onSound('ui-click'); }
     else if (state.phase === 'payday') { state = stepFirstShift(state, 'payday-done'); onSound('ui-click'); }
     else if (state.phase === 'fight-result') { state = stepFirstShift(state, 'fight-done'); onSound('ui-click'); }
-    setDialogue(); renderText(); canvas?.focus({ preventScroll: true }); if (dialogue.hidden) canvas?.requestPointerLock?.();
+    setDialogue(); renderText(); canvas?.focus({ preventScroll: true }); if (dialogue.hidden) canvas?.requestPointerLock?.()?.catch?.(() => {});
   });
   bossTalk?.addEventListener('click', () => {
     if (talk) { ask('carry'); return; }
@@ -1608,7 +1611,7 @@ export function createFirstShift(root, { onComplete = () => {}, onSound = () => 
     if (talk) { ask('fix'); return; }
     if (state.phase !== 'confront') return;
     state = stepFirstShift(state, 'fight-start'); startFight(performance.now());
-    setDialogue(); renderText(); canvas?.focus({ preventScroll: true }); canvas?.requestPointerLock?.();
+    setDialogue(); renderText(); canvas?.focus({ preventScroll: true }); canvas?.requestPointerLock?.()?.catch?.(() => {});
   });
   window.addEventListener('resize', resize);
 

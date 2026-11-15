@@ -1,3 +1,4 @@
+import { createDragLook } from './drag-look.js';
 // 19.2 · the shared site login (/akkaunty) installs window.QQ_PROFILE_ADAPTER
 // before anything below resolves it — only on aka-gst.ru / ?akk=1 (akkaunty-adapter.js).
 import './akkaunty-adapter.js';
@@ -29,27 +30,32 @@ import { createCityChronicle } from './city-chronicle.js?v=chronicle-1';
 import { createCityWeave } from './city-weave.js?v=weave-1';
 import { createCityThreads } from './city-threads.js?v=threads-1';
 import { createQuestGuild } from './quest-guild.js?v=guild-1';
-import { CAREER_REALMS, createCareerWorlds, foundationStatus, characterSheet, heldRealmDay, nextRealmDay } from './career-worlds.js?v=career-11';
+import { CAREER_REALMS, createCareerWorlds, foundationStatus, characterSheet, heldRealmDay, nextRealmDay } from './career-worlds.js?v=20.0.2';
 // 19.0: optional exports of the professions screen (realmAvailability,
 // enterGarageQuest); read through the namespace so this works before and
 // after the garage/professions branch lands.
-import * as careerApi from './career-worlds.js?v=career-11';
+import * as careerApi from './career-worlds.js?v=20.0.2';
 import { deviceFromQuery } from './vr-devices.js';
-import { createFpWorld } from './fp-world.js?v=fp-world-8';
-import { createPythonioBridge, markPythonioOrder } from './pythonio-bridge.js';
+import { createFpWorld } from './fp-world.js?v=20.1.0';
+import { createPythonioBridge, markPythonioOrder } from './pythonio-bridge.js?v=20.0.5';
 import { createBlackIceBridge } from './blackice-bridge.js';
+import { createFpsreBridge } from './fpsre-bridge.js?v=qq201';
+import { createDemoHub, demoRoute, demoWonNow } from './demo-hub.js?v=20.0.3';
+import { createIce64 } from './chess/overlay.js?v=ice3';
+import { flagsFound } from './polygon.js';
+import { markFpsreMilestone } from './fpsre-portal.js';
 import { markLabyrinthFloor, labyrinthCleared, LABYRINTH_FLOORS } from './labyrinth.js';
 import { setCabinetProgress } from './labyrinth-cabinet.js';
-import { markLockReward } from './locks/rewards.js';
+import { markLockReward } from './locks/rewards.js?v=zamki-120';
 import { engineProgress, eraFromProgress, engineStatus, buyUpgrade, levelFromProgress } from './engine-eras.js';
 import { levelFromQuery } from './engine-ladder.js';
-import { getCampusRank } from './campus-profile.js?v=campus-profile-7';
-import { createFirstShift } from './first-shift.js?v=first-shift-194';
+import { getCampusRank, awardCampusXp } from './campus-profile.js?v=campus-profile-7';
+import { createFirstShift } from './first-shift.js?v=20.1.0';
 import { REFLEXES, gamerLine, hearMeaning, knowledgeFrom, homeChanges, saveSnapshot, saveReport, saveWords, loadRecord, saveRecord, mark } from './gamer-reflex.js';
-import { createHourDesk, ruleSentence } from './hour-desk.js';
+import { createHourDesk, ruleSentence } from './hour-desk.js?v=20.0.2';
 import { showSeam, confirmInPage } from './hour-ui.js';
-import { skillTree as buildSkillTree, questLog as buildQuestLog, questPin } from './progress-map.js';
-import { createSkillTreeView, createQuestLogView } from './journal-ui.js';
+import { skillTree as buildSkillTree, questLog as buildQuestLog, questPin } from './progress-map.js?v=20.1.0';
+import { createSkillTreeView, createQuestLogView } from './journal-ui.js?v=20.1.0';
 import { onReleaseKeys, releaseAllKeys } from './key-guard.js';
 import { createTouchControls, isTouchDevice } from './touch-controls.js';
 import { drawFace, faceIdFor } from './faces.js';
@@ -57,19 +63,20 @@ import { masteryEvent, listenForSkills, pythonioWay } from './mastery.js';
 import { consoleGreeting, sideCheck, impossibleReasons, isAutomationContext, duelLooksAutomated, isHonestSpeedrun, MESSAGES } from './tamper.js';
 import { evaluateBadges, earnBadge, badgeById, badgeGrid, RARITY } from './achievements.js';
 import { beatenByAll, FIST_FLAGS } from './fists.js';
-import { createHackPolygon } from './hack-ui.js';
-import { pythonioDone } from './pythonio-bridge.js';
-import { tasterFinished } from './career-tasters.js';
-import { applyBuildLabels, BUILD } from './version.js';
+import { createHackPolygon } from './hack-ui.js?v=20.0.2';
+import { pythonioDone } from './pythonio-bridge.js?v=20.0.5';
+import { tasterFinished, TASTER_IDS } from './career-tasters.js';
+import { applyBuildLabels, BUILD } from './version.js?v=20.1.0';
 import { createRing } from './duel-ui.js';
 import { resolveAdapter, profileSnapshot, applySnapshot } from './profile-store.js';
 import { createAccountUi } from './account-ui.js';
 // 19.0 · the first week: five days, button → fired → Витя's garage.
-import { isWeekCheckpoint, weekDayOf, weekClock, weekPin, payLedger, legacyFromQuery, weekFromLegacy, BOSS_END, BOSS_MORNING, HALL_MORNING, EVENING, MORNING, FIRED, CORP, WEEK_PAY_CHECKPOINTS } from './week.js';
+import { WEEK_CHECKPOINTS, isWeekCheckpoint, weekDayOf, weekClock, weekPin, payLedger, legacyFromQuery, weekFromLegacy, BOSS_END, BOSS_MORNING, HALL_MORNING, EVENING, MORNING, FIRED, CORP, WEEK_PAY_CHECKPOINTS } from './week.js';
 import { createPayCard, createWeekPin } from './week-ui.js';
+import { HOME_KEY, homeAccess, homeTransaction, loadHomeLife } from './home-life.js';
 import { firedHandoff } from './week-hooks.js';
 import { openingFacts, AFTER_SHOCK_HALL, DAY2_PRINCIPLE } from './opening.js';
-import { createFactoryView, toWorld as hallToWorld, hallAimPoints } from './factory-view.js';
+import { createFactoryView, toWorld as hallToWorld, hallAimPoints } from './factory-view.js?v=qq26';
 import { createSorterBay } from './sorter-bay.js?v=sorter-1';
 import { createContractBoard } from './contract-board.js?v=contracts-1';
 import { createSystemSandbox } from './system-sandbox.js?v=sandbox-1';
@@ -92,7 +99,7 @@ import {
 } from './model.js?v=game-190';
 import { renderGame } from './render.js?v=game-03';
 import { EXPLAIN_MODE_KEY, getAdaptiveCoach, getConceptBridge, getManualIncomeCopy, getSkillRecorderBeat, normalizeExplainMode } from './engagement-director.js?v=4';
-import { createCheckpointPersistence, loadCheckpoint } from './save.js?v=190';
+import { createCheckpointPersistence, loadCheckpoint } from './save.js?v=20.1.0';
 import { createTelemetry } from './telemetry.js';
 import { CHECKPOINTS, CRATE_PAY, REWARD_REVEAL_DURATION } from './config.js?v=game-190';
 import { getSceneCameraTarget, getViewportTransform, screenToWorld } from './viewport.js?v=2';
@@ -161,6 +168,10 @@ const hud = {
 
 const isLocal = ['127.0.0.1', 'localhost'].includes(location.hostname);
 const query = new URLSearchParams(location.search);
+// 20.0 · ?demo (demo-hub.js): level links may jump to a checkpoint on the live site too —
+// the demo runs in its own storage (index.html), so a real save is never touched.
+const demoMode = query.has('demo') && Boolean(globalThis.__QQ_DEMO_STORAGE__);
+const demoQuietUntil = 4000;   // ms after load: no «you earned a badge» toasts for the days the demo skipped
 const requestedCheckpoint = query.get('checkpoint');
 const showcaseChip = query.get('showcase') === 'chip';
 const showcaseManual = query.get('showcase') === 'manual';
@@ -169,7 +180,7 @@ game.dataset.chipShowcase = showcaseChip ? 'true' : 'false';
 // an old save lands on the matching day of the first week.
 const legacy = legacyFromQuery(location.search)
   || Boolean(isLocal && requestedCheckpoint && CHECKPOINTS.includes(requestedCheckpoint) && !isWeekCheckpoint(requestedCheckpoint) && !['start', 'warehouse'].includes(requestedCheckpoint));
-const checkpoint = (isLocal && CHECKPOINTS.includes(requestedCheckpoint)) || requestedCheckpoint === 'start'
+const checkpoint = ((isLocal || demoMode) && CHECKPOINTS.includes(requestedCheckpoint)) || requestedCheckpoint === 'start'
   ? { checkpoint: requestedCheckpoint }
   : (showcaseChip ? { checkpoint: 'chip' } : (showcaseManual ? { checkpoint: 'warehouse' } : loadCheckpoint()));
 if (!legacy && !showcaseChip && !showcaseManual) checkpoint.checkpoint = weekFromLegacy(checkpoint.checkpoint);
@@ -179,6 +190,7 @@ const telemetry = createTelemetry({ enabled: isLocal });
 let state = checkpoint.checkpoint === 'start'
   ? createGameState({ scene: 'warehouse', checkpoint: 'start' })
   : createCheckpointState(checkpoint.checkpoint);
+if (Number.isFinite(checkpoint.wallet)) state = { ...state, warehouse: { ...state.warehouse, wage: checkpoint.wallet } };
 if (showcaseManual) state = { ...state, warehouse: { ...state.warehouse, introComplete: true } };
 let fakeGateway;
 let otherMindRuntime;
@@ -359,7 +371,7 @@ let engagementProgressAt = performance.now();
 let friendVisited = ['reward5', 'vika', 'reward6', 'virus', 'reward7', 'foundry', 'reward8', 'campus', 'ai-lab', 'reward9', 'llm-lab', 'reward10'].includes(checkpoint.checkpoint);
 let journalOpen = false;
 let exitOpen = false;
-const BLOCKING_OVERLAY_IDS = ['deepRing','firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
+const BLOCKING_OVERLAY_IDS = ['deepRing','firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','fpsreDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
 function isBlockingOverlayOpen() {
   return BLOCKING_OVERLAY_IDS.some((id) => !document.querySelector(`#${id}`)?.hidden);
 }
@@ -690,6 +702,7 @@ const questGuild = createQuestGuild(document.querySelector('#questGuild'), {
 // moves, campus rank, held profession days, and engine upgrades bought on
 // the home PC. ?era=0..5 (or ?era=duke) forces an era; [ / ] switch it.
 const ENGINE_KEY = 'quequest.engine.upgrades';
+let homeLife = loadHomeLife();
 function engineUpgrades() { try { return Math.max(0, Number(localStorage.getItem(ENGINE_KEY)) || 0); } catch { return 0; } }
 function engineNow() {
   const realmDays = CAREER_REALMS.reduce((n, r) => n + heldRealmDay(campusProfile, r.id), 0);
@@ -714,8 +727,10 @@ const fpWorld = createFpWorld(fpWorldRoot, {
     }
     return r;
   },
-  onDive: (program) => (program === 'pythonio' ? pythonio.open({ fromDive: true }) : program === 'blackice' ? blackice.open({ fromDive: true }) : careerWorlds.dive(program)),
-  onLeave: () => careerWorlds.fromWorld(),
+  onDive: (program) => (program === 'pythonio' ? pythonio.open({ fromDive: true }) : program === 'blackice' ? blackice.open({ fromDive: true }) : program === 'fpsre' ? fpsre.open({ fromDive: true }) : careerWorlds.dive(program)),
+  onLeave: () => { if (!legacy && fpWorld.state()?.level === 'home' && homeAccess(state.checkpoint, loadFlags()).nextWork) advanceHomeMorning(); else careerWorlds.fromWorld(); },
+  getHome: () => { const access = homeAccess(state.checkpoint, loadFlags()); return { ...access, life: homeLife, starter: !homeLife.room && !access.garage }; },
+  onHomeAction: action => performHomeAction(action),
   eraDebug: isLocal || forcedEraParam !== null || query.has('debug'),
   reducedMotion: prefersReducedMotion,
   // 17.4 · AR headset. ?ar=1 — the headset is already yours; ?ar=on — and on
@@ -756,11 +771,15 @@ const fpWorld = createFpWorld(fpWorldRoot, {
 });
 if (forcedEraParam !== null) fpWorld.setLevel(forcedEraParam);
 let careerReturnToGuild = false;
+// 20.x · ЛЁД-64, the night assault (src/game/chess/): a door on the professions screen and ?open=ice64.
+const ice64 = createIce64(document.body, { onSound: (n) => audio.play(n) });
 const careerWorldsRoot = document.querySelector('#careerWorlds');
 const careerWorlds = createCareerWorlds(careerWorldsRoot, {
   getProfile: () => campusProfile,
   getLearning: () => state.learning,
   getWallet: () => state.warehouse?.wage ?? 0,
+  tastersOpen: () => demoMode && query.has('tasters'),
+  onIce64: () => ice64.open(),
   // A profession's first held day pays real game money, not only XP.
   onProfile: (action) => {
     updateCampusProfile(action);
@@ -901,12 +920,16 @@ document.querySelector('#reportHole')?.addEventListener('click', () => { audio.p
 new MutationObserver(() => {
   if (careerWorldsRoot.hidden || !ringGate().ok || loadFlags().ringTold) return;
   setFlag('ringTold');
-  showReflexToast({ kind: 'saved', kicker: 'СОСЕД ВИТЯ', thought: '«У ТИСКОВ стажёры по вечерам меряются на ринге — задачками».', more: 'Решил быстро — получил баф. Кнопка «⚔ РИНГ · КАРТОЧКА» — наверху.' }, 6500);
+  showReflexToast({ kind: 'saved', kicker: 'СОСЕД ВИТЯ', thought: '«У ТИСКОВ стажёры по вечерам меряются на ринге — задачками»', more: 'Решил быстро — получил баф. Кнопка «⚔ РИНГ · КАРТОЧКА» — наверху.' }, 6500);
 }).observe(careerWorldsRoot, { attributes: true, attributeFilter: ['hidden'] });
 
 // Шаг 2: Pythonio as the depth of AUTO (pythonio-bridge.js, games/pythonio/).
 // Its orders pay into the same profile (AUTO branch, XP) and wallet, once per order.
 const pythonio = createPythonioBridge(document.body, {
+  onActiveOrder: (index) => {
+    demoHub?.startPythonio(index);
+    if (demoMode && query.has('demo-order')) { if (demoHub) demoHub.banner.hidden = true; const url = new URL(location.href); url.searchParams.set('demo-order', String(index + 1)); history.replaceState(null, '', url.pathname + url.search + url.hash); }
+  },
   getLearning: () => state.learning,
   getPlayer: () => (careerApi.plainRank ?? ((n) => n))(getCampusRank(campusProfile.xp ?? 0).name),
   getProfile: () => campusProfile,
@@ -945,6 +968,27 @@ const blackice = createBlackIceBridge(document.body, {
   onExit: ({ fromDive, result }) => { if (fromDive) fpWorld.surface(result); },
 });
 setCabinetProgress(labyrinthCleared(campusProfile).length, LABYRINTH_FLOORS.length);
+// 20.0 · ЧУЖОЙ МИР (fpsre-bridge.js, fpsre-portal.js, games/fpsre/): FPS-RE
+// events become §13 proofs (skill «archaeology») and one-time rewards.
+const fpsre = createFpsreBridge(document.body, {
+  onProof: (msg) => {
+    const r = masteryEvent(campusProfile, msg);
+    if (r.first) updateCampusProfile({ type: 'replace', profile: r.profile });
+  },
+  onMilestone: (id) => {
+    const r = markFpsreMilestone(campusProfile, id, awardCampusXp);
+    if (!r.first) return r;
+    updateCampusProfile({ type: 'replace', profile: r.profile });
+    state = { ...state, warehouse: { ...state.warehouse, wage: (state.warehouse?.wage ?? 0) + r.pay } };
+    persistence.save(state);
+    return r;
+  },
+  onSound: name => audio.play(name),
+  onExit: ({ fromDive, result }) => {
+    if (fromDive) fpWorld.surface(result);
+    if (result?.line) showReflexToast({ kind: 'saved', kicker: 'ЧУЖОЙ МИР', thought: result.line }, 5600);
+  },
+});
 document.querySelector('#guildWorldsOpen').addEventListener('click', () => { careerReturnToGuild = true; questGuild.close(); careerWorlds.open(); });
 // 18.0: the door opens the skill tree; professions are entered from it.
 const FLAGS_KEY = 'quequest.flags.v1';
@@ -972,10 +1016,31 @@ function badgeFacts() {
   };
 }
 const RARITY_RU = { common: 'ОБЫЧНЫЙ', rare: 'РЕДКИЙ', epic: 'ЛЕГЕНДАРНЫЙ', secret: 'СЕКРЕТНЫЙ' };
-function toastBadge(b) {
-  if (!b) return;
+// 20.0 (slice: «no toast covers the level»): a badge earned while the hand
+// terminal, a pay card or a story card is open waits and shows when it closes.
+// So does one earned inside a full-screen level (the garage laptop, Pythonio, the
+// polygon, FPS-RE, BLACK ICE): no free corner there, and the level says it in its text.
+const BADGE_WAIT_FOR = ['#hourDesk', '#payCard', '#storyBeat', '#careerWorlds[data-dive="true"]', '#pythonioDive', '#hackPolygon', '#fpsreDive', '#blackiceDive'];
+const badgeQueue = [];
+let badgeQueueTimer = 0;
+const cardOpen = () => (typeof payCard !== 'undefined' && payCard.visible()) || BADGE_WAIT_FOR.some((sel) => { const el = document.querySelector(sel); return el && !el.hidden && el.offsetParent !== null; });
+let cardSeenAt = 0;
+function flushBadges() {
+  badgeQueueTimer = 0;
+  if (!badgeQueue.length) return;
+  if (cardOpen()) { cardSeenAt = performance.now(); badgeQueueTimer = setTimeout(flushBadges, 400); return; }
+  // a card just closed: the next one (terminal → pay card → evening) opens a beat later
+  if (performance.now() - cardSeenAt < 1200) { badgeQueueTimer = setTimeout(flushBadges, 400); return; }
+  const b = badgeQueue.shift();
   showReflexToast({ kind: 'saved', kicker: `ЗНАЧОК · ${RARITY_RU[b.rarity] ?? ''}`, thought: `${b.glyph} ${b.title}`, more: b.how }, 5200);
   audio.play('duel-buff');
+  if (badgeQueue.length) badgeQueueTimer = setTimeout(flushBadges, 5600);
+}
+function toastBadge(b) {
+  if (!b) return;
+  badgeQueue.push(b);
+  // the pay card / story card that the same deed opens appears a beat later: look after it does
+  if (!badgeQueueTimer) badgeQueueTimer = setTimeout(flushBadges, 700);
 }
 let evaluatingBadges = false;
 function applyBadgeProofs(profile, earned) {
@@ -1001,7 +1066,8 @@ function maybeEarnBadges(extra = {}) {
     syncCampusSkillJournal();
     campus?.refresh?.();
     ring?.refresh?.();
-    for (const b of earned) toastBadge(b);
+    // the demo jumps straight into a level: badges for the skipped days are granted quietly
+    if (!(demoMode && performance.now() < demoQuietUntil)) for (const b of earned) toastBadge(b);
     return earned;
   } finally { evaluatingBadges = false; }
 }
@@ -1095,6 +1161,28 @@ function hear(id) {
 }
 const reflexToast = document.querySelector('#reflexToast');
 let reflexToastTimer = 0;
+// 20.0: a badge earned in the garage laptop lay over the night's text. The toast takes the
+// corner that covers the fewest controls and text lines (its CSS spot first).
+const TOAST_SPOTS = [{}, { top: 'auto', bottom: '16px', left: '16px', right: 'auto', transform: 'none' }, { top: 'auto', bottom: '16px', left: 'auto', right: '16px', transform: 'none' }, { top: '16px', bottom: 'auto', left: '16px', right: 'auto', transform: 'none' }];
+function toastHits(el) {
+  const t = el.getBoundingClientRect(); let n = 0;
+  for (const e of document.querySelectorAll('button,a[href],input,textarea,select,p,h1,h2,h3,li,pre')) {
+    if (!e.offsetParent || el.contains(e) || e.contains(el)) continue;
+    const r = e.getBoundingClientRect();
+    if (r.width && r.height && r.left < t.right && r.right > t.left && r.top < t.bottom && r.bottom > t.top) n++;
+  }
+  return n;
+}
+function placeToast(el) {
+  let best = null;
+  for (const spot of TOAST_SPOTS) {
+    for (const k of ['top', 'bottom', 'left', 'right', 'transform']) el.style[k] = spot[k] ?? '';
+    const n = toastHits(el);
+    if (!best || n < best.n) best = { spot, n };
+    if (n === 0) return;
+  }
+  for (const k of ['top', 'bottom', 'left', 'right', 'transform']) el.style[k] = best.spot[k] ?? '';
+}
 function showReflexToast({ kind = 'reflex', kicker = 'РЕФЛЕКС', thought = '', more = '', code = '' } = {}, ms = 4600) {
   if (!reflexToast) return;
   reflexToast.dataset.kind = kind;
@@ -1104,6 +1192,7 @@ function showReflexToast({ kind = 'reflex', kicker = 'РЕФЛЕКС', thought =
   const c = reflexToast.querySelector('#reflexCode');
   c.textContent = code; c.hidden = !code;
   reflexToast.hidden = false;
+  placeToast(reflexToast);
   reflexToast.getAnimations?.().forEach((a) => { a.cancel(); a.play(); });
   clearTimeout(reflexToastTimer);
   reflexToastTimer = setTimeout(() => { reflexToast.hidden = true; }, prefersReducedMotion ? ms + 1500 : ms);
@@ -1197,28 +1286,18 @@ const weekPinEl = createWeekPin(game);
 // you. «РУКА 07 ПРОСНУЛАСЬ» puts you in the hall in front of Arm 07, which
 // takes the rest of the pile by itself. Then, at the end of the day, the
 // boss: «Всё делает автомат. Заплачу меньше.»
-function weekArmWakes({ delivered = 3, extra = 0, player = null } = {}) {
-  state = createCheckpointState('d1-button');
-  state = { ...state, warehouse: { ...state.warehouse, wage: Math.max(state.warehouse.wage, (delivered + extra) * CRATE_PAY) } };
-  void player;
-  // The morning beat of a reloaded day 1 is not needed: you were just there.
-  beatsSeen.add(`${state.checkpoint}:${state.scene}:${state.warehouse.day2 ?? ''}:${state.warehouse.ruleStage ?? ''}:${state.warehouse.week ?? ''}`);
+function weekArmWakes() {
+  // The opening has already shown the shock and its vision. The arm finishes
+  // the remaining crates while the hero is taken home; no second factory loop.
+  setFlag('shocked');
+  state = createCheckpointState('pay1');
   lastScene = state.scene;
-  factoryView.place(state);
+  beatsSeen.add(`${state.checkpoint}:${state.scene}:${state.warehouse.day2 ?? ''}:${state.warehouse.ruleStage ?? ''}:${state.warehouse.week ?? ''}`);
   recordSkill('print', 'tap', { stage: 1, key: 'print:button' });
-  state = applyGameAction(state, { type: 'press-start-button' });
-  faceTarget({ type: 'insert-python-chip', x: 1010, y: 636 });
-  automationAcceptedAt = performance.now();
-  started = true;
-  lastTime = performance.now();
-  startPanel.hidden = true;
-  persistence.save(state);
-  audio.setAmbient('warehouse');
-  audio.play('power');
-  maybeEarnBadges();
-  // People saw it.
-  AFTER_SHOCK_HALL.forEach(([who, text], i) => setTimeout(() => { if (!storyActive) factoryView.say(who, text); }, 1200 + i * 3600));
+  started = true; lastTime = performance.now(); startPanel.hidden = true;
+  persistence.save(state); maybeEarnBadges();
   telemetry.mark('week-arm-wakes');
+  tellStory('ДОМА · ПОСЛЕ УДАРА ТОКОМ', 'Ты очнулся в своей комнате.', `Кровать, компьютер и голодный кот. Пока ты приходил в себя, рука закончила смену. После вычета начальника тебе пришло ${state.warehouse.wage} ₽. Кот ждёт еду, а завтра снова на работу.`, 'ОСМОТРЕТЬСЯ ДОМА →', () => openWorld('home'));
 }
 // A day starts in the hall: the boss (days 2–5) and someone in the hall.
 function weekMorningBeat() {
@@ -1275,12 +1354,34 @@ function weekCard() {
 function weekCardNext() {
   if (storyActive) return;
   payCard.hide();
-  const day = weekDayOf(state.checkpoint);
   if (state.checkpoint === 'fired') { firedNext(); return; }
-  const ev = EVENING[day];
+  openWorld('home');
+}
+
+function performHomeAction(action) {
+  const access = homeAccess(state.checkpoint, loadFlags());
+  if (action === 'garage-locked') return { ok: false, text: 'Гараж пока заперт. После пятой смены Витя позвонит и даст ключ.' };
+  if (action === 'quests') { journalHome = true; fpWorld.close(); questLogView.open(); return {}; }
+  if (action === 'sleep') {
+    if (!access.nextWork) return { ok: false, text: 'Сначала закончи сегодняшнюю смену. Сон не пропускает задания.' };
+    fpWorld.close(); advanceHomeMorning(); return { ok: true };
+  }
+  const result = homeTransaction(homeLife, state.warehouse.wage, access.day, action);
+  if (result.ok) {
+    homeLife = result.life;
+    state = { ...state, warehouse: { ...state.warehouse, wage: result.wallet } };
+    try { localStorage.setItem(HOME_KEY, JSON.stringify(homeLife)); } catch { /* persistence warning uses the normal save channel */ }
+    persistence.save(state); updateHud();
+    telemetry.mark(`home-${action}`);
+  }
+  return result;
+}
+
+function advanceHomeMorning() {
+  const day = weekDayOf(state.checkpoint);
+  if (!homeAccess(state.checkpoint, loadFlags()).nextWork) return;
   const mo = MORNING[day + 1];
-  tellStory(ev.when, ev.title, ev.line, 'СПАТЬ →', () => {
-    tellStory(mo.when, mo.title, mo.line, 'НА СКЛАД →', () => {
+  tellStory(mo.when, mo.title, mo.line, 'НА РАБОТУ →', () => {
       state = applyGameAction(state, { type: 'week-next' });
       if (loadFlags().buttonPocket && state.warehouse.button === 'torn') state = { ...state, warehouse: { ...state.warehouse, button: 'pocket' } };
       lastAutoDelivered = 0;
@@ -1288,7 +1389,6 @@ function weekCardNext() {
       if (t) faceTarget(t);
       persistence.save(state);
       telemetry.mark(`week-day-${day + 1}`);
-    });
   });
 }
 // Fired. Витя calls; the quest «Сходи в гараж к Вите» is pinned; the evening
@@ -1342,7 +1442,9 @@ function watchWeekWorld(now) {
     handoffCheckAt = now + 350;
     if (fpWorld.state().level === 'garage') onFiredHandoff();
   }
-  const pin = worldOpen && state.checkpoint === 'fired'
+  // 20.0: not inside the garage itself (the demo's r1 link lands there without Витя's call,
+  // so vityaGarage was never set and the pin sent you to where you stood).
+  const pin = worldOpen && state.checkpoint === 'fired' && fpWorld.state().level !== 'garage'
     ? (loadFlags().vityaGarage ? '' : `${FIRED.questTitle} — дверь прямо перед тобой`)
     : '';
   weekPinEl.set(pin);
@@ -1388,7 +1490,8 @@ function enterRealm(id) {
   document.querySelector('#careerEnter')?.click();
 }
 const skillTreeView = createSkillTreeView(document.querySelector('#skillTree'), { getTree: () => buildSkillTree(progressInput()), onEnterRealm: enterRealm, sound: (n) => audio.play(n), onCard: () => openRing('card') });
-const questLogView = createQuestLogView(document.querySelector('#questLog'), { getLog: () => buildQuestLog(progressInput()), sound: (n) => audio.play(n) });
+let journalHome = false;
+const questLogView = createQuestLogView(document.querySelector('#questLog'), { getLog: () => buildQuestLog(progressInput()), sound: (n) => audio.play(n), onClose: () => { if (journalHome) { journalHome = false; openWorld('home'); } } });
 document.querySelector('#careerDoor').addEventListener('click', () => { releaseAllKeys('overlay'); if (document.pointerLockElement) document.exitPointerLock?.(); skillTreeView.open(); audio.play('ui-click'); });
 document.querySelector('#questDoor').addEventListener('click', () => { releaseAllKeys('overlay'); if (document.pointerLockElement) document.exitPointerLock?.(); questLogView.open(); audio.play('ui-click'); });
 window.addEventListener('keydown', (event) => {
@@ -1471,7 +1574,7 @@ document.querySelector('#startGame').addEventListener('click', () => {
   // 16.0 FIRST SHIFT starts from a warehouse state with checkpoint=start.
   // Do not key this off the legacy prologue scene or the startup checkpoint snapshot:
   // after a reset those values are stale and the opening would be skipped.
-  if (state.checkpoint === 'start') {
+  if (state.checkpoint === 'start' || (!legacy && ['warehouse', 'd1-button'].includes(state.checkpoint) && !loadFlags().shocked)) {
     startPanel.hidden = true;
     started = true;
     lastTime = performance.now();
@@ -2002,9 +2105,10 @@ function updateHud(now = performance.now()) {
   questDoor.hidden = !hudFree;
   const questLine = document.querySelector('#questLine');
   const pin = hudFree && firstPersonScene() ? questPin(buildQuestLog(progressInput())) : '';
+  const pinShown = questLine.hidden;
   questLine.hidden = !pin;
   const pinText = document.querySelector('#questLineText');
-  if (pinText.textContent !== pin) pinText.textContent = pin;
+  if (pinText.textContent !== pin || (pin && pinShown)) { pinText.textContent = pin; if (pin) dropBelowButtons(questLine); }
   if (careerVisible) {
     const gates = ['vehicle','automation','security','web','ai','systems','lowlevel'];
     const unlocked = gates.filter(id => foundationStatus(state.learning, CAREER_REALMS.find(realm => realm.id === id)).ok).length;
@@ -2141,7 +2245,25 @@ function updateHud(now = performance.now()) {
   hud.otherMindLine.textContent = state.otherMind.line || mindCopy[1];
 }
 
+// 20.0: the top-centre quest line ran under «ЗВУК: ВКЛ» at 1280 px. If a visible button or link
+// is under it, it moves below the lowest one; otherwise it stays where the CSS puts it.
+function dropBelowButtons(el) {
+  el.style.top = '';
+  for (let step = 0; step < 4; step++) {
+    const p = el.getBoundingClientRect(); if (!p.width) return;
+    let below = 0;
+    for (const b of document.querySelectorAll('button, a[href]')) {
+      if (!b.offsetParent || el.contains(b)) continue;
+      const r = b.getBoundingClientRect();
+      if (r.width && r.left < p.right && r.right > p.left && r.top < p.bottom && r.bottom > p.top) below = Math.max(below, r.bottom);
+    }
+    if (!below) return;
+    el.style.top = `${Math.round(below - (el.offsetParent?.getBoundingClientRect().top ?? 0) + 8)}px`;
+  }
+}
+addEventListener('resize', () => { const q = document.querySelector('#questLine'); if (q && !q.hidden) dropBelowButtons(q); });
 function frame(now) {
+  demoWatch(now);
   if (showcaseChip) {
     const phase = (now - showcaseStartedAt) % 9000;
     if (phase < 2300 && state.scene !== 'chip') {
@@ -2524,6 +2646,8 @@ if (isLocal) {
     hall: { debug: (patch) => { const pos = factoryView.debug(patch); state = { ...state, player: { ...state.player, ...pos } }; return pos; }, body: () => factoryView.body(), engine: () => factoryView.engine(), speech: () => factoryView.speech(), setYaw: (yaw) => { warehouseYaw = yaw; }, punch: () => factoryView.punch(state), hands: () => factoryView.hands() },
     ring: { open: (view = 'card', opts = {}) => openRing(view, opts), close: () => ring.close(), state: () => ring.state(), fast: (on = true) => ring.fast(on), start: (opts) => ring.start(opts), snapshot: () => profileSnapshot(campusProfile, { player: currentPlayer() }), store: () => profileStore.kind, account: () => profileStore.account?.status?.() ?? null, sync: () => syncAccountOnce() },
     world: { open: (level = 'garage', opts = {}) => fpWorld.open(level, opts), debug: (patch) => fpWorld.debug(patch), state: () => fpWorld.state(), surface: (r) => careerWorlds.surface(r), engine: () => engineStatus(engineNow()) },
+    ice64,
+    fpsre: { open: (opts) => fpsre.open(opts), close: () => fpsre.close(), surface: () => fpsre.surfacePress(), handle: (ev) => fpsre.handle(ev), active: () => fpsre.active, ready: () => fpsre.ready, run: () => fpsre.run, mastery: () => campusProfile.mastery?.archaeology ?? null, awards: () => Object.keys(campusProfile.awards ?? {}).filter((k) => k.startsWith('fpsre:')) },
     pythonio: { open: (opts) => pythonio.open(opts), close: () => pythonio.close(), active: () => pythonio.active, ready: () => pythonio.ready },
     blackice: { open: (opts) => blackice.open(opts), close: () => blackice.close(), enter: (n) => blackice.enter(n), lobby: () => blackice.lobby(), handle: (msg) => blackice.handle(msg), active: () => blackice.active, ready: () => blackice.ready, view: () => blackice.view, playing: () => blackice.playing, profile: () => ({ stats: campusProfile.stats, cleared: labyrinthCleared(campusProfile), xp: campusProfile.xp, wage: state.warehouse?.wage ?? 0 }) },
     hour: { openTerminal: () => openMachinePanel(), desk: () => hourDesk.step(), beat: () => hourBeat(), lesson: () => state.warehouse.lessonStage, state: () => ({ day2: state.warehouse.day2, button: state.warehouse.button, ruleStage: state.warehouse.ruleStage, scene: state.scene, storyActive }) },
@@ -2619,7 +2743,7 @@ window.addEventListener('keydown', unlockAudioForScene, { once: true });
 canvas.addEventListener('pointerdown', unlockAudioForScene, { once: true });
 canvas.addEventListener('click', (event) => {
   if (firstPersonActive()) {
-    canvas.requestPointerLock?.();
+    canvas.requestPointerLock?.()?.catch?.(() => {});
     return;
   }
   openMachineFromCanvas(event);
@@ -2629,12 +2753,43 @@ window.addEventListener('mousemove', (event) => {
   warehouseYaw = wrapAngle(warehouseYaw + event.movementX * .0026);
   factoryView.look(event.movementX * .0026, event.movementY * .0026);
 });
+createDragLook(canvas, { active: firstPersonActive, onLook: (dx, dy) => { warehouseYaw = wrapAngle(warehouseYaw + dx * .0026); factoryView.look(dx * .0026, dy * .0026); } });
 resizeCanvas();
 if (legacy && state.checkpoint === 'ai-lab') aiLab.open({ resume: true });
 else if (legacy && state.checkpoint === 'llm-lab') llmWorkshop.open({ resume: true });
 else if (legacy && ['campus', 'reward9', 'reward10'].includes(state.checkpoint)) campus.open();
 updateHud();
 requestAnimationFrame(frame);
+
+// 20.0 · the demo entry «Три профессии» (demo-hub.js); ?open=pythonio|fpsre open those worlds.
+const demoHub = demoMode ? createDemoHub(document.body, { onSound: (n) => audio.play(n), onNext: () => pythonio.nextOrder(), version: BUILD }) : null;
+if (demoHub) { if (demoRoute(location.search) === 'hub') demoHub.open(); else demoHub.showBack(); }
+// ФИНИШ-СРЕЗ-20 item 4: a won demo level shows «✓ ПРОЙДЕНО» once and sends demo-level-win.
+// A warehouse day counts only on its own link (?checkpoint=d2-copy…): r1 starts at «fired».
+function demoFacts() {
+  const at = (c) => WEEK_CHECKPOINTS.indexOf(c);
+  return {
+    after: (c) => requestedCheckpoint === c && (at(state.checkpoint) > at(c) || (state.checkpoint === 'fired' && c === 'd5-auto')),
+    pythonio: pythonioDone(campusProfile), vehicleDay: heldRealmDay(campusProfile, 'vehicle'),
+    flags: flagsFound(campusProfile), awards: Object.keys(campusProfile.awards ?? {}),
+    tastersDone: TASTER_IDS.filter((id) => tasterFinished(campusProfile, id)),
+  };
+}
+const DEMO_GOT = {
+  w1: 'День 2 закрыт: код с листка двигает ящики', w2: 'День 3 закрыт: строчку собрал сам', w3: 'Линия идёт сама — ты уволен как ненужный',
+  p1: '+40 ₽ · +40 XP · ветка ИНЖЕНЕР +1', p2: '+60 ₽ · +50 XP · ветка ИНЖЕНЕР +1', p3: '+60 ₽ · +60 XP · ветка ИНЖЕНЕР +1',
+  r1: 'Правило сторожа держит ночь · ветка ХАКЕР', r2: 'Флаг 1/5 «Цена из браузера» · значок', r3: 'Q-Bot обманут приманкой · +400 ₽ · навык АРХЕОЛОГИЯ',
+  t1: 'Помощник Веры сам разбирает почту · +500 ₽ за три этажа',
+};
+let demoWinCheckAt = 0;
+function demoWatch(now) {
+  if (!demoHub || now - demoWinCheckAt < 500) return;
+  demoWinCheckAt = now;
+  for (const id of demoWonNow(demoFacts())) demoHub.win(id, DEMO_GOT[id] ?? '');
+}
+if (demoMode) document.body.dataset.demoCheckpoint = state.checkpoint;   // a plain mark of where the demo landed (the debug hooks stay local-only)
+if (demoMode && query.get('open') === 'pythonio') pythonio.open({ fromDive: false, demoOrder: demoMode ? query.get('demo-order') : null });
+if (demoMode && query.get('open') === 'fpsre') fpsre.open({ fromDive: false });
 
 // 17.3: ?world=garage|home walks straight into the garage or the apartment.
 if (['garage', 'home'].includes(query.get('world'))) fpWorld.open(query.get('world'));
@@ -2655,9 +2810,10 @@ if (['garage', 'home'].includes(query.get('world'))) fpWorld.open(query.get('wor
 // Admin panel (admin.html) deep links, local only:
 // ?open=careers[&realm=<id>[&enter=1]] opens the professions screen on a
 // profession (or straight inside it); ?open=campus / ?open=guild open those.
-if (isLocal) {
+if (isLocal || demoMode) {
   const open = query.get('open');
-  if (open === 'careers') {
+  if (open === 'ice64') ice64.open(query.get('level') ?? undefined);
+  else if (open === 'careers') {
     careerWorlds.open();
     const pick = document.querySelector(`#careerRealmGrid [data-realm="${query.get('realm') ?? ''}"]`);
     if (pick && careerWorldsRoot.dataset.picked !== pick.dataset.realm) pick.click();

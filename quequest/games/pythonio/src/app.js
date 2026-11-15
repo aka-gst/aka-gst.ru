@@ -6,8 +6,13 @@
     let labSession = null;
     let S, loaded = false, storageOK = true, preview = false, previewStack = [], activeRow = 0, held = null, tab = 'factory', tool = 'select', selected = null, linkFrom = null, sound = false, audio = null, toastTimer, history = [], lastSave = 0, lastRender = 0, lastFrame = 0, accumulator = 0, modalPause = null, lastAuto = 0;
     const htmlCache = new Map();
-    const store = WorkshopStorage.create({getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},E);
+    let demoUI = null;
+    const demoOrder = PythonioDemoEntry.orderFromSearch(location.search, globalThis.PythonioHost?.embedded());
+    const storage = PythonioDemoEntry.isolatedStorage({getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},demoOrder,()=>S?.chapter??demoOrder);
+    const store = WorkshopStorage.create(storage,E);
     const restored = store.load(); S=restored.state;loaded=restored.loaded;storageOK=restored.usable;
+    if(demoOrder!==null&&!loaded)S=PythonioDemoEntry.initialState(E,D,demoOrder);
+    if(demoOrder>0){$('welcome').querySelector('h2').textContent='Заказ '+(demoOrder+1)+' · '+D.contracts[demoOrder].client;$('welcome').querySelector('.welcome-body>p').textContent='Начальные условия уровня: предыдущая линия уже собрана, есть стартовый запас монет. Это не пройденные заказы. Теперь реши задачу нового соседа.';$('start').textContent='Открыть заказ →';}
     if(restored.warning)setTimeout(()=>toast(restored.warning),150);
     try {const p=JSON.parse(localStorage.getItem('zhivoy-tsekh-preferences')||'{}');sound=!!p.sound;document.body.classList.toggle('calm',!!p.calm);document.body.classList.toggle('large-text',!!p.large);}catch(_){}
     const view = new WorkshopView($('world'), { click: onMap, connect: (from,to) => act(() => E.connect(S, from, to)), move: g => act(() => E.move(S, g.id, Math.round(g.x / 10) * 10, Math.round(g.y / 10) * 10)), swap: swapWords, drop: dropWord });
@@ -64,7 +69,7 @@
             history.shift();
     } if (r?.message)
         toast(r.message); beep(); save(); render(true); return r; }
-    function setTool(t) { tool = t; view.tool = t; linkFrom = null; view.linkFrom = null; held = null; view.held = null; render(true); if (t === 'link')
+    function setTool(t) { if(t.startsWith('build:')||t.startsWith('copy:')||t==='move')demoUI?.show('map');else if(t==='link'||t==='select')demoUI?.show('selected'); tool = t; view.tool = t; linkFrom = null; view.linkFrom = null; held = null; view.held = null; render(true); if (t === 'link')
         toast('Сначала нажми на машину-источник, потом на получателя.'); if (t === 'move')
         toast('Перетащи машину на свободное место. Её линии и файлы сохранятся.'); }
     function setTab(t) { tab = t; view.tab = t; view.fit(); document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === t)); render(true); }
@@ -209,7 +214,7 @@
         else
             toast('Сделай исходный замер → измени одну вещь → повтори на тех же файлах.');
         return;
-    } const g = guide(); if (g.kind === 'advance') {act(()=>E.advance(S),false);return;} if (g.kind === 'lab') {
+    } const g = guide(); demoUI?.show(g.kind==='rule'?'rule':g.kind==='inspect'?'selected':['manual','claim','advance'].includes(g.kind)?'task':'map'); if (g.kind === 'advance') {act(()=>E.advance(S),false);return;} if (g.kind === 'lab') {
         showLab();
     }
     else if (g.kind === 'claim') {
@@ -246,6 +251,8 @@
     else
         showHelp(); }
     function render(force = false) {
+        demoUI?.refresh(S.chapter);
+        if (!preview && S.mode === 'campaign') globalThis.PythonioHost?.orderActive(S.chapter);
         const c = E.contract(S), m = E.metrics(S), g = guide();
         document.body.classList.toggle('first-contract', !preview && S.mode === 'campaign' && S.chapter === 0 && !S.claimed.length);
         $('chapterLabel').textContent = S.mode === 'puzzle' ? 'ЗАДАЧА В МАСТЕРСКОЙ' : preview ? 'ДЕМОНСТРАЦИЯ · НЕ СОХРАНЯЕТСЯ' : 'ПИСЬМО ОТ СОСЕДА · ' + (S.chapter + 1) + ' / '+D.contracts.length;
@@ -569,7 +576,8 @@
         const serious = reading.filter(n => !['in', 'out'].includes(n.type) && ['blocked', 'busy', 'downstream', 'disconnected'].includes(n.kind));
         const order = { blocked: 0, busy: 1, downstream: 2, disconnected: 3 };
         serious.sort((a, b) => order[a.kind] - order[b.kind]);
-        renderHTML('pulseList', view.heat ? `<div class="section-title">Где теряется время</div><p class="small">Наблюдение за последними 12 игровыми секундами. Это подсказка, а не доказательство единственного узкого места.</p>${serious.slice(0, 4).map(n => `<button class="pulse-card ${n.kind}" data-inspect="${n.id}"><strong>${esc(n.name)} <span>${ru(n.utilization)}% работы</span></strong><small>${esc(n.reason)}</small></button>`).join('') || '<p class="small">Явных задержек сейчас не видно. Дай потоку поработать.</p>'}` : '');
+        renderHTML('pulseList', demoUI?.active ? `<label class="qq-node-label">${tool==='link'?(linkFrom?'Линия: получатель':'Линия: источник'):'Выбрать машину'}<select id="qqNodeChoice" aria-label="Выбрать машину"><option value="">Выбери узел</option>${S.nodes.map((n,i)=>`<option value="${esc(n.id)}">${esc(D.machines[n.type].name)}${S.nodes.filter(x=>x.type===n.type).length>1?' · '+(S.nodes.slice(0,i+1).filter(x=>x.type===n.type).length):''}</option>`).join('')}</select></label>` : view.heat ? `<div class="section-title">Где теряется время</div><p class="small">Наблюдение за последними 12 игровыми секундами. Это подсказка, а не доказательство единственного узкого места.</p>${serious.slice(0, 4).map(n => `<button class="pulse-card ${n.kind}" data-inspect="${n.id}"><strong>${esc(n.name)} <span>${ru(n.utilization)}% работы</span></strong><small>${esc(n.reason)}</small></button>`).join('') || '<p class="small">Явных задержек сейчас не видно. Дай потоку поработать.</p>'}` : '');
+        if(demoUI?.active){const choose=$('qqNodeChoice');choose.value=tool==='link'?'':selected||'';choose.onchange=event=>{const n=E.get(S,choose.value);if(n)onMap({kind:'node',id:n.id},{x:n.x,y:n.y},event);};}
         $('pulseList').querySelectorAll('[data-inspect]').forEach(b => b.onclick = () => { selected = b.dataset.inspect; view.selected = selected; render(true); $('inspector').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
         const n = reading.find(n => n.id === selected);
         renderHTML('machinePulse', n ? `<div class="mini-stat"><span>Работа за последние 12 с</span><strong>${ru(n.utilization)}%</strong></div><div class="mini-stat"><span>Ожидание с файлом</span><strong>${ru(n.blocked)}%</strong></div><p class="small">${esc(n.reason)} ${esc(n.tip)}</p>` : '');
@@ -758,7 +766,8 @@
             save(); lastFrame = 0; accumulator = 0; });
         $('albumButton').onclick=showAlbum;
         $('discoveriesButton').onclick=showDiscoveries;
-        if (globalThis.PythonioHost) { PythonioHost.onHello(h => { const note = document.querySelector('#welcome .welcome-body p.small'); if (note && h.known.length) note.textContent = (h.player ? h.player + ', ' : '') + 'ты уже знаешь ' + h.known.join(', ') + '. Лекций про это не будет: здесь эти приёмы сразу работают с файлами, таблицами и API.'; render(true); }); PythonioHost.start(); }
+        if(demoOrder!==null&&S.chapter<3)demoUI=PythonioDemoUI.create(document);
+    if (globalThis.PythonioHost) { PythonioHost.onHello(h => { const note = document.querySelector('#welcome .welcome-body p.small'); if (note && h.known.length) note.textContent = (h.player ? h.player + ', ' : '') + 'ты уже знаешь ' + h.known.join(', ') + '. Лекций про это не будет: здесь эти приёмы сразу работают с файлами, таблицами и API.'; render(true); }); PythonioHost.start(); }
         if (!loaded || !S.started)
             $('welcome').showModal();
         render(true);

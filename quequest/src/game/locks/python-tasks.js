@@ -4,7 +4,7 @@
 // Ответ проверяется не по тексту, а прогоном по набору случаев: код игрока
 // должен вести себя как ядро (core.js) и шкаф (cabinet.js).
 import { runRule, formatRuleError } from '../garage-rule.js';
-import { createLock, setPressure, probeSector } from './core.js';
+import { createLock, setPressure, probeSector } from '../../../vendor/zamki@v1.2.0/src/polosy.js';
 import { attemptOpen } from './cabinet.js';
 
 const freeze = Object.freeze;

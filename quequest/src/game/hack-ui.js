@@ -9,22 +9,28 @@ import { FLAG_IDS, FLAGS, submitOrder, clickAdmin, submitInput, guessToken, forg
 import { TAMPER_SALT } from './tamper.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const CSS_HREF = new URL('./hack.css?v=193', import.meta.url).href;
+const CSS_HREF = new URL('./hack.css?v=qq23', import.meta.url).href;
+// The address bar of the TISKI test server, one page per hole.
+const PATHS = { price: '/shop/priemnik', admin: '/panel', input: '/profile/name', token: '/orders/KOD-00041', sign: '/save' };
 
 export function createHackPolygon(root, { getProfile = () => ({}), onProfile = () => {}, onSound = () => {}, onBadge = () => {}, getNick = () => 'Дайвер', onClose = () => {} } = {}) {
   if (!root) return { open() {}, close() {}, isOpen: () => false, state: () => ({}) };
   const doc = root.ownerDocument;
   if (doc && !doc.querySelector('link[data-hack-css]')) { const l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = CSS_HREF; l.dataset.hackCss = ''; doc.head.append(l); }
   let open = false, view = 'polygon', picked = 'price', msg = '', report = '';
+  let shownMessage = '';
+  root.dataset.hkPanel = 'site';
   // Per-flag editable state the «инструменты» panel changes.
   let st = fresh();
   function fresh() { return { price: REAL_PRICE, adminDisabled: true, input: '', token: '', salt: '' }; }
   const sound = (n) => { try { onSound(n); } catch { /* optional */ } };
 
   function shell(title, kicker, body, { back = view !== 'polygon' } = {}) {
+    const win = root.querySelector(':scope > .demo-win');
     root.innerHTML = `<header class="hk__top"><div><small>${esc(kicker)}</small><h2>${esc(title)}</h2></div>
       <div class="hk__actions">${back ? '<button type="button" class="hk__back" data-go="polygon">← ПОЛИГОН</button>' : ''}<button type="button" class="hk__close" aria-label="Закрыть">×</button></div></header>
       <div class="hk__body" data-view="${view}">${body}</div>`;
+    if (win) root.insertBefore(win, root.querySelector('.hk__body'));
     root.querySelector('.hk__close').addEventListener('click', close);
     for (const b of root.querySelectorAll('[data-go]')) b.addEventListener('click', () => { sound('ui-click'); go(b.dataset.go); });
   }
@@ -80,10 +86,17 @@ export function createHackPolygon(root, { getProfile = () => ({}), onProfile = (
       tools = `<p>Исходник открыт — соль лежит прямо в коде (как кнопка admin из флага 2). Вот она: <code>${esc(TAMPER_SALT)}</code>. Или впиши готовую сумму: <code>${esc(correctSignatureFor(SIGN_CHALLENGE))}</code>.</p>
         <button type="button" class="hk-tool" data-act="sign-reveal">↯ взять соль из исходника</button>`;
     }
+    // 20.x (Сергей 22.10 «смотрится пиздец»): their system is a browser window with a plain corporate site inside,
+    // our tools are a terminal. Same controls (data-act, ids) — only the look changed.
+    const ok = /^ФЛАГ/.test(msg);
     return `<article class="hk-flag" data-done="${done}">
-      <div class="hk-flag__sys">${system}<p class="hk-msg" id="hkMsg" role="status">${esc(msg)}</p></div>
-      <aside class="hk-flag__tools"><b>ИНСТРУМЕНТЫ ИССЛЕДОВАТЕЛЯ</b>${tools}
-        ${done ? `<div class="hk-lesson"><b>✓ ФЛАГ ${F.n}</b><p>${esc(F.lesson)}</p><p class="hk-def">Как защищаются по-настоящему: ${esc(F.defender)}</p></div>` : ''}
+      <div class="hk-flag__sys hk-win"><div class="hk-win__bar"><i></i><i></i><i></i><span class="hk-win__url">test.tiski.local${esc(PATHS[id] ?? '/')}</span><em>ТЕСТОВЫЙ СЕРВЕР</em></div>
+        <div class="hk-site"><div class="hk-site__nav"><b>ТИСКИ</b><span>Магазин</span><span>Заказы</span><span>Профиль</span><span>Поддержка</span></div>
+          <div class="hk-site__page">${system}</div>
+          <p class="hk-msg" id="hkMsg" role="status" data-ok="${ok}">${esc(msg)}</p>
+          <div class="hk-site__foot">© ТИСКИ · «Мы делаем за вас» · тестовая сборка, не для клиентов</div></div></div>
+      <aside class="hk-flag__tools hk-term"><b>$ инструменты исследователя</b>${tools}
+        ${done ? `<div class="hk-lesson"><b>✓ ФЛАГ ${F.n} ВЗЯТ</b><p>${esc(F.lesson)}</p><p class="hk-def">Как защищаются по-настоящему: ${esc(F.defender)}</p></div>` : ''}
       </aside></article>`;
   }
 
@@ -91,14 +104,18 @@ export function createHackPolygon(root, { getProfile = () => ({}), onProfile = (
     const p = getProfile();
     const found = flagsFound(p);
     const list = FLAG_IDS.map((id) => { const F = FLAGS[id]; const done = found.includes(id); return `<li><button type="button" data-flag="${id}" aria-pressed="${picked === id}" data-done="${done}"><b>${done ? '✓' : F.n}</b><span>${esc(F.title)}</span></button></li>`; }).join('');
+    if (msg && msg !== shownMessage) root.dataset.hkPanel = 'answer';
+    shownMessage = msg;
     shell('Взломай меня', 'ТИСКИ · ТЕСТОВЫЙ СЕРВЕР (учебный полигон)', `
+      <nav class="hk-screens" aria-label="Панели полигона">${[['site','САЙТ'],['tools','ПРИЁМ'],['flags','ЗАДАЧИ'],['intro','ВВОДНАЯ'],['answer','ОТВЕТ']].map(([id,label])=>`<button type="button" data-hk-pane="${id}" aria-pressed="${root.dataset.hkPanel===id}">${label}</button>`).join('')}</nav>
       <p class="hk-intro"><b>Тимур:</b> «ТИСКИ забыли выключить тестовый сервер. Он нарочно дырявый — на нём можно учиться законно. Найди пять дыр и пойми, как от них защищаются. Это наш полигон: ломать можно только его».</p>
       <div class="hk-grid">
-        <ol class="hk-flags">${list}</ol>
+        <div class="hk-side"><div class="hk-prog"><b>${found.length}<small>/5</small></b><span>дыр найдено</span><i style="--k:${found.length / 5}"></i></div><ol class="hk-flags">${list}</ol></div>
         <section class="hk-stage">${flagBody(picked)}</section>
       </div>
-      <nav class="hk-nav"><span>Найдено ${found.length} из 5</span><button type="button" class="hk-link" data-go="report">СООБЩИТЬ О ДЫРЕ</button><button type="button" class="hk-link" data-go="hall">ЗАЛ СЛАВЫ</button>${polygonDone(p) ? '<button type="button" class="hk-go" data-go="ethics">ИТОГ →</button>' : ''}</nav>`, { back: false });
-    for (const b of root.querySelectorAll('[data-flag]')) b.addEventListener('click', () => { picked = b.dataset.flag; msg = ''; sound('ui-click'); renderPolygon(); });
+      <nav class="hk-nav"><button type="button" class="hk-link" data-go="report">СООБЩИТЬ О ДЫРЕ</button><button type="button" class="hk-link" data-go="hall">ЗАЛ СЛАВЫ</button>${polygonDone(p) ? '<button type="button" class="hk-go" data-go="ethics">ИТОГ →</button>' : ''}</nav>`, { back: false });
+    for (const b of root.querySelectorAll('[data-hk-pane]')) b.addEventListener('click', () => { root.dataset.hkPanel = b.dataset.hkPane; for (const tab of root.querySelectorAll('[data-hk-pane]')) tab.setAttribute('aria-pressed', String(tab === b)); });
+    for (const b of root.querySelectorAll('[data-flag]')) b.addEventListener('click', () => { picked = b.dataset.flag; msg = ''; root.dataset.hkPanel = 'site'; sound('ui-click'); renderPolygon(); });
     wireFlag();
     if (polygonDone(p) && !p.hack?.polygonCardShown) { onProfile({ ...p, hack: { ...(p.hack ?? {}), polygonCardShown: true } }); }
   }

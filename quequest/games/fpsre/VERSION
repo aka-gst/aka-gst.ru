@@ -1,0 +1,15 @@
+FPS-RE V14.02 · System Archaeology 02 · Visual Polish
+author: Sergey Gostov (aka-gst)
+source: FPS_RE_V14_SYSTEM_ARCHAEOLOGY_02_VISUAL_POLISH_ИГРАТЬ.zip (12.10.2026), folder FPS_RE_GAME/Game
+sha256 of the zip: 7756ad79206ce0356aec66521f97d5fbbfef73b2e03ca4cc3dc570b1f3f1c310
+The bridge (src/game/fpsre-bridge.js) listens to the game's own EventBus from the parent page; the game logic is untouched.
+QueQuest 20.0 changes (the only ones; also: gameplay/player.js start yaw 0 (faced the wall), combat/weapons.js one objective in Russian,
+  input/input.js + render/renderer.js + style.css: RMB = aim down sights (iron sights on the crosshair, world FOV 72→60, crosshair hidden); Сергей 12.10 «почини вид от первого лица с оружием в руке»):
+  render/weapon-model-view.js — BASE_POSE/RELOAD (two hands, centred, aimed at the crosshair — CS:GO / RE refs), loadRealArm() + drawArms() draw
+    Assets/Viewmodels/fps_arm_v20.json; the old sleeve+ellipsoid stays as the fallback if the file fails; no arm in INSPECT.
+  Assets/Viewmodels/fps_arm_v20.json — since 19.10: the gloved arm from «fps pistol Animated» by DJMaesen (Sketchfab, CC-BY 4.0),
+    one-handed hip pose from the bottom-right; before that (13.10): first-person pistol arms by DJMaesen / ImageParSeconde (OpenGameArt,
+    CC-BY 4.0 — attribution in Assets/THIRD_PARTY_ASSETS.md), moved onto this pistol by QueQuest
+    tools/fpsre/blender-fp-pistol-arms.py + tools/fpsre/settle-arm.mjs (no vertex inside the gun or the other hand;
+    tools/fpsre-arm.test.mjs). Hip pose right of centre (CS:GO mirrored), RMB pose centred (RE), z −0.95; skin shader on.
+assets: Game/Assets/THIRD_PARTY_ASSETS.md (Quaternius CC0 + project-generated audio)

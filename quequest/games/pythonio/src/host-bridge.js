@@ -1,6 +1,6 @@
 /* Optional host bridge (protocol 1). Pythonio works exactly as before when it
    is opened on its own. When a same-origin host page (QueQuest) embeds it in
-   an iframe, the two exchange two small messages via postMessage:
+   an iframe, the two exchange small validated messages via postMessage:
 
    host → Pythonio  {source:'quequest', type:'hello', protocol:1, player, known:[...], story?:[...]}
                     story (QueQuest 19.0) = [{index, client, place, letter, thanks}]:
@@ -46,6 +46,8 @@
         embedded(){try{return typeof window!=='undefined'&&window.parent&&window.parent!==window;}catch(_){return false;}},
         post(msg){if(!api.embedded())return false;try{window.parent.postMessage(msg,window.location.origin);return true;}catch(_){return false;}},
         orderDone(chapter,contract){return api.post(orderMessage(chapter,contract));},
+        activeIndex:null,
+        orderActive(chapter){if(!api.host||!Number.isInteger(chapter)||chapter<0||chapter===api.activeIndex)return false;const sent=api.post({source:'pythonio',type:'order-active',protocol:PROTOCOL,id:orderId(chapter),index:chapter});if(sent)api.activeIndex=chapter;return sent;},
         onHello(fn){api.listeners.push(fn);if(api.host)fn(api.host);},
         start(){
             if(typeof window==='undefined'||!api.embedded())return false;

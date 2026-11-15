@@ -62,6 +62,10 @@ export const HOME_ROWS = freeze([
   '###############',
 ]);
 export const HOME_BASE = 0.3;
+export const STARTER_HOME_ROWS = freeze([
+  '##WW#####VV####', '#bb..dd.......#', '#bb...........#', '#.............#',
+  '#.............#', '#.........ff..#', '#.............#', '###############',
+]);
 export const HOME_CEIL = 3.0;
 export const DOOR_OPEN_H = 2.4;
 
@@ -118,10 +122,10 @@ function homeCell(ch, x, z) {
   }
 }
 
-export function buildLevelMap(id) {
+export function buildLevelMap(id, { starterHome = false } = {}) {
   const level = LEVELS[id];
   if (!level) throw new Error(`unknown level ${id}`);
-  const rows = level.rows;
+  const rows = id === 'home' && starterHome ? STARTER_HOME_ROWS : level.rows;
   const h = rows.length, w = rows[0].length;
   const cells = [];
   for (let z = 0; z < h; z++) for (let x = 0; x < w; x++) {
@@ -188,6 +192,7 @@ export const THINGS = freeze({
   ]),
   home: freeze([
     T('pc', 'pc', 5.6, 1.35, 1.35, 'КОМПЬЮТЕР · НЫРНУТЬ', { program: 'menu', reach: 1.9 }),
+    T('bed', 'bed', 2.4, 2.5, 1.05, 'КРОВАТЬ · СПАТЬ ДО УТРА', { reach: 2.2 }),
     T('sw-bed', 'switch', 6.93, 6.2, 1.5, 'СВЕТ · КОМНАТА', { group: 'bedroom' }),
     T('sw-living', 'switch', 13.93, 6.2, 1.5, 'СВЕТ · ГОСТИНАЯ', { group: 'living' }),
     T('sw-kitchen', 'switch', 8.5, 8.07, 1.5, 'СВЕТ · КУХНЯ', { group: 'kitchen' }),

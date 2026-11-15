@@ -59,7 +59,7 @@ export function createSkillTreeView(root, { getTree, onEnterRealm = () => {}, on
   return { open, close, isOpen: () => !root.hidden, render };
 }
 
-const TABS = [['main', 'Главный сюжет'], ['side', 'Дополнительные'], ['money', 'На деньги'], ['freelance', 'Фриланс']];
+const TABS = [['main', 'Сюжет'], ['side', 'Побочные'], ['money', 'На деньги'], ['freelance', 'Фриланс'], ['plan', 'Все линии']];
 
 export function createQuestLogView(root, { getLog, onClose = () => {}, sound = () => {} } = {}) {
   if (!root) return { open() {}, close() {}, isOpen: () => false };
@@ -77,7 +77,8 @@ export function createQuestLogView(root, { getLog, onClose = () => {}, sound = (
         <li class="qlog__q" data-status="${q.status}"${log.current?.id === q.id ? ' data-current="true"' : ''}>
           <div class="qlog__title"><b>${esc(q.title)}</b><span class="qlog__chip">${STATE_LABEL[q.status]}</span></div>
           <p class="qlog__giver">${esc(q.giver)}</p>
-          <p class="qlog__goal">${esc(q.status === 'locked' && q.gate ? q.gate : q.goal)}</p>
+          <p class="qlog__goal">${esc(q.goal)}</p>
+          ${q.status === 'locked' && q.gate ? `<p class="qlog__giver">Как открыть: ${esc(q.gate)}</p>` : ''}
           <p class="qlog__reward">Награда: ${esc(q.reward)}</p>
         </li>`).join('') || '<li class="qlog__empty">Пока пусто.</li>'}</ol>`;
     root.querySelector('.qlog__close').addEventListener('click', close);

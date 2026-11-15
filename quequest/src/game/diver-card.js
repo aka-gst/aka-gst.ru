@@ -12,21 +12,21 @@
 
 import { WAYS, SKILLS } from './mastery.js';
 import { getCampusRank } from './campus-profile.js?v=campus-profile-7';
-import { plainRank } from './career-worlds.js?v=career-11';
+import { plainRank } from './career-worlds.js?v=career-21';
 
 const freeze = (v) => Object.freeze(v);
 
 // buff: what a right answer on this area gives in a duel (duel.js BUFFS).
 export const AREAS = freeze([
   freeze({ id: 'say', name: 'Сказать машине', short: 'СКАЗ', glyph: '›_', skills: freeze(['print']), buff: 'attack' }),
-  freeze({ id: 'if', name: 'Условия', short: 'УСЛ', glyph: '⑂', skills: freeze(['if', 'route']), buff: 'attack' }),
+  freeze({ id: 'if', name: 'Условия', short: 'УСЛ', glyph: '⑂', skills: freeze(['if', 'route', 'behave']), buff: 'attack' }),
   freeze({ id: 'loop', name: 'Циклы', short: 'ЦИКЛ', glyph: '↻', skills: freeze(['for', 'while']), buff: 'double' }),
-  freeze({ id: 'auto', name: 'Автоматизация', short: 'АВТО', glyph: '⚙', skills: freeze(['def', 'dict', 'class']), buff: 'auto' }),
-  freeze({ id: 'guard', name: 'Защита', short: 'ЗАЩ', glyph: '⬡', skills: freeze(['guard', 'lock']), buff: 'shield' }),
+  freeze({ id: 'auto', name: 'Автоматизация', short: 'АВТО', glyph: '⚙', skills: freeze(['def', 'dict', 'class', 'agent', 'table']), buff: 'auto' }),
+  freeze({ id: 'guard', name: 'Защита', short: 'ЗАЩ', glyph: '⬡', skills: freeze(['guard', 'lock', 'archaeology']), buff: 'shield' }),
   freeze({ id: 'web', name: 'Сайты', short: 'САЙТ', glyph: '▦', skills: freeze(['site']), buff: 'heal' }),
-  freeze({ id: 'ai', name: 'ИИ', short: 'ИИ', glyph: '◉', skills: freeze(['train', 'light']), buff: 'aura' }),
+  freeze({ id: 'ai', name: 'ИИ', short: 'ИИ', glyph: '◉', skills: freeze(['train', 'light', 'shader', 'beat']), buff: 'aura' }),
   freeze({ id: 'city', name: 'Город и надёжность', short: 'ГОРОД', glyph: '▲', skills: freeze(['cascade', 'try']), buff: 'heal' }),
-  freeze({ id: 'hw', name: 'Железо', short: 'ЖЕЛ', glyph: '⏚', skills: freeze(['bits']), buff: 'attack' }),
+  freeze({ id: 'hw', name: 'Железо', short: 'ЖЕЛ', glyph: '⏚', skills: freeze(['bits', 'sensor']), buff: 'attack' }),
 ]);
 export const AREA_IDS = freeze(AREAS.map((a) => a.id));
 export const areaById = (id) => AREAS.find((a) => a.id === id) ?? null;

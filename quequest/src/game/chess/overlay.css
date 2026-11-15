@@ -1,0 +1,78 @@
+/* ЛЁД-64 · the night assault. One screen, no scroll; the board takes what height allows. Text ≥14px, buttons ≥44. */
+.ice{position:fixed;inset:0;z-index:217;display:flex;flex-direction:column;gap:10px;padding:12px clamp(12px,2.4vw,32px) calc(12px + env(safe-area-inset-bottom,0px));box-sizing:border-box;overflow:hidden;
+  background:radial-gradient(circle at 30% 0%,#0d2a3c 0,transparent 55%),linear-gradient(180deg,#061019,#03070b);color:#e8f4ff;font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.ice[hidden]{display:none!important}
+.ice *{box-sizing:border-box}
+.ice__top{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+.ice__top>div:first-child{flex:1 1 auto;min-width:0}
+.ice__close{margin-left:auto}
+.ice__top small{display:block;color:#5fd2ff;font:800 14px/1.2 ui-monospace,monospace;letter-spacing:.12em}
+.ice__top h2{margin:2px 0 0;font:900 clamp(22px,2.6vw,34px)/1.1 ui-monospace,monospace;color:#fff}
+.ice__stats{display:flex;gap:10px;font:800 15px ui-monospace,monospace;white-space:nowrap}
+.ice__stats span{padding:6px 10px;border:1px solid #5fd2ff44;border-radius:8px;background:#0a1b27}
+.ice__stats span:first-child{color:#69f0c8}
+.ice__close{min-width:44px;min-height:44px;padding:0 12px;border:1px solid #ffffff2a;border-radius:8px;background:#0f1a22;color:#e8f4ff;font:800 20px system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.ice__body{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:auto minmax(260px,420px);gap:clamp(12px,2vw,28px);justify-content:center;align-items:start}
+.ice__boardWrap{position:relative;height:100%;max-height:100%;aspect-ratio:1/1;max-width:min(78vw,100%)}
+.ice__boardWrap canvas{display:block;width:100%;height:100%;border-radius:10px;box-shadow:0 0 0 1px #5fd2ff33,0 20px 60px #000a;cursor:pointer;touch-action:manipulation}
+.ice__alarm{position:absolute;left:50%;top:10px;transform:translateX(-50%);margin:0;padding:6px 14px;border-radius:8px;background:#5a0f0c;border:2px solid #ff5a52;color:#fff;font:900 15px ui-monospace,monospace;letter-spacing:.1em;animation:ice-alarm .7s steps(2) infinite;pointer-events:none}
+@keyframes ice-alarm{50%{background:#8e2420}}
+.ice__side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ice__levels{list-style:none;margin:0;padding:0;display:flex;gap:6px;flex-wrap:wrap}
+.ice__levels button{min-width:44px;min-height:44px;padding:0 8px;border:1px solid #5fd2ff44;border-radius:8px;background:#0a1b27;color:#86a3b8;font:800 15px ui-monospace,monospace;cursor:pointer}
+.ice__levels button[data-done="true"]{color:#ffc857;border-color:#ffc85766}
+.ice__levels button[aria-current="true"]{color:#fff;border-color:#5fd2ff;background:#103247}
+.ice__legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 12px}
+.ice__legend li{display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border:1px solid #ffffff14;border-radius:8px;background:#0a1620}
+.ice__legend li[data-side="red"]{background:#1a0c0c;border-color:#ff5a5233}
+.ice__legend li[data-selected="true"]{border-color:#5fd2ff}
+.ice__legend span{font:800 14px/1.1 ui-monospace,monospace;letter-spacing:.04em;color:#e8f4ff}
+.ice__legend li[data-side="red"] span{color:#ffd9d6}
+.ice__goal{margin:0;font:800 18px/1.3 system-ui,sans-serif;color:#fff}
+.ice__vitya{margin:0;padding:10px 12px;border-left:3px solid #ffc857;background:#151208;border-radius:0 8px 8px 0;color:#f3e7c6}
+.ice__vitya b{display:block;color:#ffc857;font:800 14px ui-monospace,monospace;letter-spacing:.08em}
+.ice__code{display:flex;flex-direction:column;gap:6px}
+.ice__code[hidden]{display:none}
+.ice__code label{font:800 14px ui-monospace,monospace;letter-spacing:.08em;color:#ffc857}
+.ice__code textarea{width:100%;min-height:6.4em;resize:vertical;white-space:pre;overflow-x:auto;padding:8px 10px;border:1px solid #ffc85766;border-radius:8px;background:#05090d;color:#e8f4ff;font:15px/1.4 ui-monospace,monospace}
+.ice__codeRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ice__codeRow button{min-height:44px;padding:0 14px;border:0;border-radius:8px;background:#ffc857;color:#1a1204;font:800 15px system-ui,sans-serif;cursor:pointer}
+.ice__codeRow span{font:700 14px/1.3 ui-monospace,monospace;color:#c7d6e0}
+.ice__codeRow span[data-state="ok"]{color:#69f0c8}
+.ice__codeRow span[data-state="bad"]{color:#ffb4ad}
+.ice__verdict{margin:0;min-height:0;font:800 16px/1.3 system-ui,sans-serif}
+.ice__verdict:empty{display:none}
+.ice__verdict[data-state="won"]{padding:10px 12px;border:2px solid #3ee08f;border-radius:8px;background:#06130c;color:#cfe8d6}
+.ice__verdict[data-state="lost"]{padding:10px 12px;border:2px solid #ff5a52;border-radius:8px;background:#1d0907;color:#ffd9d6}
+.ice__buttons{display:flex;gap:8px;flex-wrap:wrap}
+.ice__buttons button{min-height:44px;padding:0 14px;border:1px solid #5fd2ff66;border-radius:8px;background:#0a1b27;color:#5fd2ff;font:800 15px system-ui,sans-serif;cursor:pointer}
+.ice__buttons button:disabled{opacity:.4;cursor:default}
+#iceNext{background:#ffc857;color:#1a1204;border-color:#ffc857}
+.ice button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+@media (max-width:760px){
+  .ice{padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));gap:6px}
+  .ice__top{flex-wrap:wrap;gap:6px 10px}
+  .ice__top small{display:none}
+  .ice__top h2{font-size:20px}
+  .ice__close{order:2}
+  .ice__top>.ice__stats{order:3;flex:1 1 100%;gap:6px;font-size:14px}
+  .ice__stats span{padding:4px 6px}
+  .ice__body{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:8px;align-items:start}
+  .ice__boardWrap{width:min(100%,58vh);height:auto;justify-self:center;max-width:100%}
+  .ice__side{gap:8px}
+  .ice__goal{font-size:16px}
+  .ice__vitya{padding:6px 10px}
+  .ice__legend{gap:4px 6px}
+  .ice__legend li{padding:2px 6px 2px 2px}
+  .ice__code textarea{min-height:6.2em;font-size:14px}
+  .ice__alarm{top:4px;padding:3px 8px;font-size:14px;white-space:nowrap;letter-spacing:.04em}
+  .ice__levels{flex-wrap:nowrap;gap:4px}
+  .ice__levels li{flex:1 1 0;min-width:0}
+  .ice__levels button{width:100%;min-width:0;padding:0 2px;font-size:14px}
+  /* a puzzle on a phone: a full chess position needs the room; the names are known by now */
+  .ice[data-puzzle="true"] .ice__legend,.ice[data-puzzle="true"] .ice__vitya{display:none}
+  /* a code level on a phone: the code needs the room — a smaller board, no level row and no legend */
+  .ice[data-code="true"] .ice__boardWrap{width:min(100%,36vh)}
+  .ice[data-code="true"] .ice__levels,.ice[data-code="true"] .ice__legend,.ice[data-code="true"] .ice__vitya{display:none}
+}
+@media (prefers-reduced-motion:reduce){.ice__alarm{animation:none}}

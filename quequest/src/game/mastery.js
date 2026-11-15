@@ -39,6 +39,15 @@ export const SKILLS = Object.freeze({
   train: { name: 'Учить робота на примерах (Тренер ИИ)', guild: 'ai' },
   cascade: { name: 'Остановить цепочку поломок (Спасатель города)', guild: 'systems' },
   bits: { name: 'Сигналы и переключатели (Знаток железа)', guild: 'lowlevel' },
+  // 20.0 · FPS-RE portal (fpsre-portal.js): understand a foreign system.
+  archaeology: { name: 'Понять чужую систему (FPS-RE)', guild: 'security' },
+  // 20.x · новые пробы (src/game/tasters/, ФИНИШ-ПРОБЫ-20.md).
+  agent: { name: 'ИИ-помощник для дела (ИИ-агенты)', guild: 'automation' },
+  shader: { name: 'Свет и картинка из правил (визуал)', guild: 'ai' },
+  beat: { name: 'Ритм и звук правилами (музыка)', guild: 'ai' },
+  behave: { name: 'Поведение героев и врагов (логика игр)', guild: 'systems' },
+  sensor: { name: 'Датчики и плата (самоделкин)', guild: 'lowlevel' },
+  table: { name: 'Порядок в данных (таблицы)', guild: 'automation' },
 });
 
 // One level scale for guild points (was GUILD_LEVELS in quest-guild.js and a

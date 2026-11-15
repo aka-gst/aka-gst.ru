@@ -107,9 +107,11 @@ export function handsPose(hands, now, { W = 427, viewH = 208, walkPhase = 0, car
   const baseY = viewH - FIST.h + bobY + rise + fall - pryLift + shockY;
   const gap = 30 - squeeze;
   const tintNow = shockTint ?? mood.tint;
+  // Сергей 22.10: the knuckles face the middle, like Doom. The PUNGA0 sprite's knuckles point to its right,
+  // so the RIGHT fist is the mirrored one (it was the other way round: both fists looked outwards).
   const idle = {
-    right: { name: 'punga0', x: Math.round(cx + gap + bobX + jitter), y: Math.round(baseY), flip: false, tint: tintNow },
-    left: { name: 'punga0', x: Math.round(cx - gap - FIST.w - bobX - jitter), y: Math.round(baseY), flip: true, tint: tintNow },
+    right: { name: 'punga0', x: Math.round(cx + gap + bobX + jitter), y: Math.round(baseY), flip: true, tint: tintNow },
+    left: { name: 'punga0', x: Math.round(cx - gap - FIST.w - bobX - jitter), y: Math.round(baseY), flip: false, tint: tintNow },
   };
   const te = now - hands.punchAt;
   let punching = null;

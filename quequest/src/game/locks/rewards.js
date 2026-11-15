@@ -1,8 +1,9 @@
+import { xrayTier as xrayTierZamki } from '../../../vendor/zamki@v1.2.0/src/rentgen.js';
 // Награды доски Сани: как pythonio-bridge.js — по своей таблице, один раз на
 // id. Ключ `locks:<id>` в skillLedger гильдии (ветка ЗАЩИТНИК / SEC) и в
 // awards профиля (XP). Деньги — в кошелёк (state.warehouse.wage) в main.js.
 import { awardCampusXp } from '../campus-profile.js';
-import { MECHANISMS } from './core.js';
+import { MECHANISMS } from '../../../vendor/zamki@v1.2.0/src/polosy.js';
 import { CABINET_ROUTES } from './cabinet.js';
 
 export const LOCKS_SKILL = 'security';
@@ -38,8 +39,7 @@ export function markLockReward(profile = {}, id) {
 // pins, set marks, strain and tempo (Витин AR-шлем или первое открытое
 // устройство); 2 «ГЛУБИНА» — ещё и полоса натяжения следующего штифта
 // (телефон и выше на лестнице устройств, или четыре открытых устройства).
+export const XRAY_POROGI = Object.freeze({ contour: 1, depth: 4 });
 export function xrayTier({ headset = false, device = 0, opened = 0 } = {}) {
-  if (device >= 1 || opened >= 4) return 2;
-  if (headset || opened >= 1) return 1;
-  return 0;
+  return xrayTierZamki({ contourTool: headset, depthTool: device >= 1, opened }, XRAY_POROGI);
 }
