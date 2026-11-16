@@ -140,3 +140,12 @@ export function pitchShear(pitch, viewH, limit = PITCH_LIMIT) {
   const k = clampPitch(pitch, limit) / limit; // -1..1
   return Math.sign(k) * Math.pow(Math.abs(k), 0.85) * viewH * 1.05;
 }
+
+// Only feet supported by the moving surface inherit its velocity. Neighbours
+// and airborne bodies keep their own motion; collision still uses moveBody.
+export function carryBySurface(map, body, dt, opts={}) {
+  const cell=cellAt(map,body.x,body.z);
+  if(!body.grounded||!cell||!['=','O','b'].includes(cell.kind)||Math.abs(body.y-cell.floor)>.04||!Number.isFinite(dt)||dt<=0)return 0;
+  const velocity=cell.surfaceVelocity||{x:.55,z:0};
+  return moveBody(map,body,Math.min(dt,.1)*velocity.x,Math.min(dt,.1)*velocity.z,opts);
+}

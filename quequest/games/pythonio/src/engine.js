@@ -32,7 +32,7 @@ else
         return fail('Предел этой мастерской: 80 линий.'); s.links.push({ from, to }); note(s, D.machines[a.type].name + ' → ' + D.machines[b.type].name); return ok('Линия готова.'); }
     function disconnect(s, from, to) { if (!s.links.some(l => l.from === from && l.to === to))
         return fail('Линия уже отсутствует.'); s.links = s.links.filter(l => !(l.from === from && l.to === to)); return ok('Линия убрана. Файлы, уже отправленные по ней, доедут.'); }
-    function build(s, type, x, y) { const m = D.machines[type]; if (!m || ['in', 'out'].includes(type) || !s.unlocked.includes(type))
+    function build(s, type, x, y) { if(s.factory&&s.nodes.some(n=>n.type==='router'))return fail('Для этой партии нужна одна развилка. Переставь существующую.'); const m = D.machines[type]; if (!m || ['in', 'out'].includes(type) || !s.unlocked.includes(type))
         return fail('Машина пока не открыта.'); if (s.nodes.length >= 32)
         return fail('Предел этой мастерской: 30 своих машин.'); if (s.coins < m.price)
         return fail('Не хватает ' + (m.price - s.coins) + ' монет. Сделай несколько заказов самому.'); if (!Number.isFinite(x) || !Number.isFinite(y) || x < 70 || x > 1310 || y < 325 || y > 730)
@@ -330,6 +330,7 @@ else
         return fail('Стол пуст. Дождись следующего заказа.'); p.prepared = true; p.checked = true; p.defect = false; delivery(s, p, true); return ok('Готово. +12 монет.'); }
     function rework(s) { returnJobs(s, s.quarantine.splice(0)); return ok('Файлы возвращены на вход. Исправь маршрут.'); }
     function tick(s, dt) {
+        if (s.factory) return factoryTick(s, dt);
         if (!s.started || s.paused || s.phase !== 'day' || !Number.isFinite(dt) || dt <= 0)
             return;
         dt = Math.min(dt, .1);
@@ -619,5 +620,47 @@ else
         s.version = 10;
         return s;
     }
-    return { compileProgram: P.compileRouter, finish, setProgram, discovery, create, tick, build, upgrade, move, remove, duplicate, configurationCost, diagnose, connect, disconnect, manual, rule, rework, goals, ready, claim, advance, newDay, decorate, metrics, serialize, parseSave, inFlight, get, contract, note };
+    // QueQuest's bounded factory order uses the same router, links, movement and
+    // Python interpreter. image/text are transport types; color is its adapter.
+    function createFactory() {
+        const s = create(17); s.chapter = 1; s.started = true; s.coins = 1000;
+        s.nodes = [node('in', 'in', 650, 710), node('left', 'photo', 240, 350), node('right', 'writer', 1120, 350)];
+        s.nodes[0].queue = Array.from({length: 60}, (_,i) => ({ id:i+1, type:i%2?'text':'image', color:i%2?'red':'white', prepared:false, checked:false, target:null }));
+        s.factory = { version:1, day:6, done:[], errors:[], paid:false }; return s;
+    }
+    function factoryRule(s, color, side) { if(!['white','red'].includes(color)||!['left','right'].includes(side))return fail('Выбери цвет и выход.'); if(s.program){s.rules[0]={condition:'image',action:s.program.table['image:0:0']};s.rules[1]={condition:'text',action:s.program.table['text:0:0']};} return rule(s, color === 'white' ? 0 : 1, color === 'white' ? 'image' : 'text', side === 'left' ? 'photo' : 'writer'); }
+    function factoryProgram(s, source) {
+        // Translate only the small public crate vocabulary into the interpreter's
+        // existing file vocabulary. No evaluation or new Python implementation.
+        const adapted = source.replace(/item\[(["'])color\1\]/g,'item["type"]').replace(/(["'])(white|red|left|right)\1/g,(_,q,v)=>q+({white:'image',red:'text',left:'photo',right:'writer'}[v])+q);
+        const result = setProgram(s, adapted); s.codeDraft = source; return result;
+    }
+    function factorySend(s, from, to, p) { s.transit.push({from,to,job:p,left:1.2,duration:1.2}); }
+    function factoryManual(s, side) {
+        if (!['left','right'].includes(side)) return fail('Выбери выход.');
+        const p = get(s,'in').queue.shift(); if (!p) return fail('На входе пусто.');
+        factorySend(s,'in',side,p); return ok('Рука перенесла ящик.');
+    }
+    function factoryRetry(s) { const jobs=s.factory.errors.splice(0); for(const p of jobs){p.target=null;get(s,'in').queue.push(p);} return ok('Ошибочные ящики возвращены. Исправь правило и запусти снова.'); }
+    function factoryTick(s, dt) {
+        if (!s.started || s.paused || !Number.isFinite(dt) || dt<=0) return;
+        dt=Math.min(.1,dt); s.time+=dt;
+        const arrived=[]; for(const t of s.transit){t.left-=dt;if(t.left<=0)arrived.push(t);}
+        s.transit=s.transit.filter(t=>t.left>0);
+        for(const t of arrived){const n=get(s,t.to);if(!n)continue;
+            if(['left','right'].includes(n.id)){
+                const p={...t.job,exit:n.id}; const correct=(p.color==='white'?'left':'right')===n.id;
+                (correct?s.factory.done:s.factory.errors).push(p);n.done++;
+                n.status=correct?'Верный выход':'ОШИБКА: чужой цвет';
+            } else n.queue.push(t.job);
+        }
+        for(const n of s.nodes){
+            if(!['in','router'].includes(n.type)||!n.queue.length)continue;
+            n.factoryClock=(n.factoryClock||0)+dt;if(n.factoryClock<.45)continue;n.factoryClock=0;
+            const p=n.queue[0],c=choose(s,n,p);
+            if(!c.node){n.status=c.reason;continue;}
+            p.target=c.target||null;n.queue.shift();factorySend(s,n.id,c.node.id,p);n.status='Передал ящик';
+        }
+    }
+    return { createFactory, factoryRule, factoryProgram, factoryManual, factoryRetry, compileProgram: P.compileRouter, finish, setProgram, discovery, create, tick, build, upgrade, move, remove, duplicate, configurationCost, diagnose, connect, disconnect, manual, rule, rework, goals, ready, claim, advance, newDay, decorate, metrics, serialize, parseSave, inFlight, get, contract, note };
 });

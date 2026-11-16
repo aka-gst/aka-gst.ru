@@ -1,3 +1,4 @@
+import { validFactory } from './factory-save.js';
 import { CHECKPOINTS, GAME_VERSION, STORAGE_KEY } from './config.js?v=game-190';
 
 const FALLBACK = Object.freeze({ checkpoint: 'start' });
@@ -9,7 +10,7 @@ export function loadCheckpoint(storage = globalThis.localStorage) {
       [1, GAME_VERSION].includes(parsed?.version)
       && CHECKPOINTS.includes(parsed.checkpoint)
     ) {
-      return { checkpoint: parsed.checkpoint, ...(Number.isFinite(parsed.wallet) && parsed.wallet >= 0 ? { wallet: parsed.wallet } : {}) };
+      return { ...(validFactory(parsed.factoryContract) ? {factoryContract:parsed.factoryContract} : {}), checkpoint: parsed.checkpoint, ...(Number.isFinite(parsed.wallet) && parsed.wallet >= 0 ? { wallet: parsed.wallet } : {}) };
     }
   } catch {
     // A broken save must never stop a new run.
@@ -25,6 +26,7 @@ export function saveCheckpoint(storage = globalThis.localStorage, state) {
     storage?.setItem(STORAGE_KEY, JSON.stringify({
       version: GAME_VERSION,
       checkpoint,
+      ...(validFactory(state?.warehouse?.factoryContract) ? {factoryContract:state.warehouse.factoryContract} : {}),
       ...(Number.isFinite(state?.warehouse?.wage) && state.warehouse.wage >= 0 ? { wallet: state.warehouse.wage } : {}),
     }));
     return { ok: true, operation: 'save' };

@@ -29,11 +29,11 @@ export const PYTHONIO_SKILL = 'automation';
 // Сверено с games/pythonio/src/data.js (tools/pythonio-bridge.test.mjs).
 const ORDERS = [['Двенадцать фотографий', 170], ['Фото налево, текст направо', 220], ['Слишком много фото', 250], ['Архив без ошибок', 280], ['Мы это уже делали', 360], ['Городская премьера', 500], ['Газета к открытию школы', 560], ['Мастерская без тебя', 700], ['Поздравления без копипаста', 640], ['Чеки в таблицу', 720], ['Районная рассылка', 860], ['Утренняя рутина', 1100], ['Расходы по категориям', 1280], ['Отчёт к девяти', 1500], ['Выгрузка бухгалтеру', 1720], ['Заявки прямо в CRM', 1950], ['Архив сам раскладывается', 2140], ['JSON для соседнего сервиса', 2360], ['Письма уходят сами', 2600], ['Сервис иногда падает', 2950], ['Ответ потерялся', 3400], ['Ночная смена без человека', 3900]];
 export const pythonioOrderId = (index) => `order-${String(index + 1).padStart(2, '0')}`;
-// Монеты Pythonio (¤) → рубли QueQuest: четверть, круглыми десятками.
-// Весь Pythonio даёт ~8,5 тыс. ₽ и 3190 XP; ветка AUTO +1 за заказ, финал +2.
+// QueQuest pays 20 ₽ per required file; workshop equipment coins stay separate.
+const ORDER_COUNTS = [12,20,42,20,30,48,36,60,28,32,44,64,36,40,34,36,38,34,32,30,28,26];
 export const PYTHONIO_ORDERS = Object.freeze(ORDERS.map(([name, coins], index) => Object.freeze({
   id: pythonioOrderId(index), index, name, coins,
-  pay: Math.max(10, Math.round((coins * 0.25) / 10) * 10),
+  count: ORDER_COUNTS[index], pay: ORDER_COUNTS[index] * 20,
   xp: 40 + index * 10,
   skillGain: index === ORDERS.length - 1 ? 2 : 1,
 })));
@@ -75,7 +75,7 @@ export function pythonioDone(profile = {}) {
 // wallet (state.warehouse.wage), which lives only until a reload: 100 ₽ after two orders became 0 ₽.
 export function pythonioEarned(profile = {}) {
   const done = new Set(pythonioDone(profile));
-  return PYTHONIO_ORDERS.filter((o) => done.has(o.id)).reduce((sum, o) => sum + o.pay, 0);
+  return PYTHONIO_ORDERS.filter((o) => done.has(o.id)).reduce((sum, o) => sum + (profile.labs?.guild?.creditLedger?.[ledgerKey(o.id)] ?? Math.max(10,Math.round(o.coins*.25/10)*10)), 0);
 }
 
 // Pure, idempotent: the second call for the same id changes nothing and pays 0.
@@ -85,7 +85,7 @@ export function markPythonioOrder(profile = {}, id) {
   const guild = profile.labs?.guild ?? {};
   const key = ledgerKey(order.id);
   if (guild.skillLedger?.[key] || Object.prototype.hasOwnProperty.call(profile.awards ?? {}, key)) return { profile, first: false, pay: 0, xp: 0, skillGain: 0, order };
-  let next = { ...profile, labs: { ...(profile.labs ?? {}), guild: { ...guild, skillLedger: { ...(guild.skillLedger ?? {}), [key]: { [PYTHONIO_SKILL]: order.skillGain } } } } };
+  let next = { ...profile, labs: { ...(profile.labs ?? {}), guild: { ...guild, skillLedger: { ...(guild.skillLedger ?? {}), [key]: { [PYTHONIO_SKILL]: order.skillGain } }, creditLedger:{...(guild.creditLedger??{}),[key]:order.pay} } } };
   next = awardCampusXp(next, order.xp, key);
   return { profile: next, first: true, pay: order.pay, xp: order.xp, skillGain: order.skillGain, order };
 }

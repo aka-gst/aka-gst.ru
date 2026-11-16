@@ -1,7 +1,7 @@
 import { WEEK, weekDayOf, nextWorkAfter } from './week.js';
 
 export const HOME_KEY = 'quequest.home.life.v1';
-export const HOME_PRICES = Object.freeze({ feed: 20, electricity: 40, room: 60 });
+export const HOME_PRICES = Object.freeze({ feed: 20, electricity: 40, room: 60, deskLamp: 240 });
 
 export function homeAccess(checkpoint = 'start', flags = {}) {
   const day = weekDayOf(checkpoint);
@@ -20,7 +20,7 @@ export function homeTransaction(previous = {}, wallet = 0, day = 1, action) {
   if (already) return { ok: false, life, wallet: balance, text: action === 'feed' ? 'Кот уже поел сегодня. Мрр.' : 'Уже оплачено — второй раз деньги не списываются.' };
   if (balance < cost) return { ok: false, life, wallet: balance, text: `Нужно ${cost} ₽. Сейчас ${balance} ₽ — можно вернуться после смены.` };
   if (action === 'feed') life.fedDays.push(day); else life[action] = true;
-  const text = { feed: 'Кот поел и замурчал. −20 ₽.', electricity: 'Свет оплачен. Компьютер работает. −40 ₽.', room: 'Открыты остальные комнаты квартиры. −60 ₽.' }[action];
+  const text = { feed: 'Кот поел и замурчал. −20 ₽.', electricity: 'Свет оплачен. Компьютер работает. −40 ₽.', room: 'Открыты остальные комнаты квартиры. −60 ₽.', deskLamp:'Лампа на столе установлена. Светлее работать дома. −240 ₽.' }[action];
   return { ok: true, life, wallet: balance - cost, text };
 }
 

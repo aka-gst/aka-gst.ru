@@ -1,3 +1,4 @@
+import { createFactoryContract } from './factory-contract.js?v=20.2.0';
 import { createDragLook } from './drag-look.js';
 // 19.2 · the shared site login (/akkaunty) installs window.QQ_PROFILE_ADAPTER
 // before anything below resolves it — only on aka-gst.ru / ?akk=1 (akkaunty-adapter.js).
@@ -37,7 +38,7 @@ import { CAREER_REALMS, createCareerWorlds, foundationStatus, characterSheet, he
 import * as careerApi from './career-worlds.js?v=20.0.2';
 import { deviceFromQuery } from './vr-devices.js';
 import { createFpWorld } from './fp-world.js?v=20.1.0';
-import { createPythonioBridge, markPythonioOrder } from './pythonio-bridge.js?v=20.0.5';
+import { createPythonioBridge, markPythonioOrder } from './pythonio-bridge.js?v=20.2.0';
 import { createBlackIceBridge } from './blackice-bridge.js';
 import { createFpsreBridge } from './fpsre-bridge.js?v=qq201';
 import { createDemoHub, demoRoute, demoWonNow } from './demo-hub.js?v=20.0.3';
@@ -64,19 +65,19 @@ import { consoleGreeting, sideCheck, impossibleReasons, isAutomationContext, due
 import { evaluateBadges, earnBadge, badgeById, badgeGrid, RARITY } from './achievements.js';
 import { beatenByAll, FIST_FLAGS } from './fists.js';
 import { createHackPolygon } from './hack-ui.js?v=20.0.2';
-import { pythonioDone } from './pythonio-bridge.js?v=20.0.5';
+import { pythonioDone } from './pythonio-bridge.js?v=20.2.0';
 import { tasterFinished, TASTER_IDS } from './career-tasters.js';
-import { applyBuildLabels, BUILD } from './version.js?v=20.1.0';
+import { applyBuildLabels, BUILD } from './version.js?v=20.2.0';
 import { createRing } from './duel-ui.js';
 import { resolveAdapter, profileSnapshot, applySnapshot } from './profile-store.js';
 import { createAccountUi } from './account-ui.js';
 // 19.0 · the first week: five days, button → fired → Витя's garage.
 import { WEEK_CHECKPOINTS, isWeekCheckpoint, weekDayOf, weekClock, weekPin, payLedger, legacyFromQuery, weekFromLegacy, BOSS_END, BOSS_MORNING, HALL_MORNING, EVENING, MORNING, FIRED, CORP, WEEK_PAY_CHECKPOINTS } from './week.js';
 import { createPayCard, createWeekPin } from './week-ui.js';
-import { HOME_KEY, homeAccess, homeTransaction, loadHomeLife } from './home-life.js';
+import { HOME_KEY, homeAccess, homeTransaction, loadHomeLife } from './home-life.js?v=20.2.0';
 import { firedHandoff } from './week-hooks.js';
 import { openingFacts, AFTER_SHOCK_HALL, DAY2_PRINCIPLE } from './opening.js';
-import { createFactoryView, toWorld as hallToWorld, hallAimPoints } from './factory-view.js?v=qq26';
+import { createFactoryView, toWorld as hallToWorld, hallAimPoints } from './factory-view.js?v=20.2.0';
 import { createSorterBay } from './sorter-bay.js?v=sorter-1';
 import { createContractBoard } from './contract-board.js?v=contracts-1';
 import { createSystemSandbox } from './system-sandbox.js?v=sandbox-1';
@@ -99,7 +100,7 @@ import {
 } from './model.js?v=game-190';
 import { renderGame } from './render.js?v=game-03';
 import { EXPLAIN_MODE_KEY, getAdaptiveCoach, getConceptBridge, getManualIncomeCopy, getSkillRecorderBeat, normalizeExplainMode } from './engagement-director.js?v=4';
-import { createCheckpointPersistence, loadCheckpoint } from './save.js?v=20.1.0';
+import { createCheckpointPersistence, loadCheckpoint } from './save.js?v=20.2.0';
 import { createTelemetry } from './telemetry.js';
 import { CHECKPOINTS, CRATE_PAY, REWARD_REVEAL_DURATION } from './config.js?v=game-190';
 import { getSceneCameraTarget, getViewportTransform, screenToWorld } from './viewport.js?v=2';
@@ -190,6 +191,7 @@ const telemetry = createTelemetry({ enabled: isLocal });
 let state = checkpoint.checkpoint === 'start'
   ? createGameState({ scene: 'warehouse', checkpoint: 'start' })
   : createCheckpointState(checkpoint.checkpoint);
+if (checkpoint.factoryContract) state = { ...state, warehouse: { ...state.warehouse, factoryContract:checkpoint.factoryContract } };
 if (Number.isFinite(checkpoint.wallet)) state = { ...state, warehouse: { ...state.warehouse, wage: checkpoint.wallet } };
 if (showcaseManual) state = { ...state, warehouse: { ...state.warehouse, introComplete: true } };
 let fakeGateway;
@@ -371,7 +373,7 @@ let engagementProgressAt = performance.now();
 let friendVisited = ['reward5', 'vika', 'reward6', 'virus', 'reward7', 'foundry', 'reward8', 'campus', 'ai-lab', 'reward9', 'llm-lab', 'reward10'].includes(checkpoint.checkpoint);
 let journalOpen = false;
 let exitOpen = false;
-const BLOCKING_OVERLAY_IDS = ['deepRing','firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','fpsreDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
+const BLOCKING_OVERLAY_IDS = ['factoryContract','deepRing','firstShift','hourDesk','seamFlash','skillTree','questLog','confirmDialog','careerWorlds','fpWorld','pythonioDive','blackiceDive','fpsreDive','questGuild','friendSandbox','vikaMemory','virusFinale','automationFoundry','futureComic','sorterBay','engineerCampus','contractBoard','systemSandbox','pythonContracts','aiLab','modelWorkbench','neuralFoundry','llmWorkshop','retrievalWarehouse','botForge','automationLab','aiFactoryCapstone','simnetLab','factoryNexus','opsDesk','worldGrid','automationCommons','cityOperations','cityChronicle','cityWeave','cityThreads'];
 function isBlockingOverlayOpen() {
   return BLOCKING_OVERLAY_IDS.some((id) => !document.querySelector(`#${id}`)?.hidden);
 }
@@ -729,7 +731,7 @@ const fpWorld = createFpWorld(fpWorldRoot, {
   },
   onDive: (program) => (program === 'pythonio' ? pythonio.open({ fromDive: true }) : program === 'blackice' ? blackice.open({ fromDive: true }) : program === 'fpsre' ? fpsre.open({ fromDive: true }) : careerWorlds.dive(program)),
   onLeave: () => { if (!legacy && fpWorld.state()?.level === 'home' && homeAccess(state.checkpoint, loadFlags()).nextWork) advanceHomeMorning(); else careerWorlds.fromWorld(); },
-  getHome: () => { const access = homeAccess(state.checkpoint, loadFlags()); return { ...access, life: homeLife, starter: !homeLife.room && !access.garage }; },
+  getHome: () => { const access = homeAccess(state.checkpoint, loadFlags()); return { ...access, life: homeLife, day:state.warehouse.factoryContract?.factory.day||access.day, starter: !homeLife.room && !access.garage }; },
   onHomeAction: action => performHomeAction(action),
   eraDebug: isLocal || forcedEraParam !== null || query.has('debug'),
   reducedMotion: prefersReducedMotion,
@@ -757,7 +759,7 @@ const fpWorld = createFpWorld(fpWorldRoot, {
   // it, and the one thing at home that is different after the first quest.
   meaning: (id) => hear(id),
   onSeam: (code) => showMeaningSeam(code),
-  homeChanges: () => homeChanges(reflexRecord, { checkpoint: state.checkpoint }).map((c) => ({ ...c, noticed: Boolean(reflexRecord.homeSeen[c.id]) })),
+  homeChanges: () => [...homeChanges(reflexRecord, { checkpoint: state.checkpoint }).map((c) => ({ ...c, noticed: Boolean(reflexRecord.homeSeen[c.id]) })), ...(homeLife.deskLamp?[{id:'contract-desk-lamp',sprite:'worklamp',at:{x:5.35,z:1.9,y:1.05},lamp:{group:'desk-lamp',x:5.35,z:1.9,radius:3,intensity:1,color:[1,.8,.45]},noticed:true}]:[])],
   onHomeNoticed: (id) => remember('homeSeen', id),
   onArFix: (id, reward) => {
     const pay = Math.max(0, Number(reward) || 0);
@@ -925,6 +927,7 @@ new MutationObserver(() => {
 
 // Шаг 2: Pythonio as the depth of AUTO (pythonio-bridge.js, games/pythonio/).
 // Its orders pay into the same profile (AUTO branch, XP) and wallet, once per order.
+let factoryTraining = false;
 const pythonio = createPythonioBridge(document.body, {
   onActiveOrder: (index) => {
     demoHub?.startPythonio(index);
@@ -946,8 +949,20 @@ const pythonio = createPythonioBridge(document.body, {
     return r;
   },
   onSound: name => audio.play(name),
-  onExit: ({ fromDive, result }) => { if (fromDive) fpWorld.surface(result); else careerWorlds.open(); },
+  onExit: ({ fromDive, result }) => { if(factoryTraining){factoryTraining=false;factoryContract.open();}else if (fromDive) fpWorld.surface(result); else careerWorlds.open(); },
 });
+const factoryContract = createFactoryContract({
+  getSaved: () => state.warehouse.factoryContract,
+  save: (line,reward) => { state={...state,warehouse:{...state.warehouse,factoryContract:line,wage:state.warehouse.wage+reward}};persistence.save(state);updateHud(); },
+  trained: () => pythonioDone(campusProfile).includes('order-02'),
+  onTrain: () => { factoryTraining=true;pythonio.open({fromDive:false}); },
+  onHome: () => openWorld('home'), onSound:name=>audio.play(name),
+});
+const factoryDock=document.createElement('nav');factoryDock.id='factoryHomeDock';factoryDock.hidden=true;
+factoryDock.innerHTML='<button data-factory-sleep>СПАТЬ ДО УТРА</button><button data-factory-open>ЗАВОД · ДОГОВОР 3×</button><button data-factory-lamp>ЛАМПА НА СТОЛ · 240 ₽</button>';document.body.append(factoryDock);
+factoryDock.querySelector('[data-factory-lamp]').onclick=()=>{const r=performHomeAction('deskLamp');if(r.ok)openWorld('home');};
+factoryDock.querySelector('[data-factory-sleep]').onclick=()=>performHomeAction('sleep');
+factoryDock.querySelector('[data-factory-open]').onclick=()=>{fpWorld.close();factoryContract.open();};
 // JUMP KILL · Лабиринт (blackice-bridge.js, labyrinth.js, games/blackice/):
 // a cleared level pays XP and rubles once, and counts in the «Лабиринт» stat.
 const blackice = createBlackIceBridge(document.body, {
@@ -1363,10 +1378,21 @@ function performHomeAction(action) {
   if (action === 'garage-locked') return { ok: false, text: 'Гараж пока заперт. После пятой смены Витя позвонит и даст ключ.' };
   if (action === 'quests') { journalHome = true; fpWorld.close(); questLogView.open(); return {}; }
   if (action === 'sleep') {
+    if (state.checkpoint === 'fired') {
+      fpWorld.close();
+      if (!state.warehouse.factoryContract) {
+        tellStory('НАЧАЛЬНИК · УТРЕННИЙ ЗВОНОК','Вернись. Цех стоит.', '«Я погорячился. Извини. Без тебя линия встала, а чайник не считается инженером. Вернись подрядчиком: втрое больше — 60 ₽ за ящик вместо 20 ₽. Перестрой сортировку белых и красных. Партия 60 штук, 3600 ₽ за принятый результат».', 'ДОГОВОРИЛИСЬ · 3×',()=>{factoryContract.open();});
+      } else {
+        const line=JSON.parse(JSON.stringify(state.warehouse.factoryContract));line.factory.day=(line.factory.day||6)+1;
+        state={...state,warehouse:{...state.warehouse,factoryContract:line}};persistence.save(state);
+        tellStory('УТРО',`День ${line.factory.day}`, 'Планировка цеха, ящики и деньги на месте. Можно вернуться к линии или заняться домом.', 'ВСТАТЬ',()=>openWorld('home'));
+      }
+      return {ok:true};
+    }
     if (!access.nextWork) return { ok: false, text: 'Сначала закончи сегодняшнюю смену. Сон не пропускает задания.' };
     fpWorld.close(); advanceHomeMorning(); return { ok: true };
   }
-  const result = homeTransaction(homeLife, state.warehouse.wage, access.day, action);
+  const result = homeTransaction(homeLife, state.warehouse.wage, state.warehouse.factoryContract?.factory.day||access.day, action);
   if (result.ok) {
     homeLife = result.life;
     state = { ...state, warehouse: { ...state.warehouse, wage: result.wallet } };
@@ -1438,6 +1464,11 @@ function watchWeekWorld(now) {
   if (legacy) { weekPinEl.set(''); return; }
   const flags = loadFlags();
   const worldOpen = !fpWorldRoot.hidden;
+  factoryDock.hidden=!(worldOpen && fpWorld.state().level==='home' && state.checkpoint==='fired');
+  factoryDock.querySelector('[data-factory-open]').hidden=!state.warehouse.factoryContract;
+  factoryDock.querySelector('[data-factory-lamp]').hidden=!state.warehouse.factoryContract?.factory.paid;
+  factoryDock.querySelector('[data-factory-lamp]').disabled=Boolean(homeLife.deskLamp);
+  factoryDock.querySelector('[data-factory-lamp]').textContent=homeLife.deskLamp?'ЛАМПА УСТАНОВЛЕНА':'ЛАМПА НА СТОЛ · 240 ₽';
   if (worldOpen && flags.vityaCalled && !flags.vityaGarage && now > handoffCheckAt) {
     handoffCheckAt = now + 350;
     if (fpWorld.state().level === 'garage') onFiredHandoff();
@@ -2648,6 +2679,7 @@ if (isLocal) {
     world: { open: (level = 'garage', opts = {}) => fpWorld.open(level, opts), debug: (patch) => fpWorld.debug(patch), state: () => fpWorld.state(), surface: (r) => careerWorlds.surface(r), engine: () => engineStatus(engineNow()) },
     ice64,
     fpsre: { open: (opts) => fpsre.open(opts), close: () => fpsre.close(), surface: () => fpsre.surfacePress(), handle: (ev) => fpsre.handle(ev), active: () => fpsre.active, ready: () => fpsre.ready, run: () => fpsre.run, mastery: () => campusProfile.mastery?.archaeology ?? null, awards: () => Object.keys(campusProfile.awards ?? {}).filter((k) => k.startsWith('fpsre:')) },
+    factoryContract: { open: () => factoryContract.open(), state: () => factoryContract.state, observe: () => factoryContract.observe() },
     pythonio: { open: (opts) => pythonio.open(opts), close: () => pythonio.close(), active: () => pythonio.active, ready: () => pythonio.ready },
     blackice: { open: (opts) => blackice.open(opts), close: () => blackice.close(), enter: (n) => blackice.enter(n), lobby: () => blackice.lobby(), handle: (msg) => blackice.handle(msg), active: () => blackice.active, ready: () => blackice.ready, view: () => blackice.view, playing: () => blackice.playing, profile: () => ({ stats: campusProfile.stats, cleared: labyrinthCleared(campusProfile), xp: campusProfile.xp, wage: state.warehouse?.wage ?? 0 }) },
     hour: { openTerminal: () => openMachinePanel(), desk: () => hourDesk.step(), beat: () => hourBeat(), lesson: () => state.warehouse.lessonStage, state: () => ({ day2: state.warehouse.day2, button: state.warehouse.button, ruleStage: state.warehouse.ruleStage, scene: state.scene, storyActive }) },

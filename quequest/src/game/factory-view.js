@@ -21,7 +21,7 @@ import { loadAtlas } from './first-shift-atlas.js';
 import { drawText, textWidth } from './pixel-font.js';
 import { dressHall, drawSpeech, surfaceOf, subtitleFloorRow } from './fp-overlay.js';
 import { buildArmSprites, armPoseAt, armMotion, armFacing, paintArmFree, tint, paintTerminal, paintButton, paintSheet } from './arm-art.js?v=qq26';
-import { createBody, moveBody, stepBody, openAt, jump as bodyJump, landingDip, clampPitch, pitchShear } from './fp-body.js';
+import { createBody, moveBody, stepBody, carryBySurface, openAt, jump as bodyJump, landingDip, clampPitch, pitchShear } from './fp-body.js?v=20.2.0';
 import { createChatter, createMomentWatcher, SPEAKERS } from './npc-chatter.js';
 // 17.4: the hall is drawn at the player's rung of the engine ladder too.
 import { createEngineCore, frameDims } from './engine-core.js';
@@ -242,6 +242,7 @@ export function createFactoryView({ onSound = () => {}, onFlag = () => {}, reduc
       }
     }
     if (!moving || !body.grounded) walkPhase *= 0.9;
+    if (!paused) carryBySurface(map, body, dt, { circles: circles() });
     const fall = stepBody(map, body, dt, { circles: circles() });
     if (fall.landed) {
       if (fall.impact > 3) { dipAt = now; dipImpact = fall.impact; onSound('land'); }
